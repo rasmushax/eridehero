@@ -19,6 +19,7 @@ use ERH\User\RateLimiter;
 use ERH\User\UserRepository;
 use ERH\User\SocialAuth;
 use ERH\Email\MailchimpSync;
+use ERH\Admin\SettingsPage;
 
 /**
  * Core plugin class that initializes all components.
@@ -94,6 +95,13 @@ class Core {
      * @var MailchimpSync
      */
     private MailchimpSync $mailchimp_sync;
+
+    /**
+     * Settings page handler.
+     *
+     * @var SettingsPage
+     */
+    private SettingsPage $settings_page;
 
     /**
      * Initialize all plugin components.
@@ -229,8 +237,9 @@ class Core {
         // Enqueue admin styles.
         add_action('admin_enqueue_scripts', [$this, 'enqueue_admin_assets']);
 
-        // Add admin menu pages (will be implemented later).
-        // add_action('admin_menu', [$this, 'register_admin_menus']);
+        // Initialize settings page.
+        $this->settings_page = new SettingsPage();
+        $this->settings_page->register();
     }
 
     /**
@@ -410,5 +419,14 @@ class Core {
      */
     public function get_mailchimp_sync(): MailchimpSync {
         return $this->mailchimp_sync;
+    }
+
+    /**
+     * Get the settings page handler.
+     *
+     * @return SettingsPage
+     */
+    public function get_settings_page(): SettingsPage {
+        return $this->settings_page;
     }
 }

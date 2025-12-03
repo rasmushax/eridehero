@@ -7,6 +7,7 @@ $baseDir = dirname($vendorDir);
 
 return array(
     'Composer\\InstalledVersions' => $vendorDir . '/composer/InstalledVersions.php',
+    'ERH\\Admin\\SettingsPage' => $baseDir . '/includes/admin/class-settings-page.php',
     'ERH\\Core' => $baseDir . '/includes/class-core.php',
     'ERH\\Database\\PriceHistory' => $baseDir . '/includes/database/class-price-history.php',
     'ERH\\Database\\PriceTracker' => $baseDir . '/includes/database/class-price-tracker.php',

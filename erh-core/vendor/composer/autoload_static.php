@@ -8,6 +8,7 @@ class ComposerStaticInitb5e889746c5280811e87a72c161db6db
 {
     public static $classMap = array (
         'Composer\\InstalledVersions' => __DIR__ . '/..' . '/composer/InstalledVersions.php',
+        'ERH\\Admin\\SettingsPage' => __DIR__ . '/../..' . '/includes/admin/class-settings-page.php',
         'ERH\\Core' => __DIR__ . '/../..' . '/includes/class-core.php',
         'ERH\\Database\\PriceHistory' => __DIR__ . '/../..' . '/includes/database/class-price-history.php',
         'ERH\\Database\\PriceTracker' => __DIR__ . '/../..' . '/includes/database/class-price-tracker.php',
