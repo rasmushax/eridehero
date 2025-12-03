@@ -14,11 +14,22 @@ class ComposerStaticInitb5e889746c5280811e87a72c161db6db
         'ERH\\Database\\ProductCache' => __DIR__ . '/../..' . '/includes/database/class-product-cache.php',
         'ERH\\Database\\Schema' => __DIR__ . '/../..' . '/includes/database/class-schema.php',
         'ERH\\Database\\ViewTracker' => __DIR__ . '/../..' . '/includes/database/class-view-tracker.php',
+        'ERH\\Email\\MailchimpSync' => __DIR__ . '/../..' . '/includes/email/class-mailchimp-sync.php',
         'ERH\\PostTypes\\Product' => __DIR__ . '/../..' . '/includes/post-types/class-product.php',
         'ERH\\PostTypes\\Review' => __DIR__ . '/../..' . '/includes/post-types/class-review.php',
         'ERH\\Pricing\\DealsFinder' => __DIR__ . '/../..' . '/includes/pricing/class-deals-finder.php',
         'ERH\\Pricing\\PriceFetcher' => __DIR__ . '/../..' . '/includes/pricing/class-price-fetcher.php',
         'ERH\\Pricing\\RetailerLogos' => __DIR__ . '/../..' . '/includes/pricing/class-retailer-logos.php',
+        'ERH\\User\\AuthHandler' => __DIR__ . '/../..' . '/includes/user/class-auth-handler.php',
+        'ERH\\User\\OAuthFacebook' => __DIR__ . '/../..' . '/includes/user/class-oauth-facebook.php',
+        'ERH\\User\\OAuthGoogle' => __DIR__ . '/../..' . '/includes/user/class-oauth-google.php',
+        'ERH\\User\\OAuthProviderInterface' => __DIR__ . '/../..' . '/includes/user/interface-oauth-provider.php',
+        'ERH\\User\\OAuthReddit' => __DIR__ . '/../..' . '/includes/user/class-oauth-reddit.php',
+        'ERH\\User\\RateLimiter' => __DIR__ . '/../..' . '/includes/user/class-rate-limiter.php',
+        'ERH\\User\\SocialAuth' => __DIR__ . '/../..' . '/includes/user/class-social-auth.php',
+        'ERH\\User\\UserPreferences' => __DIR__ . '/../..' . '/includes/user/class-user-preferences.php',
+        'ERH\\User\\UserRepository' => __DIR__ . '/../..' . '/includes/user/class-user-repository.php',
+        'ERH\\User\\UserTracker' => __DIR__ . '/../..' . '/includes/user/class-user-tracker.php',
     );
 
     public static function getInitializer(ClassLoader $loader)

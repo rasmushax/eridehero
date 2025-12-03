@@ -12,6 +12,13 @@ namespace ERH;
 use ERH\PostTypes\Product;
 use ERH\PostTypes\Review;
 use ERH\Database\Schema;
+use ERH\User\AuthHandler;
+use ERH\User\UserPreferences;
+use ERH\User\UserTracker;
+use ERH\User\RateLimiter;
+use ERH\User\UserRepository;
+use ERH\User\SocialAuth;
+use ERH\Email\MailchimpSync;
 
 /**
  * Core plugin class that initializes all components.
@@ -40,6 +47,55 @@ class Core {
     private Schema $schema;
 
     /**
+     * Auth handler.
+     *
+     * @var AuthHandler
+     */
+    private AuthHandler $auth_handler;
+
+    /**
+     * User preferences handler.
+     *
+     * @var UserPreferences
+     */
+    private UserPreferences $user_preferences;
+
+    /**
+     * User tracker handler.
+     *
+     * @var UserTracker
+     */
+    private UserTracker $user_tracker;
+
+    /**
+     * Rate limiter instance.
+     *
+     * @var RateLimiter
+     */
+    private RateLimiter $rate_limiter;
+
+    /**
+     * User repository instance.
+     *
+     * @var UserRepository
+     */
+    private UserRepository $user_repo;
+
+    /**
+     * Social auth handler.
+     *
+     * @var SocialAuth
+     */
+    private SocialAuth $social_auth;
+
+    /**
+     * Mailchimp sync handler.
+     *
+     * @var MailchimpSync
+     */
+    private MailchimpSync $mailchimp_sync;
+
+    /**
      * Initialize all plugin components.
      *
      * @return void
@@ -48,11 +104,17 @@ class Core {
         // Load text domain for translations.
         add_action('init', [$this, 'load_textdomain']);
 
+        // Initialize shared services.
+        $this->init_services();
+
         // Initialize post types.
         $this->init_post_types();
 
         // Initialize database.
         $this->init_database();
+
+        // Initialize user system.
+        $this->init_user_system();
 
         // Initialize admin.
         if (is_admin()) {
@@ -72,6 +134,48 @@ class Core {
 
         // Initialize REST API.
         add_action('rest_api_init', [$this, 'init_rest_api']);
+    }
+
+    /**
+     * Initialize shared services.
+     *
+     * @return void
+     */
+    private function init_services(): void {
+        $this->rate_limiter = new RateLimiter();
+        $this->user_repo = new UserRepository();
+
+        // Register HFT product post types filter.
+        add_filter('hft_product_post_types', function () {
+            return ['products'];
+        });
+    }
+
+    /**
+     * Initialize user system components.
+     *
+     * @return void
+     */
+    private function init_user_system(): void {
+        // Initialize auth handler.
+        $this->auth_handler = new AuthHandler($this->rate_limiter, $this->user_repo);
+        $this->auth_handler->register();
+
+        // Initialize user preferences.
+        $this->user_preferences = new UserPreferences($this->user_repo);
+        $this->user_preferences->register();
+
+        // Initialize user tracker.
+        $this->user_tracker = new UserTracker($this->rate_limiter, $this->user_repo);
+        $this->user_tracker->register();
+
+        // Initialize social auth (OAuth for Google, Facebook, Reddit).
+        $this->social_auth = new SocialAuth($this->user_repo);
+        $this->social_auth->register();
+
+        // Initialize Mailchimp sync.
+        $this->mailchimp_sync = new MailchimpSync($this->user_repo);
+        $this->mailchimp_sync->register();
     }
 
     /**
@@ -243,5 +347,68 @@ class Core {
      */
     public function get_schema(): Schema {
         return $this->schema;
+    }
+
+    /**
+     * Get the auth handler.
+     *
+     * @return AuthHandler
+     */
+    public function get_auth_handler(): AuthHandler {
+        return $this->auth_handler;
+    }
+
+    /**
+     * Get the user preferences handler.
+     *
+     * @return UserPreferences
+     */
+    public function get_user_preferences(): UserPreferences {
+        return $this->user_preferences;
+    }
+
+    /**
+     * Get the user tracker handler.
+     *
+     * @return UserTracker
+     */
+    public function get_user_tracker(): UserTracker {
+        return $this->user_tracker;
+    }
+
+    /**
+     * Get the rate limiter.
+     *
+     * @return RateLimiter
+     */
+    public function get_rate_limiter(): RateLimiter {
+        return $this->rate_limiter;
+    }
+
+    /**
+     * Get the user repository.
+     *
+     * @return UserRepository
+     */
+    public function get_user_repo(): UserRepository {
+        return $this->user_repo;
+    }
+
+    /**
+     * Get the social auth handler.
+     *
+     * @return SocialAuth
+     */
+    public function get_social_auth(): SocialAuth {
+        return $this->social_auth;
+    }
+
+    /**
+     * Get the Mailchimp sync handler.
+     *
+     * @return MailchimpSync
+     */
+    public function get_mailchimp_sync(): MailchimpSync {
+        return $this->mailchimp_sync;
     }
 }
