@@ -167,9 +167,18 @@ class MigrationAdmin {
                 <ol style="margin-left: 20px;">
                     <li>Import the new ACF field structure via <strong>ACF → Tools → Import</strong></li>
                     <li>File: <code>acf-import-new-structure.json</code></li>
-                    <li>Ensure the source site's REST API is accessible</li>
+                    <li>On the <strong>source site</strong>, ensure ACF fields are exposed to REST API:
+                        <ul style="list-style: circle; margin-left: 20px; margin-top: 5px;">
+                            <li>ACF field groups need <code>Show in REST API</code> enabled</li>
+                            <li>Or install the "ACF to REST API" plugin</li>
+                        </ul>
+                    </li>
                     <li>Run a <strong>Dry Run</strong> first to verify</li>
                 </ol>
+
+                <h3 style="margin-top: 15px;">If ACF Fields Are Empty</h3>
+                <p>The migrator will try to <strong>infer product type</strong> from the product name (e.g., "eRide" → Electric Bike, "Kaabo" → Electric Scooter).</p>
+                <p>Check <code>wp-content/debug.log</code> for details.</p>
             </div>
         </div>
         <?php
