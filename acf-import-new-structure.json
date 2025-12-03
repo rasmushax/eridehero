@@ -1,0 +1,2099 @@
+[
+    {
+        "key": "group_erh_products_basic",
+        "title": "Products - Basic Info",
+        "fields": [
+            {
+                "key": "field_erh_product_image",
+                "label": "Product Image",
+                "name": "product_image",
+                "type": "image",
+                "instructions": "Main product image (recommended: 800x800px or larger)",
+                "required": 0,
+                "wrapper": {
+                    "width": "25",
+                    "class": "",
+                    "id": ""
+                },
+                "return_format": "id",
+                "library": "all",
+                "preview_size": "medium"
+            },
+            {
+                "key": "field_erh_model",
+                "label": "Model",
+                "name": "model",
+                "type": "text",
+                "instructions": "Model name/number",
+                "required": 0,
+                "wrapper": {
+                    "width": "25",
+                    "class": "",
+                    "id": ""
+                }
+            },
+            {
+                "key": "field_erh_release_year",
+                "label": "Release Year",
+                "name": "release_year",
+                "type": "number",
+                "instructions": "",
+                "required": 0,
+                "wrapper": {
+                    "width": "15",
+                    "class": "",
+                    "id": ""
+                },
+                "min": 2015,
+                "max": 2035
+            },
+            {
+                "key": "field_erh_release_quarter",
+                "label": "Release Quarter",
+                "name": "release_quarter",
+                "type": "select",
+                "instructions": "",
+                "required": 0,
+                "wrapper": {
+                    "width": "15",
+                    "class": "",
+                    "id": ""
+                },
+                "choices": {
+                    "Q1": "Q1",
+                    "Q2": "Q2",
+                    "Q3": "Q3",
+                    "Q4": "Q4",
+                    "Unknown": "Unknown"
+                },
+                "default_value": "Unknown",
+                "return_format": "value"
+            },
+            {
+                "key": "field_erh_editor_rating",
+                "label": "Editor Rating",
+                "name": "editor_rating",
+                "type": "number",
+                "instructions": "Overall editor score (1-10)",
+                "required": 0,
+                "wrapper": {
+                    "width": "20",
+                    "class": "",
+                    "id": ""
+                },
+                "min": 1,
+                "max": 10,
+                "step": 0.1
+            },
+            {
+                "key": "field_erh_youtube_review",
+                "label": "YouTube Review",
+                "name": "youtube_review",
+                "type": "url",
+                "instructions": "Link to YouTube video review",
+                "required": 0,
+                "wrapper": {
+                    "width": "50",
+                    "class": "",
+                    "id": ""
+                }
+            },
+            {
+                "key": "field_erh_written_review",
+                "label": "Written Review",
+                "name": "written_review",
+                "type": "post_object",
+                "instructions": "Link to written review post",
+                "required": 0,
+                "wrapper": {
+                    "width": "50",
+                    "class": "",
+                    "id": ""
+                },
+                "post_type": ["post"],
+                "post_status": ["publish"],
+                "return_format": "id",
+                "allow_null": 1,
+                "ui": 1
+            }
+        ],
+        "location": [
+            [
+                {
+                    "param": "post_type",
+                    "operator": "==",
+                    "value": "products"
+                }
+            ]
+        ],
+        "menu_order": 0,
+        "position": "normal",
+        "style": "default",
+        "label_placement": "top",
+        "instruction_placement": "label",
+        "active": true
+    },
+    {
+        "key": "group_erh_products_specs",
+        "title": "Products - Manufacturer Specs",
+        "fields": [
+            {
+                "key": "field_erh_manufacturer_top_speed",
+                "label": "Manufacturer Top Speed",
+                "name": "manufacturer_top_speed",
+                "type": "number",
+                "instructions": "",
+                "required": 0,
+                "wrapper": {
+                    "width": "20",
+                    "class": "",
+                    "id": ""
+                },
+                "append": "MPH"
+            },
+            {
+                "key": "field_erh_manufacturer_range",
+                "label": "Manufacturer Range",
+                "name": "manufacturer_range",
+                "type": "number",
+                "instructions": "",
+                "required": 0,
+                "wrapper": {
+                    "width": "20",
+                    "class": "",
+                    "id": ""
+                },
+                "append": "miles"
+            },
+            {
+                "key": "field_erh_weight",
+                "label": "Weight",
+                "name": "weight",
+                "type": "number",
+                "instructions": "",
+                "required": 0,
+                "wrapper": {
+                    "width": "20",
+                    "class": "",
+                    "id": ""
+                },
+                "append": "lbs",
+                "step": 0.1
+            },
+            {
+                "key": "field_erh_max_weight_capacity",
+                "label": "Max Weight Capacity",
+                "name": "max_weight_capacity",
+                "type": "number",
+                "instructions": "",
+                "required": 0,
+                "wrapper": {
+                    "width": "20",
+                    "class": "",
+                    "id": ""
+                },
+                "append": "lbs"
+            },
+            {
+                "key": "field_erh_max_incline",
+                "label": "Max Incline",
+                "name": "max_incline",
+                "type": "number",
+                "instructions": "",
+                "required": 0,
+                "wrapper": {
+                    "width": "20",
+                    "class": "",
+                    "id": ""
+                },
+                "append": "°"
+            }
+        ],
+        "location": [
+            [
+                {
+                    "param": "post_type",
+                    "operator": "==",
+                    "value": "products"
+                }
+            ]
+        ],
+        "menu_order": 1,
+        "position": "normal",
+        "style": "default",
+        "label_placement": "top",
+        "instruction_placement": "label",
+        "active": true
+    },
+    {
+        "key": "group_erh_products_performance",
+        "title": "Products - Performance Tests",
+        "fields": [
+            {
+                "key": "field_erh_tested_top_speed",
+                "label": "Tested Top Speed",
+                "name": "tested_top_speed",
+                "type": "number",
+                "instructions": "",
+                "required": 0,
+                "wrapper": {
+                    "width": "25",
+                    "class": "",
+                    "id": ""
+                },
+                "append": "MPH",
+                "step": 0.1
+            },
+            {
+                "key": "field_erh_brake_distance",
+                "label": "Brake Distance",
+                "name": "brake_distance",
+                "type": "number",
+                "instructions": "From 15 MPH",
+                "required": 0,
+                "wrapper": {
+                    "width": "25",
+                    "class": "",
+                    "id": ""
+                },
+                "append": "ft",
+                "step": 0.1
+            },
+            {
+                "key": "field_erh_hill_climbing",
+                "label": "Hill Climbing",
+                "name": "hill_climbing",
+                "type": "number",
+                "instructions": "Time to climb test hill",
+                "required": 0,
+                "wrapper": {
+                    "width": "25",
+                    "class": "",
+                    "id": ""
+                },
+                "append": "seconds",
+                "step": 0.1
+            },
+            {
+                "key": "field_erh_ideal_incline",
+                "label": "Ideal Incline",
+                "name": "ideal_incline",
+                "type": "number",
+                "instructions": "Recommended max grade",
+                "required": 0,
+                "wrapper": {
+                    "width": "25",
+                    "class": "",
+                    "id": ""
+                },
+                "append": "°"
+            },
+            {
+                "key": "field_erh_range_tests",
+                "label": "Range Tests",
+                "name": "range_tests",
+                "type": "group",
+                "instructions": "",
+                "required": 0,
+                "wrapper": {
+                    "width": "",
+                    "class": "",
+                    "id": ""
+                },
+                "layout": "table",
+                "sub_fields": [
+                    {
+                        "key": "field_erh_tested_range_fast",
+                        "label": "Range (Speed Priority)",
+                        "name": "fast",
+                        "type": "number",
+                        "wrapper": { "width": "16" },
+                        "append": "miles",
+                        "step": 0.1
+                    },
+                    {
+                        "key": "field_erh_tested_range_regular",
+                        "label": "Range (Regular)",
+                        "name": "regular",
+                        "type": "number",
+                        "wrapper": { "width": "17" },
+                        "append": "miles",
+                        "step": 0.1
+                    },
+                    {
+                        "key": "field_erh_tested_range_slow",
+                        "label": "Range (Range Priority)",
+                        "name": "slow",
+                        "type": "number",
+                        "wrapper": { "width": "17" },
+                        "append": "miles",
+                        "step": 0.1
+                    },
+                    {
+                        "key": "field_erh_tested_range_avg_speed_fast",
+                        "label": "Avg Speed (Fast)",
+                        "name": "avg_speed_fast",
+                        "type": "number",
+                        "wrapper": { "width": "16" },
+                        "append": "MPH",
+                        "step": 0.1
+                    },
+                    {
+                        "key": "field_erh_tested_range_avg_speed_regular",
+                        "label": "Avg Speed (Regular)",
+                        "name": "avg_speed_regular",
+                        "type": "number",
+                        "wrapper": { "width": "17" },
+                        "append": "MPH",
+                        "step": 0.1
+                    },
+                    {
+                        "key": "field_erh_tested_range_avg_speed_slow",
+                        "label": "Avg Speed (Slow)",
+                        "name": "avg_speed_slow",
+                        "type": "number",
+                        "wrapper": { "width": "17" },
+                        "append": "MPH",
+                        "step": 0.1
+                    }
+                ]
+            },
+            {
+                "key": "field_erh_acceleration_tests",
+                "label": "Acceleration Tests",
+                "name": "acceleration",
+                "type": "group",
+                "instructions": "",
+                "required": 0,
+                "wrapper": {
+                    "width": "",
+                    "class": "",
+                    "id": ""
+                },
+                "layout": "table",
+                "sub_fields": [
+                    {
+                        "key": "field_erh_accel_0_15",
+                        "label": "0-15 MPH",
+                        "name": "to_15",
+                        "type": "number",
+                        "wrapper": { "width": "20" },
+                        "append": "sec",
+                        "step": 0.01
+                    },
+                    {
+                        "key": "field_erh_accel_0_20",
+                        "label": "0-20 MPH",
+                        "name": "to_20",
+                        "type": "number",
+                        "wrapper": { "width": "20" },
+                        "append": "sec",
+                        "step": 0.01
+                    },
+                    {
+                        "key": "field_erh_accel_0_25",
+                        "label": "0-25 MPH",
+                        "name": "to_25",
+                        "type": "number",
+                        "wrapper": { "width": "20" },
+                        "append": "sec",
+                        "step": 0.01
+                    },
+                    {
+                        "key": "field_erh_accel_0_30",
+                        "label": "0-30 MPH",
+                        "name": "to_30",
+                        "type": "number",
+                        "wrapper": { "width": "20" },
+                        "append": "sec",
+                        "step": 0.01
+                    },
+                    {
+                        "key": "field_erh_accel_0_top",
+                        "label": "0-Top Speed",
+                        "name": "to_top",
+                        "type": "number",
+                        "wrapper": { "width": "20" },
+                        "append": "sec",
+                        "step": 0.01
+                    }
+                ]
+            },
+            {
+                "key": "field_erh_fastest_tests",
+                "label": "Fastest Acceleration Tests",
+                "name": "fastest",
+                "type": "group",
+                "instructions": "Best recorded times (e.g., with running start or downhill)",
+                "required": 0,
+                "wrapper": {
+                    "width": "",
+                    "class": "",
+                    "id": ""
+                },
+                "layout": "table",
+                "sub_fields": [
+                    {
+                        "key": "field_erh_fastest_0_15",
+                        "label": "0-15 MPH",
+                        "name": "to_15",
+                        "type": "number",
+                        "wrapper": { "width": "20" },
+                        "append": "sec",
+                        "step": 0.01
+                    },
+                    {
+                        "key": "field_erh_fastest_0_20",
+                        "label": "0-20 MPH",
+                        "name": "to_20",
+                        "type": "number",
+                        "wrapper": { "width": "20" },
+                        "append": "sec",
+                        "step": 0.01
+                    },
+                    {
+                        "key": "field_erh_fastest_0_25",
+                        "label": "0-25 MPH",
+                        "name": "to_25",
+                        "type": "number",
+                        "wrapper": { "width": "20" },
+                        "append": "sec",
+                        "step": 0.01
+                    },
+                    {
+                        "key": "field_erh_fastest_0_30",
+                        "label": "0-30 MPH",
+                        "name": "to_30",
+                        "type": "number",
+                        "wrapper": { "width": "20" },
+                        "append": "sec",
+                        "step": 0.01
+                    },
+                    {
+                        "key": "field_erh_fastest_0_top",
+                        "label": "0-Top Speed",
+                        "name": "to_top",
+                        "type": "number",
+                        "wrapper": { "width": "20" },
+                        "append": "sec",
+                        "step": 0.01
+                    }
+                ]
+            }
+        ],
+        "location": [
+            [
+                {
+                    "param": "post_type",
+                    "operator": "==",
+                    "value": "products"
+                }
+            ]
+        ],
+        "menu_order": 2,
+        "position": "normal",
+        "style": "default",
+        "label_placement": "top",
+        "instruction_placement": "label",
+        "active": true
+    },
+    {
+        "key": "group_erh_products_battery",
+        "title": "Products - Battery",
+        "fields": [
+            {
+                "key": "field_erh_battery_capacity",
+                "label": "Capacity",
+                "name": "battery_capacity",
+                "type": "number",
+                "instructions": "",
+                "required": 0,
+                "wrapper": {
+                    "width": "20",
+                    "class": "",
+                    "id": ""
+                },
+                "append": "Wh",
+                "step": 0.1
+            },
+            {
+                "key": "field_erh_battery_voltage",
+                "label": "Voltage",
+                "name": "battery_voltage",
+                "type": "number",
+                "instructions": "",
+                "required": 0,
+                "wrapper": {
+                    "width": "15",
+                    "class": "",
+                    "id": ""
+                },
+                "append": "V",
+                "step": 0.1
+            },
+            {
+                "key": "field_erh_battery_amphours",
+                "label": "Amp Hours",
+                "name": "battery_amphours",
+                "type": "number",
+                "instructions": "",
+                "required": 0,
+                "wrapper": {
+                    "width": "15",
+                    "class": "",
+                    "id": ""
+                },
+                "append": "Ah",
+                "step": 0.1
+            },
+            {
+                "key": "field_erh_battery_type",
+                "label": "Battery Type",
+                "name": "battery_type",
+                "type": "text",
+                "instructions": "",
+                "required": 0,
+                "wrapper": {
+                    "width": "20",
+                    "class": "",
+                    "id": ""
+                },
+                "default_value": "Lithium-ion"
+            },
+            {
+                "key": "field_erh_charging_time",
+                "label": "Charging Time",
+                "name": "charging_time",
+                "type": "number",
+                "instructions": "",
+                "required": 0,
+                "wrapper": {
+                    "width": "15",
+                    "class": "",
+                    "id": ""
+                },
+                "append": "hours",
+                "step": 0.1
+            },
+            {
+                "key": "field_erh_charger_output",
+                "label": "Charger Output",
+                "name": "charger_output",
+                "type": "number",
+                "instructions": "",
+                "required": 0,
+                "wrapper": {
+                    "width": "15",
+                    "class": "",
+                    "id": ""
+                },
+                "append": "A",
+                "step": 0.1
+            }
+        ],
+        "location": [
+            [
+                {
+                    "param": "post_type",
+                    "operator": "==",
+                    "value": "products"
+                }
+            ]
+        ],
+        "menu_order": 3,
+        "position": "normal",
+        "style": "default",
+        "label_placement": "top",
+        "instruction_placement": "label",
+        "active": true
+    },
+    {
+        "key": "group_erh_products_motor",
+        "title": "Products - Motor",
+        "fields": [
+            {
+                "key": "field_erh_motor_configuration",
+                "label": "Motor Configuration",
+                "name": "motor_configuration",
+                "type": "select",
+                "instructions": "",
+                "required": 0,
+                "wrapper": {
+                    "width": "20",
+                    "class": "",
+                    "id": ""
+                },
+                "choices": {
+                    "single": "Single",
+                    "dual": "Dual",
+                    "quad": "Quad (4WD)"
+                },
+                "default_value": "single",
+                "return_format": "value"
+            },
+            {
+                "key": "field_erh_motor_type",
+                "label": "Motor Type",
+                "name": "motor_type",
+                "type": "select",
+                "instructions": "",
+                "required": 0,
+                "wrapper": {
+                    "width": "20",
+                    "class": "",
+                    "id": ""
+                },
+                "choices": {
+                    "hub": "Hub",
+                    "belt": "Belt",
+                    "mid_drive": "Mid-Drive",
+                    "direct_drive": "Direct Drive",
+                    "gear_drive": "Gear Drive"
+                },
+                "default_value": "hub",
+                "return_format": "value"
+            },
+            {
+                "key": "field_erh_motor_position",
+                "label": "Motor Position",
+                "name": "motor_position",
+                "type": "select",
+                "instructions": "",
+                "required": 0,
+                "wrapper": {
+                    "width": "20",
+                    "class": "",
+                    "id": ""
+                },
+                "choices": {
+                    "front": "Front",
+                    "rear": "Rear",
+                    "both": "Front & Rear",
+                    "mid": "Mid",
+                    "hub": "In-Wheel Hub"
+                },
+                "return_format": "value",
+                "allow_null": 1
+            },
+            {
+                "key": "field_erh_motor_nominal_wattage",
+                "label": "Nominal Wattage",
+                "name": "motor_nominal_wattage",
+                "type": "number",
+                "instructions": "Combined if dual/quad",
+                "required": 0,
+                "wrapper": {
+                    "width": "20",
+                    "class": "",
+                    "id": ""
+                },
+                "append": "W"
+            },
+            {
+                "key": "field_erh_motor_peak_wattage",
+                "label": "Peak Wattage",
+                "name": "motor_peak_wattage",
+                "type": "number",
+                "instructions": "Combined if dual/quad",
+                "required": 0,
+                "wrapper": {
+                    "width": "20",
+                    "class": "",
+                    "id": ""
+                },
+                "append": "W"
+            },
+            {
+                "key": "field_erh_motor_torque",
+                "label": "Torque",
+                "name": "motor_torque",
+                "type": "number",
+                "instructions": "",
+                "required": 0,
+                "wrapper": {
+                    "width": "20",
+                    "class": "",
+                    "id": ""
+                },
+                "append": "Nm"
+            }
+        ],
+        "location": [
+            [
+                {
+                    "param": "post_type",
+                    "operator": "==",
+                    "value": "products"
+                }
+            ]
+        ],
+        "menu_order": 4,
+        "position": "normal",
+        "style": "default",
+        "label_placement": "top",
+        "instruction_placement": "label",
+        "active": true
+    },
+    {
+        "key": "group_erh_products_brakes",
+        "title": "Products - Brakes",
+        "fields": [
+            {
+                "key": "field_erh_brake_front",
+                "label": "Front Brake",
+                "name": "brake_front",
+                "type": "select",
+                "instructions": "",
+                "required": 0,
+                "wrapper": {
+                    "width": "25",
+                    "class": "",
+                    "id": ""
+                },
+                "choices": {
+                    "none": "None",
+                    "drum": "Drum",
+                    "mechanical_disc": "Mechanical Disc",
+                    "hydraulic_disc": "Hydraulic Disc",
+                    "regenerative": "Regenerative Only"
+                },
+                "return_format": "value",
+                "allow_null": 1
+            },
+            {
+                "key": "field_erh_brake_rear",
+                "label": "Rear Brake",
+                "name": "brake_rear",
+                "type": "select",
+                "instructions": "",
+                "required": 0,
+                "wrapper": {
+                    "width": "25",
+                    "class": "",
+                    "id": ""
+                },
+                "choices": {
+                    "none": "None",
+                    "drum": "Drum",
+                    "mechanical_disc": "Mechanical Disc",
+                    "hydraulic_disc": "Hydraulic Disc",
+                    "foot_brake": "Foot Brake",
+                    "regenerative": "Regenerative Only"
+                },
+                "return_format": "value",
+                "allow_null": 1
+            },
+            {
+                "key": "field_erh_brake_regen",
+                "label": "Regenerative Braking",
+                "name": "brake_regen",
+                "type": "true_false",
+                "instructions": "",
+                "required": 0,
+                "wrapper": {
+                    "width": "25",
+                    "class": "",
+                    "id": ""
+                },
+                "default_value": 0,
+                "ui": 1,
+                "ui_on_text": "Yes",
+                "ui_off_text": "No"
+            },
+            {
+                "key": "field_erh_brake_abs",
+                "label": "ABS",
+                "name": "brake_abs",
+                "type": "true_false",
+                "instructions": "",
+                "required": 0,
+                "wrapper": {
+                    "width": "25",
+                    "class": "",
+                    "id": ""
+                },
+                "default_value": 0,
+                "ui": 1,
+                "ui_on_text": "Yes",
+                "ui_off_text": "No"
+            }
+        ],
+        "location": [
+            [
+                {
+                    "param": "post_type",
+                    "operator": "==",
+                    "value": "products"
+                }
+            ]
+        ],
+        "menu_order": 5,
+        "position": "normal",
+        "style": "default",
+        "label_placement": "top",
+        "instruction_placement": "label",
+        "active": true
+    },
+    {
+        "key": "group_erh_escooter",
+        "title": "Electric Scooter Specs",
+        "fields": [
+            {
+                "key": "field_erh_escooter_dimensions",
+                "label": "Dimensions",
+                "name": "escooter_dimensions",
+                "type": "group",
+                "instructions": "",
+                "required": 0,
+                "layout": "block",
+                "sub_fields": [
+                    {
+                        "key": "field_erh_esc_deck_length",
+                        "label": "Deck Length",
+                        "name": "deck_length",
+                        "type": "number",
+                        "wrapper": { "width": "16" },
+                        "append": "in",
+                        "step": 0.1
+                    },
+                    {
+                        "key": "field_erh_esc_deck_width",
+                        "label": "Deck Width",
+                        "name": "deck_width",
+                        "type": "number",
+                        "wrapper": { "width": "16" },
+                        "append": "in",
+                        "step": 0.1
+                    },
+                    {
+                        "key": "field_erh_esc_handlebar_height",
+                        "label": "Handlebar Height",
+                        "name": "handlebar_height",
+                        "type": "number",
+                        "wrapper": { "width": "17" },
+                        "append": "in",
+                        "step": 0.1
+                    },
+                    {
+                        "key": "field_erh_esc_ground_clearance",
+                        "label": "Ground Clearance",
+                        "name": "ground_clearance",
+                        "type": "number",
+                        "wrapper": { "width": "17" },
+                        "append": "in",
+                        "step": 0.1
+                    },
+                    {
+                        "key": "field_erh_esc_folded_length",
+                        "label": "Folded Length",
+                        "name": "folded_length",
+                        "type": "number",
+                        "wrapper": { "width": "17" },
+                        "append": "in",
+                        "step": 0.1
+                    },
+                    {
+                        "key": "field_erh_esc_folded_height",
+                        "label": "Folded Height",
+                        "name": "folded_height",
+                        "type": "number",
+                        "wrapper": { "width": "17" },
+                        "append": "in",
+                        "step": 0.1
+                    }
+                ]
+            },
+            {
+                "key": "field_erh_escooter_wheels",
+                "label": "Wheels & Tires",
+                "name": "escooter_wheels",
+                "type": "group",
+                "instructions": "",
+                "required": 0,
+                "layout": "block",
+                "sub_fields": [
+                    {
+                        "key": "field_erh_esc_tire_size_front",
+                        "label": "Front Tire Size",
+                        "name": "tire_size_front",
+                        "type": "number",
+                        "wrapper": { "width": "20" },
+                        "append": "in",
+                        "step": 0.1
+                    },
+                    {
+                        "key": "field_erh_esc_tire_size_rear",
+                        "label": "Rear Tire Size",
+                        "name": "tire_size_rear",
+                        "type": "number",
+                        "wrapper": { "width": "20" },
+                        "append": "in",
+                        "step": 0.1
+                    },
+                    {
+                        "key": "field_erh_esc_tire_type",
+                        "label": "Tire Type",
+                        "name": "tire_type",
+                        "type": "select",
+                        "wrapper": { "width": "20" },
+                        "choices": {
+                            "pneumatic": "Pneumatic (Air)",
+                            "solid": "Solid",
+                            "honeycomb": "Honeycomb",
+                            "self_healing": "Self-Healing",
+                            "tubeless": "Tubeless"
+                        },
+                        "return_format": "value",
+                        "allow_null": 1
+                    },
+                    {
+                        "key": "field_erh_esc_suspension_front",
+                        "label": "Front Suspension",
+                        "name": "suspension_front",
+                        "type": "select",
+                        "wrapper": { "width": "20" },
+                        "choices": {
+                            "none": "None",
+                            "spring": "Spring",
+                            "hydraulic": "Hydraulic",
+                            "air": "Air",
+                            "rubber": "Rubber"
+                        },
+                        "return_format": "value",
+                        "allow_null": 1
+                    },
+                    {
+                        "key": "field_erh_esc_suspension_rear",
+                        "label": "Rear Suspension",
+                        "name": "suspension_rear",
+                        "type": "select",
+                        "wrapper": { "width": "20" },
+                        "choices": {
+                            "none": "None",
+                            "spring": "Spring",
+                            "hydraulic": "Hydraulic",
+                            "air": "Air",
+                            "swingarm": "Swingarm"
+                        },
+                        "return_format": "value",
+                        "allow_null": 1
+                    }
+                ]
+            },
+            {
+                "key": "field_erh_escooter_lighting",
+                "label": "Lighting",
+                "name": "escooter_lighting",
+                "type": "group",
+                "instructions": "",
+                "required": 0,
+                "layout": "block",
+                "sub_fields": [
+                    {
+                        "key": "field_erh_esc_front_light",
+                        "label": "Front Light",
+                        "name": "front_light",
+                        "type": "true_false",
+                        "wrapper": { "width": "20" },
+                        "ui": 1
+                    },
+                    {
+                        "key": "field_erh_esc_rear_light",
+                        "label": "Rear Light",
+                        "name": "rear_light",
+                        "type": "true_false",
+                        "wrapper": { "width": "20" },
+                        "ui": 1
+                    },
+                    {
+                        "key": "field_erh_esc_deck_lights",
+                        "label": "Deck Lights",
+                        "name": "deck_lights",
+                        "type": "true_false",
+                        "wrapper": { "width": "20" },
+                        "ui": 1
+                    },
+                    {
+                        "key": "field_erh_esc_turn_signals",
+                        "label": "Turn Signals",
+                        "name": "turn_signals",
+                        "type": "true_false",
+                        "wrapper": { "width": "20" },
+                        "ui": 1
+                    },
+                    {
+                        "key": "field_erh_esc_front_light_lumens",
+                        "label": "Front Light (Lumens)",
+                        "name": "front_light_lumens",
+                        "type": "number",
+                        "wrapper": { "width": "20" },
+                        "append": "lm"
+                    }
+                ]
+            },
+            {
+                "key": "field_erh_escooter_other",
+                "label": "Other Specs",
+                "name": "escooter_other",
+                "type": "group",
+                "instructions": "",
+                "required": 0,
+                "layout": "block",
+                "sub_fields": [
+                    {
+                        "key": "field_erh_esc_ip_rating",
+                        "label": "IP Rating",
+                        "name": "ip_rating",
+                        "type": "text",
+                        "wrapper": { "width": "15" },
+                        "placeholder": "e.g., IP54"
+                    },
+                    {
+                        "key": "field_erh_esc_throttle_type",
+                        "label": "Throttle Type",
+                        "name": "throttle_type",
+                        "type": "select",
+                        "wrapper": { "width": "20" },
+                        "choices": {
+                            "thumb": "Thumb",
+                            "trigger": "Trigger",
+                            "half_twist": "Half-Twist",
+                            "full_twist": "Full-Twist",
+                            "wheel": "Wheel"
+                        },
+                        "return_format": "value",
+                        "allow_null": 1
+                    },
+                    {
+                        "key": "field_erh_esc_fold_location",
+                        "label": "Fold Location",
+                        "name": "fold_location",
+                        "type": "select",
+                        "wrapper": { "width": "15" },
+                        "choices": {
+                            "stem": "Stem",
+                            "neck": "Neck",
+                            "none": "None"
+                        },
+                        "return_format": "value",
+                        "allow_null": 1
+                    },
+                    {
+                        "key": "field_erh_esc_terrain",
+                        "label": "Terrain",
+                        "name": "terrain",
+                        "type": "select",
+                        "wrapper": { "width": "15" },
+                        "choices": {
+                            "street": "Street",
+                            "off_road": "Off-road",
+                            "hybrid": "Hybrid"
+                        },
+                        "return_format": "value",
+                        "allow_null": 1
+                    },
+                    {
+                        "key": "field_erh_esc_stem_type",
+                        "label": "Stem Type",
+                        "name": "stem_type",
+                        "type": "select",
+                        "wrapper": { "width": "15" },
+                        "choices": {
+                            "fixed": "Fixed",
+                            "adjustable": "Adjustable"
+                        },
+                        "return_format": "value",
+                        "allow_null": 1
+                    },
+                    {
+                        "key": "field_erh_esc_display",
+                        "label": "Display Type",
+                        "name": "display_type",
+                        "type": "select",
+                        "wrapper": { "width": "20" },
+                        "choices": {
+                            "none": "None",
+                            "led": "LED",
+                            "lcd": "LCD",
+                            "oled": "OLED",
+                            "tft": "TFT Color"
+                        },
+                        "return_format": "value",
+                        "allow_null": 1
+                    }
+                ]
+            },
+            {
+                "key": "field_erh_escooter_features",
+                "label": "Features",
+                "name": "escooter_features",
+                "type": "checkbox",
+                "instructions": "",
+                "required": 0,
+                "wrapper": {
+                    "width": "",
+                    "class": "",
+                    "id": ""
+                },
+                "choices": {
+                    "app": "App",
+                    "speed_modes": "Speed Modes",
+                    "cruise_control": "Cruise Control",
+                    "quick_swap_battery": "Quick-Swap Battery",
+                    "folding": "Folding Mechanism",
+                    "seat_addon": "Seat Add-On",
+                    "foldable_handlebars": "Foldable Handlebars",
+                    "zero_start": "Zero-Start",
+                    "push_to_start": "Push-To-Start",
+                    "turn_signals": "Turn Signals",
+                    "brake_adjustment": "Brake Curve Adjustment",
+                    "acceleration_adjustment": "Acceleration Adjustment",
+                    "self_healing_tires": "Self-Healing Tires",
+                    "speed_limiting": "Speed Limiting",
+                    "ota_updates": "OTA Firmware Updates",
+                    "adjustable_suspension": "Adjustable Suspension",
+                    "steering_dampener": "Steering Dampener",
+                    "location_tracking": "Location Tracking",
+                    "electronic_horn": "Electronic Horn",
+                    "nfc_unlock": "NFC Unlock",
+                    "fingerprint_unlock": "Fingerprint Unlock"
+                },
+                "return_format": "value",
+                "layout": "horizontal"
+            }
+        ],
+        "location": [
+            [
+                {
+                    "param": "post_type",
+                    "operator": "==",
+                    "value": "products"
+                },
+                {
+                    "param": "taxonomy",
+                    "operator": "==",
+                    "value": "product_type:electric-scooter"
+                }
+            ]
+        ],
+        "menu_order": 10,
+        "position": "normal",
+        "style": "default",
+        "label_placement": "top",
+        "instruction_placement": "label",
+        "active": true
+    },
+    {
+        "key": "group_erh_ebike",
+        "title": "Electric Bike Specs",
+        "fields": [
+            {
+                "key": "field_erh_ebike_category",
+                "label": "Category",
+                "name": "ebike_category",
+                "type": "select",
+                "instructions": "",
+                "required": 0,
+                "wrapper": {
+                    "width": "25",
+                    "class": "",
+                    "id": ""
+                },
+                "choices": {
+                    "commuter": "Commuter",
+                    "mountain": "Mountain",
+                    "road": "Road",
+                    "cargo": "Cargo",
+                    "folding": "Folding",
+                    "fat_tire": "Fat Tire",
+                    "gravel": "Gravel",
+                    "hybrid": "Hybrid",
+                    "cruiser": "Cruiser",
+                    "high_performance": "High Performance"
+                },
+                "return_format": "value",
+                "multiple": 1,
+                "allow_null": 1,
+                "ui": 1
+            },
+            {
+                "key": "field_erh_ebike_motor",
+                "label": "Motor Details",
+                "name": "ebike_motor",
+                "type": "group",
+                "instructions": "",
+                "required": 0,
+                "layout": "block",
+                "sub_fields": [
+                    {
+                        "key": "field_erh_eb_motor_brand",
+                        "label": "Motor Brand",
+                        "name": "brand",
+                        "type": "text",
+                        "wrapper": { "width": "20" }
+                    },
+                    {
+                        "key": "field_erh_eb_motor_model",
+                        "label": "Motor Model",
+                        "name": "model",
+                        "type": "text",
+                        "wrapper": { "width": "20" }
+                    },
+                    {
+                        "key": "field_erh_eb_assist_levels",
+                        "label": "Assist Levels",
+                        "name": "assist_levels",
+                        "type": "number",
+                        "wrapper": { "width": "15" }
+                    },
+                    {
+                        "key": "field_erh_eb_sensor_type",
+                        "label": "Sensor Type",
+                        "name": "sensor_type",
+                        "type": "select",
+                        "wrapper": { "width": "20" },
+                        "choices": {
+                            "torque": "Torque",
+                            "cadence": "Cadence",
+                            "both": "Both",
+                            "unknown": "Unknown"
+                        },
+                        "default_value": "unknown",
+                        "return_format": "value"
+                    }
+                ]
+            },
+            {
+                "key": "field_erh_ebike_battery",
+                "label": "Battery Details",
+                "name": "ebike_battery",
+                "type": "group",
+                "instructions": "",
+                "required": 0,
+                "layout": "block",
+                "sub_fields": [
+                    {
+                        "key": "field_erh_eb_battery_position",
+                        "label": "Battery Position",
+                        "name": "position",
+                        "type": "select",
+                        "wrapper": { "width": "25" },
+                        "choices": {
+                            "downtube": "Downtube",
+                            "rear_rack": "Rear Rack",
+                            "integrated": "Integrated",
+                            "seat_tube": "Seat Tube",
+                            "top_tube": "Top Tube",
+                            "dual": "Dual",
+                            "unknown": "Unknown"
+                        },
+                        "default_value": "unknown",
+                        "return_format": "value"
+                    },
+                    {
+                        "key": "field_erh_eb_battery_removable",
+                        "label": "Removable Battery",
+                        "name": "removable",
+                        "type": "true_false",
+                        "wrapper": { "width": "25" },
+                        "ui": 1
+                    }
+                ]
+            },
+            {
+                "key": "field_erh_ebike_class",
+                "label": "Speed & Class",
+                "name": "ebike_class",
+                "type": "group",
+                "instructions": "",
+                "required": 0,
+                "layout": "block",
+                "sub_fields": [
+                    {
+                        "key": "field_erh_eb_class",
+                        "label": "E-Bike Class",
+                        "name": "class",
+                        "type": "checkbox",
+                        "wrapper": { "width": "50" },
+                        "choices": {
+                            "class_1": "Class 1 (Pedal assist, 20 mph)",
+                            "class_2": "Class 2 (Throttle, 20 mph)",
+                            "class_3": "Class 3 (Pedal assist, 28 mph)",
+                            "eu_pedelec": "EU Pedelec (25 km/h)",
+                            "eu_s_pedelec": "EU S-Pedelec (45 km/h)",
+                            "uk_eapc": "UK EAPC"
+                        },
+                        "return_format": "value",
+                        "layout": "horizontal"
+                    },
+                    {
+                        "key": "field_erh_eb_top_assist_speed",
+                        "label": "Top Assist Speed",
+                        "name": "top_assist_speed",
+                        "type": "number",
+                        "wrapper": { "width": "16" },
+                        "append": "MPH"
+                    },
+                    {
+                        "key": "field_erh_eb_throttle_top_speed",
+                        "label": "Throttle Top Speed",
+                        "name": "throttle_top_speed",
+                        "type": "number",
+                        "wrapper": { "width": "17" },
+                        "append": "MPH"
+                    },
+                    {
+                        "key": "field_erh_eb_has_throttle",
+                        "label": "Has Throttle",
+                        "name": "has_throttle",
+                        "type": "true_false",
+                        "wrapper": { "width": "17" },
+                        "ui": 1
+                    }
+                ]
+            },
+            {
+                "key": "field_erh_ebike_drivetrain",
+                "label": "Drivetrain",
+                "name": "ebike_drivetrain",
+                "type": "group",
+                "instructions": "",
+                "required": 0,
+                "layout": "block",
+                "sub_fields": [
+                    {
+                        "key": "field_erh_eb_gears",
+                        "label": "Gears",
+                        "name": "gears",
+                        "type": "number",
+                        "wrapper": { "width": "15" }
+                    },
+                    {
+                        "key": "field_erh_eb_derailleur_type",
+                        "label": "Derailleur Type",
+                        "name": "derailleur_type",
+                        "type": "select",
+                        "wrapper": { "width": "20" },
+                        "choices": {
+                            "external": "External",
+                            "internal": "Internal Hub",
+                            "single_speed": "Single Speed",
+                            "cvt": "CVT"
+                        },
+                        "return_format": "value",
+                        "allow_null": 1
+                    },
+                    {
+                        "key": "field_erh_eb_derailleur_brand",
+                        "label": "Derailleur Brand",
+                        "name": "derailleur_brand",
+                        "type": "text",
+                        "wrapper": { "width": "20" }
+                    },
+                    {
+                        "key": "field_erh_eb_chain_type",
+                        "label": "Chain/Belt",
+                        "name": "chain_type",
+                        "type": "select",
+                        "wrapper": { "width": "20" },
+                        "choices": {
+                            "chain": "Chain",
+                            "belt": "Belt Drive"
+                        },
+                        "return_format": "value",
+                        "allow_null": 1
+                    }
+                ]
+            },
+            {
+                "key": "field_erh_ebike_brakes",
+                "label": "Brake Details",
+                "name": "ebike_brakes",
+                "type": "group",
+                "instructions": "",
+                "required": 0,
+                "layout": "block",
+                "sub_fields": [
+                    {
+                        "key": "field_erh_eb_brake_brand",
+                        "label": "Brake Brand",
+                        "name": "brand",
+                        "type": "text",
+                        "wrapper": { "width": "25" }
+                    },
+                    {
+                        "key": "field_erh_eb_rotor_size_front",
+                        "label": "Front Rotor",
+                        "name": "rotor_front",
+                        "type": "number",
+                        "wrapper": { "width": "25" },
+                        "append": "mm"
+                    },
+                    {
+                        "key": "field_erh_eb_rotor_size_rear",
+                        "label": "Rear Rotor",
+                        "name": "rotor_rear",
+                        "type": "number",
+                        "wrapper": { "width": "25" },
+                        "append": "mm"
+                    }
+                ]
+            },
+            {
+                "key": "field_erh_ebike_frame",
+                "label": "Frame & Geometry",
+                "name": "ebike_frame",
+                "type": "group",
+                "instructions": "",
+                "required": 0,
+                "layout": "block",
+                "sub_fields": [
+                    {
+                        "key": "field_erh_eb_frame_material",
+                        "label": "Frame Material",
+                        "name": "material",
+                        "type": "select",
+                        "wrapper": { "width": "20" },
+                        "choices": {
+                            "aluminum": "Aluminum",
+                            "steel": "Steel",
+                            "carbon": "Carbon Fiber",
+                            "titanium": "Titanium",
+                            "magnesium": "Magnesium"
+                        },
+                        "return_format": "value",
+                        "allow_null": 1
+                    },
+                    {
+                        "key": "field_erh_eb_step_through",
+                        "label": "Step-Through",
+                        "name": "step_through",
+                        "type": "true_false",
+                        "wrapper": { "width": "15" },
+                        "ui": 1
+                    },
+                    {
+                        "key": "field_erh_eb_foldable",
+                        "label": "Foldable",
+                        "name": "foldable",
+                        "type": "true_false",
+                        "wrapper": { "width": "15" },
+                        "ui": 1
+                    },
+                    {
+                        "key": "field_erh_eb_wheel_size",
+                        "label": "Wheel Size",
+                        "name": "wheel_size",
+                        "type": "number",
+                        "wrapper": { "width": "15" },
+                        "append": "in",
+                        "step": 0.1
+                    },
+                    {
+                        "key": "field_erh_eb_tire_width",
+                        "label": "Tire Width",
+                        "name": "tire_width",
+                        "type": "number",
+                        "wrapper": { "width": "15" },
+                        "append": "in",
+                        "step": 0.1
+                    },
+                    {
+                        "key": "field_erh_eb_suspension",
+                        "label": "Suspension",
+                        "name": "suspension",
+                        "type": "select",
+                        "wrapper": { "width": "20" },
+                        "choices": {
+                            "none": "None (Rigid)",
+                            "front": "Front Only",
+                            "full": "Full Suspension"
+                        },
+                        "return_format": "value",
+                        "allow_null": 1
+                    }
+                ]
+            },
+            {
+                "key": "field_erh_ebike_features",
+                "label": "Features",
+                "name": "ebike_features",
+                "type": "checkbox",
+                "instructions": "",
+                "required": 0,
+                "wrapper": {
+                    "width": "",
+                    "class": "",
+                    "id": ""
+                },
+                "choices": {
+                    "app": "App Connectivity",
+                    "integrated_lights": "Integrated Lights",
+                    "rear_rack": "Rear Rack",
+                    "fenders": "Fenders",
+                    "kickstand": "Kickstand",
+                    "walk_mode": "Walk Mode",
+                    "usb_charging": "USB Charging Port",
+                    "anti_theft": "Anti-Theft System",
+                    "gps": "GPS Tracking"
+                },
+                "return_format": "value",
+                "layout": "horizontal"
+            }
+        ],
+        "location": [
+            [
+                {
+                    "param": "post_type",
+                    "operator": "==",
+                    "value": "products"
+                },
+                {
+                    "param": "taxonomy",
+                    "operator": "==",
+                    "value": "product_type:electric-bike"
+                }
+            ]
+        ],
+        "menu_order": 11,
+        "position": "normal",
+        "style": "default",
+        "label_placement": "top",
+        "instruction_placement": "label",
+        "active": true
+    },
+    {
+        "key": "group_erh_euc",
+        "title": "Electric Unicycle Specs",
+        "fields": [
+            {
+                "key": "field_erh_euc_wheel",
+                "label": "Wheel",
+                "name": "euc_wheel",
+                "type": "group",
+                "instructions": "",
+                "required": 0,
+                "layout": "block",
+                "sub_fields": [
+                    {
+                        "key": "field_erh_euc_wheel_size",
+                        "label": "Wheel Size",
+                        "name": "size",
+                        "type": "number",
+                        "wrapper": { "width": "20" },
+                        "append": "in",
+                        "step": 0.1
+                    },
+                    {
+                        "key": "field_erh_euc_tire_type",
+                        "label": "Tire Type",
+                        "name": "tire_type",
+                        "type": "select",
+                        "wrapper": { "width": "20" },
+                        "choices": {
+                            "street": "Street",
+                            "knobby": "Knobby (Off-road)",
+                            "hybrid": "Hybrid"
+                        },
+                        "return_format": "value",
+                        "allow_null": 1
+                    },
+                    {
+                        "key": "field_erh_euc_tire_width",
+                        "label": "Tire Width",
+                        "name": "tire_width",
+                        "type": "number",
+                        "wrapper": { "width": "20" },
+                        "append": "in",
+                        "step": 0.1
+                    },
+                    {
+                        "key": "field_erh_euc_suspension",
+                        "label": "Suspension",
+                        "name": "suspension",
+                        "type": "true_false",
+                        "wrapper": { "width": "20" },
+                        "ui": 1
+                    },
+                    {
+                        "key": "field_erh_euc_suspension_travel",
+                        "label": "Suspension Travel",
+                        "name": "suspension_travel",
+                        "type": "number",
+                        "wrapper": { "width": "20" },
+                        "append": "mm"
+                    }
+                ]
+            },
+            {
+                "key": "field_erh_euc_pedals",
+                "label": "Pedals",
+                "name": "euc_pedals",
+                "type": "group",
+                "instructions": "",
+                "required": 0,
+                "layout": "block",
+                "sub_fields": [
+                    {
+                        "key": "field_erh_euc_pedal_height",
+                        "label": "Pedal Height",
+                        "name": "height",
+                        "type": "number",
+                        "wrapper": { "width": "25" },
+                        "append": "in",
+                        "step": 0.1
+                    },
+                    {
+                        "key": "field_erh_euc_pedal_size",
+                        "label": "Pedal Size",
+                        "name": "size",
+                        "type": "text",
+                        "wrapper": { "width": "25" }
+                    },
+                    {
+                        "key": "field_erh_euc_pedal_material",
+                        "label": "Pedal Material",
+                        "name": "material",
+                        "type": "select",
+                        "wrapper": { "width": "25" },
+                        "choices": {
+                            "aluminum": "Aluminum",
+                            "magnesium": "Magnesium",
+                            "plastic": "Plastic",
+                            "steel": "Steel"
+                        },
+                        "return_format": "value",
+                        "allow_null": 1
+                    },
+                    {
+                        "key": "field_erh_euc_spiked_pedals",
+                        "label": "Spiked Pedals",
+                        "name": "spiked",
+                        "type": "true_false",
+                        "wrapper": { "width": "25" },
+                        "ui": 1
+                    }
+                ]
+            },
+            {
+                "key": "field_erh_euc_other",
+                "label": "Other Specs",
+                "name": "euc_other",
+                "type": "group",
+                "instructions": "",
+                "required": 0,
+                "layout": "block",
+                "sub_fields": [
+                    {
+                        "key": "field_erh_euc_trolley_handle",
+                        "label": "Trolley Handle",
+                        "name": "trolley_handle",
+                        "type": "true_false",
+                        "wrapper": { "width": "20" },
+                        "ui": 1
+                    },
+                    {
+                        "key": "field_erh_euc_kickstand",
+                        "label": "Kickstand",
+                        "name": "kickstand",
+                        "type": "true_false",
+                        "wrapper": { "width": "20" },
+                        "ui": 1
+                    },
+                    {
+                        "key": "field_erh_euc_speakers",
+                        "label": "Built-in Speakers",
+                        "name": "speakers",
+                        "type": "true_false",
+                        "wrapper": { "width": "20" },
+                        "ui": 1
+                    },
+                    {
+                        "key": "field_erh_euc_headlight_lumens",
+                        "label": "Headlight",
+                        "name": "headlight_lumens",
+                        "type": "number",
+                        "wrapper": { "width": "20" },
+                        "append": "lm"
+                    },
+                    {
+                        "key": "field_erh_euc_ip_rating",
+                        "label": "IP Rating",
+                        "name": "ip_rating",
+                        "type": "text",
+                        "wrapper": { "width": "20" }
+                    }
+                ]
+            },
+            {
+                "key": "field_erh_euc_features",
+                "label": "Features",
+                "name": "euc_features",
+                "type": "checkbox",
+                "instructions": "",
+                "required": 0,
+                "wrapper": {
+                    "width": "",
+                    "class": "",
+                    "id": ""
+                },
+                "choices": {
+                    "app": "App Connectivity",
+                    "bluetooth_speakers": "Bluetooth Speakers",
+                    "rgb_lights": "RGB Lighting",
+                    "adjustable_pedals": "Adjustable Pedals",
+                    "lift_sensor": "Lift/Cutoff Sensor",
+                    "tilt_back": "Tilt-back Warning",
+                    "beep_alarm": "Speed Beep Alarm"
+                },
+                "return_format": "value",
+                "layout": "horizontal"
+            }
+        ],
+        "location": [
+            [
+                {
+                    "param": "post_type",
+                    "operator": "==",
+                    "value": "products"
+                },
+                {
+                    "param": "taxonomy",
+                    "operator": "==",
+                    "value": "product_type:electric-unicycle"
+                }
+            ]
+        ],
+        "menu_order": 12,
+        "position": "normal",
+        "style": "default",
+        "label_placement": "top",
+        "instruction_placement": "label",
+        "active": true
+    },
+    {
+        "key": "group_erh_eskate",
+        "title": "Electric Skateboard Specs",
+        "fields": [
+            {
+                "key": "field_erh_eskate_deck",
+                "label": "Deck",
+                "name": "eskate_deck",
+                "type": "group",
+                "instructions": "",
+                "required": 0,
+                "layout": "block",
+                "sub_fields": [
+                    {
+                        "key": "field_erh_esk_deck_length",
+                        "label": "Deck Length",
+                        "name": "length",
+                        "type": "number",
+                        "wrapper": { "width": "20" },
+                        "append": "in",
+                        "step": 0.1
+                    },
+                    {
+                        "key": "field_erh_esk_deck_width",
+                        "label": "Deck Width",
+                        "name": "width",
+                        "type": "number",
+                        "wrapper": { "width": "20" },
+                        "append": "in",
+                        "step": 0.1
+                    },
+                    {
+                        "key": "field_erh_esk_deck_material",
+                        "label": "Deck Material",
+                        "name": "material",
+                        "type": "select",
+                        "wrapper": { "width": "20" },
+                        "choices": {
+                            "maple": "Maple",
+                            "bamboo": "Bamboo",
+                            "carbon": "Carbon Fiber",
+                            "fiberglass": "Fiberglass",
+                            "composite": "Composite"
+                        },
+                        "return_format": "value",
+                        "allow_null": 1
+                    },
+                    {
+                        "key": "field_erh_esk_deck_flex",
+                        "label": "Flex",
+                        "name": "flex",
+                        "type": "select",
+                        "wrapper": { "width": "20" },
+                        "choices": {
+                            "none": "None (Stiff)",
+                            "low": "Low",
+                            "medium": "Medium",
+                            "high": "High"
+                        },
+                        "return_format": "value",
+                        "allow_null": 1
+                    },
+                    {
+                        "key": "field_erh_esk_deck_style",
+                        "label": "Style",
+                        "name": "style",
+                        "type": "select",
+                        "wrapper": { "width": "20" },
+                        "choices": {
+                            "longboard": "Longboard",
+                            "shortboard": "Shortboard",
+                            "mini": "Mini",
+                            "drop_through": "Drop-Through",
+                            "cruiser": "Cruiser"
+                        },
+                        "return_format": "value",
+                        "allow_null": 1
+                    }
+                ]
+            },
+            {
+                "key": "field_erh_eskate_wheels",
+                "label": "Wheels",
+                "name": "eskate_wheels",
+                "type": "group",
+                "instructions": "",
+                "required": 0,
+                "layout": "block",
+                "sub_fields": [
+                    {
+                        "key": "field_erh_esk_wheel_size",
+                        "label": "Wheel Size",
+                        "name": "size",
+                        "type": "number",
+                        "wrapper": { "width": "25" },
+                        "append": "mm"
+                    },
+                    {
+                        "key": "field_erh_esk_wheel_type",
+                        "label": "Wheel Type",
+                        "name": "type",
+                        "type": "select",
+                        "wrapper": { "width": "25" },
+                        "choices": {
+                            "urethane": "Urethane (Street)",
+                            "pneumatic": "Pneumatic",
+                            "airless": "Airless/Rubber",
+                            "cloudwheels": "Cloudwheels"
+                        },
+                        "return_format": "value",
+                        "allow_null": 1
+                    },
+                    {
+                        "key": "field_erh_esk_wheel_durometer",
+                        "label": "Durometer",
+                        "name": "durometer",
+                        "type": "text",
+                        "wrapper": { "width": "25" },
+                        "placeholder": "e.g., 78A"
+                    },
+                    {
+                        "key": "field_erh_esk_trucks",
+                        "label": "Truck Type",
+                        "name": "trucks",
+                        "type": "select",
+                        "wrapper": { "width": "25" },
+                        "choices": {
+                            "standard": "Standard",
+                            "double_kingpin": "Double Kingpin",
+                            "channel": "Channel"
+                        },
+                        "return_format": "value",
+                        "allow_null": 1
+                    }
+                ]
+            },
+            {
+                "key": "field_erh_eskate_remote",
+                "label": "Remote",
+                "name": "eskate_remote",
+                "type": "group",
+                "instructions": "",
+                "required": 0,
+                "layout": "block",
+                "sub_fields": [
+                    {
+                        "key": "field_erh_esk_remote_type",
+                        "label": "Remote Type",
+                        "name": "type",
+                        "type": "select",
+                        "wrapper": { "width": "33" },
+                        "choices": {
+                            "thumb_wheel": "Thumb Wheel",
+                            "trigger": "Trigger",
+                            "joystick": "Joystick",
+                            "app": "App Only"
+                        },
+                        "return_format": "value",
+                        "allow_null": 1
+                    },
+                    {
+                        "key": "field_erh_esk_remote_display",
+                        "label": "Remote Display",
+                        "name": "display",
+                        "type": "true_false",
+                        "wrapper": { "width": "33" },
+                        "ui": 1
+                    },
+                    {
+                        "key": "field_erh_esk_speed_modes",
+                        "label": "Speed Modes",
+                        "name": "speed_modes",
+                        "type": "number",
+                        "wrapper": { "width": "33" }
+                    }
+                ]
+            },
+            {
+                "key": "field_erh_eskate_features",
+                "label": "Features",
+                "name": "eskate_features",
+                "type": "checkbox",
+                "instructions": "",
+                "required": 0,
+                "wrapper": {
+                    "width": "",
+                    "class": "",
+                    "id": ""
+                },
+                "choices": {
+                    "app": "App Connectivity",
+                    "swappable_battery": "Swappable Battery",
+                    "lights": "Built-in Lights",
+                    "waterproof": "Water Resistant",
+                    "reverse": "Reverse Mode",
+                    "cruise_control": "Cruise Control"
+                },
+                "return_format": "value",
+                "layout": "horizontal"
+            }
+        ],
+        "location": [
+            [
+                {
+                    "param": "post_type",
+                    "operator": "==",
+                    "value": "products"
+                },
+                {
+                    "param": "taxonomy",
+                    "operator": "==",
+                    "value": "product_type:electric-skateboard"
+                }
+            ]
+        ],
+        "menu_order": 13,
+        "position": "normal",
+        "style": "default",
+        "label_placement": "top",
+        "instruction_placement": "label",
+        "active": true
+    },
+    {
+        "key": "group_erh_hoverboard",
+        "title": "Hoverboard Specs",
+        "fields": [
+            {
+                "key": "field_erh_hoverboard_specs",
+                "label": "Specs",
+                "name": "hoverboard_specs",
+                "type": "group",
+                "instructions": "",
+                "required": 0,
+                "layout": "block",
+                "sub_fields": [
+                    {
+                        "key": "field_erh_hov_wheel_size",
+                        "label": "Wheel Size",
+                        "name": "wheel_size",
+                        "type": "select",
+                        "wrapper": { "width": "25" },
+                        "choices": {
+                            "6.5": "6.5 inch",
+                            "8": "8 inch",
+                            "8.5": "8.5 inch",
+                            "10": "10 inch"
+                        },
+                        "return_format": "value",
+                        "allow_null": 1
+                    },
+                    {
+                        "key": "field_erh_hov_tire_type",
+                        "label": "Tire Type",
+                        "name": "tire_type",
+                        "type": "select",
+                        "wrapper": { "width": "25" },
+                        "choices": {
+                            "solid": "Solid Rubber",
+                            "pneumatic": "Pneumatic"
+                        },
+                        "return_format": "value",
+                        "allow_null": 1
+                    },
+                    {
+                        "key": "field_erh_hov_ip_rating",
+                        "label": "IP Rating",
+                        "name": "ip_rating",
+                        "type": "text",
+                        "wrapper": { "width": "25" }
+                    },
+                    {
+                        "key": "field_erh_hov_ul_certified",
+                        "label": "UL 2272 Certified",
+                        "name": "ul_certified",
+                        "type": "true_false",
+                        "wrapper": { "width": "25" },
+                        "ui": 1
+                    }
+                ]
+            },
+            {
+                "key": "field_erh_hoverboard_features",
+                "label": "Features",
+                "name": "hoverboard_features",
+                "type": "checkbox",
+                "instructions": "",
+                "required": 0,
+                "wrapper": {
+                    "width": "",
+                    "class": "",
+                    "id": ""
+                },
+                "choices": {
+                    "bluetooth_speaker": "Bluetooth Speaker",
+                    "led_lights": "LED Lights",
+                    "app": "App Connectivity",
+                    "self_balancing": "Self-Balancing",
+                    "fender_bumpers": "Fender Bumpers",
+                    "handle": "Carry Handle"
+                },
+                "return_format": "value",
+                "layout": "horizontal"
+            }
+        ],
+        "location": [
+            [
+                {
+                    "param": "post_type",
+                    "operator": "==",
+                    "value": "products"
+                },
+                {
+                    "param": "taxonomy",
+                    "operator": "==",
+                    "value": "product_type:hoverboard"
+                }
+            ]
+        ],
+        "menu_order": 14,
+        "position": "normal",
+        "style": "default",
+        "label_placement": "top",
+        "instruction_placement": "label",
+        "active": true
+    }
+]
