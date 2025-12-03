@@ -116,6 +116,17 @@ CREATE TABLE wp_hft_scraper_rules (
 
 ### HFT Integration Points
 
+**ERH-Core Integration Filters** (in `class-core.php`):
+```php
+// Use ERH 'products' CPT instead of HFT's 'hf_product'
+add_filter('hft_product_post_types', function() {
+    return ['products'];
+});
+
+// Disable HFT's built-in CPT registration
+add_filter('hft_register_product_cpt', '__return_false');
+```
+
 **PHP Functions** (from HFT plugin):
 ```php
 // Check if HFT is active
@@ -248,21 +259,49 @@ add_filter('hft_best_price', function($best_price, $product_id) {
 }, 10, 2);
 ```
 
-### User System
+### User System (REST API - Implemented)
 
-| File | Function | Description |
-|------|----------|-------------|
-| `login.php` | AJAX handler | Custom login with `wp_signon()` |
-| `register.php` | AJAX handler | Registration with rate limiting, honeypot, DNS validation |
-| `lost_password.php` | AJAX handler | Password reset email with custom template |
-| `reset-password.php` | AJAX handler | Password reset processing |
-| `settings.php` | Template | User preferences (email settings, password change) |
+**Authentication** (`class-auth-handler.php`):
+```
+POST /erh/v1/auth/login          - Email/password login
+POST /erh/v1/auth/register       - Registration with DNS validation
+POST /erh/v1/auth/forgot-password - Password reset request
+POST /erh/v1/auth/reset-password - Password reset completion
+POST /erh/v1/auth/logout         - Logout
+GET  /erh/v1/auth/status         - Check auth status
+```
 
-**User Meta Keys**:
+**Social Login** (`class-social-auth.php`):
+```
+GET /erh/v1/auth/social/{provider}          - Initiate OAuth (google/facebook/reddit)
+GET /erh/v1/auth/social/{provider}/callback - OAuth callback
+GET /erh/v1/auth/social/providers           - List available providers
+```
+
+**User Features** (`class-user-preferences.php`, `class-user-tracker.php`):
+```
+GET/PUT /erh/v1/user/preferences        - Email preferences
+PUT     /erh/v1/user/email              - Change email
+PUT     /erh/v1/user/password           - Change password
+GET     /erh/v1/user/trackers           - List user's price trackers
+DELETE  /erh/v1/user/trackers/{id}      - Delete tracker
+GET/POST/DELETE /erh/v1/products/{id}/tracker - Tracker CRUD
+```
+
+**Webhooks**:
+```
+POST /erh/v1/webhooks/mailchimp - Mailchimp unsubscribe sync
+```
+
+**User Meta Keys** (defined in `UserRepository`):
 - `price_trackers_emails` - Boolean, receive price drop alerts
 - `sales_roundup_emails` - Boolean, receive deals digest
 - `sales_roundup_frequency` - `weekly`, `bi-weekly`, or `monthly`
 - `newsletter_subscription` - Boolean, general newsletter
+- `erh_google_id` - Google OAuth user ID
+- `erh_facebook_id` - Facebook OAuth user ID
+- `erh_reddit_id` - Reddit OAuth user ID
+- `erh_preferences_set` - Boolean, has user set preferences
 - `last_deals_email_sent` - Datetime, for frequency throttling
 - `registration_ip` - For security
 
@@ -438,15 +477,23 @@ erh-core/
 │   │   └── class-notification-job.php   # Price alert checks
 │   │
 │   ├── user/
+│   │   ├── class-rate-limiter.php       # Transient-based rate limiting
+│   │   ├── class-user-repository.php    # User data access & meta constants
 │   │   ├── class-auth-handler.php       # Login, register, password reset
-│   │   ├── class-user-preferences.php   # Email settings, etc.
-│   │   └── class-user-tracker.php       # Price tracker CRUD for users
+│   │   ├── class-user-preferences.php   # Email settings, profile updates
+│   │   ├── class-user-tracker.php       # Price tracker CRUD for users
+│   │   ├── interface-oauth-provider.php # OAuth provider contract
+│   │   ├── class-oauth-google.php       # Google OAuth 2.0
+│   │   ├── class-oauth-facebook.php     # Facebook OAuth 2.0
+│   │   ├── class-oauth-reddit.php       # Reddit OAuth 2.0
+│   │   └── class-social-auth.php        # OAuth orchestrator
 │   │
 │   ├── reviews/
 │   │   ├── class-review-handler.php     # Submit, moderate reviews
 │   │   └── class-review-query.php       # Get reviews, calculate ratings
 │   │
 │   ├── email/
+│   │   ├── class-mailchimp-sync.php     # Mailchimp API + webhook (implemented)
 │   │   ├── class-email-template.php     # HTML email wrapper
 │   │   ├── class-email-sender.php       # wp_mail wrapper
 │   │   ├── class-price-alert-email.php  # Price drop notifications
@@ -461,6 +508,7 @@ erh-core/
 │   │   └── class-geo-pricing.php        # IPInfo integration (future)
 │   │
 │   └── admin/
+│       ├── class-settings-page.php      # Settings > ERideHero (implemented)
 │       ├── class-admin-menu.php         # Admin menu pages
 │       ├── class-price-tracker-admin.php # Tracker management
 │       └── class-product-metabox.php    # Product edit screen additions
