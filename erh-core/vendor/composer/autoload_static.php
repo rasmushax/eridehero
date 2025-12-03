@@ -9,9 +9,16 @@ class ComposerStaticInitb5e889746c5280811e87a72c161db6db
     public static $classMap = array (
         'Composer\\InstalledVersions' => __DIR__ . '/..' . '/composer/InstalledVersions.php',
         'ERH\\Core' => __DIR__ . '/../..' . '/includes/class-core.php',
+        'ERH\\Database\\PriceHistory' => __DIR__ . '/../..' . '/includes/database/class-price-history.php',
+        'ERH\\Database\\PriceTracker' => __DIR__ . '/../..' . '/includes/database/class-price-tracker.php',
+        'ERH\\Database\\ProductCache' => __DIR__ . '/../..' . '/includes/database/class-product-cache.php',
         'ERH\\Database\\Schema' => __DIR__ . '/../..' . '/includes/database/class-schema.php',
+        'ERH\\Database\\ViewTracker' => __DIR__ . '/../..' . '/includes/database/class-view-tracker.php',
         'ERH\\PostTypes\\Product' => __DIR__ . '/../..' . '/includes/post-types/class-product.php',
         'ERH\\PostTypes\\Review' => __DIR__ . '/../..' . '/includes/post-types/class-review.php',
+        'ERH\\Pricing\\DealsFinder' => __DIR__ . '/../..' . '/includes/pricing/class-deals-finder.php',
+        'ERH\\Pricing\\PriceFetcher' => __DIR__ . '/../..' . '/includes/pricing/class-price-fetcher.php',
+        'ERH\\Pricing\\RetailerLogos' => __DIR__ . '/../..' . '/includes/pricing/class-retailer-logos.php',
     );
 
     public static function getInitializer(ClassLoader $loader)
