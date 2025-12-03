@@ -129,38 +129,70 @@ Use this file alongside CLAUDE.md to track progress.
 
 ---
 
-## Phase 4: Reviews & Cron (Days 9-10) - PENDING
+## Phase 4: Reviews, Cron & Email (Days 9-11) - COMPLETE
 
-### Day 9: Reviews
-- [ ] Create `includes/reviews/class-review-handler.php`
-  - Port `submit_review.php`
-  - Image upload handling
-- [ ] Create `includes/reviews/class-review-query.php`
-  - Port `getReviews()` function
-  - Ratings distribution calculation
-- [ ] Test: Review submission and display works
+**Key Decisions:**
+- Email system pulled forward from Phase 5 (used by notification job)
+- Reviews use REST API (consistent with user system)
+- Notifications run every 6 hours (not daily)
+- Admin "Run Now" buttons for cron jobs (in Settings > ERideHero > Cron Jobs)
 
-### Day 10: Cron System
-- [ ] Create `includes/cron/class-cron-manager.php`
-- [ ] Create `includes/cron/class-price-update-job.php` (daily prices)
-- [ ] Create `includes/cron/class-cache-rebuild-job.php` (product data)
-- [ ] Create `includes/cron/class-search-json-job.php`
-- [ ] Create `includes/cron/class-notification-job.php` (price alerts)
-- [ ] Test: Manual trigger works for each job
+### Reviews
+- [x] Create `includes/reviews/class-review-query.php`
+  - Get reviews by product or user
+  - Calculate ratings distribution
+  - Check if user has reviewed product
+- [x] Create `includes/reviews/class-review-handler.php`
+  - REST API for review submission with image upload
+  - Admin notification when new review submitted
+  - Reviews always pending (require moderation)
+
+**REST Endpoints:**
+- `POST /erh/v1/reviews` - Submit review
+- `GET /erh/v1/products/{id}/reviews` - Get product reviews
+- `GET /erh/v1/user/reviews` - Get user's reviews
+- `DELETE /erh/v1/reviews/{id}` - Delete own review
+
+### Email System
+- [x] Create `includes/email/class-email-template.php`
+  - Branded HTML email wrapper (logo, footer)
+  - Helper methods: paragraph, heading, button, link, divider
+  - Product card and price drop card templates
+- [x] Create `includes/email/class-email-sender.php`
+  - wp_mail wrapper with HTML headers
+  - Templates: price drop notification, deals digest, password reset, welcome
+
+### Cron System
+- [x] Create `includes/cron/interface-cron-job.php` (contract)
+- [x] Create `includes/cron/class-cron-manager.php`
+  - Central registration with job locking (transients)
+  - Custom schedules: `erh_six_hours`, `erh_twelve_hours`
+  - WP-CLI commands: `wp erh cron run/list/status`
+- [x] Create `includes/cron/class-price-update-job.php`
+  - Daily price snapshots to `wp_product_daily_prices`
+  - 2-year retention cleanup
+- [x] Create `includes/cron/class-cache-rebuild-job.php`
+  - Rebuild `wp_product_data` cache (twice daily)
+  - Price history stats (3m, 6m, 12m averages, z-scores)
+  - Popularity scoring algorithm
+  - Computed specs (price_per_watt, range_per_lb, etc.)
+- [x] Create `includes/cron/class-search-json-job.php`
+  - Generate `/uploads/search_items.json` (twice daily)
+  - Posts, products, tools
+- [x] Create `includes/cron/class-notification-job.php`
+  - Check price trackers every 6 hours
+  - Send email alerts for price drops
+  - 24-hour cooldown per product per user
+
+### Admin Integration
+- [x] Add Cron Jobs tab to Settings > ERideHero
+  - Job status with last run time
+  - "Run Now" buttons with AJAX handler
+  - Next scheduled run display
 
 ---
 
-## Phase 5: Email System (Day 11) - PENDING
-
-- [ ] Create `includes/email/class-email-template.php`
-- [ ] Create `includes/email/class-email-sender.php`
-- [ ] Create `includes/email/class-price-alert-email.php`
-- [ ] Create `includes/email/class-deals-digest-email.php`
-- [ ] Test: Emails render correctly and send
-
----
-
-## Phase 6: Theme Scaffold (Days 12-13) - PENDING
+## Phase 5: Theme Scaffold (Days 12-13) - PENDING
 
 ### Day 12: Theme Setup
 - [ ] Create `erh-theme/` directory structure
@@ -181,7 +213,7 @@ Use this file alongside CLAUDE.md to track progress.
 
 ---
 
-## Phase 7: Templates (Days 14-16) - PENDING
+## Phase 6: Templates (Days 14-16) - PENDING
 
 ### Day 14: Product Templates
 - [ ] Create `template-parts/product/card.php`
@@ -209,7 +241,7 @@ Use this file alongside CLAUDE.md to track progress.
 
 ---
 
-## Phase 8: Shortcodes (Days 17-18) - PENDING
+## Phase 7: Shortcodes (Days 17-18) - PENDING
 
 - [ ] Create `shortcodes/class-shortcode-base.php`
 - [ ] Migrate shortcodes (prioritize by usage):
@@ -231,7 +263,7 @@ Use this file alongside CLAUDE.md to track progress.
 
 ---
 
-## Phase 9: JavaScript & Polish (Day 19) - PENDING
+## Phase 8: JavaScript & Polish (Day 19) - PENDING
 
 - [ ] Bundle all JS into `dist/main.min.js`
 - [ ] Create `assets/js/src/search.js` (JSON-based search)
@@ -241,7 +273,7 @@ Use this file alongside CLAUDE.md to track progress.
 
 ---
 
-## Phase 10: Testing & Launch (Days 20-21) - PENDING
+## Phase 9: Testing & Launch (Days 20-21) - PENDING
 
 ### Testing Checklist
 - [ ] All product pages render
@@ -302,7 +334,7 @@ erh-core/
 │   ├── class-core.php               # Main orchestrator
 │   │
 │   ├── admin/
-│   │   └── class-settings-page.php  # Settings > ERideHero
+│   │   └── class-settings-page.php  # Settings > ERideHero (incl. Cron Jobs tab)
 │   │
 │   ├── post-types/
 │   │   ├── class-product.php
@@ -334,8 +366,22 @@ erh-core/
 │   │   ├── class-oauth-reddit.php
 │   │   └── class-social-auth.php
 │   │
-│   └── email/
-│       └── class-mailchimp-sync.php
+│   ├── reviews/
+│   │   ├── class-review-query.php
+│   │   └── class-review-handler.php
+│   │
+│   ├── email/
+│   │   ├── class-mailchimp-sync.php
+│   │   ├── class-email-template.php
+│   │   └── class-email-sender.php
+│   │
+│   └── cron/
+│       ├── interface-cron-job.php
+│       ├── class-cron-manager.php
+│       ├── class-price-update-job.php
+│       ├── class-cache-rebuild-job.php
+│       ├── class-search-json-job.php
+│       └── class-notification-job.php
 │
 └── vendor/                           # Composer autoload
 ```
@@ -353,6 +399,10 @@ erh-core/
 | Mailchimp | API v3 + Webhook | Two-way sync for unsubscribes |
 | HFT Integration | Filters | Use ERH `products` CPT, disable HFT CPT |
 | Settings | WP Settings API | Native, proper sanitization |
+| Reviews API | REST (not AJAX) | Consistent with user system |
+| Notifications | Every 6 hours | Balance responsiveness vs server load |
+| Cron Admin | "Run Now" buttons | User prefers GUI over WP-CLI |
+| Job Locking | Transients | Prevent duplicate cron execution |
 
 ---
 
@@ -373,6 +423,25 @@ erh-core/
 ### General
 - `erh_email_preferences_page_id`
 - `erh_db_version`
+
+---
+
+## Cron Jobs
+
+| Job | Hook | Schedule | Description |
+|-----|------|----------|-------------|
+| Price Update | `erh_cron_price-update` | Daily | Record daily prices to wp_product_daily_prices |
+| Cache Rebuild | `erh_cron_cache-rebuild` | Twice daily | Rebuild wp_product_data with stats |
+| Search JSON | `erh_cron_search-json` | Twice daily | Generate search_items.json |
+| Notifications | `erh_cron_notifications` | Every 6 hours | Check price trackers, send alerts |
+
+### Custom Schedules
+- `erh_six_hours` - Every 6 hours
+- `erh_twelve_hours` - Every 12 hours
+
+### Job Transients (Locking)
+- `erh_cron_lock_{job-id}` - Prevents concurrent execution (5 min TTL)
+- `erh_cron_last_run_{job-id}` - Last successful run timestamp
 
 ---
 
@@ -398,7 +467,7 @@ UserRepository::META_REGISTRATION_IP         // 'registration_ip'
 
 ---
 
-## Phase 11: ACF Field Restructuring (Post-Launch)
+## Phase 10: ACF Field Restructuring (Post-Launch)
 
 **Do this AFTER the main rebuild is complete and stable.**
 

@@ -12,6 +12,10 @@ namespace ERH;
 use ERH\PostTypes\Product;
 use ERH\PostTypes\Review;
 use ERH\Database\Schema;
+use ERH\Database\ProductCache;
+use ERH\Database\PriceHistory;
+use ERH\Database\PriceTracker;
+use ERH\Database\ViewTracker;
 use ERH\User\AuthHandler;
 use ERH\User\UserPreferences;
 use ERH\User\UserTracker;
@@ -19,6 +23,16 @@ use ERH\User\RateLimiter;
 use ERH\User\UserRepository;
 use ERH\User\SocialAuth;
 use ERH\Email\MailchimpSync;
+use ERH\Email\EmailTemplate;
+use ERH\Email\EmailSender;
+use ERH\Reviews\ReviewQuery;
+use ERH\Reviews\ReviewHandler;
+use ERH\Pricing\PriceFetcher;
+use ERH\Cron\CronManager;
+use ERH\Cron\PriceUpdateJob;
+use ERH\Cron\CacheRebuildJob;
+use ERH\Cron\SearchJsonJob;
+use ERH\Cron\NotificationJob;
 use ERH\Admin\SettingsPage;
 
 /**
@@ -104,6 +118,41 @@ class Core {
     private SettingsPage $settings_page;
 
     /**
+     * Review query instance.
+     *
+     * @var ReviewQuery
+     */
+    private ReviewQuery $review_query;
+
+    /**
+     * Review handler instance.
+     *
+     * @var ReviewHandler
+     */
+    private ReviewHandler $review_handler;
+
+    /**
+     * Email template instance.
+     *
+     * @var EmailTemplate
+     */
+    private EmailTemplate $email_template;
+
+    /**
+     * Email sender instance.
+     *
+     * @var EmailSender
+     */
+    private EmailSender $email_sender;
+
+    /**
+     * Cron manager instance.
+     *
+     * @var CronManager
+     */
+    private CronManager $cron_manager;
+
+    /**
      * Initialize all plugin components.
      *
      * @return void
@@ -123,6 +172,12 @@ class Core {
 
         // Initialize user system.
         $this->init_user_system();
+
+        // Initialize email system.
+        $this->init_email();
+
+        // Initialize review system.
+        $this->init_reviews();
 
         // Initialize admin.
         if (is_admin()) {
@@ -242,6 +297,7 @@ class Core {
 
         // Initialize settings page.
         $this->settings_page = new SettingsPage();
+        $this->settings_page->set_cron_manager($this->cron_manager);
         $this->settings_page->register();
     }
 
@@ -311,15 +367,79 @@ class Core {
     }
 
     /**
+     * Initialize email system.
+     *
+     * @return void
+     */
+    private function init_email(): void {
+        $this->email_template = new EmailTemplate();
+        $this->email_sender = new EmailSender($this->email_template);
+    }
+
+    /**
+     * Initialize review system.
+     *
+     * @return void
+     */
+    private function init_reviews(): void {
+        $this->review_query = new ReviewQuery();
+        $this->review_handler = new ReviewHandler($this->rate_limiter, $this->review_query);
+        $this->review_handler->register();
+    }
+
+    /**
      * Initialize cron jobs.
      *
      * @return void
      */
     private function init_cron(): void {
-        // Cron jobs will be registered here.
-        // Example:
-        // $cron_manager = new Cron\CronManager();
-        // $cron_manager->register();
+        // Initialize cron manager.
+        $this->cron_manager = new CronManager();
+
+        // Create shared dependencies.
+        $price_fetcher = new PriceFetcher();
+        $product_cache = new ProductCache();
+        $price_history = new PriceHistory();
+        $price_tracker_db = new PriceTracker();
+        $view_tracker = new ViewTracker();
+
+        // Add cron jobs.
+        $this->cron_manager->add_job(
+            'price-update',
+            new PriceUpdateJob($price_fetcher, $price_history, $this->cron_manager)
+        );
+
+        $this->cron_manager->add_job(
+            'cache-rebuild',
+            new CacheRebuildJob(
+                $price_fetcher,
+                $product_cache,
+                $price_history,
+                $price_tracker_db,
+                $view_tracker,
+                $this->review_query,
+                $this->cron_manager
+            )
+        );
+
+        $this->cron_manager->add_job(
+            'search-json',
+            new SearchJsonJob($this->cron_manager)
+        );
+
+        $this->cron_manager->add_job(
+            'notifications',
+            new NotificationJob(
+                $price_fetcher,
+                $price_tracker_db,
+                $this->email_sender,
+                $this->user_repo,
+                $this->cron_manager
+            )
+        );
+
+        // Register the cron manager.
+        $this->cron_manager->register();
     }
 
     /**
@@ -431,5 +551,50 @@ class Core {
      */
     public function get_settings_page(): SettingsPage {
         return $this->settings_page;
+    }
+
+    /**
+     * Get the review query instance.
+     *
+     * @return ReviewQuery
+     */
+    public function get_review_query(): ReviewQuery {
+        return $this->review_query;
+    }
+
+    /**
+     * Get the review handler instance.
+     *
+     * @return ReviewHandler
+     */
+    public function get_review_handler(): ReviewHandler {
+        return $this->review_handler;
+    }
+
+    /**
+     * Get the email template instance.
+     *
+     * @return EmailTemplate
+     */
+    public function get_email_template(): EmailTemplate {
+        return $this->email_template;
+    }
+
+    /**
+     * Get the email sender instance.
+     *
+     * @return EmailSender
+     */
+    public function get_email_sender(): EmailSender {
+        return $this->email_sender;
+    }
+
+    /**
+     * Get the cron manager instance.
+     *
+     * @return CronManager
+     */
+    public function get_cron_manager(): CronManager {
+        return $this->cron_manager;
     }
 }
