@@ -18,4 +18,9 @@ return array(
     'ERH\\Pricing\\DealsFinder' => $baseDir . '/includes/pricing/class-deals-finder.php',
     'ERH\\Pricing\\PriceFetcher' => $baseDir . '/includes/pricing/class-price-fetcher.php',
     'ERH\\Pricing\\RetailerLogos' => $baseDir . '/includes/pricing/class-retailer-logos.php',
+    'ERH\\User\\AuthHandler' => $baseDir . '/includes/user/class-auth-handler.php',
+    'ERH\\User\\RateLimiter' => $baseDir . '/includes/user/class-rate-limiter.php',
+    'ERH\\User\\UserPreferences' => $baseDir . '/includes/user/class-user-preferences.php',
+    'ERH\\User\\UserRepository' => $baseDir . '/includes/user/class-user-repository.php',
+    'ERH\\User\\UserTracker' => $baseDir . '/includes/user/class-user-tracker.php',
 );
