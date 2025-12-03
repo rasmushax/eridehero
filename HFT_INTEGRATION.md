@@ -67,6 +67,25 @@ define('HFT_PLUGIN_URL', plugin_dir_url(__FILE__));
 define('HFT_PLUGIN_FILE', __FILE__);
 ```
 
+### ERideHero Integration
+
+ERH-Core uses its own `products` CPT instead of HFT's built-in `hf_product`. These filters are applied in `class-core.php`:
+
+```php
+// Use ERH 'products' CPT instead of HFT's 'hf_product'
+add_filter('hft_product_post_types', function() {
+    return ['products'];
+});
+
+// Disable HFT's built-in CPT registration
+add_filter('hft_register_product_cpt', '__return_false');
+```
+
+**Effect:**
+- The `hf_product` menu item disappears from admin
+- All HFT meta boxes, ACF fields, and scraping options appear on `products` CPT
+- `wp_hft_tracked_links.product_post_id` references ERH product IDs
+
 ---
 
 ## Database Schema
