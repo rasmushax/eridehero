@@ -1,0 +1,34 @@
+/**
+ * ERideHero Core - Admin Styles
+ *
+ * @package ERH
+ */
+
+/* Admin UI styles */
+.erh-admin-wrap {
+    margin-top: 20px;
+}
+
+.erh-admin-header {
+    display: flex;
+    align-items: center;
+    margin-bottom: 20px;
+}
+
+.erh-admin-header h1 {
+    margin: 0;
+}
+
+/* Review admin columns */
+.column-score {
+    width: 100px;
+    color: #f0ad4e;
+}
+
+.column-product {
+    width: 200px;
+}
+
+.column-reviewer {
+    width: 150px;
+}
