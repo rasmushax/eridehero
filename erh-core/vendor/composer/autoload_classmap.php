@@ -8,7 +8,13 @@ $baseDir = dirname($vendorDir);
 return array(
     'Composer\\InstalledVersions' => $vendorDir . '/composer/InstalledVersions.php',
     'ERH\\Core' => $baseDir . '/includes/class-core.php',
+    'ERH\\Database\\PriceHistory' => $baseDir . '/includes/database/class-price-history.php',
+    'ERH\\Database\\PriceTracker' => $baseDir . '/includes/database/class-price-tracker.php',
+    'ERH\\Database\\ProductCache' => $baseDir . '/includes/database/class-product-cache.php',
     'ERH\\Database\\Schema' => $baseDir . '/includes/database/class-schema.php',
+    'ERH\\Database\\ViewTracker' => $baseDir . '/includes/database/class-view-tracker.php',
     'ERH\\PostTypes\\Product' => $baseDir . '/includes/post-types/class-product.php',
     'ERH\\PostTypes\\Review' => $baseDir . '/includes/post-types/class-review.php',
+    'ERH\\Pricing\\DealsFinder' => $baseDir . '/includes/pricing/class-deals-finder.php',
+    'ERH\\Pricing\\PriceFetcher' => $baseDir . '/includes/pricing/class-price-fetcher.php',
 );
