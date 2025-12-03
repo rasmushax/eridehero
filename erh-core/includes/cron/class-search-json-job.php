@@ -167,21 +167,23 @@ class SearchJsonJob implements CronJobInterface {
         $type = '';
         $product_type = '';
 
+        $post_id = (int) $post->ID;
+
         switch ($post->post_type) {
             case 'products':
                 $type = 'Product';
-                $thumbnail_url = $this->get_product_thumbnail($post->ID);
-                $product_type = get_field('product_type', $post->ID) ?: '';
+                $thumbnail_url = $this->get_product_thumbnail($post_id);
+                $product_type = get_field('product_type', $post_id) ?: '';
                 break;
 
             case 'tool':
                 $type = 'Tool';
-                $thumbnail_url = $this->get_post_thumbnail($post->ID);
+                $thumbnail_url = $this->get_post_thumbnail($post_id);
                 break;
 
             case 'post':
                 $type = 'Article';
-                $thumbnail_url = $this->get_post_thumbnail($post->ID);
+                $thumbnail_url = $this->get_post_thumbnail($post_id);
                 break;
 
             default:
@@ -189,9 +191,9 @@ class SearchJsonJob implements CronJobInterface {
         }
 
         $item = [
-            'id'        => (int) $post->ID,
+            'id'        => $post_id,
             'title'     => $post->post_title,
-            'url'       => get_permalink($post->ID),
+            'url'       => get_permalink($post_id),
             'type'      => $type,
             'thumbnail' => $thumbnail_url,
         ];
