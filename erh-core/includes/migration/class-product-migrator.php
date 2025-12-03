@@ -137,13 +137,30 @@ class ProductMigrator {
 
         $acf = $old_data['acf'] ?? [];
 
+        // Debug: Log ACF data for first product.
+        static $logged_acf_sample = false;
+        if (!$logged_acf_sample) {
+            $this->log('info', 'Sample ACF data keys: ' . implode(', ', array_keys($acf)));
+            if (!empty($acf['product_type'])) {
+                $this->log('info', "Sample product_type value: {$acf['product_type']}");
+            } else {
+                $this->log('warning', 'ACF product_type is empty - will try to infer from title');
+            }
+            $logged_acf_sample = true;
+        }
+
         // Map old product_type to taxonomy.
         $old_product_type = $acf['product_type'] ?? '';
         $product_type_slug = Taxonomies::map_old_product_type($old_product_type);
 
+        // If product_type is empty, try to infer from title or skip.
         if (!$product_type_slug) {
-            $this->log('warning', "Skipping {$title} - unknown product type: {$old_product_type}");
-            return null;
+            $product_type_slug = $this->infer_product_type($title, $acf);
+            if (!$product_type_slug) {
+                $this->log('warning', "Skipping {$title} - could not determine product type");
+                return null;
+            }
+            $this->log('info', "Inferred product type '{$product_type_slug}' for {$title}");
         }
 
         // Prepare post data.
@@ -182,7 +199,7 @@ class ProductMigrator {
         if (!empty($brand)) {
             $brand_id = Taxonomies::get_or_create_brand($brand);
             if ($brand_id) {
-                wp_set_object_terms($post_id, [$brand_id], 'brands');
+                wp_set_object_terms($post_id, [$brand_id], 'brand');
             }
         }
 
@@ -548,6 +565,70 @@ class ProductMigrator {
         }
 
         return (string) round(array_sum($values) / count($values), 1);
+    }
+
+    /**
+     * Infer product type from title or ACF data when product_type field is empty.
+     *
+     * @param string $title The product title.
+     * @param array  $acf   The ACF data.
+     * @return string|null The inferred product type slug or null.
+     */
+    private function infer_product_type(string $title, array $acf): ?string {
+        $title_lower = strtolower($title);
+
+        // Check for e-bike indicators.
+        $ebike_keywords = ['e-bike', 'ebike', 'electric bike', 'eride', 'heckler', 'bullit', 'ransom', 'levo', 'turbo', 'powerfly', 'rail', 'fuel', 'shuttle', 'trance', 'reign', 'stance', 'habit', 'moterra'];
+        foreach ($ebike_keywords as $keyword) {
+            if (stripos($title, $keyword) !== false) {
+                return 'electric-bike';
+            }
+        }
+
+        // Check for e-bike ACF data (has e-bikes group).
+        if (!empty($acf['e-bikes']) && is_array($acf['e-bikes'])) {
+            return 'electric-bike';
+        }
+
+        // Check for scooter indicators.
+        $scooter_keywords = ['scooter', 'ninebot', 'kaabo', 'wolf', 'dualtron', 'vsett', 'inokim', 'emove', 'apollo', 'varla', 'gotrax', 'hiboy', 'segway', 'unagi', 'boosted rev', 'niu', 'mercane', 'zero', 'mantis', 'ghost', 'blade', 'thunder', 'eagle', 'falcon', 'phantom', 'speedway'];
+        foreach ($scooter_keywords as $keyword) {
+            if (stripos($title, $keyword) !== false) {
+                return 'electric-scooter';
+            }
+        }
+
+        // Check for scooter ACF data.
+        if (!empty($acf['deck_length']) || !empty($acf['handlebar_height']) || !empty($acf['throttle_type'])) {
+            return 'electric-scooter';
+        }
+
+        // Check for EUC indicators.
+        $euc_keywords = ['unicycle', 'euc', 'inmotion', 'gotway', 'begode', 'kingsong', 'veteran', 'leaperkim'];
+        foreach ($euc_keywords as $keyword) {
+            if (stripos($title, $keyword) !== false) {
+                return 'electric-unicycle';
+            }
+        }
+
+        // Check for skateboard indicators.
+        $eskate_keywords = ['skateboard', 'longboard', 'boosted board', 'evolve', 'meepo', 'exway', 'wowgo', 'backfire', 'ownboard', 'teamgee'];
+        foreach ($eskate_keywords as $keyword) {
+            if (stripos($title, $keyword) !== false) {
+                return 'electric-skateboard';
+            }
+        }
+
+        // Check for hoverboard indicators.
+        $hoverboard_keywords = ['hoverboard', 'swagway', 'swagtron', 'razor hovertrax'];
+        foreach ($hoverboard_keywords as $keyword) {
+            if (stripos($title, $keyword) !== false) {
+                return 'hoverboard';
+            }
+        }
+
+        // Could not determine type.
+        return null;
     }
 
     /**

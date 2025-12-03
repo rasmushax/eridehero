@@ -108,7 +108,7 @@ class Taxonomies {
             'rewrite'               => ['slug' => 'brands'],
         ];
 
-        register_taxonomy('brands', ['products'], $args);
+        register_taxonomy('brand', ['products'], $args);
     }
 
     /**
@@ -155,13 +155,13 @@ class Taxonomies {
             return null;
         }
 
-        $term = get_term_by('name', $brand_name, 'brands');
+        $term = get_term_by('name', $brand_name, 'brand');
         if ($term) {
             return $term->term_id;
         }
 
         // Create the brand.
-        $result = wp_insert_term($brand_name, 'brands');
+        $result = wp_insert_term($brand_name, 'brand');
         if (is_wp_error($result)) {
             return null;
         }
