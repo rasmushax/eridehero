@@ -11,6 +11,7 @@ namespace ERH;
 
 use ERH\PostTypes\Product;
 use ERH\PostTypes\Review;
+use ERH\PostTypes\Taxonomies;
 use ERH\Database\Schema;
 use ERH\Database\ProductCache;
 use ERH\Database\PriceHistory;
@@ -34,6 +35,7 @@ use ERH\Cron\CacheRebuildJob;
 use ERH\Cron\SearchJsonJob;
 use ERH\Cron\NotificationJob;
 use ERH\Admin\SettingsPage;
+use ERH\Migration\MigrationAdmin;
 
 /**
  * Core plugin class that initializes all components.
@@ -53,6 +55,13 @@ class Core {
      * @var Review
      */
     private Review $review_post_type;
+
+    /**
+     * Taxonomies handler.
+     *
+     * @var Taxonomies
+     */
+    private Taxonomies $taxonomies;
 
     /**
      * Database schema handler.
@@ -116,6 +125,13 @@ class Core {
      * @var SettingsPage
      */
     private SettingsPage $settings_page;
+
+    /**
+     * Migration admin instance.
+     *
+     * @var MigrationAdmin
+     */
+    private MigrationAdmin $migration_admin;
 
     /**
      * Review query instance.
@@ -268,6 +284,9 @@ class Core {
 
         $this->review_post_type = new Review();
         $this->review_post_type->register();
+
+        $this->taxonomies = new Taxonomies();
+        $this->taxonomies->register();
     }
 
     /**
@@ -299,6 +318,10 @@ class Core {
         $this->settings_page = new SettingsPage();
         $this->settings_page->set_cron_manager($this->cron_manager);
         $this->settings_page->register();
+
+        // Initialize migration admin.
+        $this->migration_admin = new MigrationAdmin();
+        $this->migration_admin->register();
     }
 
     /**
