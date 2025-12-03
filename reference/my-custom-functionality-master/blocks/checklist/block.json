@@ -1,0 +1,18 @@
+{
+  "name": "acf/checklist",
+  "title": "Checklist",
+  "description": "Displays a checklist with an optional title, description, and custom items.",
+  "style": "file:./checklist.css",
+  "category": "formatting",
+  "icon": "clipboard",
+  "keywords": ["checklist", "list", "tips", "acf"],
+  "acf": {
+    "mode": "preview",
+    "renderTemplate": "checklist.php"
+  },
+  "supports": {
+    "align": ["wide", "full"],
+    "anchor": true
+  },
+  "apiVersion": 2
+}

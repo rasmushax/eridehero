@@ -1,0 +1,14 @@
+{
+    "name": "acf/toppicks",
+    "title": "Top Picks",
+    "description": "Top Picks for a buying guide",
+    "style": [ "file:./toppicks.css" ],
+    "category": "formatting",
+    "icon": "admin-comments",
+    "keywords": ["Top", "picks","overview"],
+    "acf": {
+        "mode": "edit",
+        "renderTemplate": "toppicks.php"
+    },
+    "align": "full"
+}

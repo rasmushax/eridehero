@@ -1,0 +1,20 @@
+{
+    "name": "acf/listicle-item",
+    "title": "Listicle Item",
+    "description": "Displays a product item for listicles or buying guides.",
+    "style": [ "file:./listicle-item.css" ],
+    "script": "file:./listicle-item.js",
+    "category": "formatting",
+    "icon": "products",
+    "keywords": ["product", "listicle", "guide", "item", "acf"],
+    "acf": {
+        "mode": "preview",
+        "renderTemplate": "listicle-item.php",
+        "postTypes": ["post", "page"]
+    },
+    "supports": {
+        "align": false,
+        "anchor": true,
+        "jsx": true
+    }
+}

@@ -1,0 +1,14 @@
+{
+    "name": "acf/thisprodprice",
+    "title": "Product Price",
+    "description": "Gets the price of a product (either from the current post or another)",
+    "style": [ "file:./thisprodprice.css" ],
+    "category": "formatting",
+    "icon": "admin-comments",
+    "keywords": ["product", "price","this"],
+    "acf": {
+        "mode": "edit",
+        "renderTemplate": "thisprodprice.php"
+    },
+    "align": "full"
+}

@@ -1,0 +1,30 @@
+{
+    "name": "acf/buying-guide-table",
+    "title": "Buying Guide Table",
+    "description": "Displays a comparison table of selected products.",
+    "style": [ "file:./buying-guide-table.css" ],
+    "category": "formatting",
+    "icon": "list-view",
+    "keywords": ["table", "comparison", "products", "guide", "scooter"],
+    "acf": {
+        "mode": "preview",
+        "renderTemplate": "buying-guide-table.php",
+        "postTypes": ["post", "page"]
+    },
+    "supports": {
+        "align": ["wide", "full"],
+        "anchor": true
+    },
+    "example": {
+        "attributes": {
+            "mode": "preview",
+            "data": {
+                "table_rows": [
+                    { "_acf_nested_field_product": 123, "highlight_text": "Best Overall Commuter" },
+                    { "_acf_nested_field_product": 456, "highlight_text": "Longest Range" }
+                ]
+            }
+        }
+    }
+}
+

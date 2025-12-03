@@ -15,11 +15,20 @@ ERideHero is a data-driven electric mobility review platform (scooters, e-bikes,
 | Component | Current | Target |
 |-----------|---------|--------|
 | Theme | Oxygen Builder | Custom theme + Tailwind CSS |
-| Plugin | my-custom-functionality (monolithic) | erh-core (structured) |
+| Plugins | my-custom-functionality-master + product-functionality | erh-core (unified) |
 | Price Data | HFT Plugin (Housefresh Tools) | HFT Plugin (integrated) |
 | Fields | ACF Pro | ACF Pro (keep) |
 | Tables | Custom tables | Same (keep schema) |
 | Caching | LiteSpeed Cache | LiteSpeed + Cloudflare |
+
+## Reference Code
+
+The current functionality is split across two plugins in `reference/`:
+
+- **`reference/my-custom-functionality-master/`** - Shortcodes, blocks, general utilities
+- **`reference/product-functionality/`** - Core product logic: pricing, reviews, price trackers, user system, cron jobs
+
+When looking for existing implementations, check both folders. The new `erh-core` plugin will unify all functionality.
 
 ---
 

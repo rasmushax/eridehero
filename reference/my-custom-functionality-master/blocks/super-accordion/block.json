@@ -1,0 +1,19 @@
+{
+  "name": "acf/super-accordion",
+  "title": "Super Accordion",
+  "description": "Displays content in an expandable accordion, with initially visible title and summary.",
+  "style": "file:./super-accordion.css",
+  "script": "file:./super-accordion.js",
+  "category": "formatting",
+  "icon": "editor-ul",
+  "keywords": ["accordion", "toggle", "expand", "collapse", "faq"],
+  "apiVersion": 2,
+  "acf": {
+    "mode": "preview",
+    "renderTemplate": "super-accordion.php"
+  },
+  "supports": {
+    "align": true,
+    "anchor": true
+  }
+}

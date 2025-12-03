@@ -1,0 +1,14 @@
+{
+    "name": "acf/simplebgitem",
+    "title": "Simple Buying Guide Item",
+    "description": "Show BG item",
+    "style": [ "file:./simplebgitem.css" ],
+    "category": "formatting",
+    "icon": "admin-comments",
+    "keywords": ["simple", "bg", "item", "buying guide"],
+    "acf": {
+        "mode": "edit",
+        "renderTemplate": "simplebgitem.php"
+    },
+    "align": "full"
+}

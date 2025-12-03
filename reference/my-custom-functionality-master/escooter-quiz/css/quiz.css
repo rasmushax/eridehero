@@ -1,0 +1,503 @@
+/**
+ * ERideHero E-Scooter Quiz Styles
+ * Matches the site's design and brand
+ */
+
+:root {
+  --primary: #6c5ce7;
+  --primary-light: #7d6cf5;
+  --primary-dark: #5a49d4;
+  --secondary: #f64f59;
+  --text-dark: #2d3436;
+  --text-light: #636e72;
+  --text-lighter: #b2bec3;
+  --background: #ffffff;
+  --background-alt: #f8f9fa;
+  --border: #e0e0e0;
+  --success: #00b894;
+  --warning: #fdcb6e;
+  --error: #d63031;
+}
+
+/* Quiz container */
+.eridehero-quiz-container {
+  max-width: 800px;
+  margin: 40px auto;
+  background-color: var(--background);
+  border-radius: 10px;
+  box-shadow: 0 4px 15px rgba(0, 0, 0, 0.08);
+  overflow: hidden;
+}
+
+.eridehero-quiz-intro {
+  padding: 30px;
+  text-align: center;
+}
+
+.eridehero-quiz-intro h2 {
+  font-size: 28px;
+  font-weight: 600;
+  margin-bottom: 15px;
+  color: var(--text-dark);
+}
+
+.eridehero-quiz-intro p {
+  font-size: 16px;
+  color: var(--text-light);
+  max-width: 600px;
+  margin: 0 auto 20px;
+}
+
+.eridehero-quiz-intro-image {
+  margin: 25px auto;
+  max-width: 100%;
+  height: auto;
+  border-radius: 8px;
+}
+
+/* Progress bar */
+.eridehero-quiz-progress {
+  height: 6px;
+  background-color: var(--border);
+  position: relative;
+  overflow: hidden;
+}
+
+.eridehero-quiz-progress-bar {
+  height: 100%;
+  background-color: var(--primary);
+  transition: width 0.4s ease;
+  width: 0%;
+}
+
+/* Question container */
+.eridehero-quiz-questions {
+  padding: 30px;
+}
+
+.eridehero-quiz-question {
+  font-size: 22px;
+  font-weight: 500;
+  margin-bottom: 20px;
+  color: var(--text-dark);
+}
+
+/* Options container */
+.eridehero-quiz-options {
+  display: grid;
+  grid-template-columns: repeat(2, 1fr);
+  gap: 15px;
+  margin-bottom: 30px;
+}
+
+@media (max-width: 640px) {
+  .eridehero-quiz-options {
+    grid-template-columns: 1fr;
+  }
+}
+
+.eridehero-quiz-option {
+  background-color: var(--background-alt);
+  border: 2px solid var(--border);
+  border-radius: 8px;
+  padding: 15px;
+  cursor: pointer;
+  transition: all 0.2s ease;
+  display: flex;
+  align-items: center;
+}
+
+.eridehero-quiz-option.selected {
+  border-color: var(--primary);
+  background-color: rgba(108, 92, 231, 0.05);
+}
+
+.eridehero-quiz-option:hover {
+  border-color: var(--primary-light);
+  transform: translateY(-2px);
+  box-shadow: 0 4px 8px rgba(0, 0, 0, 0.05);
+}
+
+.eridehero-quiz-option-image {
+  width: 60px;
+  height: 60px;
+  object-fit: contain;
+  margin-right: 15px;
+  flex-shrink: 0;
+}
+
+.eridehero-quiz-option-content {
+  flex-grow: 1;
+}
+
+.eridehero-quiz-option-title {
+  font-weight: 500;
+  font-size: 16px;
+  margin-bottom: 5px;
+  color: var(--text-dark);
+}
+
+.eridehero-quiz-option-desc {
+  font-size: 14px;
+  color: var(--text-light);
+}
+
+/* Multi-select styling */
+.eridehero-quiz-option.multiselect {
+  position: relative;
+}
+
+.eridehero-quiz-option.multiselect.selected:before {
+  content: "✓";
+  position: absolute;
+  top: 10px;
+  right: 10px;
+  width: 24px;
+  height: 24px;
+  background-color: var(--primary);
+  color: white;
+  border-radius: 50%;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  font-size: 14px;
+}
+
+/* Navigation */
+.eridehero-quiz-nav {
+  display: flex;
+  justify-content: space-between;
+  margin-top: 20px;
+}
+
+.eridehero-quiz-btn {
+  padding: 12px 20px;
+  border-radius: 6px;
+  font-weight: 500;
+  font-size: 16px;
+  cursor: pointer;
+  transition: all 0.2s ease;
+  border: none;
+  outline: none;
+}
+
+.eridehero-quiz-btn-primary {
+  background-color: var(--primary);
+  color: white;
+}
+
+.eridehero-quiz-btn-primary:hover {
+  background-color: var(--primary-dark);
+}
+
+.eridehero-quiz-btn-secondary {
+  background-color: var(--background-alt);
+  color: var(--text-dark);
+}
+
+.eridehero-quiz-btn-secondary:hover {
+  background-color: var(--border);
+}
+
+.eridehero-quiz-btn:disabled {
+  opacity: 0.5;
+  cursor: not-allowed;
+}
+
+/* Results container */
+.eridehero-quiz-results {
+  display: none;
+  padding: 30px;
+}
+
+.eridehero-quiz-results-header {
+  text-align: center;
+  margin-bottom: 30px;
+}
+
+.eridehero-quiz-results-title {
+  font-size: 28px;
+  font-weight: 600;
+  color: var(--text-dark);
+  margin-bottom: 10px;
+}
+
+.eridehero-quiz-results-subtitle {
+  font-size: 16px;
+  color: var(--text-light);
+  max-width: 600px;
+  margin: 0 auto;
+}
+
+/* Scooter result item */
+.eridehero-scooter-result {
+  border: 1px solid var(--border);
+  border-radius: 10px;
+  margin-bottom: 30px;
+  overflow: hidden;
+}
+
+.eridehero-scooter-result:hover {
+  box-shadow: 0 5px 15px rgba(0, 0, 0, 0.1);
+  transform: translateY(-3px);
+  transition: all 0.3s ease;
+}
+
+.eridehero-match-percent {
+  background-color: var(--background-alt);
+  padding: 8px 15px;
+  display: flex;
+  align-items: center;
+}
+
+.eridehero-match-bar {
+  flex-grow: 1;
+  height: 8px;
+  background-color: var(--border);
+  border-radius: 4px;
+  margin-right: 15px;
+  overflow: hidden;
+  position: relative;
+}
+
+.eridehero-match-fill {
+  height: 100%;
+  background-color: var(--success);
+  position: absolute;
+  left: 0;
+  top: 0;
+}
+
+.eridehero-match-number {
+  font-weight: 600;
+  color: var(--success);
+}
+
+.eridehero-scooter-header {
+  display: flex;
+  padding: 20px;
+  border-bottom: 1px solid var(--border);
+}
+
+.eridehero-scooter-image {
+  width: 120px;
+  height: 120px;
+  object-fit: contain;
+  margin-right: 20px;
+  flex-shrink: 0;
+}
+
+.eridehero-scooter-title {
+  flex-grow: 1;
+}
+
+.eridehero-scooter-name {
+  font-size: 22px;
+  font-weight: 600;
+  margin-bottom: 5px;
+  color: var(--text-dark);
+}
+
+.eridehero-scooter-price {
+  font-size: 20px;
+  font-weight: 600;
+  color: var(--primary);
+  margin-bottom: 8px;
+}
+
+.eridehero-scooter-tagline {
+  color: var(--text-light);
+  font-size: 14px;
+  font-style: italic;
+}
+
+.eridehero-scooter-content {
+  padding: 20px;
+}
+
+.eridehero-specs-grid {
+  display: grid;
+  grid-template-columns: repeat(3, 1fr);
+  gap: 15px;
+  margin: 20px 0;
+}
+
+@media (max-width: 640px) {
+  .eridehero-specs-grid {
+    grid-template-columns: repeat(2, 1fr);
+  }
+}
+
+.eridehero-spec-item {
+  display: flex;
+  flex-direction: column;
+  align-items: center;
+  text-align: center;
+  padding: 10px;
+  background-color: var(--background-alt);
+  border-radius: 6px;
+}
+
+.eridehero-spec-value {
+  font-size: 18px;
+  font-weight: 600;
+  margin-bottom: 5px;
+  color: var(--text-dark);
+}
+
+.eridehero-spec-label {
+  font-size: 13px;
+  color: var(--text-light);
+}
+
+.eridehero-features-list {
+  list-style: none;
+  margin: 20px 0;
+}
+
+.eridehero-feature-item {
+  display: flex;
+  align-items: flex-start;
+  margin-bottom: 12px;
+}
+
+.eridehero-feature-icon {
+  color: var(--success);
+  margin-right: 10px;
+  font-size: 18px;
+}
+
+.eridehero-feature-text {
+  font-size: 15px;
+  color: var(--text-dark);
+}
+
+.eridehero-scooter-actions {
+  display: flex;
+  gap: 10px;
+  margin-top: 20px;
+}
+
+.eridehero-scooter-btn {
+  text-decoration: none;
+  padding: 12px 15px;
+  border-radius: 6px;
+  font-weight: 500;
+  text-align: center;
+  flex-grow: 1;
+  transition: all 0.2s ease;
+}
+
+.eridehero-scooter-btn-primary {
+  background-color: var(--primary);
+  color: white !important;
+}
+
+.eridehero-scooter-btn-primary:hover {
+  background-color: var(--primary-dark);
+}
+
+.eridehero-scooter-btn-secondary {
+  border: 1px solid var(--primary);
+  color: var(--primary) !important;
+  background-color: white;
+}
+
+.eridehero-scooter-btn-secondary:hover {
+  background-color: rgba(108, 92, 231, 0.05);
+}
+
+/* Email capture */
+.eridehero-email-capture {
+  margin: 30px 0;
+  text-align: center;
+}
+
+.eridehero-email-capture p {
+  margin-bottom: 15px;
+  color: var(--text-light);
+}
+
+.eridehero-email-form {
+  display: flex;
+  max-width: 500px;
+  margin: 0 auto;
+}
+
+.eridehero-email-input {
+  flex-grow: 1;
+  padding: 12px 15px;
+  border: 1px solid var(--border);
+  border-radius: 6px 0 0 6px;
+  font-size: 16px;
+  outline: none;
+}
+
+.eridehero-email-input:focus {
+  border-color: var(--primary);
+}
+
+.eridehero-email-btn {
+  background-color: var(--primary);
+  color: white;
+  border: none;
+  padding: 0 20px;
+  font-weight: 500;
+  border-radius: 0 6px 6px 0;
+  cursor: pointer;
+}
+
+/* Results actions */
+.eridehero-results-actions {
+  text-align: center;
+  margin-top: 30px;
+}
+
+/* Loader */
+.eridehero-loader {
+  display: none;
+  justify-content: center;
+  align-items: center;
+  position: absolute;
+  top: 0;
+  left: 0;
+  right: 0;
+  bottom: 0;
+  background-color: rgba(255, 255, 255, 0.8);
+  z-index: 10;
+}
+
+.eridehero-spinner {
+  width: 40px;
+  height: 40px;
+  border: 4px solid var(--border);
+  border-radius: 50%;
+  border-top-color: var(--primary);
+  animation: spin 1s linear infinite;
+}
+
+@keyframes spin {
+  0% { transform: rotate(0deg); }
+  100% { transform: rotate(360deg); }
+}
+
+/* Success/error messages */
+.eridehero-message {
+  padding: 15px;
+  margin: 20px 0;
+  border-radius: 6px;
+  text-align: center;
+  display: none;
+}
+
+.eridehero-message-success {
+  background-color: rgba(0, 184, 148, 0.1);
+  color: var(--success);
+  border: 1px solid var(--success);
+}
+
+.eridehero-message-error {
+  background-color: rgba(214, 48, 49, 0.1);
+  color: var(--error);
+  border: 1px solid var(--error);
+}

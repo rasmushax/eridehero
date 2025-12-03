@@ -1,0 +1,14 @@
+{
+    "name": "acf/jumplinks",
+    "title": "Jump Links",
+    "description": "Add jumplinks to post",
+    "style": [ "file:./jumplinks.css" ],
+    "category": "formatting",
+    "icon": "admin-comments",
+    "keywords": ["jump", "link","quick"],
+    "acf": {
+        "mode": "edit",
+        "renderTemplate": "jumplinks.php"
+    },
+    "align": "full"
+}

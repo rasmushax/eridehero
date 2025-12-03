@@ -1,0 +1,14 @@
+{
+    "name": "acf/bgoverview",
+    "title": "Buying Guide Overview",
+    "description": "Buying Guide Overview item containing the top picks",
+    "style": [ "file:./bgoverview.css" ],
+    "category": "formatting",
+    "icon": "admin-comments",
+    "keywords": ["bg", "bg", "overview", "buying guide"],
+    "acf": {
+        "mode": "edit",
+        "renderTemplate": "bgoverview.php"
+    },
+    "align": "full"
+}

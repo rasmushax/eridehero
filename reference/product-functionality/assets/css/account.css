@@ -1,0 +1,555 @@
+.review-item {
+	padding:1.5em 0;
+	border-top:1px solid #f4f4f4;
+	display:flex;
+	flex-direction:column;
+	gap:1em;
+}
+
+.review-item-top {
+    display: flex;
+    gap: 1em 2em;
+    flex-wrap: wrap;
+    justify-content: space-between;
+}
+
+.iconshidden {
+	display:none;
+}
+
+.review-item-star {
+    width: 16px;
+    fill: #f0effe;
+    height: 16px;
+}
+
+.review-item-stars {
+	display: flex;
+    gap: .2em;
+    align-items: center;
+}
+
+.review-stars-1 .review-item-star:nth-child(-n+1) {
+    fill: #ffd700;
+}
+
+.review-stars-2 .review-item-star:nth-child(-n+2) {
+    fill: #ffd700;
+}
+
+.review-stars-3 .review-item-star:nth-child(-n+3) {
+    fill: #ffd700;
+}
+
+.review-stars-4 .review-item-star:nth-child(-n+4) {
+    fill: #ffd700;
+}
+
+.review-stars-5 .review-item-star:nth-child(-n+5) {
+    fill: #ffd700;
+}
+
+.review-item-link {
+    display: flex;
+    align-items: center;
+    gap: .5em;
+    color: var(--cldark);
+}
+
+.review-item-body {
+	word-break:break-word;
+}
+
+.review-item-top-right {
+	flex-direction:column;
+	display:flex;
+}
+
+.review-item-title {
+	display: flex;
+    gap: .5em;
+    align-items: center;
+}
+
+img.review-item-img {
+    display: flex;
+}
+
+.review-item-imgcon {
+    position: relative;
+    padding: 10px;
+}
+
+.review-item-imgcon:after {
+    content: "";
+    position: absolute;
+    inset: 0;
+    border-radius: 100%;
+    background-color: var(--clol);
+}
+
+.account-title {
+	margin-bottom:.5em;
+}
+
+.review-item-time {
+    color: var(--clfade);
+    font-size: 14px;
+    font-weight: 400;
+}
+
+.review-item-status {
+    font-size: 12px;
+    padding: 0.2em 0.6em;
+    border-radius: 5px;
+}
+
+.review-published {
+    color: var(--cldark);
+    background: #49D784;
+}
+
+.review-pending {
+    color: var(--cldark);
+    background: #ffd700;
+}
+
+.account-empty {
+	display: flex;
+    flex-direction: column;
+    gap: 1em;
+    height: 100%;
+    align-items: center;
+    justify-content: center;
+    background: grey;
+    color: var(--cldark);
+    padding: 1.5em;
+    background: var(--clow);
+    border-radius: 5px;
+}
+
+svg.account-empty-icon {
+    width: 100px;
+    height: 100px;
+    fill: currentColor;
+}
+
+.account-empty-txt {
+    font-size: 22px;
+}
+
+
+
+/*** TABLE ***/
+
+button.tracker-more {
+	padding:0;
+	margin:0;
+	cursor:pointer;
+	border:none;
+	width:40px;
+	height:40px;
+	display:flex;
+	align-items:center;
+	justify-content:center;
+	position:relative;
+	border-radius:100%;
+	background:transparent;
+	transition:.2s ease;
+	color:var(--clbody);
+	font-family:inherit;
+}
+
+button.tracker-more:hover {
+	background:#f0effe;
+	color:var(--cldark);
+}
+
+button.tracker-more svg {
+	width:25px;
+	height:25px;
+	display:flex;
+	fill:currentColor;
+}
+
+#trackers {
+	border-collapse:collapse;
+	color:var(--cldark);
+}
+
+#trackers th, #trackers td {
+	padding:0.6em;
+}
+
+#trackers th {
+    font-weight: 500;
+    font-size: 14px;
+    text-transform: uppercase;
+	cursor:pointer;
+}
+
+#trackers th.dt-orderable-none {
+	cursor:auto;
+}
+
+#trackers tbody tr {
+	border-top:1px solid #f4f4f4;
+}
+
+#trackers tbody {
+	border-bottom:1px solid #f4f4f4;
+}
+
+.account-table-prod {
+	display:flex;
+	font-weight:500;
+	color:var(--cldark);
+	align-items:center;
+	gap:.65em;
+}
+
+#trackers .review-item-imgcon {
+	padding:5px;
+}
+
+button.tracker-more .tooltip-text {
+	width: min-content;
+    white-space: nowrap;
+	padding:.35em .65em;
+}
+#trackers .review-item-imgcon:after {
+	border-radius:5px;
+}
+
+.dt-orderable-asc .dt-column-order, .dt-orderable-desc .dt-column-order {
+	    display: inline-block;
+    height: 0;
+    margin-left: 0.5em;
+    position: relative;
+    width: 0;
+    transform: translateY(1px);
+    border-style: solid;
+    border-color: transparent;
+    border-width: 5px 5px 0;
+    border-top-color: #9da3b9;
+}
+
+.dt-orderable-asc .dt-column-order:before, .dt-orderable-desc .dt-column-order:before {
+    display: inline-block;
+    content: "";
+    position: absolute;
+    height: 0;
+    width: 0;
+    left: -5px;
+    top: -12px;
+    border-style: solid;
+    border-color: transparent;
+    border-width: 0 5px 5px;
+    border-bottom-color: #9da3b9;
+}
+
+.dt-ordering-asc .dt-column-order {
+	border-top-color:transparent;
+}
+
+.dt-ordering-asc .dt-column-order:before {
+	border-bottom-color:#3d4668;
+}
+
+.dt-ordering-desc .dt-column-order {
+	border-top-color:#3d4668;
+}
+
+.dt-ordering-desc .dt-column-order:before {
+	border-bottom-color:transparent;
+	top:-10px;
+}
+
+.dt-search {
+	padding: 0.6em;
+    margin-bottom: 1em;
+    display: flex;
+    flex-direction: column;
+    gap: .5em;
+    align-items: flex-start;
+}
+
+.dt-search label {
+	 color: var(--cldark);
+    font-weight: 500;
+    text-transform: uppercase;
+    font-size: 14px;
+}
+
+.dt-search input {
+	font-family: inherit;
+    border: 1px solid #e3e8ed;
+    padding: 0.8em 1.2em;
+    border-radius: 5px;
+    color: var(--cldark);
+    font-size: 14px;
+}
+
+button.dt-paging-button {
+    background: transparent;
+    border: 1px solid #e3e8ed;
+    border-radius: 5px;
+    width: 40px;
+    font-family: inherit;
+    height: 40px;
+    display: flex;
+    cursor: pointer;
+    align-items: center;
+    justify-content: center;
+    color: var(--cldark);
+}
+
+button.dt-paging-button.current {
+	cursor:auto;
+	color:var(--clmain);
+}
+
+button.dt-paging-button.disabled {
+	display:none;
+}
+
+.dt-paging {
+	display:flex;
+	gap:.5em;
+}
+
+.dt-layout-row:last-child {
+	display:flex;
+	gap:1em;
+	padding:1em 0;
+	justify-content:space-between;
+}
+
+.tracker-more-container {
+  position: relative;
+}
+
+.tracker-dropdown {
+  position: absolute;
+  transform:translate(-50%,-5%);
+  background-color: #fff;
+  border-radius: 5px;
+  box-shadow: 0 2px 7px rgba(65, 77, 137, 0.1);
+  z-index: 1000;
+}
+
+.tracker-dropdown button {
+  display: block;
+  width: 100%;
+  padding: 8px 12px;
+  text-align: left;
+  border: none;
+  font-family:inherit;
+  background: none;
+  cursor: pointer;
+  color:var(--cldark);
+}
+
+.tracker-dropdown button:hover {
+  background-color: #f4f4f4;
+}
+
+.pf-settings-container section {
+	margin:2em 0;
+}
+.pf-settings-container .pf-btn {
+	width:auto;
+}
+
+#pf-change-email-form, #pf-change-password-form, #pf-email-preferences-form {
+	display:flex;
+	gap:1em;
+	flex-direction:column;
+	margin-top:1em;
+	align-items: flex-start;
+}
+
+form#pf-email-preferences-form.pf-email-pref {
+    gap: 0;
+}
+
+.pf-explainer {
+    margin-bottom: 1.5em;
+    font-size: 14px;
+    border-bottom: 1px solid #f4f4f4;
+    padding-bottom: 1.5em;
+}
+
+form#pf-email-preferences-form #pf-sales-roundup-frequency {
+	margin-bottom:1em;
+}
+
+form#pf-email-preferences-form .pf-checkbox-group {
+    font-weight: 700;
+}
+
+div#pf-sales-roundup-frequency {
+    font-size: 14px;
+}
+
+#pf-change-email-form input, #pf-change-password-form input, #pf-email-preferences-form input, #pf-email-preferences-form select {
+    padding: 10px;
+	width:400px;
+	max-width:90%;
+    font-family: inherit;
+    border: 1px solid #e3e8ed;
+    border-radius: 5px;
+    color: var(--cldark);
+}
+
+#pf-change-email-form input:disabled {
+	opacity:0.3;
+	cursor:not-allowed;
+}
+
+.pf-price-trackers, .pf-checkbox-group, .pf-checkbox-group {
+    display: flex;
+    align-items: center;
+    position: relative;
+    padding-left: 35px;
+    margin-bottom: 12px;
+    cursor: pointer;
+    font-size: 14px;
+    color: var(--cldark);
+}
+
+.pf-price-trackers input, .pf-checkbox-group input, .pf-checkbox-group input {
+    position: absolute;
+    opacity: 0;
+    cursor: pointer;
+    height: 0;
+    width: 0;
+}
+
+.checkbox-container .checkmark {
+    position: absolute;
+    top: 0;
+    left: 0;
+    height: 25px;
+    width: 25px;
+    background-color: #fff;
+    border: 2px solid #e3e8ed;
+    border-radius: 5px;
+    transition: all 0.2s ease;
+}
+
+.checkbox-container .checkmark:after {
+    left: 9px;
+    top: 5px;
+    width: 5px;
+    height: 10px;
+    border: solid white;
+    border-width: 0 2px 2px 0;
+    transform: rotate(45deg);
+}
+
+.checkbox-container input:checked ~ .checkmark {
+    background-color: var(--clmain);
+    border-color: var(--clmain);
+}
+
+.checkmark:after {
+    content: "";
+    position: absolute;
+    display: none;
+}
+
+.checkbox-container input:checked ~ .checkmark:after {
+    display: block;
+}
+
+.pf-warning-message {
+    background-color: #ffebee;
+    border: 1px solid #ffcdd2;
+    color: #b71c1c;
+    padding: 10px;
+    margin-top: 10px;
+    border-radius: 5px;
+    font-size: 14px;
+}
+
+@media screen and (max-width:991px){
+	h1.account-title {
+		font-size:26px;
+	}
+}
+
+@media screen and (max-width:700px){
+	table#trackers, #trackers td {
+		display:block;
+	}
+	
+	#trackers thead {
+		display:none;
+	}
+	#trackers tbody {
+		display: flex;
+		flex-direction: column;
+		gap:1em;
+		border-bottom:none;
+	}
+	
+	#trackers tr {
+		display: flex;
+		flex-direction: row;
+		align-items: center;
+		width: 100%;
+		gap: 0 1em;
+		position: relative;
+		flex-wrap: wrap;
+		justify-content: space-between;
+		padding:0.6em;
+		border:1px solid #f4f4f4;
+		border-radius:5px;
+	}
+	
+	#trackers .col-start-price, #trackers .col-current-price, #trackers .tracker-type {
+		display:flex;
+		flex-direction:column;
+	}
+	
+	#trackers .col-start-price:before {
+		content:"Start Price:";
+		font-weight:700;
+	}
+	#trackers .col-current-price:before {
+		content:"Current Price:";
+		font-weight:700;
+	}
+	#trackers .tracker-type:before {
+		content:"Target:";
+		font-weight:700;
+	}
+	
+	#trackers .tracker-btn {
+		position:absolute;
+		right:0.3em;
+		top:0.3em;
+	}
+	
+	#trackers tr > td:first-child {
+		width:100%;
+	}
+	
+	.account-table-prod {
+		display: inline-flex;
+		padding-right: 3em;
+	}
+	
+	.dt-search {
+		padding:0;
+	}
+}
+
+@media screen and (max-width: 350px) {
+    .account-table-prod {
+        flex-direction:column;
+		padding-right:0;
+		align-items: flex-start;
+    }
+}

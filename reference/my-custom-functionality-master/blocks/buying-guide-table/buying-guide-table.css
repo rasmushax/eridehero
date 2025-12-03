@@ -1,0 +1,113 @@
+/* Styling for Buying Guide Table Block - Revised Layout */
+.buying-guide-table-block {
+    margin-top: 2em;
+    margin-bottom: 2em;
+	font-size:14px;
+}
+
+.bgt-table-container {
+    overflow-x: auto; /* Allows horizontal scrolling on small screens */
+    -webkit-overflow-scrolling: touch; /* Smoother scrolling on iOS */
+    border: 1px solid #e0e0e0;
+    border-radius: 8px; /* Rounded corners for the container */
+}
+
+.buying-guide-table-block table {
+    width: 100%;
+    border-collapse: collapse;
+    border-spacing: 0;
+    font-size: 0.9em;
+    min-width: 550px; /* Adjusted minimum width */
+}
+
+.buying-guide-table-block th,
+.buying-guide-table-block td {
+    padding: 12px 10px; /* Slightly reduced padding */
+    text-align: left;
+    border-bottom: 1px solid rgb(230, 229, 233);
+    vertical-align: middle; /* Align content vertically */
+}
+
+.buying-guide-table-block thead th {
+    background-color: rgb(249, 250, 254);
+    font-weight: 600; /* Bolder header text */
+    white-space: nowrap; /* Prevent headers from wrapping */
+}
+/* Column Specific Styles */
+.bgt-col-image {
+    width: 60px; /* Slightly smaller image column */
+    text-align: center;
+    padding-right: 5px;
+}
+.bgt-col-image img {
+    max-width: 50px; /* Smaller image */
+    height: auto;
+    display: block;
+    margin: 0 auto;
+    border-radius: 4px;
+}
+
+/* Combined Scooter Info Column */
+.bgt-col-scooter-info {
+    line-height: 1.4; /* Adjust line height for stacked text */
+}
+.bgt-col-scooter-info .scooter-name a {
+    text-decoration: none;
+    font-weight: 600;
+    font-size: 1em;
+}
+.bgt-col-scooter-info .scooter-name a:hover {
+    text-decoration: underline;
+}
+.bgt-col-scooter-info .scooter-highlight {
+    font-size: 0.9em;
+    color: #485373;
+    margin-top: 2px;
+}
+
+.bgt-col-speed,
+.bgt-col-range,
+.bgt-col-weight {
+    white-space: nowrap; /* Prevent wrapping for specs */
+    text-align: center; /* Center align specs */
+}
+
+/* Price Link Style */
+.bgt-price-link {
+    display: inline-block;
+    padding: 6px 8px;
+    color: white;
+    text-decoration: none;
+	width:100%;
+	text-align:center;
+    border-radius: 4px;
+    font-weight: 600;
+    white-space: nowrap;
+    background-color: #5e2ced;
+    transition: background-color 0.2s ease, color 0.2s ease;
+}
+.bgt-price-link:hover {
+    background-color: #a32ded;
+    color: #fff;
+    text-decoration: none;
+}
+
+.buying-guide-table-block tbody tr:last-child td {
+	border-bottom:none;
+}
+
+
+/* Responsive adjustments */
+@media screen and (max-width: 767px) {
+   /* Horizontal scroll is handled by .bgt-table-container */
+   /* You could increase min-width if needed, or implement stacking */
+    .buying-guide-table-block th,
+    .buying-guide-table-block td {
+        padding: 8px 5px; /* Reduce padding further on mobile */
+        font-size: 0.85em; /* Smaller font on mobile */
+    }
+    .bgt-col-image { width: 50px; }
+    .bgt-col-image img { max-width: 40px; }
+    .bgt-price-link { padding: 4px 6px; }
+}
+

@@ -1,0 +1,233 @@
+.simpleitem {
+	padding:1em;
+	border:1px solid #f4f4f4;
+	border-radius:5px;
+	display:flex;
+	margin:1em 0;
+	flex-direction:column;
+}
+
+.simpleitemtop {
+	display:flex;
+	align-items:center;
+	justify-content:space-between;
+	margin-bottom:1em;
+}
+
+.simpleitemtop > div:last-child {
+	display:flex;
+	flex-direction:column;
+	align-items:center;
+}
+
+.simpleitem img {
+	border-radius:5px;
+	max-width:100%;
+}
+
+.simpleitemtitle {
+	margin-top:0!important;
+	display: flex;
+    flex-direction: column;
+    font-size: 26px;
+}
+
+.simpleitemtitle > span {
+	font-size: 22px;
+    font-weight: 400;
+}
+
+.simpleitemdesktopcta, .simpleitemmobilecta {
+	display:flex;
+	align-items:center;
+	justify-content:center;
+	    white-space: nowrap;
+	font-size:16px;
+	color:white;
+	background-color:#5e2ced;
+	border-radius:5px;
+	gap:6px;
+	transition:.2s;
+	padding:14px 24px;
+}
+
+.simpleitemmobilecta:hover, .simpleitemdesktopcta:hover {
+	color:white;
+	background-color:#a32ded;
+}
+
+.simpleitemtop > div:last-child {
+	display:flex;
+}
+
+.simpleitemcouponmobile, .simpleitemmobilecta {
+	display:none;
+}
+
+.simpleitemmobilecta > span, .simpleitemdesktopcta > span {
+	text-decoration:line-through;
+	font-weight:400;
+}
+
+.simpleitemspecs {
+	display:grid;
+	gap:.75em;
+	grid-template-columns: repeat(auto-fill, minmax(200px,1fr));
+}
+
+.specitem {
+	display: grid;
+    column-gap: 1em;
+    grid-template-columns: auto 1fr;
+    align-items: center;
+	color:#21273a;
+}
+
+.specitem svg {
+	grid-row:1 / span 2;
+	width:28px;
+	height:28px;
+	color:#21273a;
+	fill:currentColor;
+}
+
+.specitem svg.strokes path {
+	stroke:currentColor;
+}
+	
+
+.spectitle {
+	font-size:14px;
+}
+
+.specval {
+	font-size:18px;
+}
+
+.simpleitem .pros-and-cons {
+	margin:0;
+}
+
+.simpleitem .pros-and-cons-title {
+	margin-top:0;
+	font-size:18px;
+}
+
+.simpleitemspecs, .simpleitem .pros-and-cons, .simpleitemquick {
+	border-bottom: 1px solid #f4f4f4;
+    padding: 1.25em 0;
+	color:#21273a;
+}
+
+.simpleitemquicktop {
+	font-weight:600;
+	display:flex;
+	align-items:center;
+	gap:.5em;
+}
+
+.simpleitemquickicon {
+	width:28px;
+	height:28px;
+	fill:#5e2ced;
+}
+
+.simpleitemquicktext {
+	margin-top:.5em;
+	font-size:16px;
+}
+
+.simplebgcontent > :first-child {
+    margin-top: 1em;
+}
+
+.simpleitemcoupon, .simpleitemcouponmobile {
+	font-size:14px;
+	margin-top:0.25em;
+	color:#21273a;
+}
+
+@media screen and (max-width: 767px) {
+	.simpleitem .simpleitemtop .simpleitemtitle {
+		font-size: 22px;
+	}
+	.simpleitem  .pros-and-cons {
+		grid-template-columns: 1fr 1fr;
+		gap:1em;
+	}
+}
+
+@media screen and (max-width: 610px) {
+	.simpleitemtitle {
+		display:block;
+	}
+	.simpleitemtitle > span {
+		font-size:unset;
+		font-weight:unset;
+	}
+	.simpleitemtitle > span:after {
+		content:": ";
+	}
+	
+	.simpleitemtop > div:last-child {
+		display:none;
+	}
+	
+	.simpleitemmobilecta {
+		display:flex;
+		margin-top:1em;
+	}
+	
+	.simpleitemcouponmobile {
+		display:block;
+		width:100%;
+		text-align:center;
+		margin-top:0.5em;
+	}
+	
+	.simpleitemspecs {
+		grid-template-columns: 1fr 1fr;
+	}
+	
+}
+
+@media screen and (max-width: 560px) {	
+	.simpleitem  .pros-and-cons {
+		grid-template-columns: 1fr;
+	}	
+}
+
+@media screen and (max-width: 460px) {
+	.simpleitemtitle {
+		display:block;
+	}
+	.simpleitemtitle > span {
+		font-size:unset;
+		font-weight:unset;
+	}
+	.simpleitemtitle > span:after {
+		content:": ";
+	}
+	
+	.simpleitemspecs {
+		grid-template-columns: 1fr;
+	}
+	
+	.specitem {
+		display: flex;
+		column-gap: 0.5em;
+	}
+	
+	.spectitle, .simpleitemquicktop {
+		font-size:16px;
+	}
+	
+	.spectitle:after {
+		content:": ";
+	}
+	
+	.specval, .simpleitem .pros-and-cons-title {
+		font-size:16px;
+	}
+
+}

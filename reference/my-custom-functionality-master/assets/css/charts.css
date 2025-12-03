@@ -1,0 +1,51 @@
+div.graphContainer {
+	display:flex;
+	width:100%;
+	flex-direction:column;
+	font-weight:700;
+	margin:10px 0;
+}
+
+div.graphTitle {
+	margin:auto;
+	font-size:26px;
+	font-weight:400;
+}
+
+div.graphEntity {
+	display:flex;
+	flex-wrap:wrap;
+	flex-direction:row;
+	justify-content:space-between;
+	margin:8px 0;
+	font-size:16px;
+}
+
+div.graphEntityBar {
+	width:100%;
+	border-radius:5px;
+	background-color:#ebebeb;
+	height:30px;
+}
+
+div.graphEntityBarFill {
+	background-color:#5e2ced;
+	height:100%;
+	border-radius:5px;
+}
+
+@media (max-width:992px){
+	div.graphTitle {
+		font-size:24px;
+	}
+}
+
+@media (max-width:748px){
+	div.graphTitle {
+		font-size:20px;
+	}
+	
+	div.graphEntity {
+		font-size:14px;
+	}
+}

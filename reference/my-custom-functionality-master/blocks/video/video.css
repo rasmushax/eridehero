@@ -1,0 +1,53 @@
+.acfvideo {
+	position:relative;
+	cursor:pointer;
+	margin:1em 0;
+	display:flex;
+}
+
+.acfvideo video {
+	width:100%;
+	aspect-ratio:16/9;
+	border-radius:5px;
+	cursor:pointer;
+	display:none;
+}
+
+.acfvideo .video-controls {
+	position:absolute;
+	left:10px;
+	bottom:10px;
+}
+
+.acfvideo .video-controls svg {
+	fill:white;
+	height: 100px;
+	filter: drop-shadow(2px 4px 16px black);
+    max-height: 20vw;
+    cursor: pointer;
+    width: 100px;
+    max-width: 20vw;
+}
+
+.acfvideo .video-controls svg.vid_loading {
+	animation-name: spin;
+	animation-duration: 1000ms;
+	animation-iteration-count: infinite;
+	animation-timing-function: linear; 
+}
+
+.acfvidimg {
+	width:100%;
+	aspect-ratio:16/9;
+	border-radius:5px;
+	height:auto;
+}
+
+@keyframes spin {
+    from {
+        transform:rotate(0deg);
+    }
+    to {
+        transform:rotate(360deg);
+    }
+}

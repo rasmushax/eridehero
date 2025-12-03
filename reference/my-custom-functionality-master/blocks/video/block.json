@@ -1,0 +1,14 @@
+{
+    "name": "acf/video",
+    "title": "ACF Video",
+    "description": "Show a video in custom player",
+    "style": [ "file:./video.css" ],
+    "category": "formatting",
+    "icon": "admin-comments",
+    "keywords": ["video", "ACF"],
+    "acf": {
+        "mode": "edit",
+        "renderTemplate": "video.php"
+    },
+    "align": "full"
+}

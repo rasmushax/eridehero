@@ -1,0 +1,108 @@
+table.comparison-table {
+    font-size: 16px;
+    color: var(--cldark);
+    border-collapse: separate;
+    border-spacing: 0;
+	table-layout:fixed;
+	width:100%;
+}
+
+table.comparison-table tbody tr:nth-child(odd):not(.comparison-table-top) td, table.comparison-table tbody tr:nth-child(odd):not(.comparison-table-top) th {
+    background: #f4f5f9;
+}
+
+table.comparison-table td {
+    padding: .7em;
+}
+
+table.comparison-table th {
+    font-size: 14px;
+    padding: .7em;
+    text-transform: uppercase;
+	vertical-align: bottom;
+    font-weight: 500;
+}
+
+table.comparison-table tbody tr td:first-child {
+	font-weight:600;
+	border-radius:5px 0 0 5px;
+}
+
+table.comparison-table tbody tr td:last-child {
+	border-radius:0 5px 5px 0;
+}
+
+table.comparison-table a {
+    color: var(--cldark);
+    text-decoration: underline;
+    font-weight: 500;
+}
+
+table.comparison-table a:hover {
+	text-decoration:none;
+	color:var(--clmain);
+}
+
+.comparison-table-external {
+	display:flex;
+	align-items:center;
+	gap:.5em;
+}
+
+.comparison-table-external svg {
+	width:16px;
+	height:16px;
+	fill:currentcolor;
+}
+
+.comparison-table-top svg {
+    width: 16px;
+    height: 16px;
+    margin-left: 5px;
+    transform: translateY(2px);
+}
+
+.comparison-table-top img {
+	border-radius:5px;
+	width:100%;
+	display:flex;
+	height:auto;
+}
+
+.comparison-table-container {
+    width: 100%;
+    overflow-y: auto;
+}
+
+tr.comparison-table-top td{
+    padding: 0 0.7em;
+}
+
+@media screen and (max-width:650px){
+	.comparison-table-top img {
+		aspect-ratio:1/1;
+		object-fit:cover;
+	}
+}
+
+@media screen and (max-width:600px){
+	table.comparison-table {
+		font-size:14px;
+	}
+	table.comparison-table td {
+		padding: .5em;
+	}
+	table.comparison-table th {
+		padding: 0 .5em;
+	}
+}
+
+@media screen and (max-width:550px){
+    .comparison-table-top img {
+        height: 100px;
+        width: auto;
+    }
+	table.comparison-table {
+		table-layout:auto;
+	}
+}

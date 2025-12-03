@@ -1,0 +1,14 @@
+{
+    "name": "acf/bfdeal",
+    "title": "Black Friday Deal",
+    "description": "Show BF deal",
+    "style": [ "file:./bfdeal.css" ],
+    "category": "formatting",
+    "icon": "admin-comments",
+    "keywords": ["black", "friday", "deal"],
+    "acf": {
+        "mode": "edit",
+        "renderTemplate": "bfdeal.php"
+    },
+    "align": "full"
+}

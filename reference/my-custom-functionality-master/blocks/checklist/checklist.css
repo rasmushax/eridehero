@@ -1,0 +1,55 @@
+/* Safety Checklist Block Styles */
+.checklist-block {
+  margin-top: 1.5em;
+  margin-bottom: 1.5em;
+  padding: 1.5em;
+  background-color: #f6f4ff;
+  border-radius: 10px;
+}
+
+/* Styles applied specifically within the editor */
+.is-root-container .checklist-block {
+    /* Add styles here if you need different spacing/margins in editor vs frontend */
+}
+
+.checklist-block .checklist-title {
+  margin-top: 0;
+  margin-bottom: 0.5em;
+  font-size: 1.2em;
+  font-weight: bold;
+}
+
+.checklist-block .checklist-description {
+  margin-top: 0;
+  margin-bottom: 1.2em;
+  font-size: 1em;
+}
+
+.checklist-block ul.checklist-items {
+  list-style: none;
+  padding-left: 0;
+  margin-top: 0;
+  margin-bottom: 0;
+}
+
+.checklist-block ul.checklist-items li {
+  display: flex;
+  align-items: flex-start;
+  margin-bottom: 0.75em;
+  line-height: 2;
+}
+
+.checklist-block ul.checklist-items li:last-child {
+  margin-bottom: 0;
+}
+
+.checklist-block ul.checklist-items li .checklist-icon {
+  flex-shrink: 0;
+  width: 1.3em;
+  height: 1.3em;
+  margin-right: 0.6em;
+  margin-top: 0.15em;
+  fill: #5e2ced;
+  border: 2px solid #5e2ced;
+  border-radius: 5px;
+}

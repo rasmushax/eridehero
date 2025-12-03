@@ -1,0 +1,14 @@
+{
+    "name": "acf/relatedproducts",
+    "title": "Related Products",
+    "description": "Show related products",
+    "style": [ "file:./relatedproducts.css" ],
+    "category": "formatting",
+    "icon": "admin-comments",
+    "keywords": ["related", "products"],
+    "acf": {
+        "mode": "edit",
+        "renderTemplate": "relatedproducts.php"
+    },
+    "align": "full"
+}

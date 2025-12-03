@@ -1,0 +1,21 @@
+.toppicks {
+	display:flex;
+	flex-direction:column;
+	gap:.75em;
+	color:#21273a;
+}
+
+.toppicktag {
+	font-weight:700;
+}
+
+.toppick > a {
+	align-items:center;
+	gap:.5em;
+	font-weight:500;
+}
+
+.toppick > a:hover {
+	text-decoration:underline;
+	color:#21273a;
+}

@@ -1,0 +1,547 @@
+/* Modal Styles */
+body.pf-modal-open {
+  overflow: hidden;
+}
+
+.pf-modal {
+  display: none;
+  position: fixed;
+  z-index: 1000;
+  left: 0;
+  align-items:center;
+  justify-content:center;
+  top: 0;
+  width: 100%;
+  height: 100%;
+  background-color: rgba(0,0,0,0.4);
+  overflow: hidden;
+}
+
+.pf-modal-content {
+  background-color: white;
+  width: 90%;
+  padding:2em;
+  max-width: 450px;
+  border-radius: 5px;
+  box-shadow: 0 4px 8px rgba(0,0,0,0.1);
+  max-height: 90vh;
+  display: flex;
+  position:relative;
+  flex-direction: column;
+}
+
+.pf-modal-header {
+  border-bottom: 1px solid #f4f4f4;
+  padding-bottom:1.5em;
+  display: flex;
+  justify-content: space-between;
+  align-items: center;
+}
+
+.pf-tracker-email-permission {
+	margin-bottom:1em;
+}
+
+.pf-modal-header h2 {
+  margin: 0;
+  font-size: 1.5em;
+}
+
+.pf-modal-body {
+	overflow-y:auto;
+}
+
+.pf-reviews-container {
+  max-height: calc(90vh - 100px); /* Adjust based on your header height */
+  overflow-y: auto;
+}
+
+.pf-close {
+	position: absolute;
+    right: 2em;
+    top: 2em;
+}
+
+.pf-close-icon {
+  fill:var(--cldark);
+  width:25px;
+  height:25px;
+  cursor: pointer;
+}
+
+.pf-close-icon:hover,
+.pf-close-icon:focus {
+  fill:var(--clmain);
+}
+
+/* Snackbar Styles */
+.pf-snackbar {
+  visibility: hidden;
+  max-width:90%;
+  transform:translateX(-50%);
+  background-color: var(--cldark);
+  color: #fff;
+  text-align: center;
+  border-radius: 5px;
+  padding: 0.8em 1.2em;
+  position: fixed;
+  font-weight:500;
+  display:flex;
+  width:max-content;
+  align-items:center;
+  justify-content: space-between;
+  gap:0.75em;
+  z-index: 1001;
+  left: 50%;
+  top: 30px;
+  opacity: 0;
+  transition: visibility 0s 0.3s, opacity 0.3s linear;
+}
+
+.pf-snackbar-success {
+	color:var(--cldark);
+	background:#49D784;
+}
+
+.pf-snackbar-failed {
+	color:white;
+	background:#D96556;
+}
+
+.pf-snackbar .pf-snackbar-icon-failed, .pf-snackbar .pf-snackbar-icon-success {
+	fill:currentColor;
+	width:20px;
+	height:20px;
+	display:none;
+}
+
+.pf-snackbar-failed .pf-snackbar-icon-failed {
+	display:flex;
+}
+
+.pf-snackbar-success .pf-snackbar-icon-success {
+	display:flex;
+}
+
+.pf-snackbar .pf-snackbar-close {
+	cursor:pointer;
+	width:20px;
+	height:20px;
+	fill:currentColor;
+}
+
+.pf-snackbar-text {
+    text-align: left;
+}
+
+.pf-snackbar.show {
+  visibility: visible;
+  opacity: 1;
+  transition: opacity 0.3s linear;
+}
+
+@keyframes pf-fadein {
+  from {bottom: 0; opacity: 0;}
+  to {bottom: 30px; opacity: 1;}
+}
+
+@keyframes pf-fadeout {
+  from {bottom: 30px; opacity: 1;}
+  to {bottom: 0; opacity: 0;}
+}
+
+/* Review Styles */
+.pf-review {
+  border-bottom: 1px solid #f4f4f4;
+  padding: 1.5em 0;
+}
+
+.pf-review:last-child {
+  border-bottom: none;
+  padding-bottom:0;
+}
+
+.pf-user {
+  display: flex;
+  align-items: center;
+  margin-bottom: 10px;
+}
+
+.pf-avatar {
+    width: 40px;
+    height: 40px;
+    border-radius: 50%;
+    background-color: #f0effe;
+    display: flex;
+    align-items: center;
+	margin-right:10px;
+    justify-content: center;
+    font-weight: bold;
+}
+
+.pf-user-info {
+  display: flex;
+  flex-direction: column;
+}
+
+.pf-username {
+  font-weight: bold;
+    color: var(--cldark);
+}
+
+.pf-date {
+  font-size: 12px;
+  color: var(--clfade);
+}
+
+.pf-stars {
+  display: inline-flex;
+  align-items: center;
+}
+
+.pf-star {
+  width: 16px;
+  height: 16px;
+  fill: #f0effe; /* Color for empty stars */
+}
+
+.pf-star-filled {
+  fill: #ffd700; /* Color for filled stars */
+}
+
+.pf-text {
+  font-size: 14px;
+  line-height: 1.6;
+  color: var(--clbody);
+}
+
+/* Form Styles */
+#pf-review-form,
+#pf-login-form, #pf-register-form, #pf-lostpassword-form {
+  display: flex;
+  margin-top:1em;
+  flex-direction: column;
+}
+
+#pf-review-form div,
+#pf-login-form div, #pf-register-form div, #pf-lostpassword-form div {
+  margin-bottom: 15px;
+}
+
+#pf-review-form label,
+#pf-login-form label, #pf-register-form label, #pf-lostpassword-form label {
+  display: block;
+  margin-bottom: 5px;
+  font-weight:500;
+  color:var(--cldark);
+}
+
+#pf-review-form select,
+#pf-review-form textarea,
+#pf-login-form input, #pf-register-form input, #pf-lostpassword-form input {
+  width: 100%;
+    padding: 10px;
+    font-family: inherit;
+    border: 1px solid #e3e8ed;
+    border-radius: 5px;
+	color:var(--cldark);
+}
+
+#pf-char-count {
+	font-size:14px;
+	color:var(--clfade);
+}
+
+#pf-review-form textarea {
+  height: 150px;
+  max-height:250px;
+  resize: vertical;
+}
+
+.pf-write-review {
+    padding: 0.8em 1.5em;
+    border: none;
+    border-radius: 5px;
+    cursor: pointer;
+    color: white;
+    display: inline-flex;
+    font-size: 14px;
+    background: var(--cldark);
+    font-weight: 500;
+    transition: .2s ease;
+    font-family: inherit;
+    align-items: center;
+    gap: .5em;
+	transition:.2s ease;
+}
+
+.pf-write-review:hover {
+	background:var(--clbody);
+}
+
+.pf-write-review svg {
+	width: 20px;
+    height: 20px;
+    fill: currentColor;
+}
+
+/* Loading Styles */
+.pf-loading {
+  position: relative;
+  color: transparent !important;
+}
+
+.pf-loading::after {
+  content: '';
+  position: absolute;
+  left: calc(50% - 10px);
+  top: calc(50% - 10px);
+  width: 20px;
+  height: 20px;
+  border: 2px solid #ffffff;
+  border-radius: 50%;
+  border-top: 2px solid #5e2ced;
+  animation: pf-spin 1s linear infinite;
+}
+
+@keyframes pf-spin {
+  0% { transform: rotate(0deg); }
+  100% { transform: rotate(360deg); }
+}
+
+.pf-loading-spinner {
+  display: flex;
+  justify-content: center;
+  align-items: center;
+  height: 100px;
+}
+
+.pf-loading-spinner::after {
+  content: '';
+  width: 40px;
+  height: 40px;
+  border: 4px solid #f3f3f3;
+  border-top: 4px solid #007bff;
+  border-radius: 50%;
+  animation: pf-spin 1s linear infinite;
+}
+
+.pf-show-more {
+  color: var(--clbody);
+  text-decoration: underline;
+  font-weight:500;
+  cursor: pointer;
+}
+
+.pf-show-more:hover {
+  text-decoration: none;
+}
+
+
+.pfbtn {
+    width: 100%;
+    padding: 1em;
+    border: 1px solid #e3e8ed;
+    border-radius: 5px;
+    cursor: pointer;
+    font-size: 14px;
+    background: none;
+    font-weight: 500;
+    transition: .2s ease;
+    font-family: inherit;
+}
+
+.pfbtn:hover {
+    border-color: #8f939f;
+    color: var(--cldark);
+}
+
+.pf-login {
+  display:flex;
+  flex-direction:column;
+}
+
+.pf-login-title {
+  margin:1em 0;
+}
+
+.pf-login-socials {
+  display:flex;
+  flex-direction:column;
+  gap:0.5em;
+}
+
+.pf-login-social {
+  background:red;
+  border-radius:5px;
+  padding:0.8em 1.2em;
+  color:white;
+  font-weight:500;
+  font-size:16px;
+  display:flex;
+  align-items:center;
+  justify-content:center;
+  gap:1em;
+  position:relative;
+  transition:.2s ease;
+}
+
+.pf-login-social svg {
+  fill:currentColor;
+  width:20px;
+  height:20px;
+  position:absolute;
+  left:1.2em;
+}
+
+.pf-fb {
+  background:#1877F2;
+}
+
+.pf-fb:hover {
+  color:white;
+  background:#4a99ff;
+}
+
+.pf-go {
+  background:white;
+  color:var(--cldark);
+  box-shadow:inset 0 0 0 1px var(--clbody);
+}
+
+.pf-go:hover {
+  color:var(--cldark);
+  background:#f2f2f2;
+  box-shadow:inset 0 0 0 1px var(--cldark);
+}
+
+.pf-re {
+  background:#FF4500;
+}
+
+.pf-re:hover {
+  color:white;
+  background:#ff7947;
+}
+
+.pf-login-break {
+      display: flex;
+    align-items: center;
+    justify-content: center;
+    position: relative;
+}
+
+.pf-login-break:before {
+    content: "";
+    display: block;
+    position: absolute;
+    left: 0;
+    right: 0;
+    height: 1px;
+    background: #d9d9d9;
+}
+
+.pf-login-break span {
+  background: white;
+    z-index: 1;
+    padding: 0.5em;
+}
+
+.pf-btn {
+  background:#f4f4f4;
+  border:none!important;
+  cursor:pointer;
+  font-family:inherit;
+  border-radius:5px;
+  padding:0.8em 1.2em;
+  color:var(--cldark);
+  font-weight:500;
+  width: 100%;
+  font-size:16px;
+  display:flex;
+  align-items:center;
+  justify-content:center;
+  transition:.2s ease;
+  margin-bottom:0.5em;
+}
+
+.pf-btn:hover {
+  background:#e4e4e4;
+}
+
+.pf-disclaimer {
+  margin-top:1em;
+  font-size:14px;
+}
+
+.pf-disclaimer a {
+  font-weight:400;
+  color:inherit;
+  text-decoration:underline;
+}
+
+#pf-login-form .pf-forgetmenot label {
+display:flex;
+align-items:center;
+gap:.5em;
+}
+
+.pf-txt {
+	font-size:14px;
+	color:var(--cldark);
+	margin-bottom:0;
+}
+
+.pf-txt a {
+	font-weight:400;
+	text-decoration:underline;
+	color:var(--cldark);
+}
+
+#pf-login-form input#pf-rememberme {
+	width:auto;
+	padding:0;
+	border:unset;
+	border-radius:unset;
+}
+
+#pf-login-form input[type="submit"] {
+	padding:0.8em 1.2em;
+}
+
+form#pf-login-form, form#pf-register-form, form#pf-lostpassword-form {
+	display:flex;
+	flex-direction:column;
+	gap:.5em;
+}
+
+#pf-login-form p, #pf-register-form p, #pf-lostpassword-form p {
+	margin:0;
+}
+
+/* Responsive Adjustments */
+@media (max-width: 768px) {
+  .pf-modal-content {
+    width: 95%;
+    margin: 2vh auto;
+  }
+  
+	.pf-snackbar {
+        left: 0;
+        right: 0;
+        width: unset;
+        max-width: unset;
+        transform: unset;
+        margin: 0 20px;
+    }
+}
+
+@media (max-height: 600px) {
+  .pf-modal-content {
+    max-height: 90vh;
+  }
+  
+  .pf-reviews-container {
+    max-height: calc(90vh - 100px); /* Adjust based on your header height */
+  }
+}

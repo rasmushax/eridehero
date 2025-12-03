@@ -1,0 +1,14 @@
+{
+    "name": "acf/accordion",
+    "title": "Accordion",
+    "description": "Accordion",
+    "style": [ "file:./accordion.css" ],
+    "category": "formatting",
+    "icon": "admin-comments",
+    "keywords": ["accordion"],
+    "acf": {
+        "mode": "edit",
+        "renderTemplate": "accordion.php"
+    },
+    "align": "full"
+}

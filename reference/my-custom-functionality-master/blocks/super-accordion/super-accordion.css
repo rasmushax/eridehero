@@ -1,0 +1,107 @@
+/* --- Super Accordion Block Specific --- */
+.super-accordion-block .visible-summary {
+  padding: 18px;
+  /* background: #f9fafa; Slightly different background for summary */
+  /* Add any specific styling for the always-visible part */
+}
+
+.super-accordion-block .visible-title {
+  font-size: 20px; /* Example size */
+  color: var(--cldark, #21273a);
+  margin: 0 0 0.5em 0; /* Adjust margin */
+}
+
+.super-accordion-block .visible-text {
+  font-size: 16px; /* Example size */
+  color: var(--cldark, #21273a);
+  margin: 0;
+  line-height: 1.6;
+}
+
+.super-accordion-block .accordion-prompt {
+  margin: 0;
+  flex-grow: 1; /* Allow prompt text to take space */
+  text-align: left; /* Ensure prompt text aligns left */
+}
+
+
+/* --- Generic Accordion Styles (Mostly from your provided CSS) --- */
+.super-accordion-block .accordion {
+  width: 100%;
+  margin: 0; /* Removed top/bottom margin as block has spacing */
+}
+
+.super-accordion-block .accordion-item {
+  margin-bottom: 1em; /* Keep spacing between multiple blocks */
+  border: 1px solid var(--clborder, #e0e0e0);
+  border-radius: 5px;
+  overflow: hidden; /* Needed for border-radius clipping */
+}
+
+.super-accordion-block .accordion-header {
+  color: var(--cldark, #21273a);
+  cursor: pointer;
+  width: 100%;
+  text-align: left;
+  background: var(--clow, #fff); /* Use low contrast background for header */
+  border: none; /* Reset button border */
+  border-top: 1px solid var(--clborder, #e0e0e0); /* Separator line */
+  padding: 12px 18px; /* Adjust padding */
+  margin: 0;
+  font-weight: 600;
+  font-size: 16px; /* Match visible text size or adjust */
+  font-family: inherit;
+  display: flex;
+  gap: .75em;
+  justify-content: space-between;
+  align-items: center;
+  transition: background-color 0.2s ease; /* Add hover effect */
+}
+
+.super-accordion-block .accordion-header:hover {
+    background-color: #f5f5f5; /* Subtle hover */
+}
+
+.super-accordion-block .accordion-chevron {
+  width: 22px;
+  height: 22px;
+  flex-shrink: 0;
+  fill: var(--clmain, #5e2ced);
+  transition: transform 0.2s ease; /* CSS handles rotation */
+}
+
+/* Target the item for active state to rotate chevron within */
+.super-accordion-block .accordion-item.accordion-active .accordion-chevron {
+  transform: rotate(180deg);
+}
+
+.super-accordion-block .accordion-panel {
+  padding: 0 18px; /* Padding applied only when open */
+  /* box-shadow: inset 0px 1px 0 var(--clborder, #e0e0e0); */ /* Removed inset shadow, border-top on header is cleaner */
+  max-height: 0;
+  overflow: hidden;
+  background: var(--clow, #fff);
+  font-size: 16px;
+  transition: max-height 0.3s ease-out, padding 0.3s ease-out; /* Smoother transition */
+}
+
+.super-accordion-block .accordion-panel.open {
+  /* Set a large enough max-height or calculate dynamically */
+  /* Using a fixed large value is often simpler and reliable */
+  max-height: 1500px; /* Adjust if you have very long content */
+  padding: 18px;
+}
+
+/* Inner content padding (optional, adjust if needed) */
+.super-accordion-block .accordion-content {
+    padding-bottom: 5px; /* Ensure some space at the bottom */
+    line-height: 1.7;
+}
+
+/* Style headings, paragraphs etc inside the expanded content if needed */
+.super-accordion-block .accordion-content > *:first-child {
+    margin-top: 0;
+}
+.super-accordion-block .accordion-content > *:last-child {
+    margin-bottom: 0;
+}

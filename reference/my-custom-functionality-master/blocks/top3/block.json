@@ -1,0 +1,14 @@
+{
+    "name": "acf/top3",
+    "title": "Top 3",
+    "description": "A top 3 picks summary table",
+    "style": [ "file:./top3.css" ],
+    "category": "formatting",
+    "icon": "admin-comments",
+    "keywords": ["top", "3","table"],
+    "acf": {
+        "mode": "edit",
+        "renderTemplate": "top3.php"
+    },
+    "align": "full"
+}
