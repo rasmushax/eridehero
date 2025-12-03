@@ -86,16 +86,16 @@ spl_autoload_register(function (string $class): void {
 });
 
 /**
- * Check plugin dependencies.
+ * Check plugin dependencies at runtime (after plugins loaded).
  *
  * @return bool True if all dependencies are met.
  */
 function erh_check_dependencies(): bool {
     $errors = [];
 
-    // Check for ACF Pro.
+    // Check for ACF Pro (only at runtime, not during activation).
     if (!class_exists('ACF')) {
-        $errors[] = __('Advanced Custom Fields Pro is required.', 'erh-core');
+        $errors[] = __('Advanced Custom Fields Pro is required for full functionality.', 'erh-core');
     }
 
     // Check PHP version.
@@ -121,6 +121,49 @@ function erh_check_dependencies(): bool {
 }
 
 /**
+ * Check minimum requirements for activation.
+ * Only checks things that can be verified before other plugins load.
+ *
+ * @return bool True if minimum requirements are met.
+ */
+function erh_check_activation_requirements(): bool {
+    $errors = [];
+
+    // Check PHP version.
+    if (version_compare(PHP_VERSION, '7.4', '<')) {
+        $errors[] = sprintf(
+            __('PHP 7.4 or higher is required. Current version: %s', 'erh-core'),
+            PHP_VERSION
+        );
+    }
+
+    // Check if ACF plugin file exists (doesn't require it to be loaded).
+    $acf_paths = [
+        WP_PLUGIN_DIR . '/advanced-custom-fields-pro/acf.php',
+        WP_PLUGIN_DIR . '/advanced-custom-fields/acf.php',
+    ];
+
+    $acf_found = false;
+    foreach ($acf_paths as $path) {
+        if (file_exists($path)) {
+            $acf_found = true;
+            break;
+        }
+    }
+
+    if (!$acf_found) {
+        // This is a warning, not a blocker - ACF might be in a different location.
+        // We'll check again at runtime.
+    }
+
+    if (!empty($errors)) {
+        return false;
+    }
+
+    return true;
+}
+
+/**
  * Initialize the plugin.
  */
 function erh_init(): void {
@@ -138,10 +181,10 @@ add_action('plugins_loaded', 'erh_init');
  * Plugin activation hook.
  */
 function erh_activate(): void {
-    // Check dependencies before activation.
-    if (!erh_check_dependencies()) {
+    // Check minimum requirements before activation.
+    if (!erh_check_activation_requirements()) {
         wp_die(
-            esc_html__('ERideHero Core cannot be activated. Please check the plugin requirements.', 'erh-core'),
+            esc_html__('ERideHero Core cannot be activated. PHP 7.4 or higher is required.', 'erh-core'),
             esc_html__('Plugin Activation Error', 'erh-core'),
             ['back_link' => true]
         );
