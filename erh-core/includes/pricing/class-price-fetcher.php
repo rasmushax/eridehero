@@ -36,13 +36,23 @@ class PriceFetcher {
     private string $scrapers_table;
 
     /**
-     * Constructor.
+     * Retailer logos helper.
+     *
+     * @var RetailerLogos
      */
-    public function __construct() {
+    private RetailerLogos $logos;
+
+    /**
+     * Constructor.
+     *
+     * @param RetailerLogos|null $logos Optional RetailerLogos instance.
+     */
+    public function __construct(?RetailerLogos $logos = null) {
         global $wpdb;
         $this->wpdb = $wpdb;
         $this->tracked_links_table = $wpdb->prefix . 'hft_tracked_links';
         $this->scrapers_table = $wpdb->prefix . 'hft_scrapers';
+        $this->logos = $logos ?? new RetailerLogos();
     }
 
     /**
@@ -83,6 +93,7 @@ class PriceFetcher {
                     tl.id,
                     tl.product_post_id,
                     tl.tracking_url,
+                    tl.scraper_id,
                     tl.parser_identifier,
                     tl.geo_target,
                     tl.affiliate_link_override,
@@ -163,6 +174,7 @@ class PriceFetcher {
                     tl.id,
                     tl.product_post_id,
                     tl.tracking_url,
+                    tl.scraper_id,
                     tl.parser_identifier,
                     tl.geo_target,
                     tl.affiliate_link_override,
@@ -278,6 +290,13 @@ class PriceFetcher {
         // Build the affiliate URL.
         $url = $row['affiliate_link_override'] ?: $this->build_affiliate_url($row);
 
+        // Get retailer logo from HFT scraper.
+        $logo_url = null;
+        $scraper_id = isset($row['scraper_id']) ? (int)$row['scraper_id'] : 0;
+        if ($scraper_id > 0) {
+            $logo_url = $this->logos->get_logo_by_id($scraper_id, 'thumbnail');
+        }
+
         return [
             'id'              => (int)$row['id'],
             'product_id'      => (int)$row['product_post_id'],
@@ -290,6 +309,7 @@ class PriceFetcher {
             'shipping'        => $row['current_shipping_info'],
             'retailer'        => $row['retailer_name'] ?: $row['retailer_domain'] ?: 'Unknown',
             'domain'          => $row['retailer_domain'],
+            'logo_url'        => $logo_url,
             'geo'             => $row['geo_target'],
             'last_updated'    => $row['last_scraped_at'],
         ];

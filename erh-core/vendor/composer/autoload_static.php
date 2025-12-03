@@ -18,6 +18,7 @@ class ComposerStaticInitb5e889746c5280811e87a72c161db6db
         'ERH\\PostTypes\\Review' => __DIR__ . '/../..' . '/includes/post-types/class-review.php',
         'ERH\\Pricing\\DealsFinder' => __DIR__ . '/../..' . '/includes/pricing/class-deals-finder.php',
         'ERH\\Pricing\\PriceFetcher' => __DIR__ . '/../..' . '/includes/pricing/class-price-fetcher.php',
+        'ERH\\Pricing\\RetailerLogos' => __DIR__ . '/../..' . '/includes/pricing/class-retailer-logos.php',
     );
 
     public static function getInitializer(ClassLoader $loader)

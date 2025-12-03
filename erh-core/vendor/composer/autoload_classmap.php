@@ -17,4 +17,5 @@ return array(
     'ERH\\PostTypes\\Review' => $baseDir . '/includes/post-types/class-review.php',
     'ERH\\Pricing\\DealsFinder' => $baseDir . '/includes/pricing/class-deals-finder.php',
     'ERH\\Pricing\\PriceFetcher' => $baseDir . '/includes/pricing/class-price-fetcher.php',
+    'ERH\\Pricing\\RetailerLogos' => $baseDir . '/includes/pricing/class-retailer-logos.php',
 );
