@@ -17,6 +17,8 @@ use ERH\User\UserPreferences;
 use ERH\User\UserTracker;
 use ERH\User\RateLimiter;
 use ERH\User\UserRepository;
+use ERH\User\SocialAuth;
+use ERH\Email\MailchimpSync;
 
 /**
  * Core plugin class that initializes all components.
@@ -80,6 +82,20 @@ class Core {
     private UserRepository $user_repo;
 
     /**
+     * Social auth handler.
+     *
+     * @var SocialAuth
+     */
+    private SocialAuth $social_auth;
+
+    /**
+     * Mailchimp sync handler.
+     *
+     * @var MailchimpSync
+     */
+    private MailchimpSync $mailchimp_sync;
+
+    /**
      * Initialize all plugin components.
      *
      * @return void
@@ -128,6 +144,11 @@ class Core {
     private function init_services(): void {
         $this->rate_limiter = new RateLimiter();
         $this->user_repo = new UserRepository();
+
+        // Register HFT product post types filter.
+        add_filter('hft_product_post_types', function () {
+            return ['products'];
+        });
     }
 
     /**
@@ -147,6 +168,14 @@ class Core {
         // Initialize user tracker.
         $this->user_tracker = new UserTracker($this->rate_limiter, $this->user_repo);
         $this->user_tracker->register();
+
+        // Initialize social auth (OAuth for Google, Facebook, Reddit).
+        $this->social_auth = new SocialAuth($this->user_repo);
+        $this->social_auth->register();
+
+        // Initialize Mailchimp sync.
+        $this->mailchimp_sync = new MailchimpSync($this->user_repo);
+        $this->mailchimp_sync->register();
     }
 
     /**
@@ -363,5 +392,23 @@ class Core {
      */
     public function get_user_repo(): UserRepository {
         return $this->user_repo;
+    }
+
+    /**
+     * Get the social auth handler.
+     *
+     * @return SocialAuth
+     */
+    public function get_social_auth(): SocialAuth {
+        return $this->social_auth;
+    }
+
+    /**
+     * Get the Mailchimp sync handler.
+     *
+     * @return MailchimpSync
+     */
+    public function get_mailchimp_sync(): MailchimpSync {
+        return $this->mailchimp_sync;
     }
 }
