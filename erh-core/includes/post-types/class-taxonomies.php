@@ -123,6 +123,7 @@ class Taxonomies {
             'electric-unicycle'   => 'Electric Unicycle',
             'electric-skateboard' => 'Electric Skateboard',
             'hoverboard'          => 'Hoverboard',
+            'other'               => 'Other',
         ];
 
         foreach ($default_types as $slug => $name) {
@@ -182,7 +183,7 @@ class Taxonomies {
             'Electric Unicycle'   => 'electric-unicycle',
             'Electric Skateboard' => 'electric-skateboard',
             'Hoverboard'          => 'hoverboard',
-            'Other'               => null, // Skip "Other" types
+            'Other'               => 'other',
         ];
 
         return $map[$old_value] ?? null;
