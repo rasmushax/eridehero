@@ -179,6 +179,9 @@ class Core {
         // Initialize review system.
         $this->init_reviews();
 
+        // Initialize cron jobs (before admin, since settings page needs cron_manager).
+        $this->init_cron();
+
         // Initialize admin.
         if (is_admin()) {
             $this->init_admin();
@@ -191,9 +194,6 @@ class Core {
 
         // Initialize AJAX handlers.
         $this->init_ajax();
-
-        // Initialize cron jobs.
-        $this->init_cron();
 
         // Initialize REST API.
         add_action('rest_api_init', [$this, 'init_rest_api']);
