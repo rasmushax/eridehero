@@ -157,6 +157,9 @@ class Core {
         add_filter('hft_product_post_types', function () {
             return ['products'];
         });
+
+        // Disable HFT's built-in hf_product CPT (we use our own 'products' CPT).
+        add_filter('hft_register_product_cpt', '__return_false');
     }
 
     /**
