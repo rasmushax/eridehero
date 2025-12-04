@@ -445,10 +445,11 @@ class ProductMigrator {
     /**
      * Map motor position array to single select value.
      *
-     * @param array $motors Motors array (e.g., ["Rear"], ["Front", "Rear"]).
+     * @param mixed $motors Motors array (e.g., ["Rear"], ["Front", "Rear"]).
      * @return string Motor position (Front, Rear, or Dual).
      */
-    private function map_motor_position(array $motors): string {
+    private function map_motor_position($motors): string {
+        $motors = $this->normalize_array($motors);
         if (empty($motors)) {
             return 'Rear';
         }
@@ -465,10 +466,11 @@ class ProductMigrator {
     /**
      * Map old brake array to select value.
      *
-     * @param array $brakes Brakes array.
+     * @param mixed $brakes Brakes array or string.
      * @return string Brake type select value.
      */
-    private function map_brake_type_select(array $brakes): string {
+    private function map_brake_type_select($brakes): string {
+        $brakes = $this->normalize_array($brakes);
         foreach ($brakes as $brake) {
             $lower = strtolower($brake);
             if (strpos($lower, 'hydraulic') !== false) {
@@ -490,10 +492,10 @@ class ProductMigrator {
     /**
      * Map old tire type array to select value.
      *
-     * @param array $tires Tires array.
+     * @param mixed $tires Tires array or string.
      * @return string Tire type select value (Pneumatic, Solid, Mixed).
      */
-    private function map_tire_type_select(array $tires): string {
+    private function map_tire_type_select($tires): string {
         $tires = $this->normalize_array($tires);
         if (empty($tires)) {
             return 'Pneumatic';
@@ -524,10 +526,11 @@ class ProductMigrator {
     /**
      * Map terrain to allowed values.
      *
-     * @param string $terrain Old terrain value.
+     * @param mixed $terrain Old terrain value.
      * @return string New terrain value (Street, Hybrid, Off-road).
      */
-    private function map_terrain(string $terrain): string {
+    private function map_terrain($terrain): string {
+        $terrain = is_array($terrain) ? ($terrain[0] ?? '') : (string) $terrain;
         $lower = strtolower($terrain);
         if (strpos($lower, 'off') !== false) {
             return 'Off-road';
@@ -582,10 +585,11 @@ class ProductMigrator {
     /**
      * Map old suspension array to new format.
      *
-     * @param array $suspension Old suspension values.
+     * @param mixed $suspension Old suspension values.
      * @return array New suspension type values.
      */
-    private function map_suspension_type(array $suspension): array {
+    private function map_suspension_type($suspension): array {
+        $suspension = $this->normalize_array($suspension);
         $map = [
             'Front fork'       => 'Front fork',
             'Front spring'     => 'Front spring',
@@ -613,10 +617,11 @@ class ProductMigrator {
      * Map old feature values to new format.
      * Excludes features that now live in dedicated fields.
      *
-     * @param array $features Old feature values.
+     * @param mixed $features Old feature values.
      * @return array New feature values.
      */
-    private function map_escooter_features(array $features): array {
+    private function map_escooter_features($features): array {
+        $features = $this->normalize_array($features);
         // Features that now live in dedicated fields (exclude from features list).
         $excluded = [
             'Foldable Handlebars',
@@ -762,10 +767,11 @@ class ProductMigrator {
     /**
      * Map skateboard drive value.
      *
-     * @param string $drive Old drive value (e.g., "2WD").
+     * @param mixed $drive Old drive value (e.g., "2WD").
      * @return string
      */
-    private function map_skateboard_drive(string $drive): string {
+    private function map_skateboard_drive($drive): string {
+        $drive = is_array($drive) ? ($drive[0] ?? '') : (string) $drive;
         $drive = strtoupper(trim($drive));
         if (in_array($drive, ['1WD', '2WD', '4WD'], true)) {
             return $drive;
@@ -1184,11 +1190,13 @@ class ProductMigrator {
     /**
      * Map EUC battery type based on type and brand.
      *
-     * @param string $type  Battery type.
-     * @param string $brand Battery brand.
+     * @param mixed $type  Battery type.
+     * @param mixed $brand Battery brand.
      * @return string
      */
-    private function map_euc_battery_type(string $type, string $brand): string {
+    private function map_euc_battery_type($type, $brand): string {
+        $type = is_array($type) ? ($type[0] ?? '') : (string) $type;
+        $brand = is_array($brand) ? ($brand[0] ?? '') : (string) $brand;
         $brand_lower = strtolower($brand);
 
         if (strpos($brand_lower, 'lg') !== false) {
