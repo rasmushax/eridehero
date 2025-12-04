@@ -4,22 +4,6 @@
         "title": "Products - Basic Info",
         "fields": [
             {
-                "key": "field_erh_product_image",
-                "label": "Product Image",
-                "name": "product_image",
-                "type": "image",
-                "instructions": "Main product image (recommended: 800x800px or larger)",
-                "required": 0,
-                "wrapper": {
-                    "width": "25",
-                    "class": "",
-                    "id": ""
-                },
-                "return_format": "id",
-                "library": "all",
-                "preview_size": "medium"
-            },
-            {
                 "key": "field_erh_model",
                 "label": "Model",
                 "name": "model",
