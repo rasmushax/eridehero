@@ -3,7 +3,7 @@
  * Product Migration Handler
  *
  * Migrates products from eridehero.com via REST API.
- * Uses 1-to-1 field copy since source and destination ACF structures match.
+ * Maps old field names to new clean structure.
  *
  * @package ERH\Migration
  */
@@ -37,6 +37,20 @@ class ProductMigrator {
      * @var array
      */
     private array $log = [];
+
+    /**
+     * Field name mappings (old => new) for performance tests.
+     * Removes colons and standardizes naming.
+     *
+     * @var array
+     */
+    private const PERF_FIELD_MAPPINGS = [
+        'acceleration:_0-15_mph' => 'acceleration_0_15_mph',
+        'acceleration:_0-20_mph' => 'acceleration_0_20_mph',
+        'acceleration:_0-25_mph' => 'acceleration_0_25_mph',
+        'acceleration:_0-30_mph' => 'acceleration_0_30_mph',
+        'acceleration:_0-to-top' => 'acceleration_0_to_top',
+    ];
 
     /**
      * Constructor.
@@ -82,9 +96,7 @@ class ProductMigrator {
 
         $response = wp_remote_get($url, [
             'timeout' => 60,
-            'headers' => [
-                'Accept' => 'application/json',
-            ],
+            'headers' => ['Accept' => 'application/json'],
         ]);
 
         if (is_wp_error($response)) {
@@ -205,47 +217,26 @@ class ProductMigrator {
     /**
      * Migrate ACF fields from source to local.
      *
-     * @param int    $post_id          The post ID.
-     * @param array  $acf              Source ACF data.
+     * @param int    $post_id           The post ID.
+     * @param array  $acf               Source ACF data.
      * @param string $product_type_slug The product type slug.
      * @return void
      */
     private function migrate_acf_fields(int $post_id, array $acf, string $product_type_slug): void {
         // Basic info (all products).
-        $this->set_field('model', $acf['model'] ?? '', $post_id);
-        $this->set_field('release_year', $acf['release_year'] ?? '', $post_id);
-        $this->set_field('release_quarter', $acf['release_quarter'] ?? 'Unknown', $post_id);
-        $this->set_field('youtube_review', $acf['youtube_review'] ?? '', $post_id);
+        $this->migrate_basic_info($post_id, $acf);
 
-        // Editor rating (from ratings.overall or calculate average).
-        $editor_rating = $this->get_editor_rating($acf);
-        $this->set_field('editor_rating', $editor_rating, $post_id);
-
-        // Performance tests (all products) - copy directly, same field names.
-        $perf_fields = [
-            'tested_top_speed',
-            'acceleration:_0-15_mph', 'acceleration:_0-20_mph', 'acceleration:_0-25_mph',
-            'acceleration:_0-30_mph', 'acceleration:_0-to-top',
-            'fastest_0_15', 'fastest_0_20', 'fastest_0_25', 'fastest_0_30', 'fastest_0_top',
-            'tested_range_fast', 'tested_range_regular', 'tested_range_slow',
-            'tested_range_avg_speed_fast', 'tested_range_avg_speed_regular', 'tested_range_avg_speed_slow',
-            'brake_distance', 'hill_climbing',
-            'manufacturer_top_speed', 'manufacturer_range', 'max_incline', 'ideal_incline',
-        ];
-
-        foreach ($perf_fields as $field) {
-            if (isset($acf[$field]) && $acf[$field] !== '') {
-                $this->set_field($field, $acf[$field], $post_id);
-            }
-        }
+        // Performance tests (all products).
+        $this->migrate_performance_tests($post_id, $acf);
 
         // Product-type specific fields.
         switch ($product_type_slug) {
             case 'electric-bike':
                 $this->migrate_ebike_fields($post_id, $acf);
                 break;
-            // Other product types will be added later.
             case 'electric-scooter':
+                $this->migrate_escooter_fields($post_id, $acf);
+                break;
             case 'electric-unicycle':
             case 'electric-skateboard':
             case 'hoverboard':
@@ -255,10 +246,62 @@ class ProductMigrator {
     }
 
     /**
-     * Migrate e-bike specific fields.
+     * Migrate basic info fields.
      *
-     * Since source and destination ACF structures are identical,
-     * we just copy the entire e-bikes group as-is.
+     * @param int   $post_id The post ID.
+     * @param array $acf     Source ACF data.
+     * @return void
+     */
+    private function migrate_basic_info(int $post_id, array $acf): void {
+        $this->set_field('model', $acf['model'] ?? '', $post_id);
+        $this->set_field('release_year', $acf['release_year'] ?? '', $post_id);
+        $this->set_field('release_quarter', $acf['release_quarter'] ?? 'Unknown', $post_id);
+
+        // YouTube review might be in review.youtube_video or youtube_review.
+        $youtube = $acf['youtube_review'] ?? $acf['review']['youtube_video'] ?? '';
+        $this->set_field('youtube_review', $youtube, $post_id);
+
+        // Editor rating from ratings.overall or calculate average.
+        $editor_rating = $this->get_editor_rating($acf);
+        $this->set_field('editor_rating', $editor_rating, $post_id);
+    }
+
+    /**
+     * Migrate performance test fields.
+     * Maps old field names with colons to new clean names.
+     *
+     * @param int   $post_id The post ID.
+     * @param array $acf     Source ACF data.
+     * @return void
+     */
+    private function migrate_performance_tests(int $post_id, array $acf): void {
+        // Direct copy fields (same name in source and destination).
+        $direct_fields = [
+            'tested_top_speed',
+            'fastest_0_15', 'fastest_0_20', 'fastest_0_25', 'fastest_0_30', 'fastest_0_top',
+            'tested_range_fast', 'tested_range_regular', 'tested_range_slow',
+            'tested_range_avg_speed_fast', 'tested_range_avg_speed_regular', 'tested_range_avg_speed_slow',
+            'brake_distance', 'hill_climbing',
+            'manufacturer_top_speed', 'manufacturer_range', 'max_incline', 'ideal_incline',
+        ];
+
+        foreach ($direct_fields as $field) {
+            if (isset($acf[$field]) && $acf[$field] !== '') {
+                $this->set_field($field, $acf[$field], $post_id);
+            }
+        }
+
+        // Mapped fields (old name => new name).
+        foreach (self::PERF_FIELD_MAPPINGS as $old_name => $new_name) {
+            if (isset($acf[$old_name]) && $acf[$old_name] !== '') {
+                $this->set_field($new_name, $acf[$old_name], $post_id);
+            }
+        }
+    }
+
+    /**
+     * Migrate e-bike specific fields.
+     * Copies the entire e-bikes group as-is (1-to-1 structure match).
      *
      * @param int   $post_id The post ID.
      * @param array $acf     Source ACF data.
@@ -279,6 +322,210 @@ class ProductMigrator {
     }
 
     /**
+     * Migrate e-scooter specific fields.
+     * Maps flat source fields to new nested structure.
+     *
+     * @param int   $post_id The post ID.
+     * @param array $acf     Source ACF data.
+     * @return void
+     */
+    private function migrate_escooter_fields(int $post_id, array $acf): void {
+        $escooter = [];
+
+        // Motor group.
+        $escooter['motor'] = [
+            'motor_position' => $this->normalize_array($acf['motors'] ?? []),
+            'motor_type'     => $acf['motor_type'] ?? '',
+            'wheel_drive'    => $acf['Wheel Drive'] ?? $acf['wheel_drive'] ?? '',
+            'voltage'        => $acf['voltage'] ?? '',
+            'power_nominal'  => $acf['nominal_motor_wattage'] ?? '',
+            'power_peak'     => $acf['total_peak_wattage'] ?? '',
+        ];
+
+        // Battery group.
+        $escooter['battery'] = [
+            'capacity'      => $acf['battery_capacity'] ?? '',
+            'voltage'       => $acf['battery_voltage'] ?? '',
+            'amphours'      => $acf['battery_amphours'] ?? '',
+            'type'          => $acf['battery_type'] ?? '',
+            'brand'         => $acf['battery_brand'] ?? '',
+            'charging_time' => $acf['charging_time'] ?? '',
+        ];
+
+        // Brakes group.
+        $escooter['brakes'] = [
+            'type'        => $this->normalize_array($acf['brakes'] ?? []),
+            'rotor_front' => '',
+            'rotor_rear'  => '',
+        ];
+
+        // Wheels group.
+        $escooter['wheels'] = [
+            'tire_size_front' => $acf['tire_size_front'] ?? '',
+            'tire_size_rear'  => $acf['tire_size_rear'] ?? '',
+            'tire_width'      => $acf['tire_width'] ?? '',
+            'tire_type'       => $this->normalize_array($acf['tires'] ?? []),
+            'pneumatic_type'  => $acf['pneumatic_type'] ?? '',
+        ];
+
+        // Suspension group.
+        $escooter['suspension'] = [
+            'type'         => $this->map_suspension_type($acf['suspension'] ?? []),
+            'front_travel' => '',
+            'rear_travel'  => '',
+        ];
+
+        // Dimensions group.
+        $escooter['dimensions'] = [
+            'deck_length'         => $acf['deck_length'] ?? '',
+            'deck_width'          => $acf['deck_width'] ?? '',
+            'ground_clearance'    => $acf['ground_clearance'] ?? '',
+            'handlebar_height_min'=> $acf['deck_to_handlebar_min'] ?? '',
+            'handlebar_height_max'=> $acf['deck_to_handlebar_max'] ?? '',
+            'handlebar_width'     => $acf['handlebar_width'] ?? '',
+            'weight'              => $acf['weight'] ?? '',
+            'max_load'            => $acf['max_load'] ?? '',
+            'unfolded_length'     => $acf['unfolded_depth'] ?? '',
+            'unfolded_width'      => $acf['unfolded_width'] ?? '',
+            'unfolded_height'     => $acf['unfolded_height'] ?? '',
+            'folded_length'       => $acf['folded_depth'] ?? '',
+            'folded_width'        => $acf['folded_width'] ?? '',
+            'folded_height'       => $acf['folded_height'] ?? '',
+        ];
+
+        // Lighting group.
+        $escooter['lighting'] = [
+            'lights'       => $this->normalize_array($acf['lights'] ?? []),
+            'front_lumens' => '',
+            'turn_signals' => $this->has_feature($acf, 'Turn Signals'),
+        ];
+
+        // Other group.
+        $escooter['other'] = [
+            'throttle_type' => $this->get_first($acf['throttle_type'] ?? []),
+            'fold_location' => $acf['fold_location'] ?? '',
+            'terrain'       => $acf['terrain'] ?? '',
+            'ip_rating'     => $this->get_first($acf['weather_resistance'] ?? []),
+            'footrest'      => !empty($acf['footrest']),
+            'kickstand'     => true, // Most scooters have kickstands.
+            'stem_type'     => '',
+            'display_type'  => '',
+        ];
+
+        // Features.
+        $escooter['features'] = $this->map_escooter_features($acf['features'] ?? []);
+
+        // Save the entire e-scooters group.
+        $this->set_field('e-scooters', $escooter, $post_id);
+
+        $this->log('info', "Migrated e-scooters group with " . count($escooter) . " sub-groups");
+    }
+
+    /**
+     * Normalize array value (ensure it's an array).
+     *
+     * @param mixed $value The value.
+     * @return array
+     */
+    private function normalize_array($value): array {
+        if (is_array($value)) {
+            return $value;
+        }
+        if (empty($value)) {
+            return [];
+        }
+        return [$value];
+    }
+
+    /**
+     * Get first value from array or return empty string.
+     *
+     * @param mixed $value The value.
+     * @return string
+     */
+    private function get_first($value): string {
+        if (is_array($value)) {
+            return $value[0] ?? '';
+        }
+        return (string) $value;
+    }
+
+    /**
+     * Check if product has a specific feature.
+     *
+     * @param array  $acf     ACF data.
+     * @param string $feature Feature name.
+     * @return bool
+     */
+    private function has_feature(array $acf, string $feature): bool {
+        $features = $acf['features'] ?? [];
+        return in_array($feature, $features, true);
+    }
+
+    /**
+     * Map old suspension array to new format.
+     *
+     * @param array $suspension Old suspension values.
+     * @return array New suspension type values.
+     */
+    private function map_suspension_type(array $suspension): array {
+        $map = [
+            'Front fork'    => 'Front Fork',
+            'Front spring'  => 'Front Spring',
+            'Rear spring'   => 'Rear Spring',
+            'Rear swingarm' => 'Rear Swingarm',
+            'Dual spring'   => 'Dual Spring',
+        ];
+
+        $result = [];
+        foreach ($suspension as $s) {
+            $result[] = $map[$s] ?? $s;
+        }
+        return $result;
+    }
+
+    /**
+     * Map old feature values to new format.
+     *
+     * @param array $features Old feature values.
+     * @return array New feature values.
+     */
+    private function map_escooter_features(array $features): array {
+        $map = [
+            'App'                           => 'App',
+            'Speed Modes'                   => 'Speed Modes',
+            'Cruise Control'                => 'Cruise Control',
+            'Folding Mechanism'             => 'Folding',
+            'Foldable Handlebars'           => 'Foldable Handlebars',
+            'Push-To-Start'                 => 'Push-To-Start',
+            'Zero-Start'                    => 'Zero-Start',
+            'Turn Signals'                  => 'Turn Signals',
+            'Brake Curve Adjustment'        => 'Brake Curve Adjustment',
+            'Acceleration Adjustment'       => 'Acceleration Adjustment',
+            'Speed limiting'                => 'Speed Limiting',
+            'Over-the-air firmware updates' => 'OTA Updates',
+            'Location tracking'             => 'Location Tracking',
+            'Quick-Swap Battery'            => 'Quick-Swap Battery',
+            'Adjustable suspension'         => 'Adjustable Suspension',
+            'Steering dampener'             => 'Steering Damper',
+            'Electronic horn'               => 'Electronic Horn',
+            'NFC Unlock'                    => 'NFC Unlock',
+            'Self-healing tires'            => 'Self-Healing Tires',
+            'Seat Add-On'                   => 'Seat Option',
+        ];
+
+        $result = [];
+        foreach ($features as $f) {
+            if (isset($map[$f])) {
+                $result[] = $map[$f];
+            } elseif (in_array($f, array_values($map), true)) {
+                $result[] = $f;
+            }
+        }
+        return $result;
+    }
+
+    /**
      * Migrate product image.
      *
      * @param int   $post_id  The post ID.
@@ -287,13 +534,11 @@ class ProductMigrator {
      * @return void
      */
     private function migrate_image(int $post_id, array $acf, array $old_data): void {
-        // Check if product already has a featured image (skip if already migrated).
         if (has_post_thumbnail($post_id)) {
             $this->log('info', "Product {$post_id} already has a featured image, skipping");
             return;
         }
 
-        // Try to get image URL from various sources.
         $image_url = $this->get_remote_image_url($acf, $old_data);
 
         if (empty($image_url)) {
@@ -303,7 +548,6 @@ class ProductMigrator {
 
         $this->log('info', "Downloading image: {$image_url}");
 
-        // Sideload the image.
         $attachment_id = $this->sideload_image($image_url, $post_id);
 
         if ($attachment_id) {
@@ -479,9 +723,18 @@ class ProductMigrator {
      * @return string|null The inferred product type slug or null.
      */
     private function infer_product_type(string $title, array $acf): ?string {
-        // Check for e-bike ACF data (has e-bikes group).
+        // Check for e-bike ACF data (has populated e-bikes group).
         if (!empty($acf['e-bikes']) && is_array($acf['e-bikes'])) {
-            return 'electric-bike';
+            $ebike = $acf['e-bikes'];
+            // Check if e-bikes has actual data (not just empty defaults).
+            if (!empty($ebike['category']) || !empty($ebike['motor']['power_nominal'])) {
+                return 'electric-bike';
+            }
+        }
+
+        // Check for scooter-specific fields.
+        if (!empty($acf['deck_length']) || !empty($acf['throttle_type'])) {
+            return 'electric-scooter';
         }
 
         $title_lower = strtolower($title);
@@ -495,16 +748,11 @@ class ProductMigrator {
         }
 
         // Scooter keywords.
-        $scooter_keywords = ['scooter', 'ninebot', 'kaabo', 'wolf', 'dualtron', 'vsett', 'inokim', 'emove', 'apollo', 'varla', 'gotrax', 'hiboy', 'segway', 'unagi', 'boosted rev', 'niu', 'mercane', 'zero', 'mantis', 'ghost', 'blade', 'thunder', 'eagle', 'falcon', 'phantom', 'speedway'];
+        $scooter_keywords = ['scooter', 'ninebot', 'kaabo', 'wolf', 'dualtron', 'vsett', 'inokim', 'emove', 'apollo', 'varla', 'gotrax', 'hiboy', 'segway', 'unagi', 'boosted rev', 'niu', 'mercane', 'zero', 'mantis', 'ghost', 'blade', 'thunder', 'eagle', 'falcon', 'phantom', 'speedway', 'navee'];
         foreach ($scooter_keywords as $keyword) {
             if (stripos($title, $keyword) !== false) {
                 return 'electric-scooter';
             }
-        }
-
-        // Check for scooter ACF data.
-        if (!empty($acf['deck_length']) || !empty($acf['handlebar_height']) || !empty($acf['throttle_type'])) {
-            return 'electric-scooter';
         }
 
         // EUC keywords.
