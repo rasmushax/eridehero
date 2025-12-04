@@ -7,12 +7,11 @@
         "key": "field_615326243923b",
         "label": "Model",
         "name": "model",
-        "aria-label": "",
         "type": "text",
         "instructions": "",
         "required": 0,
         "wrapper": {
-          "width": "30",
+          "width": "25",
           "class": "",
           "id": ""
         },
@@ -26,7 +25,6 @@
         "key": "field_649c0b1f5b3e8",
         "label": "Release Year",
         "name": "release_year",
-        "aria-label": "",
         "type": "number",
         "instructions": "",
         "required": 0,
@@ -47,7 +45,6 @@
         "key": "field_649c0b8b5b3e9",
         "label": "Release Quarter",
         "name": "release_quarter",
-        "aria-label": "",
         "type": "select",
         "instructions": "",
         "required": 0,
@@ -69,38 +66,149 @@
         "allow_null": 0,
         "ui": 0,
         "ajax": 0,
-        "placeholder": "",
-        "create_options": 0,
-        "save_options": 0
-      },
-      {
-        "key": "field_erh_youtube_review",
-        "label": "YouTube Review",
-        "name": "youtube_review",
-        "type": "url",
-        "instructions": "URL to YouTube review video",
-        "required": 0,
-        "wrapper": {
-          "width": "40",
-          "class": "",
-          "id": ""
-        }
+        "placeholder": ""
       },
       {
         "key": "field_erh_editor_rating",
         "label": "Editor Rating",
         "name": "editor_rating",
         "type": "number",
-        "instructions": "Overall editor rating (1-10)",
+        "instructions": "Overall rating (1-10)",
         "required": 0,
         "min": 1,
         "max": 10,
         "step": 0.1,
         "wrapper": {
-          "width": "20",
+          "width": "15",
           "class": "",
           "id": ""
         }
+      },
+      {
+        "key": "field_erh_review",
+        "label": "Review",
+        "name": "review",
+        "type": "group",
+        "instructions": "",
+        "required": 0,
+        "wrapper": {
+          "width": "",
+          "class": "",
+          "id": ""
+        },
+        "layout": "block",
+        "sub_fields": [
+          {
+            "key": "field_erh_review_post",
+            "label": "Review Article",
+            "name": "review_post",
+            "type": "post_object",
+            "instructions": "Link to the review post/article",
+            "required": 0,
+            "wrapper": {
+              "width": "50",
+              "class": "",
+              "id": ""
+            },
+            "post_type": [
+              "post"
+            ],
+            "taxonomy": "",
+            "return_format": "id",
+            "multiple": 0,
+            "allow_null": 1,
+            "ui": 1
+          },
+          {
+            "key": "field_erh_youtube_video",
+            "label": "YouTube Video",
+            "name": "youtube_video",
+            "type": "url",
+            "instructions": "URL to YouTube review video",
+            "required": 0,
+            "wrapper": {
+              "width": "50",
+              "class": "",
+              "id": ""
+            }
+          }
+        ]
+      },
+      {
+        "key": "field_erh_obsolete",
+        "label": "Obsolete",
+        "name": "obsolete",
+        "type": "group",
+        "instructions": "",
+        "required": 0,
+        "wrapper": {
+          "width": "",
+          "class": "",
+          "id": ""
+        },
+        "layout": "block",
+        "sub_fields": [
+          {
+            "key": "field_erh_is_product_obsolete",
+            "label": "Is Product Obsolete",
+            "name": "is_product_obsolete",
+            "type": "true_false",
+            "instructions": "Product is no longer available/relevant",
+            "required": 0,
+            "wrapper": {
+              "width": "33",
+              "class": "",
+              "id": ""
+            },
+            "default_value": 0,
+            "ui": 1
+          },
+          {
+            "key": "field_erh_has_been_superseded",
+            "label": "Has Been Superseded",
+            "name": "has_the_product_been_superseded",
+            "type": "true_false",
+            "instructions": "A newer version of this product exists",
+            "required": 0,
+            "wrapper": {
+              "width": "33",
+              "class": "",
+              "id": ""
+            },
+            "default_value": 0,
+            "ui": 1
+          },
+          {
+            "key": "field_erh_new_product",
+            "label": "New Product",
+            "name": "new_product",
+            "type": "post_object",
+            "instructions": "The product that supersedes this one",
+            "required": 0,
+            "wrapper": {
+              "width": "33",
+              "class": "",
+              "id": ""
+            },
+            "post_type": [
+              "products"
+            ],
+            "taxonomy": "",
+            "return_format": "id",
+            "multiple": 0,
+            "allow_null": 1,
+            "ui": 1,
+            "conditional_logic": [
+              [
+                {
+                  "field": "field_erh_has_been_superseded",
+                  "operator": "==",
+                  "value": "1"
+                }
+              ]
+            ]
+          }
+        ]
       }
     ],
     "location": [
