@@ -384,7 +384,7 @@ class ProductMigrator {
         // Category.
         $this->set_field('ebike_category', $ebike['category'] ?? [], $post_id);
 
-        // Motor details.
+        // Motor details (e-bike specific).
         $motor = $ebike['motor'] ?? [];
         $this->set_field('ebike_motor', [
             'brand'        => $motor['motor_brand'] ?? '',
@@ -393,7 +393,18 @@ class ProductMigrator {
             'sensor_type'  => strtolower($motor['sensor_type'] ?? 'unknown'),
         ], $post_id);
 
-        // Battery details.
+        // Update shared motor fields from e-bike motor data.
+        if (!empty($motor['power_nominal'])) {
+            $this->set_field('motor_nominal_wattage', $motor['power_nominal'], $post_id);
+        }
+        if (!empty($motor['power_peak'])) {
+            $this->set_field('motor_peak_wattage', $motor['power_peak'], $post_id);
+        }
+        if (!empty($motor['torque'])) {
+            $this->set_field('motor_torque', $motor['torque'], $post_id);
+        }
+
+        // Battery details (e-bike specific).
         $battery = $ebike['battery'] ?? [];
         $this->set_field('ebike_battery', [
             'position'  => strtolower($battery['battery_position'] ?? 'unknown'),
@@ -413,6 +424,23 @@ class ProductMigrator {
         if (!empty($battery['charge_time'])) {
             $this->set_field('charging_time', $battery['charge_time'], $post_id);
         }
+        // E-bike claimed range goes to shared manufacturer_range.
+        if (!empty($battery['range'])) {
+            $this->set_field('manufacturer_range', $battery['range'], $post_id);
+        }
+        // Also check for range_claimed field name variant.
+        if (!empty($battery['range_claimed'])) {
+            $this->set_field('manufacturer_range', $battery['range_claimed'], $post_id);
+        }
+
+        // Weight and capacity (e-bike stores these in a nested group).
+        $weight_capacity = $ebike['weight_and_capacity'] ?? [];
+        if (!empty($weight_capacity['weight'])) {
+            $this->set_field('weight', $weight_capacity['weight'], $post_id);
+        }
+        if (!empty($weight_capacity['weight_limit'])) {
+            $this->set_field('max_weight_capacity', $weight_capacity['weight_limit'], $post_id);
+        }
 
         // Speed & Class.
         $speed_class = $ebike['speed_and_class'] ?? [];
@@ -422,6 +450,11 @@ class ProductMigrator {
             'throttle_top_speed' => $speed_class['throttle_top_speed'] ?? '',
             'has_throttle'       => !empty($speed_class['throttle']),
         ], $post_id);
+
+        // Update shared manufacturer_top_speed from e-bike top_assist_speed if not set.
+        if (!empty($speed_class['top_assist_speed'])) {
+            $this->set_field('manufacturer_top_speed', $speed_class['top_assist_speed'], $post_id);
+        }
 
         // Drivetrain.
         $drivetrain = $ebike['drivetrain'] ?? [];
@@ -539,11 +572,8 @@ class ProductMigrator {
         $attachment_id = $this->sideload_image($image_url, $post_id);
 
         if ($attachment_id) {
-            // Set as featured image.
+            // Set as featured image (no need for separate ACF field).
             set_post_thumbnail($post_id, $attachment_id);
-
-            // Also set ACF product_image field.
-            $this->set_field('product_image', $attachment_id, $post_id);
 
             $this->log('success', "Image uploaded successfully (attachment ID: {$attachment_id})");
         }
