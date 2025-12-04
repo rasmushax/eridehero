@@ -237,8 +237,10 @@ class ProductMigrator {
             case 'electric-scooter':
                 $this->migrate_escooter_fields($post_id, $acf);
                 break;
-            case 'electric-unicycle':
             case 'electric-skateboard':
+                $this->migrate_eskateboard_fields($post_id, $acf);
+                break;
+            case 'electric-unicycle':
             case 'hoverboard':
                 $this->log('info', "Product type '{$product_type_slug}' migration not yet implemented");
                 break;
@@ -653,6 +655,246 @@ class ProductMigrator {
             }
         }
         return $result;
+    }
+
+    /**
+     * Migrate e-skateboard specific fields.
+     *
+     * @param int   $post_id The post ID.
+     * @param array $acf     Source ACF data.
+     * @return void
+     */
+    private function migrate_eskateboard_fields(int $post_id, array $acf): void {
+        $eskateboard = [];
+        $features = $this->normalize_array($acf['features'] ?? []);
+
+        // Motor group.
+        $eskateboard['motor'] = [
+            'motor_type'    => $acf['motor_type'] ?: 'Hub',
+            'drive'         => $this->map_skateboard_drive($acf['Wheel Drive'] ?? ''),
+            'motor_count'   => 2, // Default, not in source data
+            'motor_size'    => '', // Not in source data
+            'power_nominal' => $acf['nominal_motor_wattage'] ?? '',
+            'power_peak'    => $acf['total_peak_wattage'] ?? '',
+        ];
+
+        // Battery group.
+        $eskateboard['battery'] = [
+            'capacity'      => $acf['battery_capacity'] ?? '',
+            'voltage'       => $acf['battery_voltage'] ?? $acf['voltage'] ?? '',
+            'amphours'      => $acf['battery_amphours'] ?? '',
+            'battery_type'  => $acf['battery_type'] ?? 'Lithium-ion',
+            'brand'         => $acf['battery_brand'] ?? '',
+            'configuration' => '', // Not in source data
+            'charging_time' => $acf['charging_time'] ?? '',
+        ];
+
+        // Deck group.
+        $eskateboard['deck'] = [
+            'length'   => $acf['deck_length'] ?? '',
+            'width'    => $acf['deck_width'] ?? '',
+            'material' => $acf['deck_material'] ?? '',
+            'concave'  => '', // Not in source data
+        ];
+
+        // Trucks group.
+        $eskateboard['trucks'] = [
+            'trucks'   => $acf['trucks'] ?? '',
+            'bushings' => $acf['bushings'] ?? '',
+        ];
+
+        // Wheels group.
+        $wheel_size = $acf['wheel_size_front'] ?? $acf['wheel_size_rear'] ?? '';
+        $eskateboard['wheels'] = [
+            'wheel_size'     => $wheel_size,
+            'wheel_width'    => $acf['tire_width'] ?? '',
+            'durometer'      => $acf['tire_durometer'] ?? '',
+            'wheel_type'     => $this->map_skateboard_wheel_type($acf['tires'] ?? []),
+            'wheel_material' => $this->map_skateboard_wheel_material($acf['tire_material'] ?? []),
+            'terrain'        => $this->map_skateboard_terrain($acf['terrain'] ?? ''),
+        ];
+
+        // Suspension group.
+        $has_suspension = !empty($acf['suspension']) && !in_array('None', (array) $acf['suspension'], true);
+        $eskateboard['suspension'] = [
+            'has_suspension'  => $has_suspension,
+            'suspension_type' => $has_suspension ? implode(', ', (array) $acf['suspension']) : '',
+        ];
+
+        // Dimensions group.
+        $eskateboard['dimensions'] = [
+            'wheelbase'        => $acf['wheel_base'] ?? '',
+            'ground_clearance' => $acf['ground_clearance'] ?? '',
+            'weight'           => $acf['weight'] ?? '',
+            'max_load'         => $acf['max_load'] ?? '',
+            'unfolded_length'  => $acf['unfolded_depth'] ?? '',
+            'unfolded_width'   => $acf['unfolded_width'] ?? '',
+            'unfolded_height'  => $acf['unfolded_height'] ?? '',
+        ];
+
+        // Electronics group.
+        $eskateboard['electronics'] = [
+            'esc'         => $acf['esc'] ?? '',
+            'remote_type' => '', // Not in source data
+        ];
+
+        // Lighting group.
+        $eskateboard['lighting'] = [
+            'lights'          => $this->normalize_array($acf['lights'] ?? []),
+            'side_visibility' => $this->normalize_array($acf['Side_visibility'] ?? []),
+            'ambient_lights'  => false, // Not in source data
+        ];
+
+        // Other group.
+        $eskateboard['other'] = [
+            'ip_rating' => $this->map_skateboard_ip_rating($acf['weather_resistance'] ?? []),
+        ];
+
+        // Features.
+        $eskateboard['features'] = $this->map_eskateboard_features($acf);
+
+        $this->set_field('e-skateboards', $eskateboard, $post_id);
+        $this->log('info', "Migrated e-skateboards group with " . count($eskateboard) . " sub-groups");
+    }
+
+    /**
+     * Map skateboard drive value.
+     *
+     * @param string $drive Old drive value (e.g., "2WD").
+     * @return string
+     */
+    private function map_skateboard_drive(string $drive): string {
+        $drive = strtoupper(trim($drive));
+        if (in_array($drive, ['1WD', '2WD', '4WD'], true)) {
+            return $drive;
+        }
+        return '2WD'; // Default.
+    }
+
+    /**
+     * Map skateboard wheel type.
+     *
+     * @param array $tires Tires array.
+     * @return string
+     */
+    private function map_skateboard_wheel_type(array $tires): string {
+        $tires = $this->normalize_array($tires);
+        foreach ($tires as $tire) {
+            $lower = strtolower($tire);
+            if (strpos($lower, 'pneumatic') !== false || strpos($lower, 'inflat') !== false || strpos($lower, 'air') !== false) {
+                return 'Pneumatic';
+            }
+            if (strpos($lower, 'solid') !== false) {
+                return 'Solid';
+            }
+        }
+        return 'Solid'; // Default for skateboards.
+    }
+
+    /**
+     * Map skateboard wheel material.
+     *
+     * @param array $materials Material array.
+     * @return string
+     */
+    private function map_skateboard_wheel_material(array $materials): string {
+        $materials = $this->normalize_array($materials);
+        foreach ($materials as $material) {
+            $lower = strtolower($material);
+            if (strpos($lower, 'polyurethane') !== false || strpos($lower, 'pu') !== false) {
+                return 'Polyurethane';
+            }
+            if (strpos($lower, 'rubber') !== false) {
+                return 'Rubber';
+            }
+            if (strpos($lower, 'cloud') !== false) {
+                return 'Cloudwheels';
+            }
+        }
+        return 'Polyurethane'; // Default.
+    }
+
+    /**
+     * Map skateboard terrain.
+     *
+     * @param string $terrain Terrain value.
+     * @return string
+     */
+    private function map_skateboard_terrain(string $terrain): string {
+        $lower = strtolower($terrain);
+        if (strpos($lower, 'all') !== false || strpos($lower, 'off') !== false) {
+            return 'All-Terrain';
+        }
+        if (strpos($lower, 'hybrid') !== false) {
+            return 'Hybrid';
+        }
+        return 'Street';
+    }
+
+    /**
+     * Map skateboard IP rating from weather_resistance array.
+     *
+     * @param array $resistance Weather resistance array.
+     * @return string
+     */
+    private function map_skateboard_ip_rating(array $resistance): string {
+        $resistance = $this->normalize_array($resistance);
+        foreach ($resistance as $r) {
+            $r = strtoupper(trim($r));
+            // Check for valid IP ratings.
+            if (preg_match('/^IP[X]?\d{1,2}$/i', $r)) {
+                return $r;
+            }
+        }
+        return 'Unknown';
+    }
+
+    /**
+     * Map skateboard features.
+     *
+     * @param array $acf ACF data.
+     * @return array
+     */
+    private function map_eskateboard_features(array $acf): array {
+        $features = [];
+
+        // Boolean fields.
+        if (!empty($acf['cruise_control'])) {
+            $features[] = 'Cruise Control';
+        }
+        if (!empty($acf['riding_modes'])) {
+            $features[] = 'Speed Modes';
+        }
+        if (!empty($acf['bluetooth_app'])) {
+            $features[] = 'App';
+        }
+        if (!empty($acf['quick_swap_battery'])) {
+            $features[] = 'Quick-Swap Battery';
+        }
+        if (!empty($acf['push_to_start'])) {
+            $features[] = 'Push Start';
+        }
+        if (!empty($acf['braking_modes'])) {
+            $features[] = 'Braking Modes';
+        }
+
+        // Check features array for additional items.
+        $source_features = $this->normalize_array($acf['features'] ?? []);
+        $map = [
+            'App'                  => 'App',
+            'Speed Modes'          => 'Speed Modes',
+            'Cruise Control'       => 'Cruise Control',
+            'Regenerative Braking' => 'Regenerative Braking',
+            'Reverse'              => 'Reverse',
+        ];
+
+        foreach ($source_features as $f) {
+            if (isset($map[$f]) && !in_array($map[$f], $features, true)) {
+                $features[] = $map[$f];
+            }
+        }
+
+        return $features;
     }
 
     /**

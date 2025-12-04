@@ -1,0 +1,958 @@
+[
+  {
+    "key": "group_erh_eskateboards",
+    "title": "E-Skateboard Specifications",
+    "fields": [
+      {
+        "key": "field_erh_eskateboards",
+        "label": "E-Skateboards",
+        "name": "e-skateboards",
+        "type": "group",
+        "instructions": "",
+        "required": 0,
+        "wrapper": {
+          "width": "",
+          "class": "",
+          "id": ""
+        },
+        "layout": "block",
+        "sub_fields": [
+          {
+            "key": "field_erh_eskateboard_motor",
+            "label": "Motor",
+            "name": "motor",
+            "type": "group",
+            "instructions": "",
+            "required": 0,
+            "wrapper": {
+              "width": "",
+              "class": "",
+              "id": ""
+            },
+            "layout": "block",
+            "sub_fields": [
+              {
+                "key": "field_erh_eskateboard_motor_type",
+                "label": "Motor Type",
+                "name": "motor_type",
+                "type": "select",
+                "instructions": "",
+                "required": 0,
+                "wrapper": {
+                  "width": "16",
+                  "class": "",
+                  "id": ""
+                },
+                "choices": {
+                  "Hub": "Hub",
+                  "Belt": "Belt",
+                  "Gear": "Gear",
+                  "Direct Drive": "Direct Drive"
+                },
+                "default_value": "Hub",
+                "return_format": "value",
+                "multiple": 0,
+                "allow_null": 0,
+                "ui": 0,
+                "ajax": 0
+              },
+              {
+                "key": "field_erh_eskateboard_drive",
+                "label": "Drive",
+                "name": "drive",
+                "type": "select",
+                "instructions": "",
+                "required": 0,
+                "wrapper": {
+                  "width": "16",
+                  "class": "",
+                  "id": ""
+                },
+                "choices": {
+                  "1WD": "1WD",
+                  "2WD": "2WD",
+                  "4WD": "4WD"
+                },
+                "default_value": "2WD",
+                "return_format": "value",
+                "multiple": 0,
+                "allow_null": 0,
+                "ui": 0,
+                "ajax": 0
+              },
+              {
+                "key": "field_erh_eskateboard_motor_count",
+                "label": "Motor Count",
+                "name": "motor_count",
+                "type": "number",
+                "instructions": "",
+                "required": 0,
+                "wrapper": {
+                  "width": "16",
+                  "class": "",
+                  "id": ""
+                },
+                "default_value": 2,
+                "min": 1,
+                "max": 4,
+                "step": 1
+              },
+              {
+                "key": "field_erh_eskateboard_motor_size",
+                "label": "Motor Size",
+                "name": "motor_size",
+                "type": "text",
+                "instructions": "e.g., 6374, 7285",
+                "required": 0,
+                "wrapper": {
+                  "width": "16",
+                  "class": "",
+                  "id": ""
+                },
+                "default_value": "",
+                "placeholder": ""
+              },
+              {
+                "key": "field_erh_eskateboard_power_nominal",
+                "label": "Nominal Power",
+                "name": "power_nominal",
+                "type": "number",
+                "instructions": "Total watts (W)",
+                "required": 0,
+                "wrapper": {
+                  "width": "16",
+                  "class": "",
+                  "id": ""
+                },
+                "min": "",
+                "max": "",
+                "step": ""
+              },
+              {
+                "key": "field_erh_eskateboard_power_peak",
+                "label": "Peak Power",
+                "name": "power_peak",
+                "type": "number",
+                "instructions": "Total watts (W)",
+                "required": 0,
+                "wrapper": {
+                  "width": "16",
+                  "class": "",
+                  "id": ""
+                },
+                "min": "",
+                "max": "",
+                "step": ""
+              }
+            ]
+          },
+          {
+            "key": "field_erh_eskateboard_battery",
+            "label": "Battery",
+            "name": "battery",
+            "type": "group",
+            "instructions": "",
+            "required": 0,
+            "wrapper": {
+              "width": "",
+              "class": "",
+              "id": ""
+            },
+            "layout": "block",
+            "sub_fields": [
+              {
+                "key": "field_erh_eskateboard_capacity",
+                "label": "Capacity",
+                "name": "capacity",
+                "type": "number",
+                "instructions": "Watt-hours (Wh)",
+                "required": 0,
+                "wrapper": {
+                  "width": "14",
+                  "class": "",
+                  "id": ""
+                },
+                "min": "",
+                "max": "",
+                "step": ""
+              },
+              {
+                "key": "field_erh_eskateboard_voltage",
+                "label": "Voltage",
+                "name": "voltage",
+                "type": "number",
+                "instructions": "Volts (V)",
+                "required": 0,
+                "wrapper": {
+                  "width": "14",
+                  "class": "",
+                  "id": ""
+                },
+                "min": "",
+                "max": "",
+                "step": ""
+              },
+              {
+                "key": "field_erh_eskateboard_amphours",
+                "label": "Amp Hours",
+                "name": "amphours",
+                "type": "number",
+                "instructions": "Ah",
+                "required": 0,
+                "wrapper": {
+                  "width": "14",
+                  "class": "",
+                  "id": ""
+                },
+                "min": "",
+                "max": "",
+                "step": ""
+              },
+              {
+                "key": "field_erh_eskateboard_battery_type",
+                "label": "Battery Type",
+                "name": "battery_type",
+                "type": "select",
+                "instructions": "",
+                "required": 0,
+                "wrapper": {
+                  "width": "14",
+                  "class": "",
+                  "id": ""
+                },
+                "choices": {
+                  "Lithium-ion": "Lithium-ion",
+                  "Lead-acid": "Lead-acid"
+                },
+                "default_value": "Lithium-ion",
+                "return_format": "value",
+                "multiple": 0,
+                "allow_null": 0,
+                "ui": 0,
+                "ajax": 0
+              },
+              {
+                "key": "field_erh_eskateboard_battery_brand",
+                "label": "Brand",
+                "name": "brand",
+                "type": "text",
+                "instructions": "e.g., Samsung 50S",
+                "required": 0,
+                "wrapper": {
+                  "width": "14",
+                  "class": "",
+                  "id": ""
+                },
+                "default_value": "",
+                "placeholder": ""
+              },
+              {
+                "key": "field_erh_eskateboard_configuration",
+                "label": "Configuration",
+                "name": "configuration",
+                "type": "text",
+                "instructions": "e.g., 12S4P",
+                "required": 0,
+                "wrapper": {
+                  "width": "14",
+                  "class": "",
+                  "id": ""
+                },
+                "default_value": "",
+                "placeholder": ""
+              },
+              {
+                "key": "field_erh_eskateboard_charging_time",
+                "label": "Charging Time",
+                "name": "charging_time",
+                "type": "number",
+                "instructions": "Hours",
+                "required": 0,
+                "wrapper": {
+                  "width": "14",
+                  "class": "",
+                  "id": ""
+                },
+                "min": "",
+                "max": "",
+                "step": ""
+              }
+            ]
+          },
+          {
+            "key": "field_erh_eskateboard_deck",
+            "label": "Deck",
+            "name": "deck",
+            "type": "group",
+            "instructions": "",
+            "required": 0,
+            "wrapper": {
+              "width": "",
+              "class": "",
+              "id": ""
+            },
+            "layout": "block",
+            "sub_fields": [
+              {
+                "key": "field_erh_eskateboard_deck_length",
+                "label": "Length",
+                "name": "length",
+                "type": "number",
+                "instructions": "Inches",
+                "required": 0,
+                "wrapper": {
+                  "width": "25",
+                  "class": "",
+                  "id": ""
+                },
+                "min": "",
+                "max": "",
+                "step": ""
+              },
+              {
+                "key": "field_erh_eskateboard_deck_width",
+                "label": "Width",
+                "name": "width",
+                "type": "number",
+                "instructions": "Inches",
+                "required": 0,
+                "wrapper": {
+                  "width": "25",
+                  "class": "",
+                  "id": ""
+                },
+                "min": "",
+                "max": "",
+                "step": ""
+              },
+              {
+                "key": "field_erh_eskateboard_deck_material",
+                "label": "Material",
+                "name": "material",
+                "type": "text",
+                "instructions": "e.g., 8 ply Canadian maple",
+                "required": 0,
+                "wrapper": {
+                  "width": "25",
+                  "class": "",
+                  "id": ""
+                },
+                "default_value": "",
+                "placeholder": ""
+              },
+              {
+                "key": "field_erh_eskateboard_concave",
+                "label": "Concave",
+                "name": "concave",
+                "type": "select",
+                "instructions": "",
+                "required": 0,
+                "wrapper": {
+                  "width": "25",
+                  "class": "",
+                  "id": ""
+                },
+                "choices": {
+                  "Flat": "Flat",
+                  "Mild": "Mild",
+                  "Medium": "Medium",
+                  "Aggressive": "Aggressive",
+                  "W-Concave": "W-Concave"
+                },
+                "default_value": "",
+                "return_format": "value",
+                "multiple": 0,
+                "allow_null": 1,
+                "ui": 0,
+                "ajax": 0
+              }
+            ]
+          },
+          {
+            "key": "field_erh_eskateboard_trucks",
+            "label": "Trucks",
+            "name": "trucks",
+            "type": "group",
+            "instructions": "",
+            "required": 0,
+            "wrapper": {
+              "width": "",
+              "class": "",
+              "id": ""
+            },
+            "layout": "block",
+            "sub_fields": [
+              {
+                "key": "field_erh_eskateboard_trucks_desc",
+                "label": "Trucks",
+                "name": "trucks",
+                "type": "text",
+                "instructions": "e.g., 12-inch Double Kingpin",
+                "required": 0,
+                "wrapper": {
+                  "width": "50",
+                  "class": "",
+                  "id": ""
+                },
+                "default_value": "",
+                "placeholder": ""
+              },
+              {
+                "key": "field_erh_eskateboard_bushings",
+                "label": "Bushings",
+                "name": "bushings",
+                "type": "text",
+                "instructions": "e.g., Double Barrel, Riptide 65A/75A",
+                "required": 0,
+                "wrapper": {
+                  "width": "50",
+                  "class": "",
+                  "id": ""
+                },
+                "default_value": "",
+                "placeholder": ""
+              }
+            ]
+          },
+          {
+            "key": "field_erh_eskateboard_wheels",
+            "label": "Wheels",
+            "name": "wheels",
+            "type": "group",
+            "instructions": "",
+            "required": 0,
+            "wrapper": {
+              "width": "",
+              "class": "",
+              "id": ""
+            },
+            "layout": "block",
+            "sub_fields": [
+              {
+                "key": "field_erh_eskateboard_wheel_size",
+                "label": "Wheel Size",
+                "name": "wheel_size",
+                "type": "number",
+                "instructions": "mm",
+                "required": 0,
+                "wrapper": {
+                  "width": "16",
+                  "class": "",
+                  "id": ""
+                },
+                "min": "",
+                "max": "",
+                "step": ""
+              },
+              {
+                "key": "field_erh_eskateboard_wheel_width",
+                "label": "Wheel Width",
+                "name": "wheel_width",
+                "type": "number",
+                "instructions": "mm",
+                "required": 0,
+                "wrapper": {
+                  "width": "16",
+                  "class": "",
+                  "id": ""
+                },
+                "min": "",
+                "max": "",
+                "step": ""
+              },
+              {
+                "key": "field_erh_eskateboard_durometer",
+                "label": "Durometer",
+                "name": "durometer",
+                "type": "number",
+                "instructions": "e.g., 78 for 78A",
+                "required": 0,
+                "wrapper": {
+                  "width": "16",
+                  "class": "",
+                  "id": ""
+                },
+                "min": "",
+                "max": "",
+                "step": ""
+              },
+              {
+                "key": "field_erh_eskateboard_wheel_type",
+                "label": "Wheel Type",
+                "name": "wheel_type",
+                "type": "select",
+                "instructions": "",
+                "required": 0,
+                "wrapper": {
+                  "width": "16",
+                  "class": "",
+                  "id": ""
+                },
+                "choices": {
+                  "Pneumatic": "Pneumatic",
+                  "Solid": "Solid",
+                  "Mixed": "Mixed"
+                },
+                "default_value": "Solid",
+                "return_format": "value",
+                "multiple": 0,
+                "allow_null": 0,
+                "ui": 0,
+                "ajax": 0
+              },
+              {
+                "key": "field_erh_eskateboard_wheel_material",
+                "label": "Wheel Material",
+                "name": "wheel_material",
+                "type": "select",
+                "instructions": "",
+                "required": 0,
+                "wrapper": {
+                  "width": "16",
+                  "class": "",
+                  "id": ""
+                },
+                "choices": {
+                  "Polyurethane": "Polyurethane",
+                  "Rubber": "Rubber",
+                  "Cloudwheels": "Cloudwheels"
+                },
+                "default_value": "Polyurethane",
+                "return_format": "value",
+                "multiple": 0,
+                "allow_null": 0,
+                "ui": 0,
+                "ajax": 0
+              },
+              {
+                "key": "field_erh_eskateboard_terrain",
+                "label": "Terrain",
+                "name": "terrain",
+                "type": "select",
+                "instructions": "",
+                "required": 0,
+                "wrapper": {
+                  "width": "16",
+                  "class": "",
+                  "id": ""
+                },
+                "choices": {
+                  "Street": "Street",
+                  "Hybrid": "Hybrid",
+                  "All-Terrain": "All-Terrain"
+                },
+                "default_value": "Street",
+                "return_format": "value",
+                "multiple": 0,
+                "allow_null": 0,
+                "ui": 0,
+                "ajax": 0
+              }
+            ]
+          },
+          {
+            "key": "field_erh_eskateboard_suspension",
+            "label": "Suspension",
+            "name": "suspension",
+            "type": "group",
+            "instructions": "",
+            "required": 0,
+            "wrapper": {
+              "width": "",
+              "class": "",
+              "id": ""
+            },
+            "layout": "block",
+            "sub_fields": [
+              {
+                "key": "field_erh_eskateboard_has_suspension",
+                "label": "Has Suspension",
+                "name": "has_suspension",
+                "type": "true_false",
+                "instructions": "",
+                "required": 0,
+                "wrapper": {
+                  "width": "30",
+                  "class": "",
+                  "id": ""
+                },
+                "default_value": 0,
+                "ui": 1
+              },
+              {
+                "key": "field_erh_eskateboard_suspension_type",
+                "label": "Suspension Type",
+                "name": "suspension_type",
+                "type": "text",
+                "instructions": "e.g., Urban Independent Suspension",
+                "required": 0,
+                "wrapper": {
+                  "width": "70",
+                  "class": "",
+                  "id": ""
+                },
+                "default_value": "",
+                "placeholder": "",
+                "conditional_logic": [
+                  [
+                    {
+                      "field": "field_erh_eskateboard_has_suspension",
+                      "operator": "==",
+                      "value": "1"
+                    }
+                  ]
+                ]
+              }
+            ]
+          },
+          {
+            "key": "field_erh_eskateboard_dimensions",
+            "label": "Dimensions",
+            "name": "dimensions",
+            "type": "group",
+            "instructions": "",
+            "required": 0,
+            "wrapper": {
+              "width": "",
+              "class": "",
+              "id": ""
+            },
+            "layout": "block",
+            "sub_fields": [
+              {
+                "key": "field_erh_eskateboard_wheelbase",
+                "label": "Wheelbase",
+                "name": "wheelbase",
+                "type": "number",
+                "instructions": "Inches",
+                "required": 0,
+                "wrapper": {
+                  "width": "14",
+                  "class": "",
+                  "id": ""
+                },
+                "min": "",
+                "max": "",
+                "step": ""
+              },
+              {
+                "key": "field_erh_eskateboard_ground_clearance",
+                "label": "Ground Clearance",
+                "name": "ground_clearance",
+                "type": "number",
+                "instructions": "Inches",
+                "required": 0,
+                "wrapper": {
+                  "width": "14",
+                  "class": "",
+                  "id": ""
+                },
+                "min": "",
+                "max": "",
+                "step": ""
+              },
+              {
+                "key": "field_erh_eskateboard_weight",
+                "label": "Weight",
+                "name": "weight",
+                "type": "number",
+                "instructions": "Pounds",
+                "required": 0,
+                "wrapper": {
+                  "width": "14",
+                  "class": "",
+                  "id": ""
+                },
+                "min": "",
+                "max": "",
+                "step": ""
+              },
+              {
+                "key": "field_erh_eskateboard_max_load",
+                "label": "Max Load",
+                "name": "max_load",
+                "type": "number",
+                "instructions": "Pounds",
+                "required": 0,
+                "wrapper": {
+                  "width": "14",
+                  "class": "",
+                  "id": ""
+                },
+                "min": "",
+                "max": "",
+                "step": ""
+              },
+              {
+                "key": "field_erh_eskateboard_unfolded_length",
+                "label": "Length",
+                "name": "unfolded_length",
+                "type": "number",
+                "instructions": "Inches",
+                "required": 0,
+                "wrapper": {
+                  "width": "14",
+                  "class": "",
+                  "id": ""
+                },
+                "min": "",
+                "max": "",
+                "step": ""
+              },
+              {
+                "key": "field_erh_eskateboard_unfolded_width",
+                "label": "Width",
+                "name": "unfolded_width",
+                "type": "number",
+                "instructions": "Inches",
+                "required": 0,
+                "wrapper": {
+                  "width": "14",
+                  "class": "",
+                  "id": ""
+                },
+                "min": "",
+                "max": "",
+                "step": ""
+              },
+              {
+                "key": "field_erh_eskateboard_unfolded_height",
+                "label": "Height",
+                "name": "unfolded_height",
+                "type": "number",
+                "instructions": "Inches",
+                "required": 0,
+                "wrapper": {
+                  "width": "14",
+                  "class": "",
+                  "id": ""
+                },
+                "min": "",
+                "max": "",
+                "step": ""
+              }
+            ]
+          },
+          {
+            "key": "field_erh_eskateboard_electronics",
+            "label": "Electronics",
+            "name": "electronics",
+            "type": "group",
+            "instructions": "",
+            "required": 0,
+            "wrapper": {
+              "width": "",
+              "class": "",
+              "id": ""
+            },
+            "layout": "block",
+            "sub_fields": [
+              {
+                "key": "field_erh_eskateboard_esc",
+                "label": "ESC",
+                "name": "esc",
+                "type": "text",
+                "instructions": "e.g., Hobbywing 10S, FOC 3.0",
+                "required": 0,
+                "wrapper": {
+                  "width": "50",
+                  "class": "",
+                  "id": ""
+                },
+                "default_value": "",
+                "placeholder": ""
+              },
+              {
+                "key": "field_erh_eskateboard_remote_type",
+                "label": "Remote Type",
+                "name": "remote_type",
+                "type": "text",
+                "instructions": "e.g., OLED Remote, Color Screen",
+                "required": 0,
+                "wrapper": {
+                  "width": "50",
+                  "class": "",
+                  "id": ""
+                },
+                "default_value": "",
+                "placeholder": ""
+              }
+            ]
+          },
+          {
+            "key": "field_erh_eskateboard_lighting",
+            "label": "Lighting",
+            "name": "lighting",
+            "type": "group",
+            "instructions": "",
+            "required": 0,
+            "wrapper": {
+              "width": "",
+              "class": "",
+              "id": ""
+            },
+            "layout": "block",
+            "sub_fields": [
+              {
+                "key": "field_erh_eskateboard_lights",
+                "label": "Lights",
+                "name": "lights",
+                "type": "checkbox",
+                "instructions": "",
+                "required": 0,
+                "wrapper": {
+                  "width": "33",
+                  "class": "",
+                  "id": ""
+                },
+                "choices": {
+                  "Front": "Front",
+                  "Rear": "Rear",
+                  "Both": "Both",
+                  "None": "None"
+                },
+                "default_value": [],
+                "return_format": "value",
+                "layout": "horizontal"
+              },
+              {
+                "key": "field_erh_eskateboard_side_visibility",
+                "label": "Side Visibility",
+                "name": "side_visibility",
+                "type": "checkbox",
+                "instructions": "",
+                "required": 0,
+                "wrapper": {
+                  "width": "33",
+                  "class": "",
+                  "id": ""
+                },
+                "choices": {
+                  "Front": "Front",
+                  "Rear": "Rear",
+                  "Both": "Both",
+                  "None": "None"
+                },
+                "default_value": [],
+                "return_format": "value",
+                "layout": "horizontal"
+              },
+              {
+                "key": "field_erh_eskateboard_ambient_lights",
+                "label": "Ambient Lights",
+                "name": "ambient_lights",
+                "type": "true_false",
+                "instructions": "RGB deck lights",
+                "required": 0,
+                "wrapper": {
+                  "width": "33",
+                  "class": "",
+                  "id": ""
+                },
+                "default_value": 0,
+                "ui": 1
+              }
+            ]
+          },
+          {
+            "key": "field_erh_eskateboard_other",
+            "label": "Other",
+            "name": "other",
+            "type": "group",
+            "instructions": "",
+            "required": 0,
+            "wrapper": {
+              "width": "",
+              "class": "",
+              "id": ""
+            },
+            "layout": "block",
+            "sub_fields": [
+              {
+                "key": "field_erh_eskateboard_ip_rating",
+                "label": "IP Rating",
+                "name": "ip_rating",
+                "type": "select",
+                "instructions": "",
+                "required": 0,
+                "wrapper": {
+                  "width": "100",
+                  "class": "",
+                  "id": ""
+                },
+                "choices": {
+                  "None": "None",
+                  "IP34": "IP34",
+                  "IP45": "IP45",
+                  "IP54": "IP54",
+                  "IP55": "IP55",
+                  "IP65": "IP65",
+                  "IP66": "IP66",
+                  "IP67": "IP67",
+                  "IP77": "IP77",
+                  "IPX4": "IPX4",
+                  "IPX5": "IPX5",
+                  "IPX6": "IPX6",
+                  "IPX7": "IPX7",
+                  "Unknown": "Unknown"
+                },
+                "default_value": "Unknown",
+                "return_format": "value",
+                "multiple": 0,
+                "allow_null": 0,
+                "ui": 0,
+                "ajax": 0
+              }
+            ]
+          },
+          {
+            "key": "field_erh_eskateboard_features",
+            "label": "Features",
+            "name": "features",
+            "type": "checkbox",
+            "instructions": "",
+            "required": 0,
+            "wrapper": {
+              "width": "100",
+              "class": "",
+              "id": ""
+            },
+            "choices": {
+              "Cruise Control": "Cruise Control",
+              "Speed Modes": "Speed Modes",
+              "App": "App",
+              "Regenerative Braking": "Regenerative Braking",
+              "Push Start": "Push Start",
+              "Quick-Swap Battery": "Quick-Swap Battery",
+              "Reverse": "Reverse",
+              "Braking Modes": "Braking Modes",
+              "Laser Lights": "Laser Lights",
+              "Bindings Compatible": "Bindings Compatible",
+              "Handle": "Handle"
+            },
+            "default_value": [],
+            "return_format": "value",
+            "layout": "horizontal"
+          }
+        ]
+      }
+    ],
+    "location": [
+      [
+        {
+          "param": "post_taxonomy",
+          "operator": "==",
+          "value": "product_type:electric-skateboard"
+        }
+      ]
+    ],
+    "menu_order": 3,
+    "position": "normal",
+    "style": "default",
+    "label_placement": "top",
+    "instruction_placement": "label",
+    "hide_on_screen": "",
+    "active": true,
+    "show_in_rest": true
+  }
+]
