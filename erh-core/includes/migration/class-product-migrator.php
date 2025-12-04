@@ -776,10 +776,10 @@ class ProductMigrator {
     /**
      * Map skateboard wheel type.
      *
-     * @param array $tires Tires array.
+     * @param mixed $tires Tires array or string.
      * @return string
      */
-    private function map_skateboard_wheel_type(array $tires): string {
+    private function map_skateboard_wheel_type($tires): string {
         $tires = $this->normalize_array($tires);
         foreach ($tires as $tire) {
             $lower = strtolower($tire);
@@ -796,10 +796,10 @@ class ProductMigrator {
     /**
      * Map skateboard wheel material.
      *
-     * @param array $materials Material array.
+     * @param mixed $materials Material array or string.
      * @return string
      */
-    private function map_skateboard_wheel_material(array $materials): string {
+    private function map_skateboard_wheel_material($materials): string {
         $materials = $this->normalize_array($materials);
         foreach ($materials as $material) {
             $lower = strtolower($material);
@@ -819,10 +819,11 @@ class ProductMigrator {
     /**
      * Map skateboard terrain.
      *
-     * @param string $terrain Terrain value.
+     * @param mixed $terrain Terrain value.
      * @return string
      */
-    private function map_skateboard_terrain(string $terrain): string {
+    private function map_skateboard_terrain($terrain): string {
+        $terrain = is_array($terrain) ? ($terrain[0] ?? '') : (string) $terrain;
         $lower = strtolower($terrain);
         if (strpos($lower, 'all') !== false || strpos($lower, 'off') !== false) {
             return 'All-Terrain';
@@ -836,10 +837,10 @@ class ProductMigrator {
     /**
      * Map skateboard IP rating from weather_resistance array.
      *
-     * @param array $resistance Weather resistance array.
+     * @param mixed $resistance Weather resistance array or string.
      * @return string
      */
-    private function map_skateboard_ip_rating(array $resistance): string {
+    private function map_skateboard_ip_rating($resistance): string {
         $resistance = $this->normalize_array($resistance);
         foreach ($resistance as $r) {
             $r = strtoupper(trim($r));
@@ -975,10 +976,10 @@ class ProductMigrator {
     /**
      * Map hoverboard wheel type.
      *
-     * @param array $tires Tires array.
+     * @param mixed $tires Tires array or string.
      * @return string
      */
-    private function map_hoverboard_wheel_type(array $tires): string {
+    private function map_hoverboard_wheel_type($tires): string {
         $tires = $this->normalize_array($tires);
         foreach ($tires as $tire) {
             $lower = strtolower($tire);
@@ -1030,10 +1031,10 @@ class ProductMigrator {
     /**
      * Map hoverboard IP rating.
      *
-     * @param array $resistance Weather resistance array.
+     * @param mixed $resistance Weather resistance array or string.
      * @return string
      */
-    private function map_hoverboard_ip_rating(array $resistance): string {
+    private function map_hoverboard_ip_rating($resistance): string {
         $resistance = $this->normalize_array($resistance);
         foreach ($resistance as $r) {
             $r = strtoupper(trim($r));
@@ -1047,10 +1048,11 @@ class ProductMigrator {
     /**
      * Map hoverboard terrain.
      *
-     * @param string $terrain Terrain value.
+     * @param mixed $terrain Terrain value.
      * @return string
      */
-    private function map_hoverboard_terrain(string $terrain): string {
+    private function map_hoverboard_terrain($terrain): string {
+        $terrain = is_array($terrain) ? ($terrain[0] ?? '') : (string) $terrain;
         $lower = strtolower($terrain);
         if (strpos($lower, 'off') !== false || strpos($lower, 'all') !== false) {
             return 'Off-road';
