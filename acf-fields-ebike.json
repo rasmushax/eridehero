@@ -1,0 +1,2781 @@
+[
+  {
+    "key": "group_erh_basic_info",
+    "title": "Basic Info",
+    "fields": [
+      {
+        "key": "field_615326243923b",
+        "label": "Model",
+        "name": "model",
+        "aria-label": "",
+        "type": "text",
+        "instructions": "",
+        "required": 0,
+        "wrapper": {
+          "width": "14.27",
+          "class": "",
+          "id": ""
+        },
+        "default_value": "",
+        "maxlength": "",
+        "placeholder": "",
+        "prepend": "",
+        "append": ""
+      },
+      {
+        "key": "field_649c0b1f5b3e8",
+        "label": "Release Year",
+        "name": "release_year",
+        "aria-label": "",
+        "type": "number",
+        "instructions": "",
+        "required": 0,
+        "wrapper": {
+          "width": "6",
+          "class": "",
+          "id": ""
+        },
+        "default_value": "",
+        "min": "",
+        "max": "",
+        "placeholder": "",
+        "step": "",
+        "prepend": "",
+        "append": ""
+      },
+      {
+        "key": "field_649c0b8b5b3e9",
+        "label": "Release Quarter",
+        "name": "release_quarter",
+        "aria-label": "",
+        "type": "select",
+        "instructions": "",
+        "required": 0,
+        "wrapper": {
+          "width": "6",
+          "class": "",
+          "id": ""
+        },
+        "choices": {
+          "Q1": "Q1",
+          "Q2": "Q2",
+          "Q3": "Q3",
+          "Q4": "Q4",
+          "Unknown": "Unknown"
+        },
+        "default_value": "Unknown",
+        "return_format": "value",
+        "multiple": 0,
+        "allow_null": 0,
+        "ui": 0,
+        "ajax": 0,
+        "placeholder": "",
+        "create_options": 0,
+        "save_options": 0
+      },
+      {
+        "key": "field_erh_youtube_review",
+        "label": "YouTube Review",
+        "name": "youtube_review",
+        "type": "url",
+        "instructions": "URL to YouTube review video",
+        "required": 0,
+        "wrapper": {
+          "width": "50",
+          "class": "",
+          "id": ""
+        }
+      },
+      {
+        "key": "field_erh_editor_rating",
+        "label": "Editor Rating",
+        "name": "editor_rating",
+        "type": "number",
+        "instructions": "Overall editor rating (1-10)",
+        "required": 0,
+        "min": 1,
+        "max": 10,
+        "step": 0.1,
+        "wrapper": {
+          "width": "25",
+          "class": "",
+          "id": ""
+        }
+      }
+    ],
+    "location": [
+      [
+        {
+          "param": "post_type",
+          "operator": "==",
+          "value": "products"
+        }
+      ]
+    ],
+    "menu_order": 0,
+    "position": "normal",
+    "style": "default",
+    "label_placement": "top",
+    "instruction_placement": "label",
+    "hide_on_screen": "",
+    "active": true,
+    "show_in_rest": true
+  },
+  {
+    "key": "group_erh_performance_tests",
+    "title": "Performance Tests",
+    "fields": [
+      {
+        "key": "field_61531f74886e7",
+        "label": "Tested Top Speed",
+        "name": "tested_top_speed",
+        "aria-label": "",
+        "type": "number",
+        "instructions": "",
+        "required": 0,
+        "wrapper": {
+          "width": "",
+          "class": "",
+          "id": ""
+        },
+        "default_value": "",
+        "min": "",
+        "max": "",
+        "placeholder": "",
+        "step": "",
+        "prepend": "",
+        "append": "MPH"
+      },
+      {
+        "key": "field_61531fe3886ec",
+        "label": "Acceleration: 0-15 MPH",
+        "name": "acceleration:_0-15_mph",
+        "aria-label": "",
+        "type": "number",
+        "instructions": "",
+        "required": 0,
+        "wrapper": {
+          "width": "20",
+          "class": "",
+          "id": ""
+        },
+        "default_value": "",
+        "min": "",
+        "max": "",
+        "placeholder": "",
+        "step": "",
+        "prepend": "",
+        "append": "secs"
+      },
+      {
+        "key": "field_6153202b886ed",
+        "label": "Acceleration: 0-20 MPH",
+        "name": "acceleration:_0-20_mph",
+        "aria-label": "",
+        "type": "number",
+        "instructions": "",
+        "required": 0,
+        "wrapper": {
+          "width": "20",
+          "class": "",
+          "id": ""
+        },
+        "default_value": "",
+        "min": "",
+        "max": "",
+        "placeholder": "",
+        "step": "",
+        "prepend": "",
+        "append": "secs"
+      },
+      {
+        "key": "field_61532039886ee",
+        "label": "Acceleration: 0-25 MPH",
+        "name": "acceleration:_0-25_mph",
+        "aria-label": "",
+        "type": "number",
+        "instructions": "",
+        "required": 0,
+        "wrapper": {
+          "width": "20",
+          "class": "",
+          "id": ""
+        },
+        "default_value": "",
+        "min": "",
+        "max": "",
+        "placeholder": "",
+        "step": "",
+        "prepend": "",
+        "append": "secs"
+      },
+      {
+        "key": "field_61542dd017231",
+        "label": "Acceleration: 0-30 MPH",
+        "name": "acceleration:_0-30_mph",
+        "aria-label": "",
+        "type": "number",
+        "instructions": "",
+        "required": 0,
+        "wrapper": {
+          "width": "20",
+          "class": "",
+          "id": ""
+        },
+        "default_value": "",
+        "min": "",
+        "max": "",
+        "placeholder": "",
+        "step": "",
+        "prepend": "",
+        "append": "secs"
+      },
+      {
+        "key": "field_61532043886ef",
+        "label": "Acceleration: 0 to Top Speed",
+        "name": "acceleration:_0-to-top",
+        "aria-label": "",
+        "type": "number",
+        "instructions": "",
+        "required": 0,
+        "wrapper": {
+          "width": "20",
+          "class": "",
+          "id": ""
+        },
+        "default_value": "",
+        "min": "",
+        "max": "",
+        "placeholder": "",
+        "step": "",
+        "prepend": "",
+        "append": "secs"
+      },
+      {
+        "key": "field_639215a043dfd",
+        "label": "Fastest 0-15 MPH",
+        "name": "fastest_0_15",
+        "aria-label": "",
+        "type": "number",
+        "instructions": "",
+        "required": 0,
+        "wrapper": {
+          "width": "20",
+          "class": "",
+          "id": ""
+        },
+        "default_value": "",
+        "min": "",
+        "max": "",
+        "placeholder": "",
+        "step": "",
+        "prepend": "",
+        "append": "secs"
+      },
+      {
+        "key": "field_639215b443dfe",
+        "label": "Fastest 0-20 MPH",
+        "name": "fastest_0_20",
+        "aria-label": "",
+        "type": "number",
+        "instructions": "",
+        "required": 0,
+        "wrapper": {
+          "width": "20",
+          "class": "",
+          "id": ""
+        },
+        "default_value": "",
+        "min": "",
+        "max": "",
+        "placeholder": "",
+        "step": "",
+        "prepend": "",
+        "append": "secs"
+      },
+      {
+        "key": "field_639215ba43dff",
+        "label": "Fastest 0-25 MPH",
+        "name": "fastest_0_25",
+        "aria-label": "",
+        "type": "number",
+        "instructions": "",
+        "required": 0,
+        "wrapper": {
+          "width": "20",
+          "class": "",
+          "id": ""
+        },
+        "default_value": "",
+        "min": "",
+        "max": "",
+        "placeholder": "",
+        "step": "",
+        "prepend": "",
+        "append": "secs"
+      },
+      {
+        "key": "field_639215c343e00",
+        "label": "Fastest 0-30 MPH",
+        "name": "fastest_0_30",
+        "aria-label": "",
+        "type": "number",
+        "instructions": "",
+        "required": 0,
+        "wrapper": {
+          "width": "20",
+          "class": "",
+          "id": ""
+        },
+        "default_value": "",
+        "min": "",
+        "max": "",
+        "placeholder": "",
+        "step": "",
+        "prepend": "",
+        "append": "secs"
+      },
+      {
+        "key": "field_639215c943e01",
+        "label": "Fastest 0 to Top Speed",
+        "name": "fastest_0_top",
+        "aria-label": "",
+        "type": "number",
+        "instructions": "",
+        "required": 0,
+        "wrapper": {
+          "width": "20",
+          "class": "",
+          "id": ""
+        },
+        "default_value": "",
+        "min": "",
+        "max": "",
+        "placeholder": "",
+        "step": "",
+        "prepend": "",
+        "append": "secs"
+      },
+      {
+        "key": "field_61531f8e886e8",
+        "label": "Tested Range (Speed Priority)",
+        "name": "tested_range_fast",
+        "aria-label": "",
+        "type": "number",
+        "instructions": "",
+        "required": 0,
+        "wrapper": {
+          "width": "33",
+          "class": "",
+          "id": ""
+        },
+        "default_value": "",
+        "placeholder": "",
+        "prepend": "",
+        "append": "miles",
+        "min": "",
+        "max": "",
+        "step": ""
+      },
+      {
+        "key": "field_61531fb1886e9",
+        "label": "Tested Range (Regular)",
+        "name": "tested_range_regular",
+        "aria-label": "",
+        "type": "number",
+        "instructions": "",
+        "required": 0,
+        "wrapper": {
+          "width": "33",
+          "class": "",
+          "id": ""
+        },
+        "default_value": "",
+        "placeholder": "",
+        "prepend": "",
+        "append": "miles",
+        "min": "",
+        "max": "",
+        "step": ""
+      },
+      {
+        "key": "field_61531fb9886ea",
+        "label": "Tested Range (Range Priority)",
+        "name": "tested_range_slow",
+        "aria-label": "",
+        "type": "number",
+        "instructions": "",
+        "required": 0,
+        "wrapper": {
+          "width": "33",
+          "class": "",
+          "id": ""
+        },
+        "default_value": "",
+        "placeholder": "",
+        "prepend": "",
+        "append": "miles",
+        "min": "",
+        "max": "",
+        "step": ""
+      },
+      {
+        "key": "field_615320ce2b6c2",
+        "label": "Tested Range Avg. Speed (Speed Priority)",
+        "name": "tested_range_avg_speed_fast",
+        "aria-label": "",
+        "type": "number",
+        "instructions": "",
+        "required": 0,
+        "wrapper": {
+          "width": "33",
+          "class": "",
+          "id": ""
+        },
+        "default_value": "",
+        "placeholder": "",
+        "prepend": "",
+        "append": "MPH",
+        "min": "",
+        "max": "",
+        "step": ""
+      },
+      {
+        "key": "field_615320e82b6c3",
+        "label": "Tested Range Avg. Speed (Regular)",
+        "name": "tested_range_avg_speed_regular",
+        "aria-label": "",
+        "type": "number",
+        "instructions": "",
+        "required": 0,
+        "wrapper": {
+          "width": "33",
+          "class": "",
+          "id": ""
+        },
+        "default_value": "",
+        "placeholder": "",
+        "prepend": "",
+        "append": "MPH",
+        "min": "",
+        "max": "",
+        "step": ""
+      },
+      {
+        "key": "field_615320f72b6c4",
+        "label": "Tested Range Avg. Speed (Range Priority)",
+        "name": "tested_range_avg_speed_slow",
+        "aria-label": "",
+        "type": "number",
+        "instructions": "",
+        "required": 0,
+        "wrapper": {
+          "width": "33",
+          "class": "",
+          "id": ""
+        },
+        "default_value": "",
+        "placeholder": "",
+        "prepend": "",
+        "append": "MPH",
+        "min": "",
+        "max": "",
+        "step": ""
+      },
+      {
+        "key": "field_61a4a99b40e64",
+        "label": "Brake distance",
+        "name": "brake_distance",
+        "aria-label": "",
+        "type": "number",
+        "instructions": "",
+        "required": 0,
+        "wrapper": {
+          "width": "50",
+          "class": "",
+          "id": ""
+        },
+        "default_value": "",
+        "min": "",
+        "max": "",
+        "placeholder": "",
+        "step": "",
+        "prepend": "",
+        "append": "ft"
+      },
+      {
+        "key": "field_647f4ec2653f9",
+        "label": "Hill Climbing",
+        "name": "hill_climbing",
+        "aria-label": "",
+        "type": "number",
+        "instructions": "",
+        "required": 0,
+        "wrapper": {
+          "width": "50",
+          "class": "",
+          "id": ""
+        },
+        "default_value": "",
+        "min": "",
+        "max": "",
+        "placeholder": "",
+        "step": "",
+        "prepend": "",
+        "append": "seconds"
+      },
+      {
+        "key": "field_61532c139ce55",
+        "label": "Manufacturer Top Speed",
+        "name": "manufacturer_top_speed",
+        "aria-label": "",
+        "type": "number",
+        "instructions": "",
+        "required": 0,
+        "wrapper": {
+          "width": "50",
+          "class": "",
+          "id": ""
+        },
+        "default_value": "",
+        "placeholder": "",
+        "prepend": "",
+        "append": "MPH",
+        "min": "",
+        "max": "",
+        "step": ""
+      },
+      {
+        "key": "field_61532c219ce56",
+        "label": "Manufacturer Range",
+        "name": "manufacturer_range",
+        "aria-label": "",
+        "type": "number",
+        "instructions": "",
+        "required": 0,
+        "wrapper": {
+          "width": "50",
+          "class": "",
+          "id": ""
+        },
+        "default_value": "",
+        "placeholder": "",
+        "prepend": "",
+        "append": "miles",
+        "min": "",
+        "max": "",
+        "step": ""
+      },
+      {
+        "key": "field_652c026c68432",
+        "label": "Max incline",
+        "name": "max_incline",
+        "aria-label": "",
+        "type": "number",
+        "instructions": "",
+        "required": 0,
+        "wrapper": {
+          "width": "20",
+          "class": "",
+          "id": ""
+        },
+        "default_value": "",
+        "min": "",
+        "max": "",
+        "placeholder": "",
+        "step": "",
+        "prepend": "",
+        "append": "degrees"
+      },
+      {
+        "key": "field_652c028768433",
+        "label": "Ideal incline",
+        "name": "ideal_incline",
+        "aria-label": "",
+        "type": "number",
+        "instructions": "",
+        "required": 0,
+        "wrapper": {
+          "width": "20",
+          "class": "",
+          "id": ""
+        },
+        "default_value": "",
+        "min": "",
+        "max": "",
+        "placeholder": "",
+        "step": "",
+        "prepend": "",
+        "append": "degrees"
+      }
+    ],
+    "location": [
+      [
+        {
+          "param": "post_type",
+          "operator": "==",
+          "value": "products"
+        }
+      ]
+    ],
+    "menu_order": 1,
+    "position": "normal",
+    "style": "default",
+    "label_placement": "top",
+    "instruction_placement": "label",
+    "hide_on_screen": "",
+    "active": true,
+    "show_in_rest": true
+  },
+  {
+    "key": "group_erh_ebikes",
+    "title": "E-Bike Specifications",
+    "fields": [
+      {
+        "key": "field_664c9fc842dde",
+        "label": "E-Bikes",
+        "name": "e-bikes",
+        "aria-label": "",
+        "type": "group",
+        "instructions": "",
+        "required": 0,
+        "wrapper": {
+          "width": "",
+          "class": "",
+          "id": ""
+        },
+        "layout": "block",
+        "sub_fields": [
+          {
+            "key": "field_68b00dab91f9a",
+            "label": "Category",
+            "name": "category",
+            "aria-label": "",
+            "type": "select",
+            "instructions": "",
+            "required": 0,
+            "conditional_logic": 0,
+            "wrapper": {
+              "width": "15",
+              "class": "",
+              "id": ""
+            },
+            "choices": {
+              "Commuter": "Commuter",
+              "Mountain": "Mountain",
+              "Road": "Road",
+              "Cargo": "Cargo",
+              "Folding": "Folding",
+              "Fat Tire": "Fat Tire",
+              "Gravel": "Gravel",
+              "Hybrid": "Hybrid",
+              "Cruiser": "Cruiser",
+              "High Performance": "High Performance"
+            },
+            "default_value": [],
+            "return_format": "value",
+            "multiple": 1,
+            "allow_null": 0,
+            "allow_in_bindings": 0,
+            "ui": 0,
+            "ajax": 0,
+            "placeholder": "",
+            "create_options": 0,
+            "save_options": 0
+          },
+          {
+            "key": "field_68b00e7091fa0",
+            "label": "Motor",
+            "name": "motor",
+            "aria-label": "",
+            "type": "group",
+            "instructions": "",
+            "required": 0,
+            "conditional_logic": 0,
+            "wrapper": {
+              "width": "",
+              "class": "",
+              "id": ""
+            },
+            "layout": "block",
+            "sub_fields": [
+              {
+                "key": "field_664ca00242de0",
+                "label": "Motor Type",
+                "name": "motor_type",
+                "aria-label": "",
+                "type": "select",
+                "instructions": "",
+                "required": 0,
+                "conditional_logic": 0,
+                "wrapper": {
+                  "width": "15",
+                  "class": "",
+                  "id": ""
+                },
+                "choices": {
+                  "Hub": "Hub",
+                  "Mid-Drive": "Mid-Drive"
+                },
+                "default_value": false,
+                "return_format": "value",
+                "multiple": 0,
+                "allow_null": 0,
+                "allow_in_bindings": 1,
+                "ui": 0,
+                "ajax": 0,
+                "placeholder": "",
+                "create_options": 0,
+                "save_options": 0
+              },
+              {
+                "key": "field_68b00e0291f9b",
+                "label": "Motor Position",
+                "name": "motor_position",
+                "aria-label": "",
+                "type": "select",
+                "instructions": "",
+                "required": 0,
+                "conditional_logic": 0,
+                "wrapper": {
+                  "width": "15",
+                  "class": "",
+                  "id": ""
+                },
+                "choices": {
+                  "Front Hub": "Front Hub",
+                  "Rear Hub": "Rear Hub",
+                  "Mid": "Mid",
+                  "Dual": "Dual"
+                },
+                "default_value": false,
+                "return_format": "value",
+                "multiple": 0,
+                "allow_null": 0,
+                "allow_in_bindings": 1,
+                "ui": 0,
+                "ajax": 0,
+                "placeholder": "",
+                "create_options": 0,
+                "save_options": 0
+              },
+              {
+                "key": "field_68b00e1591f9c",
+                "label": "Motor Brand",
+                "name": "motor_brand",
+                "aria-label": "",
+                "type": "text",
+                "instructions": "",
+                "required": 0,
+                "conditional_logic": 0,
+                "wrapper": {
+                  "width": "15",
+                  "class": "",
+                  "id": ""
+                },
+                "default_value": "",
+                "maxlength": "",
+                "allow_in_bindings": 0,
+                "placeholder": "",
+                "prepend": "",
+                "append": ""
+              },
+              {
+                "key": "field_68b00e2c91f9d",
+                "label": "Motor Model",
+                "name": "motor_model",
+                "aria-label": "",
+                "type": "text",
+                "instructions": "",
+                "required": 0,
+                "conditional_logic": 0,
+                "wrapper": {
+                  "width": "15",
+                  "class": "",
+                  "id": ""
+                },
+                "default_value": "",
+                "maxlength": "",
+                "allow_in_bindings": 0,
+                "placeholder": "",
+                "prepend": "",
+                "append": ""
+              },
+              {
+                "key": "field_68b00e3591f9e",
+                "label": "Power Nominal",
+                "name": "power_nominal",
+                "aria-label": "",
+                "type": "number",
+                "instructions": "",
+                "required": 0,
+                "conditional_logic": 0,
+                "wrapper": {
+                  "width": "15",
+                  "class": "",
+                  "id": ""
+                },
+                "default_value": "",
+                "min": "",
+                "max": "",
+                "allow_in_bindings": 1,
+                "placeholder": "",
+                "step": "",
+                "prepend": "",
+                "append": "W"
+              },
+              {
+                "key": "field_68b00e4391f9f",
+                "label": "Power Peak",
+                "name": "power_peak",
+                "aria-label": "",
+                "type": "number",
+                "instructions": "",
+                "required": 0,
+                "conditional_logic": 0,
+                "wrapper": {
+                  "width": "15",
+                  "class": "",
+                  "id": ""
+                },
+                "default_value": "",
+                "min": "",
+                "max": "",
+                "allow_in_bindings": 1,
+                "placeholder": "",
+                "step": "",
+                "prepend": "",
+                "append": "W"
+              },
+              {
+                "key": "field_664c9fe742ddf",
+                "label": "Torque",
+                "name": "torque",
+                "aria-label": "",
+                "type": "number",
+                "instructions": "",
+                "required": 0,
+                "conditional_logic": 0,
+                "wrapper": {
+                  "width": "15",
+                  "class": "",
+                  "id": ""
+                },
+                "default_value": "",
+                "min": "",
+                "max": "",
+                "allow_in_bindings": 1,
+                "placeholder": "",
+                "step": "",
+                "prepend": "",
+                "append": "Nm"
+              },
+              {
+                "key": "field_68b00e9791fa1",
+                "label": "Assist Levels",
+                "name": "assist_levels",
+                "aria-label": "",
+                "type": "number",
+                "instructions": "",
+                "required": 0,
+                "conditional_logic": 0,
+                "wrapper": {
+                  "width": "15",
+                  "class": "",
+                  "id": ""
+                },
+                "default_value": "",
+                "min": "",
+                "max": "",
+                "allow_in_bindings": 1,
+                "placeholder": "",
+                "step": "",
+                "prepend": "",
+                "append": ""
+              },
+              {
+                "key": "field_68b00ea891fa2",
+                "label": "Sensor Type",
+                "name": "sensor_type",
+                "aria-label": "",
+                "type": "select",
+                "instructions": "",
+                "required": 0,
+                "conditional_logic": 0,
+                "wrapper": {
+                  "width": "15",
+                  "class": "",
+                  "id": ""
+                },
+                "choices": {
+                  "Torque": "Torque",
+                  "Cadence": "Cadence",
+                  "Both": "Both",
+                  "Unknown": "Unknown"
+                },
+                "default_value": "Unknown",
+                "return_format": "value",
+                "multiple": 0,
+                "allow_null": 0,
+                "allow_in_bindings": 1,
+                "ui": 0,
+                "ajax": 0,
+                "placeholder": "",
+                "create_options": 0,
+                "save_options": 0
+              }
+            ]
+          },
+          {
+            "key": "field_68b00ec091fa3",
+            "label": "Battery",
+            "name": "battery",
+            "aria-label": "",
+            "type": "group",
+            "instructions": "",
+            "required": 0,
+            "conditional_logic": 0,
+            "wrapper": {
+              "width": "",
+              "class": "",
+              "id": ""
+            },
+            "layout": "block",
+            "sub_fields": [
+              {
+                "key": "field_68b00ecc91fa4",
+                "label": "Battery Capacity",
+                "name": "battery_capacity",
+                "aria-label": "",
+                "type": "number",
+                "instructions": "",
+                "required": 0,
+                "conditional_logic": 0,
+                "wrapper": {
+                  "width": "15",
+                  "class": "",
+                  "id": ""
+                },
+                "default_value": "",
+                "min": "",
+                "max": "",
+                "allow_in_bindings": 0,
+                "placeholder": "",
+                "step": "",
+                "prepend": "",
+                "append": "Wh"
+              },
+              {
+                "key": "field_68b00ef091fa5",
+                "label": "Voltage",
+                "name": "voltage",
+                "aria-label": "",
+                "type": "number",
+                "instructions": "",
+                "required": 0,
+                "conditional_logic": 0,
+                "wrapper": {
+                  "width": "15",
+                  "class": "",
+                  "id": ""
+                },
+                "default_value": "",
+                "min": "",
+                "max": "",
+                "allow_in_bindings": 0,
+                "placeholder": "",
+                "step": "",
+                "prepend": "",
+                "append": "V"
+              },
+              {
+                "key": "field_68b00efd91fa6",
+                "label": "Amphours",
+                "name": "amphours",
+                "aria-label": "",
+                "type": "number",
+                "instructions": "",
+                "required": 0,
+                "conditional_logic": 0,
+                "wrapper": {
+                  "width": "15",
+                  "class": "",
+                  "id": ""
+                },
+                "default_value": "",
+                "min": "",
+                "max": "",
+                "allow_in_bindings": 0,
+                "placeholder": "",
+                "step": "",
+                "prepend": "",
+                "append": "Ah"
+              },
+              {
+                "key": "field_68b0be77a9fd6",
+                "label": "Battery Position",
+                "name": "battery_position",
+                "aria-label": "",
+                "type": "select",
+                "instructions": "",
+                "required": 0,
+                "conditional_logic": 0,
+                "wrapper": {
+                  "width": "15",
+                  "class": "",
+                  "id": ""
+                },
+                "choices": {
+                  "Downtube": "Downtube",
+                  "Rear Rack": "Rear Rack",
+                  "Integrated": "Integrated",
+                  "Seat Tube": "Seat Tube",
+                  "Top Tube": "Top Tube",
+                  "Dual": "Dual",
+                  "Unknown": "Unknown"
+                },
+                "default_value": "Unknown",
+                "return_format": "value",
+                "multiple": 0,
+                "allow_null": 0,
+                "allow_in_bindings": 0,
+                "ui": 0,
+                "ajax": 0,
+                "placeholder": "",
+                "create_options": 0,
+                "save_options": 0
+              },
+              {
+                "key": "field_68b00f0d91fa7",
+                "label": "Removable",
+                "name": "removable",
+                "aria-label": "",
+                "type": "true_false",
+                "instructions": "",
+                "required": 0,
+                "conditional_logic": 0,
+                "wrapper": {
+                  "width": "15",
+                  "class": "",
+                  "id": ""
+                },
+                "message": "",
+                "default_value": 0,
+                "allow_in_bindings": 0,
+                "ui": 0,
+                "ui_on_text": "",
+                "ui_off_text": ""
+              },
+              {
+                "key": "field_68b00f2291fa8",
+                "label": "Max Range",
+                "name": "range",
+                "aria-label": "",
+                "type": "number",
+                "instructions": "",
+                "required": 0,
+                "conditional_logic": 0,
+                "wrapper": {
+                  "width": "15",
+                  "class": "",
+                  "id": ""
+                },
+                "default_value": "",
+                "min": "",
+                "max": "",
+                "allow_in_bindings": 0,
+                "placeholder": "",
+                "step": "",
+                "prepend": "",
+                "append": "miles"
+              },
+              {
+                "key": "field_68b00f3591fa9",
+                "label": "Charge Time",
+                "name": "charge_time",
+                "aria-label": "",
+                "type": "number",
+                "instructions": "",
+                "required": 0,
+                "conditional_logic": 0,
+                "wrapper": {
+                  "width": "15",
+                  "class": "",
+                  "id": ""
+                },
+                "default_value": "",
+                "min": "",
+                "max": "",
+                "allow_in_bindings": 0,
+                "placeholder": "",
+                "step": "",
+                "prepend": "",
+                "append": "hrs"
+              }
+            ]
+          },
+          {
+            "key": "field_68b00f4f91faa",
+            "label": "Speed And Class",
+            "name": "speed_and_class",
+            "aria-label": "",
+            "type": "group",
+            "instructions": "",
+            "required": 0,
+            "conditional_logic": 0,
+            "wrapper": {
+              "width": "",
+              "class": "",
+              "id": ""
+            },
+            "layout": "block",
+            "sub_fields": [
+              {
+                "key": "field_68b00f5e91fab",
+                "label": "Class",
+                "name": "class",
+                "aria-label": "",
+                "type": "checkbox",
+                "instructions": "",
+                "required": 0,
+                "conditional_logic": 0,
+                "wrapper": {
+                  "width": "",
+                  "class": "",
+                  "id": ""
+                },
+                "choices": {
+                  "Class 1": "Class 1",
+                  "Class 2": "Class 2",
+                  "Class 3": "Class 3",
+                  "EU Pedelec": "EU Pedelec",
+                  "EU S-Pedelec": "EU S-Pedelec",
+                  "UK EAPC": "UK EAPC",
+                  "Unknown": "Unknown"
+                },
+                "default_value": [
+                  "Unknown"
+                ],
+                "return_format": "value",
+                "allow_custom": 0,
+                "allow_in_bindings": 0,
+                "layout": "vertical",
+                "toggle": 0,
+                "save_custom": 0,
+                "custom_choice_button_text": "Add new choice"
+              },
+              {
+                "key": "field_68b00faa91fac",
+                "label": "Top Assist Speed",
+                "name": "top_assist_speed",
+                "aria-label": "",
+                "type": "number",
+                "instructions": "",
+                "required": 0,
+                "conditional_logic": 0,
+                "wrapper": {
+                  "width": "15",
+                  "class": "",
+                  "id": ""
+                },
+                "default_value": "",
+                "min": "",
+                "max": "",
+                "allow_in_bindings": 0,
+                "placeholder": "",
+                "step": "",
+                "prepend": "",
+                "append": "MPH"
+              },
+              {
+                "key": "field_68b00fc091fad",
+                "label": "Throttle Top Speed",
+                "name": "throttle_top_speed",
+                "aria-label": "",
+                "type": "number",
+                "instructions": "",
+                "required": 0,
+                "conditional_logic": 0,
+                "wrapper": {
+                  "width": "15",
+                  "class": "",
+                  "id": ""
+                },
+                "default_value": "",
+                "min": "",
+                "max": "",
+                "allow_in_bindings": 0,
+                "placeholder": "",
+                "step": "",
+                "prepend": "",
+                "append": "MPH"
+              },
+              {
+                "key": "field_68b00fd791fae",
+                "label": "Throttle",
+                "name": "throttle",
+                "aria-label": "",
+                "type": "true_false",
+                "instructions": "",
+                "required": 0,
+                "conditional_logic": 0,
+                "wrapper": {
+                  "width": "15",
+                  "class": "",
+                  "id": ""
+                },
+                "message": "",
+                "default_value": 0,
+                "allow_in_bindings": 0,
+                "ui": 0,
+                "ui_on_text": "",
+                "ui_off_text": ""
+              }
+            ]
+          },
+          {
+            "key": "field_68b00fe991faf",
+            "label": "Drivetrain",
+            "name": "drivetrain",
+            "aria-label": "",
+            "type": "group",
+            "instructions": "",
+            "required": 0,
+            "conditional_logic": 0,
+            "wrapper": {
+              "width": "",
+              "class": "",
+              "id": ""
+            },
+            "layout": "block",
+            "sub_fields": [
+              {
+                "key": "field_68b00ffb91fb0",
+                "label": "Gears",
+                "name": "gears",
+                "aria-label": "",
+                "type": "number",
+                "instructions": "",
+                "required": 0,
+                "conditional_logic": 0,
+                "wrapper": {
+                  "width": "15",
+                  "class": "",
+                  "id": ""
+                },
+                "default_value": "",
+                "min": "",
+                "max": "",
+                "allow_in_bindings": 0,
+                "placeholder": "",
+                "step": "",
+                "prepend": "",
+                "append": ""
+              },
+              {
+                "key": "field_68b0100c91fb1",
+                "label": "Drive System",
+                "name": "drive_system",
+                "aria-label": "",
+                "type": "select",
+                "instructions": "",
+                "required": 0,
+                "conditional_logic": 0,
+                "wrapper": {
+                  "width": "15",
+                  "class": "",
+                  "id": ""
+                },
+                "choices": {
+                  "Chain": "Chain",
+                  "Belt": "Belt",
+                  "Shaft": "Shaft",
+                  "Unknown": "Unknown"
+                },
+                "default_value": "Unknown",
+                "return_format": "value",
+                "multiple": 0,
+                "allow_null": 0,
+                "allow_in_bindings": 0,
+                "ui": 0,
+                "ajax": 0,
+                "placeholder": "",
+                "create_options": 0,
+                "save_options": 0
+              },
+              {
+                "key": "field_68b0102191fb2",
+                "label": "Derailleur",
+                "name": "derailleur",
+                "aria-label": "",
+                "type": "text",
+                "instructions": "",
+                "required": 0,
+                "conditional_logic": 0,
+                "wrapper": {
+                  "width": "15",
+                  "class": "",
+                  "id": ""
+                },
+                "default_value": "",
+                "maxlength": "",
+                "allow_in_bindings": 0,
+                "placeholder": "",
+                "prepend": "",
+                "append": ""
+              },
+              {
+                "key": "field_68b0102b91fb3",
+                "label": "Cassette",
+                "name": "cassette",
+                "aria-label": "",
+                "type": "text",
+                "instructions": "",
+                "required": 0,
+                "conditional_logic": 0,
+                "wrapper": {
+                  "width": "15",
+                  "class": "",
+                  "id": ""
+                },
+                "default_value": "",
+                "maxlength": "",
+                "allow_in_bindings": 0,
+                "placeholder": "",
+                "prepend": "",
+                "append": ""
+              },
+              {
+                "key": "field_68b0103691fb4",
+                "label": "Shifter",
+                "name": "shifter",
+                "aria-label": "",
+                "type": "select",
+                "instructions": "",
+                "required": 0,
+                "conditional_logic": 0,
+                "wrapper": {
+                  "width": "15",
+                  "class": "",
+                  "id": ""
+                },
+                "choices": {
+                  "Trigger": "Trigger",
+                  "Twist": "Twist",
+                  "Electronic": "Electronic",
+                  "Unknown": "Unknown",
+                  "None": "None"
+                },
+                "default_value": "Unknown",
+                "return_format": "value",
+                "multiple": 0,
+                "allow_null": 0,
+                "allow_in_bindings": 0,
+                "ui": 0,
+                "ajax": 0,
+                "placeholder": "",
+                "create_options": 0,
+                "save_options": 0
+              }
+            ]
+          },
+          {
+            "key": "field_68b0106691fb5",
+            "label": "Brakes",
+            "name": "brakes",
+            "aria-label": "",
+            "type": "group",
+            "instructions": "",
+            "required": 0,
+            "conditional_logic": 0,
+            "wrapper": {
+              "width": "",
+              "class": "",
+              "id": ""
+            },
+            "layout": "block",
+            "sub_fields": [
+              {
+                "key": "field_68b0106c91fb6",
+                "label": "Brake Type",
+                "name": "brake_type",
+                "aria-label": "",
+                "type": "checkbox",
+                "instructions": "",
+                "required": 0,
+                "conditional_logic": 0,
+                "wrapper": {
+                  "width": "15",
+                  "class": "",
+                  "id": ""
+                },
+                "choices": {
+                  "Hydraulic Disc": "Hydraulic Disc",
+                  "Mechanical Disc": "Mechanical Disc",
+                  "Rim": "Rim",
+                  "Coaster": "Coaster",
+                  "Mixed": "Mixed"
+                },
+                "default_value": [],
+                "return_format": "value",
+                "allow_custom": 0,
+                "allow_in_bindings": 0,
+                "layout": "vertical",
+                "toggle": 0,
+                "save_custom": 0,
+                "custom_choice_button_text": "Add new choice"
+              },
+              {
+                "key": "field_68b0108c91fb7",
+                "label": "Brake Brand",
+                "name": "brake_brand",
+                "aria-label": "",
+                "type": "text",
+                "instructions": "",
+                "required": 0,
+                "conditional_logic": 0,
+                "wrapper": {
+                  "width": "15",
+                  "class": "",
+                  "id": ""
+                },
+                "default_value": "",
+                "maxlength": "",
+                "allow_in_bindings": 0,
+                "placeholder": "",
+                "prepend": "",
+                "append": ""
+              },
+              {
+                "key": "field_68b0109491fb8",
+                "label": "Brake Model",
+                "name": "brake_model",
+                "aria-label": "",
+                "type": "text",
+                "instructions": "",
+                "required": 0,
+                "conditional_logic": 0,
+                "wrapper": {
+                  "width": "15",
+                  "class": "",
+                  "id": ""
+                },
+                "default_value": "",
+                "maxlength": "",
+                "allow_in_bindings": 0,
+                "placeholder": "",
+                "prepend": "",
+                "append": ""
+              },
+              {
+                "key": "field_68b0109d91fb9",
+                "label": "Rotor Size Front",
+                "name": "rotor_size_front",
+                "aria-label": "",
+                "type": "number",
+                "instructions": "",
+                "required": 0,
+                "conditional_logic": 0,
+                "wrapper": {
+                  "width": "15",
+                  "class": "",
+                  "id": ""
+                },
+                "default_value": "",
+                "min": "",
+                "max": "",
+                "allow_in_bindings": 0,
+                "placeholder": "",
+                "step": "",
+                "prepend": "",
+                "append": "mm"
+              },
+              {
+                "key": "field_68b010aa91fba",
+                "label": "Rotor Size Rear",
+                "name": "rotor_size_rear",
+                "aria-label": "",
+                "type": "number",
+                "instructions": "",
+                "required": 0,
+                "conditional_logic": 0,
+                "wrapper": {
+                  "width": "15",
+                  "class": "",
+                  "id": ""
+                },
+                "default_value": "",
+                "min": "",
+                "max": "",
+                "allow_in_bindings": 0,
+                "placeholder": "",
+                "step": "",
+                "prepend": "",
+                "append": "mm"
+              }
+            ]
+          },
+          {
+            "key": "field_68b010b891fbb",
+            "label": "Frame and Geometry",
+            "name": "frame_and_geometry",
+            "aria-label": "",
+            "type": "group",
+            "instructions": "",
+            "required": 0,
+            "conditional_logic": 0,
+            "wrapper": {
+              "width": "",
+              "class": "",
+              "id": ""
+            },
+            "layout": "block",
+            "sub_fields": [
+              {
+                "key": "field_68b010c991fbc",
+                "label": "Frame Material",
+                "name": "frame_material",
+                "aria-label": "",
+                "type": "checkbox",
+                "instructions": "",
+                "required": 0,
+                "conditional_logic": 0,
+                "wrapper": {
+                  "width": "15",
+                  "class": "",
+                  "id": ""
+                },
+                "choices": {
+                  "Aluminum": "Aluminum",
+                  "Carbon Fiber": "Carbon Fiber",
+                  "Steel": "Steel",
+                  "Titanium": "Titanium"
+                },
+                "default_value": [],
+                "return_format": "value",
+                "allow_custom": 0,
+                "allow_in_bindings": 0,
+                "layout": "vertical",
+                "toggle": 0,
+                "save_custom": 0,
+                "custom_choice_button_text": "Add new choice"
+              },
+              {
+                "key": "field_68b0110291fbd",
+                "label": "Frame Style",
+                "name": "frame_style",
+                "aria-label": "",
+                "type": "checkbox",
+                "instructions": "",
+                "required": 0,
+                "conditional_logic": 0,
+                "wrapper": {
+                  "width": "15",
+                  "class": "",
+                  "id": ""
+                },
+                "choices": {
+                  "Step-Through": "Step-Through",
+                  "Step-Over": "Step-Over",
+                  "Mixte": "Mixte",
+                  "Folding": "Folding"
+                },
+                "default_value": [],
+                "return_format": "value",
+                "allow_custom": 0,
+                "allow_in_bindings": 0,
+                "layout": "vertical",
+                "toggle": 0,
+                "save_custom": 0,
+                "custom_choice_button_text": "Add new choice"
+              },
+              {
+                "key": "field_68b0112191fbf",
+                "label": "Sizes Available",
+                "name": "sizes_available",
+                "aria-label": "",
+                "type": "checkbox",
+                "instructions": "",
+                "required": 0,
+                "conditional_logic": 0,
+                "wrapper": {
+                  "width": "15",
+                  "class": "",
+                  "id": ""
+                },
+                "choices": {
+                  "XS": "XS",
+                  "S": "S",
+                  "M": "M",
+                  "L": "L",
+                  "XL": "XL",
+                  "XXL": "XXL",
+                  "One Size": "One Size"
+                },
+                "default_value": [],
+                "return_format": "value",
+                "allow_custom": 0,
+                "allow_in_bindings": 0,
+                "layout": "vertical",
+                "toggle": 0,
+                "save_custom": 0,
+                "custom_choice_button_text": "Add new choice"
+              },
+              {
+                "key": "field_68b0115d3de95",
+                "label": "Wheelbase",
+                "name": "wheelbase",
+                "aria-label": "",
+                "type": "number",
+                "instructions": "",
+                "required": 0,
+                "conditional_logic": 0,
+                "wrapper": {
+                  "width": "15",
+                  "class": "",
+                  "id": ""
+                },
+                "default_value": "",
+                "min": "",
+                "max": "",
+                "allow_in_bindings": 0,
+                "placeholder": "",
+                "step": "",
+                "prepend": "",
+                "append": "in"
+              },
+              {
+                "key": "field_68c3de50766a9",
+                "label": "Standover Height",
+                "name": "standover_height",
+                "aria-label": "",
+                "type": "number",
+                "instructions": "",
+                "required": 0,
+                "conditional_logic": 0,
+                "wrapper": {
+                  "width": "15",
+                  "class": "",
+                  "id": ""
+                },
+                "default_value": "",
+                "min": "",
+                "max": "",
+                "allow_in_bindings": 0,
+                "placeholder": "",
+                "step": "",
+                "prepend": "",
+                "append": "in"
+              },
+              {
+                "key": "field_68b172fd87881",
+                "label": "Min Rider Height",
+                "name": "min_rider_height",
+                "aria-label": "",
+                "type": "number",
+                "instructions": "",
+                "required": 0,
+                "conditional_logic": 0,
+                "wrapper": {
+                  "width": "15",
+                  "class": "",
+                  "id": ""
+                },
+                "default_value": "",
+                "min": "",
+                "max": "",
+                "allow_in_bindings": 0,
+                "placeholder": "",
+                "step": "",
+                "prepend": "",
+                "append": "in"
+              },
+              {
+                "key": "field_68b16a2c71c9b",
+                "label": "Max Rider Height",
+                "name": "max_rider_height",
+                "aria-label": "",
+                "type": "number",
+                "instructions": "",
+                "required": 0,
+                "conditional_logic": 0,
+                "wrapper": {
+                  "width": "15",
+                  "class": "",
+                  "id": ""
+                },
+                "default_value": "",
+                "min": "",
+                "max": "",
+                "allow_in_bindings": 0,
+                "placeholder": "",
+                "step": "",
+                "prepend": "",
+                "append": "in"
+              },
+              {
+                "key": "field_68b16a4471c9d",
+                "label": "Min Handlebar Height",
+                "name": "min_handlebar_height",
+                "aria-label": "",
+                "type": "number",
+                "instructions": "",
+                "required": 0,
+                "conditional_logic": 0,
+                "wrapper": {
+                  "width": "15",
+                  "class": "",
+                  "id": ""
+                },
+                "default_value": "",
+                "min": "",
+                "max": "",
+                "allow_in_bindings": 0,
+                "placeholder": "",
+                "step": "",
+                "prepend": "",
+                "append": "in"
+              },
+              {
+                "key": "field_68b16a4d71c9e",
+                "label": "Max Handlebar Height",
+                "name": "max_handlebar_height",
+                "aria-label": "",
+                "type": "number",
+                "instructions": "",
+                "required": 0,
+                "conditional_logic": 0,
+                "wrapper": {
+                  "width": "15",
+                  "class": "",
+                  "id": ""
+                },
+                "default_value": "",
+                "min": "",
+                "max": "",
+                "allow_in_bindings": 0,
+                "placeholder": "",
+                "step": "",
+                "prepend": "",
+                "append": "in"
+              },
+              {
+                "key": "field_68b16a5671c9f",
+                "label": "Min Seat Height",
+                "name": "min_seat_height",
+                "aria-label": "",
+                "type": "number",
+                "instructions": "",
+                "required": 0,
+                "conditional_logic": 0,
+                "wrapper": {
+                  "width": "15",
+                  "class": "",
+                  "id": ""
+                },
+                "default_value": "",
+                "min": "",
+                "max": "",
+                "allow_in_bindings": 0,
+                "placeholder": "",
+                "step": "",
+                "prepend": "",
+                "append": "in"
+              },
+              {
+                "key": "field_68b16a5c71ca0",
+                "label": "Max Seat Height",
+                "name": "max_seat_height",
+                "aria-label": "",
+                "type": "number",
+                "instructions": "",
+                "required": 0,
+                "conditional_logic": 0,
+                "wrapper": {
+                  "width": "15",
+                  "class": "",
+                  "id": ""
+                },
+                "default_value": "",
+                "min": "",
+                "max": "",
+                "allow_in_bindings": 0,
+                "placeholder": "",
+                "step": "",
+                "prepend": "",
+                "append": "in"
+              },
+              {
+                "key": "field_68b16a3c71c9c",
+                "label": "Total Length",
+                "name": "total_length",
+                "aria-label": "",
+                "type": "number",
+                "instructions": "",
+                "required": 0,
+                "conditional_logic": 0,
+                "wrapper": {
+                  "width": "15",
+                  "class": "",
+                  "id": ""
+                },
+                "default_value": "",
+                "min": "",
+                "max": "",
+                "allow_in_bindings": 0,
+                "placeholder": "",
+                "step": "",
+                "prepend": "",
+                "append": "in"
+              },
+              {
+                "key": "field_68b16a6e71ca2",
+                "label": "Handlebar Width",
+                "name": "handlebar_width",
+                "aria-label": "",
+                "type": "number",
+                "instructions": "",
+                "required": 0,
+                "conditional_logic": 0,
+                "wrapper": {
+                  "width": "15",
+                  "class": "",
+                  "id": ""
+                },
+                "default_value": "",
+                "min": "",
+                "max": "",
+                "allow_in_bindings": 0,
+                "placeholder": "",
+                "step": "",
+                "prepend": "",
+                "append": "in"
+              }
+            ]
+          },
+          {
+            "key": "field_68b011713de96",
+            "label": "Wheels and Tires",
+            "name": "wheels_and_tires",
+            "aria-label": "",
+            "type": "group",
+            "instructions": "",
+            "required": 0,
+            "conditional_logic": 0,
+            "wrapper": {
+              "width": "",
+              "class": "",
+              "id": ""
+            },
+            "layout": "block",
+            "sub_fields": [
+              {
+                "key": "field_68b0117e3de97",
+                "label": "Wheel Size (Front)",
+                "name": "wheel_size",
+                "aria-label": "",
+                "type": "number",
+                "instructions": "",
+                "required": 0,
+                "conditional_logic": 0,
+                "wrapper": {
+                  "width": "15",
+                  "class": "",
+                  "id": ""
+                },
+                "default_value": "",
+                "min": "",
+                "max": "",
+                "allow_in_bindings": 0,
+                "placeholder": "",
+                "step": "",
+                "prepend": "",
+                "append": "\""
+              },
+              {
+                "key": "field_68c7f810d2420",
+                "label": "Wheel Size (Rear)",
+                "name": "wheel_size_rear",
+                "aria-label": "",
+                "type": "number",
+                "instructions": "",
+                "required": 0,
+                "conditional_logic": 0,
+                "wrapper": {
+                  "width": "15",
+                  "class": "",
+                  "id": ""
+                },
+                "default_value": "",
+                "min": "",
+                "max": "",
+                "allow_in_bindings": 0,
+                "placeholder": "",
+                "step": "",
+                "prepend": "",
+                "append": "\""
+              },
+              {
+                "key": "field_68b011973de98",
+                "label": "Tire Width",
+                "name": "tire_width",
+                "aria-label": "",
+                "type": "number",
+                "instructions": "",
+                "required": 0,
+                "conditional_logic": 0,
+                "wrapper": {
+                  "width": "15",
+                  "class": "",
+                  "id": ""
+                },
+                "default_value": "",
+                "min": "",
+                "max": "",
+                "allow_in_bindings": 0,
+                "placeholder": "",
+                "step": "",
+                "prepend": "",
+                "append": "\""
+              },
+              {
+                "key": "field_68b011aa3de9a",
+                "label": "Tire Brand",
+                "name": "tire_brand",
+                "aria-label": "",
+                "type": "text",
+                "instructions": "",
+                "required": 0,
+                "conditional_logic": 0,
+                "wrapper": {
+                  "width": "15",
+                  "class": "",
+                  "id": ""
+                },
+                "default_value": "",
+                "maxlength": "",
+                "allow_in_bindings": 0,
+                "placeholder": "",
+                "prepend": "",
+                "append": ""
+              },
+              {
+                "key": "field_68b011b03de9b",
+                "label": "Tire Model",
+                "name": "tire_model",
+                "aria-label": "",
+                "type": "text",
+                "instructions": "",
+                "required": 0,
+                "conditional_logic": 0,
+                "wrapper": {
+                  "width": "15",
+                  "class": "",
+                  "id": ""
+                },
+                "default_value": "",
+                "maxlength": "",
+                "allow_in_bindings": 0,
+                "placeholder": "",
+                "prepend": "",
+                "append": ""
+              },
+              {
+                "key": "field_68b011bb3de9c",
+                "label": "Tire Type",
+                "name": "tire_type",
+                "aria-label": "",
+                "type": "select",
+                "instructions": "",
+                "required": 0,
+                "conditional_logic": 0,
+                "wrapper": {
+                  "width": "15",
+                  "class": "",
+                  "id": ""
+                },
+                "choices": {
+                  "Slick": "Slick",
+                  "Hybrid": "Hybrid",
+                  "Knobby": "Knobby",
+                  "Fat": "Fat",
+                  "Unknown": "Unknown"
+                },
+                "default_value": "Unknown",
+                "return_format": "value",
+                "multiple": 0,
+                "allow_null": 0,
+                "allow_in_bindings": 0,
+                "ui": 0,
+                "ajax": 0,
+                "placeholder": "",
+                "create_options": 0,
+                "save_options": 0
+              },
+              {
+                "key": "field_68b011d23de9d",
+                "label": "Puncture Protection",
+                "name": "puncture_protection",
+                "aria-label": "",
+                "type": "true_false",
+                "instructions": "",
+                "required": 0,
+                "conditional_logic": 0,
+                "wrapper": {
+                  "width": "15",
+                  "class": "",
+                  "id": ""
+                },
+                "message": "",
+                "default_value": 0,
+                "allow_in_bindings": 0,
+                "ui": 0,
+                "ui_on_text": "",
+                "ui_off_text": ""
+              }
+            ]
+          },
+          {
+            "key": "field_68b011e93de9e",
+            "label": "Suspension",
+            "name": "suspension",
+            "aria-label": "",
+            "type": "group",
+            "instructions": "",
+            "required": 0,
+            "conditional_logic": 0,
+            "wrapper": {
+              "width": "",
+              "class": "",
+              "id": ""
+            },
+            "layout": "block",
+            "sub_fields": [
+              {
+                "key": "field_68b011f33de9f",
+                "label": "Front Suspension",
+                "name": "front_suspension",
+                "aria-label": "",
+                "type": "select",
+                "instructions": "",
+                "required": 0,
+                "conditional_logic": 0,
+                "wrapper": {
+                  "width": "15",
+                  "class": "",
+                  "id": ""
+                },
+                "choices": {
+                  "None": "None",
+                  "Spring": "Spring",
+                  "Air": "Air",
+                  "Hydraulic": "Hydraulic",
+                  "Coil": "Coil"
+                },
+                "default_value": "None",
+                "return_format": "value",
+                "multiple": 0,
+                "allow_null": 0,
+                "allow_in_bindings": 0,
+                "ui": 0,
+                "ajax": 0,
+                "placeholder": "",
+                "create_options": 0,
+                "save_options": 0
+              },
+              {
+                "key": "field_68b012343dea2",
+                "label": "Front Travel",
+                "name": "front_travel",
+                "aria-label": "",
+                "type": "number",
+                "instructions": "",
+                "required": 0,
+                "conditional_logic": 0,
+                "wrapper": {
+                  "width": "10",
+                  "class": "",
+                  "id": ""
+                },
+                "default_value": "",
+                "min": "",
+                "max": "",
+                "allow_in_bindings": 0,
+                "placeholder": "",
+                "step": "",
+                "prepend": "",
+                "append": "mm"
+              },
+              {
+                "key": "field_68b0120b3dea0",
+                "label": "Rear Suspension",
+                "name": "rear_suspension",
+                "aria-label": "",
+                "type": "select",
+                "instructions": "",
+                "required": 0,
+                "conditional_logic": 0,
+                "wrapper": {
+                  "width": "15",
+                  "class": "",
+                  "id": ""
+                },
+                "choices": {
+                  "None": "None",
+                  "Spring": "Spring",
+                  "Air": "Air",
+                  "Hydraulic": "Hydraulic",
+                  "Coil": "Coil"
+                },
+                "default_value": "None",
+                "return_format": "value",
+                "multiple": 0,
+                "allow_null": 0,
+                "allow_in_bindings": 0,
+                "ui": 0,
+                "ajax": 0,
+                "placeholder": "",
+                "create_options": 0,
+                "save_options": 0
+              },
+              {
+                "key": "field_68b012453dea3",
+                "label": "Rear Travel",
+                "name": "rear_travel",
+                "aria-label": "",
+                "type": "number",
+                "instructions": "",
+                "required": 0,
+                "conditional_logic": 0,
+                "wrapper": {
+                  "width": "10",
+                  "class": "",
+                  "id": ""
+                },
+                "default_value": "",
+                "min": "",
+                "max": "",
+                "allow_in_bindings": 0,
+                "placeholder": "",
+                "step": "",
+                "prepend": "",
+                "append": "mm"
+              },
+              {
+                "key": "field_68b0124f3dea4",
+                "label": "Seatpost Suspension",
+                "name": "seatpost_suspension",
+                "aria-label": "",
+                "type": "true_false",
+                "instructions": "",
+                "required": 0,
+                "conditional_logic": 0,
+                "wrapper": {
+                  "width": "15",
+                  "class": "",
+                  "id": ""
+                },
+                "message": "",
+                "default_value": 0,
+                "allow_in_bindings": 0,
+                "ui": 0,
+                "ui_on_text": "",
+                "ui_off_text": ""
+              }
+            ]
+          },
+          {
+            "key": "field_68b0125f3dea5",
+            "label": "Weight and Capacity",
+            "name": "weight_and_capacity",
+            "aria-label": "",
+            "type": "group",
+            "instructions": "",
+            "required": 0,
+            "conditional_logic": 0,
+            "wrapper": {
+              "width": "",
+              "class": "",
+              "id": ""
+            },
+            "layout": "block",
+            "sub_fields": [
+              {
+                "key": "field_68b0126a3dea6",
+                "label": "Weight",
+                "name": "weight",
+                "aria-label": "",
+                "type": "number",
+                "instructions": "",
+                "required": 0,
+                "conditional_logic": 0,
+                "wrapper": {
+                  "width": "15",
+                  "class": "",
+                  "id": ""
+                },
+                "default_value": "",
+                "min": "",
+                "max": "",
+                "allow_in_bindings": 0,
+                "placeholder": "",
+                "step": "",
+                "prepend": "",
+                "append": "lbs"
+              },
+              {
+                "key": "field_68b012863dea7",
+                "label": "Weight Limit",
+                "name": "weight_limit",
+                "aria-label": "",
+                "type": "number",
+                "instructions": "",
+                "required": 0,
+                "conditional_logic": 0,
+                "wrapper": {
+                  "width": "15",
+                  "class": "",
+                  "id": ""
+                },
+                "default_value": "",
+                "min": "",
+                "max": "",
+                "allow_in_bindings": 0,
+                "placeholder": "",
+                "step": "",
+                "prepend": "",
+                "append": "lbs"
+              },
+              {
+                "key": "field_68b012903dea8",
+                "label": "Rack Capacity",
+                "name": "rack_capacity",
+                "aria-label": "",
+                "type": "number",
+                "instructions": "",
+                "required": 0,
+                "conditional_logic": 0,
+                "wrapper": {
+                  "width": "15",
+                  "class": "",
+                  "id": ""
+                },
+                "default_value": "",
+                "min": "",
+                "max": "",
+                "allow_in_bindings": 0,
+                "placeholder": "",
+                "step": "",
+                "prepend": "",
+                "append": "lbs"
+              }
+            ]
+          },
+          {
+            "key": "field_68b012ea3dea9",
+            "label": "Components",
+            "name": "components",
+            "aria-label": "",
+            "type": "group",
+            "instructions": "",
+            "required": 0,
+            "conditional_logic": 0,
+            "wrapper": {
+              "width": "",
+              "class": "",
+              "id": ""
+            },
+            "layout": "block",
+            "sub_fields": [
+              {
+                "key": "field_68b012fa3deaa",
+                "label": "Display",
+                "name": "display",
+                "aria-label": "",
+                "type": "select",
+                "instructions": "",
+                "required": 0,
+                "conditional_logic": 0,
+                "wrapper": {
+                  "width": "15",
+                  "class": "",
+                  "id": ""
+                },
+                "choices": {
+                  "LCD": "LCD",
+                  "LED": "LED",
+                  "OLED": "OLED",
+                  "TFT": "TFT",
+                  "None": "None",
+                  "Unknown": "Unknown"
+                },
+                "default_value": "Unknown",
+                "return_format": "value",
+                "multiple": 0,
+                "allow_null": 0,
+                "allow_in_bindings": 0,
+                "ui": 0,
+                "ajax": 0,
+                "placeholder": "",
+                "create_options": 0,
+                "save_options": 0
+              },
+              {
+                "key": "field_68b013123deab",
+                "label": "Display Size",
+                "name": "display_size",
+                "aria-label": "",
+                "type": "number",
+                "instructions": "",
+                "required": 0,
+                "conditional_logic": 0,
+                "wrapper": {
+                  "width": "15",
+                  "class": "",
+                  "id": ""
+                },
+                "default_value": "",
+                "min": "",
+                "max": "",
+                "allow_in_bindings": 0,
+                "placeholder": "",
+                "step": "",
+                "prepend": "",
+                "append": "\""
+              },
+              {
+                "key": "field_68b013283deac",
+                "label": "Connectivity",
+                "name": "connectivity",
+                "aria-label": "",
+                "type": "checkbox",
+                "instructions": "",
+                "required": 0,
+                "conditional_logic": 0,
+                "wrapper": {
+                  "width": "15",
+                  "class": "",
+                  "id": ""
+                },
+                "choices": {
+                  "None": "None",
+                  "Bluetooth": "Bluetooth",
+                  "GPS": "GPS",
+                  "ANT+": "ANT+"
+                },
+                "default_value": [],
+                "return_format": "value",
+                "allow_custom": 0,
+                "allow_in_bindings": 0,
+                "layout": "vertical",
+                "toggle": 0,
+                "save_custom": 0,
+                "custom_choice_button_text": "Add new choice"
+              },
+              {
+                "key": "field_68b0134b3dead",
+                "label": "App Compatible",
+                "name": "app_compatible",
+                "aria-label": "",
+                "type": "true_false",
+                "instructions": "",
+                "required": 0,
+                "conditional_logic": 0,
+                "wrapper": {
+                  "width": "15",
+                  "class": "",
+                  "id": ""
+                },
+                "message": "",
+                "default_value": 0,
+                "allow_in_bindings": 0,
+                "ui": 0,
+                "ui_on_text": "",
+                "ui_off_text": ""
+              }
+            ]
+          },
+          {
+            "key": "field_68b013683deae",
+            "label": "Integrated Features",
+            "name": "integrated_features",
+            "aria-label": "",
+            "type": "group",
+            "instructions": "",
+            "required": 0,
+            "conditional_logic": 0,
+            "wrapper": {
+              "width": "",
+              "class": "",
+              "id": ""
+            },
+            "layout": "block",
+            "sub_fields": [
+              {
+                "key": "field_68b0138a3deaf",
+                "label": "Integrated Lights",
+                "name": "integrated_lights",
+                "aria-label": "",
+                "type": "true_false",
+                "instructions": "",
+                "required": 0,
+                "conditional_logic": 0,
+                "wrapper": {
+                  "width": "15",
+                  "class": "",
+                  "id": ""
+                },
+                "message": "",
+                "default_value": 0,
+                "allow_in_bindings": 0,
+                "ui": 0,
+                "ui_on_text": "",
+                "ui_off_text": ""
+              },
+              {
+                "key": "field_68b013cf3deb2",
+                "label": "Fenders",
+                "name": "fenders",
+                "aria-label": "",
+                "type": "true_false",
+                "instructions": "",
+                "required": 0,
+                "conditional_logic": 0,
+                "wrapper": {
+                  "width": "10",
+                  "class": "",
+                  "id": ""
+                },
+                "message": "",
+                "default_value": 0,
+                "allow_in_bindings": 0,
+                "ui": 0,
+                "ui_on_text": "",
+                "ui_off_text": ""
+              },
+              {
+                "key": "field_68b013db3deb3",
+                "label": "Rear Rack",
+                "name": "rear_rack",
+                "aria-label": "",
+                "type": "true_false",
+                "instructions": "",
+                "required": 0,
+                "conditional_logic": 0,
+                "wrapper": {
+                  "width": "10",
+                  "class": "",
+                  "id": ""
+                },
+                "message": "",
+                "default_value": 0,
+                "allow_in_bindings": 0,
+                "ui": 0,
+                "ui_on_text": "",
+                "ui_off_text": ""
+              },
+              {
+                "key": "field_68b013e13deb4",
+                "label": "Front Rack",
+                "name": "front_rack",
+                "aria-label": "",
+                "type": "true_false",
+                "instructions": "",
+                "required": 0,
+                "conditional_logic": 0,
+                "wrapper": {
+                  "width": "10",
+                  "class": "",
+                  "id": ""
+                },
+                "message": "",
+                "default_value": 0,
+                "allow_in_bindings": 0,
+                "ui": 0,
+                "ui_on_text": "",
+                "ui_off_text": ""
+              },
+              {
+                "key": "field_68b013e63deb5",
+                "label": "Kickstand",
+                "name": "kickstand",
+                "aria-label": "",
+                "type": "true_false",
+                "instructions": "",
+                "required": 0,
+                "conditional_logic": 0,
+                "wrapper": {
+                  "width": "10",
+                  "class": "",
+                  "id": ""
+                },
+                "message": "",
+                "default_value": 0,
+                "allow_in_bindings": 0,
+                "ui": 0,
+                "ui_on_text": "",
+                "ui_off_text": ""
+              },
+              {
+                "key": "field_68b013ed3deb6",
+                "label": "Chain Guard",
+                "name": "chain_guard",
+                "aria-label": "",
+                "type": "true_false",
+                "instructions": "",
+                "required": 0,
+                "conditional_logic": 0,
+                "wrapper": {
+                  "width": "10",
+                  "class": "",
+                  "id": ""
+                },
+                "message": "",
+                "default_value": 0,
+                "allow_in_bindings": 0,
+                "ui": 0,
+                "ui_on_text": "",
+                "ui_off_text": ""
+              },
+              {
+                "key": "field_68b013f43deb7",
+                "label": "Walk Assist",
+                "name": "walk_assist",
+                "aria-label": "",
+                "type": "true_false",
+                "instructions": "",
+                "required": 0,
+                "conditional_logic": 0,
+                "wrapper": {
+                  "width": "10",
+                  "class": "",
+                  "id": ""
+                },
+                "message": "",
+                "default_value": 0,
+                "allow_in_bindings": 0,
+                "ui": 0,
+                "ui_on_text": "",
+                "ui_off_text": ""
+              },
+              {
+                "key": "field_68b013fa3deb8",
+                "label": "Alarm",
+                "name": "alarm",
+                "aria-label": "",
+                "type": "true_false",
+                "instructions": "",
+                "required": 0,
+                "conditional_logic": 0,
+                "wrapper": {
+                  "width": "10",
+                  "class": "",
+                  "id": ""
+                },
+                "message": "",
+                "default_value": 0,
+                "allow_in_bindings": 0,
+                "ui": 0,
+                "ui_on_text": "",
+                "ui_off_text": ""
+              },
+              {
+                "key": "field_68b014023deb9",
+                "label": "USB",
+                "name": "usb",
+                "aria-label": "",
+                "type": "true_false",
+                "instructions": "",
+                "required": 0,
+                "conditional_logic": 0,
+                "wrapper": {
+                  "width": "10",
+                  "class": "",
+                  "id": ""
+                },
+                "message": "",
+                "default_value": 0,
+                "allow_in_bindings": 0,
+                "ui": 0,
+                "ui_on_text": "",
+                "ui_off_text": ""
+              },
+              {
+                "key": "field_68b014093deba",
+                "label": "Bottle Cage Mount",
+                "name": "bottle_cage_mount",
+                "aria-label": "",
+                "type": "true_false",
+                "instructions": "",
+                "required": 0,
+                "conditional_logic": 0,
+                "wrapper": {
+                  "width": "10",
+                  "class": "",
+                  "id": ""
+                },
+                "message": "",
+                "default_value": 0,
+                "allow_in_bindings": 0,
+                "ui": 0,
+                "ui_on_text": "",
+                "ui_off_text": ""
+              }
+            ]
+          },
+          {
+            "key": "field_68b0141d3debb",
+            "label": "Safety and Compliance",
+            "name": "safety_and_compliance",
+            "aria-label": "",
+            "type": "group",
+            "instructions": "",
+            "required": 0,
+            "conditional_logic": 0,
+            "wrapper": {
+              "width": "",
+              "class": "",
+              "id": ""
+            },
+            "layout": "block",
+            "sub_fields": [
+              {
+                "key": "field_68b0142d3debc",
+                "label": "IP Rating",
+                "name": "ip_rating",
+                "aria-label": "",
+                "type": "select",
+                "instructions": "",
+                "required": 0,
+                "conditional_logic": 0,
+                "wrapper": {
+                  "width": "15",
+                  "class": "",
+                  "id": ""
+                },
+                "choices": {
+                  "IPX2": "IPX2",
+                  "IPX3": "IPX3",
+                  "IPX4": "IPX4",
+                  "IPX5": "IPX5",
+                  "IPX6": "IPX6",
+                  "IPX7": "IPX7",
+                  "IP34": "IP34",
+                  "IP44": "IP44",
+                  "IP54": "IP54",
+                  "IP55": "IP55",
+                  "IP56": "IP56",
+                  "IP57": "IP57",
+                  "IP66": "IP66",
+                  "IP67": "IP67",
+                  "IP65": "IP65",
+                  "IP77": "IP77",
+                  "None": "None",
+                  "Unknown": "Unknown"
+                },
+                "default_value": "Unknown",
+                "return_format": "value",
+                "multiple": 0,
+                "allow_null": 0,
+                "allow_in_bindings": 0,
+                "ui": 0,
+                "ajax": 0,
+                "placeholder": "",
+                "create_options": 0,
+                "save_options": 0
+              },
+              {
+                "key": "field_68b014693debd",
+                "label": "Certifications",
+                "name": "certifications",
+                "aria-label": "",
+                "type": "checkbox",
+                "instructions": "",
+                "required": 0,
+                "conditional_logic": 0,
+                "wrapper": {
+                  "width": "15",
+                  "class": "",
+                  "id": ""
+                },
+                "choices": {
+                  "UL 2849": "UL 2849",
+                  "UL 2271": "UL 2271",
+                  "EN 15194": "EN 15194",
+                  "CE": "CE"
+                },
+                "default_value": [],
+                "return_format": "value",
+                "allow_custom": 0,
+                "allow_in_bindings": 0,
+                "layout": "vertical",
+                "toggle": 0,
+                "save_custom": 0,
+                "custom_choice_button_text": "Add new choice"
+              }
+            ]
+          },
+          {
+            "key": "field_68b014d43debe",
+            "label": "Special Features",
+            "name": "special_features",
+            "aria-label": "",
+            "type": "checkbox",
+            "instructions": "",
+            "required": 0,
+            "conditional_logic": 0,
+            "wrapper": {
+              "width": "",
+              "class": "",
+              "id": ""
+            },
+            "choices": {
+              "Automatic Shifting": "Automatic Shifting",
+              "Belt Drive": "Belt Drive",
+              "Carbon Fork": "Carbon Fork",
+              "Dropper Post": "Dropper Post",
+              "Dual Battery": "Dual Battery",
+              "Electronic Shifting": "Electronic Shifting",
+              "Folding": "Folding",
+              "Gates Belt Drive": "Gates Belt Drive",
+              "Hill Start Assist": "Hill Start Assist",
+              "Internal Cable Routing": "Internal Cable Routing",
+              "Motor Lock": "Motor Lock",
+              "Quick Release Wheels": "Quick Release Wheels",
+              "Regenerative Braking": "Regenerative Braking",
+              "Smartphone Integration": "Smartphone Integration",
+              "Thru-Axle": "Thru-Axle",
+              "Tubeless Ready": "Tubeless Ready",
+              "Turn Signals": "Turn Signals"
+            },
+            "default_value": [],
+            "return_format": "value",
+            "allow_custom": 0,
+            "allow_in_bindings": 0,
+            "layout": "vertical",
+            "toggle": 0,
+            "save_custom": 0,
+            "custom_choice_button_text": "Add new choice"
+          }
+        ]
+      }
+    ],
+    "location": [
+      [
+        {
+          "param": "post_taxonomy",
+          "operator": "==",
+          "value": "product_type:electric-bike"
+        }
+      ]
+    ],
+    "menu_order": 2,
+    "position": "normal",
+    "style": "default",
+    "label_placement": "top",
+    "instruction_placement": "label",
+    "hide_on_screen": "",
+    "active": true,
+    "show_in_rest": true
+  }
+]
