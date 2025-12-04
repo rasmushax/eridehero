@@ -1142,6 +1142,98 @@ class ProductMigrator {
      * @param int $batch_size Products per batch.
      * @return array Migration summary.
      */
+    public function migrate_single_product(string $identifier): array {
+        $result = [
+            'success'      => false,
+            'product_name' => '',
+            'reason'       => '',
+        ];
+
+        // Fetch the product by ID or slug.
+        $product = $this->fetch_single_product($identifier);
+
+        if (!$product) {
+            $result['reason'] = "Could not find product: {$identifier}";
+            return $result;
+        }
+
+        $result['product_name'] = $product['title']['rendered'] ?? $product['slug'] ?? $identifier;
+
+        // Migrate the product.
+        $migrated_id = $this->migrate_product($product);
+
+        if ($migrated_id) {
+            $result['success'] = true;
+            $this->log('success', "Migrated product ID {$migrated_id}: " . $result['product_name']);
+        } elseif ($this->dry_run) {
+            $result['success'] = true;
+            $result['reason'] = 'Dry run - no changes made';
+        } else {
+            $result['reason'] = 'Migration failed - check debug.log for details';
+        }
+
+        return $result;
+    }
+
+    /**
+     * Fetch a single product from remote site by ID or slug.
+     *
+     * @param string $identifier Product ID (numeric) or slug.
+     * @return array|null Product data or null if not found.
+     */
+    private function fetch_single_product(string $identifier): ?array {
+        // Determine if identifier is ID or slug.
+        if (is_numeric($identifier)) {
+            $url = sprintf(
+                '%s/wp-json/wp/v2/products/%d?_fields=id,slug,title,status,acf,featured_media',
+                $this->source_url,
+                (int) $identifier
+            );
+        } else {
+            $url = sprintf(
+                '%s/wp-json/wp/v2/products?slug=%s&_fields=id,slug,title,status,acf,featured_media',
+                $this->source_url,
+                urlencode($identifier)
+            );
+        }
+
+        $this->log('info', "Fetching product from: {$url}");
+
+        $response = wp_remote_get($url, [
+            'timeout' => 30,
+            'headers' => ['Accept' => 'application/json'],
+        ]);
+
+        if (is_wp_error($response)) {
+            $this->log('error', "HTTP error: " . $response->get_error_message());
+            return null;
+        }
+
+        $code = wp_remote_retrieve_response_code($response);
+        if ($code !== 200) {
+            $this->log('error', "HTTP {$code} response");
+            return null;
+        }
+
+        $data = json_decode(wp_remote_retrieve_body($response), true);
+
+        // If fetching by slug, result is an array.
+        if (!is_numeric($identifier)) {
+            if (empty($data) || !is_array($data)) {
+                return null;
+            }
+            return $data[0] ?? null;
+        }
+
+        return $data;
+    }
+
+    /**
+     * Run full remote migration.
+     *
+     * @param int $batch_size Products per batch.
+     * @return array Migration summary.
+     */
     public function run_remote_migration(int $batch_size = 50): array {
         $summary = [
             'total'     => 0,
