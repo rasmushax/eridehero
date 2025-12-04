@@ -1,0 +1,124 @@
+[
+  {
+    "key": "group_erh_basic_info",
+    "title": "Basic Info",
+    "fields": [
+      {
+        "key": "field_615326243923b",
+        "label": "Model",
+        "name": "model",
+        "aria-label": "",
+        "type": "text",
+        "instructions": "",
+        "required": 0,
+        "wrapper": {
+          "width": "30",
+          "class": "",
+          "id": ""
+        },
+        "default_value": "",
+        "maxlength": "",
+        "placeholder": "",
+        "prepend": "",
+        "append": ""
+      },
+      {
+        "key": "field_649c0b1f5b3e8",
+        "label": "Release Year",
+        "name": "release_year",
+        "aria-label": "",
+        "type": "number",
+        "instructions": "",
+        "required": 0,
+        "wrapper": {
+          "width": "15",
+          "class": "",
+          "id": ""
+        },
+        "default_value": "",
+        "min": "",
+        "max": "",
+        "placeholder": "",
+        "step": "",
+        "prepend": "",
+        "append": ""
+      },
+      {
+        "key": "field_649c0b8b5b3e9",
+        "label": "Release Quarter",
+        "name": "release_quarter",
+        "aria-label": "",
+        "type": "select",
+        "instructions": "",
+        "required": 0,
+        "wrapper": {
+          "width": "15",
+          "class": "",
+          "id": ""
+        },
+        "choices": {
+          "Q1": "Q1",
+          "Q2": "Q2",
+          "Q3": "Q3",
+          "Q4": "Q4",
+          "Unknown": "Unknown"
+        },
+        "default_value": "Unknown",
+        "return_format": "value",
+        "multiple": 0,
+        "allow_null": 0,
+        "ui": 0,
+        "ajax": 0,
+        "placeholder": "",
+        "create_options": 0,
+        "save_options": 0
+      },
+      {
+        "key": "field_erh_youtube_review",
+        "label": "YouTube Review",
+        "name": "youtube_review",
+        "type": "url",
+        "instructions": "URL to YouTube review video",
+        "required": 0,
+        "wrapper": {
+          "width": "40",
+          "class": "",
+          "id": ""
+        }
+      },
+      {
+        "key": "field_erh_editor_rating",
+        "label": "Editor Rating",
+        "name": "editor_rating",
+        "type": "number",
+        "instructions": "Overall editor rating (1-10)",
+        "required": 0,
+        "min": 1,
+        "max": 10,
+        "step": 0.1,
+        "wrapper": {
+          "width": "20",
+          "class": "",
+          "id": ""
+        }
+      }
+    ],
+    "location": [
+      [
+        {
+          "param": "post_type",
+          "operator": "==",
+          "value": "products"
+        }
+      ]
+    ],
+    "menu_order": 0,
+    "position": "normal",
+    "style": "default",
+    "label_placement": "top",
+    "instruction_placement": "label",
+    "hide_on_screen": "",
+    "active": true,
+    "show_in_rest": true
+  }
+]
