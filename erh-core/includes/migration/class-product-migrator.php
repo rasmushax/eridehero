@@ -244,7 +244,7 @@ class ProductMigrator {
                 $this->migrate_hoverboard_fields($post_id, $acf);
                 break;
             case 'electric-unicycle':
-                $this->log('info', "Product type '{$product_type_slug}' migration not yet implemented");
+                $this->migrate_euc_fields($post_id, $acf);
                 break;
         }
     }
@@ -1075,6 +1075,344 @@ class ProductMigrator {
         $lights = $this->normalize_array($acf['lights'] ?? []);
         if (!empty($lights) && !in_array('None', $lights, true)) {
             $features[] = 'LED Lights';
+        }
+
+        return $features;
+    }
+
+    /**
+     * Migrate EUC (Electric Unicycle) specific fields.
+     *
+     * @param int   $post_id The post ID.
+     * @param array $acf     Source ACF data.
+     * @return void
+     */
+    private function migrate_euc_fields(int $post_id, array $acf): void {
+        $euc = [];
+
+        // Motor group.
+        $euc['motor'] = [
+            'power_nominal' => $acf['nominal_motor_wattage'] ?? '',
+            'power_peak'    => $acf['total_peak_wattage'] ?? '',
+            'torque'        => $acf['torque'] ?? '',
+            'hollow_motor'  => !empty($acf['hollow_motor']),
+        ];
+
+        // Battery group.
+        $euc['battery'] = [
+            'capacity'      => $acf['battery_capacity'] ?? '',
+            'voltage'       => $acf['battery_voltage'] ?? $acf['voltage'] ?? '',
+            'amphours'      => $acf['battery_amphours'] ?? '',
+            'battery_type'  => $this->map_euc_battery_type($acf['battery_type'] ?? '', $acf['battery_brand'] ?? ''),
+            'charging_time' => $acf['charging_time'] ?? '',
+            'charger_output'=> $acf['charger_output'] ?? '',
+            'fast_charger'  => !empty($acf['fast_charger']),
+            'dual_charging' => !empty($acf['dual_charging']),
+            'bms'           => $acf['bms'] ?? '',
+        ];
+
+        // Wheel group.
+        $euc['wheel'] = [
+            'tire_size'    => $this->parse_tire_size_inches($acf['tire_size'] ?? $acf['wheel_size'] ?? ''),
+            'tire_width'   => $this->parse_tire_width_inches($acf['tire_width'] ?? ''),
+            'tire_type'    => $this->map_euc_tire_type($acf['tires'] ?? []),
+            'tire_tread'   => $this->map_euc_tire_tread($acf['terrain'] ?? ''),
+            'self_healing' => $this->has_feature($acf, 'Self-healing tires'),
+        ];
+
+        // Suspension group.
+        $has_suspension = !empty($acf['suspension']) && !in_array('None', (array) $acf['suspension'], true);
+        $euc['suspension'] = [
+            'has_suspension'       => $has_suspension,
+            'suspension_type'      => $has_suspension ? $this->map_euc_suspension_type($acf['suspension'] ?? []) : 'None',
+            'suspension_travel'    => $acf['suspension_travel'] ?? '',
+            'adjustable_suspension'=> !empty($acf['adjustable_suspension']),
+        ];
+
+        // Pedals group.
+        $euc['pedals'] = [
+            'pedal_height'     => $acf['pedal_height'] ?? '',
+            'pedal_size'       => $acf['pedal_size'] ?? '',
+            'pedal_angle'      => $acf['pedal_angle'] ?? '',
+            'adjustable_pedals'=> !empty($acf['adjustable_pedals']),
+            'spiked_pedals'    => !empty($acf['spiked_pedals']),
+        ];
+
+        // Dimensions group.
+        $euc['dimensions'] = [
+            'weight'   => $acf['weight'] ?? '',
+            'max_load' => $acf['max_load'] ?? '',
+            'height'   => $acf['unfolded_height'] ?? '',
+            'width'    => $acf['unfolded_width'] ?? '',
+            'depth'    => $acf['unfolded_depth'] ?? '',
+        ];
+
+        // Lighting group.
+        $euc['lighting'] = [
+            'headlight'        => !empty($acf['headlight']) || $this->has_light_type($acf, 'Front'),
+            'headlight_lumens' => $acf['headlight_lumens'] ?? '',
+            'taillight'        => !empty($acf['taillight']) || $this->has_light_type($acf, 'Rear'),
+            'brake_light'      => !empty($acf['brake_light']),
+            'rgb_lights'       => !empty($acf['rgb_lights']) || $this->has_light_type($acf, 'Side'),
+        ];
+
+        // Connectivity group.
+        $euc['connectivity'] = [
+            'bluetooth' => !empty($acf['bluetooth']),
+            'app'       => !empty($acf['bluetooth_app']),
+            'speaker'   => !empty($acf['bluetooth_speakers']),
+            'gps'       => !empty($acf['gps']),
+        ];
+
+        // Safety group.
+        $euc['safety'] = [
+            'ip_rating'     => $this->map_euc_ip_rating($acf['weather_resistance'] ?? []),
+            'tiltback_speed'=> $acf['tiltback_speed'] ?? '',
+            'cutoff_speed'  => $acf['cutoff_speed'] ?? '',
+            'lift_sensor'   => !empty($acf['lift_sensor']),
+        ];
+
+        // Features.
+        $euc['features'] = $this->map_euc_features($acf);
+
+        $this->set_field('eucs', $euc, $post_id);
+        $this->log('info', "Migrated eucs group with " . count($euc) . " sub-groups");
+    }
+
+    /**
+     * Map EUC battery type based on type and brand.
+     *
+     * @param string $type  Battery type.
+     * @param string $brand Battery brand.
+     * @return string
+     */
+    private function map_euc_battery_type(string $type, string $brand): string {
+        $brand_lower = strtolower($brand);
+
+        if (strpos($brand_lower, 'lg') !== false) {
+            return 'LG';
+        }
+        if (strpos($brand_lower, 'samsung') !== false) {
+            return 'Samsung';
+        }
+        if (strpos($brand_lower, 'panasonic') !== false) {
+            return 'Panasonic';
+        }
+        if (strpos(strtolower($type), 'lipo') !== false) {
+            return 'LiPo';
+        }
+
+        return 'Lithium-ion';
+    }
+
+    /**
+     * Parse tire size to inches (number).
+     *
+     * @param mixed $size Tire size value.
+     * @return string Inches as number string.
+     */
+    private function parse_tire_size_inches($size): string {
+        if (empty($size)) {
+            return '';
+        }
+
+        // If already a number, return it
+        if (is_numeric($size)) {
+            return (string) $size;
+        }
+
+        // Extract number from string like "16 inch" or "16""
+        if (preg_match('/(\d+\.?\d*)/', $size, $matches)) {
+            return $matches[1];
+        }
+
+        return '';
+    }
+
+    /**
+     * Parse tire width to inches.
+     *
+     * @param mixed $width Tire width value.
+     * @return string Inches as number string.
+     */
+    private function parse_tire_width_inches($width): string {
+        if (empty($width)) {
+            return '';
+        }
+
+        if (is_numeric($width)) {
+            return (string) $width;
+        }
+
+        // Extract number from string
+        if (preg_match('/(\d+\.?\d*)/', $width, $matches)) {
+            return $matches[1];
+        }
+
+        return '';
+    }
+
+    /**
+     * Map EUC tire type.
+     *
+     * @param array $tires Tires array.
+     * @return string
+     */
+    private function map_euc_tire_type(array $tires): string {
+        $tires = $this->normalize_array($tires);
+        foreach ($tires as $tire) {
+            $lower = strtolower($tire);
+            if (strpos($lower, 'solid') !== false) {
+                return 'Solid';
+            }
+            if (strpos($lower, 'honeycomb') !== false) {
+                return 'Honeycomb';
+            }
+        }
+        return 'Pneumatic'; // Default for EUCs
+    }
+
+    /**
+     * Map EUC tire tread from terrain.
+     *
+     * @param string $terrain Terrain value.
+     * @return string
+     */
+    private function map_euc_tire_tread(string $terrain): string {
+        $lower = strtolower($terrain);
+        if (strpos($lower, 'off') !== false) {
+            return 'Knobby';
+        }
+        if (strpos($lower, 'all') !== false || strpos($lower, 'hybrid') !== false) {
+            return 'All-Terrain';
+        }
+        return 'Street';
+    }
+
+    /**
+     * Map EUC suspension type to select value.
+     *
+     * @param array $suspension Suspension array.
+     * @return string
+     */
+    private function map_euc_suspension_type(array $suspension): string {
+        $suspension = $this->normalize_array($suspension);
+
+        foreach ($suspension as $s) {
+            $lower = strtolower($s);
+
+            if (strpos($lower, 'dnm') !== false) {
+                return 'DNM';
+            }
+            if (strpos($lower, 'kke') !== false) {
+                return 'KKE';
+            }
+            if (strpos($lower, 'fastace') !== false) {
+                return 'Fastace';
+            }
+            if (strpos($lower, 'air') !== false) {
+                return 'Air';
+            }
+            if (strpos($lower, 'hydraulic') !== false) {
+                return 'Hydraulic';
+            }
+            if (strpos($lower, 'coil') !== false || strpos($lower, 'spring') !== false) {
+                return 'Coil Spring';
+            }
+        }
+
+        // If suspension exists but type not recognized
+        if (!empty($suspension) && !in_array('None', $suspension, true)) {
+            return 'Custom';
+        }
+
+        return 'None';
+    }
+
+    /**
+     * Check if product has a specific light type.
+     *
+     * @param array  $acf  ACF data.
+     * @param string $type Light type (Front, Rear, Side).
+     * @return bool
+     */
+    private function has_light_type(array $acf, string $type): bool {
+        $lights = $this->normalize_array($acf['lights'] ?? []);
+        foreach ($lights as $light) {
+            if (strcasecmp($light, $type) === 0 || strcasecmp($light, 'Both') === 0) {
+                return true;
+            }
+        }
+        return false;
+    }
+
+    /**
+     * Map EUC IP rating.
+     *
+     * @param array $resistance Weather resistance array.
+     * @return string
+     */
+    private function map_euc_ip_rating(array $resistance): string {
+        $resistance = $this->normalize_array($resistance);
+        foreach ($resistance as $r) {
+            $r = strtoupper(trim($r));
+            if (preg_match('/^IP[X]?\d{1,2}$/i', $r)) {
+                return $r;
+            }
+        }
+        return 'Unknown';
+    }
+
+    /**
+     * Map EUC features.
+     *
+     * @param array $acf ACF data.
+     * @return array
+     */
+    private function map_euc_features(array $acf): array {
+        $features = [];
+
+        if (!empty($acf['kickstand'])) {
+            $features[] = 'Kickstand';
+        }
+        if (!empty($acf['trolley_handle'])) {
+            $features[] = 'Trolley Handle';
+        }
+        if (!empty($acf['retractable_handle'])) {
+            $features[] = 'Retractable Handle';
+        }
+        if (!empty($acf['mudguard'])) {
+            $features[] = 'Mudguard';
+        }
+        if (!empty($acf['power_pads'])) {
+            $features[] = 'Power Pads';
+        }
+        if (!empty($acf['display_screen'])) {
+            $features[] = 'Display Screen';
+        }
+        if (!empty($acf['usb_port'])) {
+            $features[] = 'USB Charging Port';
+        }
+
+        // Check features array
+        $source_features = $this->normalize_array($acf['features'] ?? []);
+        $map = [
+            'Kickstand'         => 'Kickstand',
+            'Trolley Handle'    => 'Trolley Handle',
+            'Handle'            => 'Trolley Handle',
+            'Mudguard'          => 'Mudguard',
+            'Fender'            => 'Mudguard',
+            'Power Pads'        => 'Power Pads',
+            'Display'           => 'Display Screen',
+            'USB'               => 'USB Charging Port',
+            'Anti-Spin'         => 'Anti-Spin Button',
+            'Learning Mode'     => 'Learning Mode',
+        ];
+
+        foreach ($source_features as $f) {
+            if (isset($map[$f]) && !in_array($map[$f], $features, true)) {
+                $features[] = $map[$f];
+            }
         }
 
         return $features;
