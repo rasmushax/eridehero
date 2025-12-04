@@ -575,7 +575,7 @@ class ProductMigrator {
      * @return bool
      */
     private function has_feature(array $acf, string $feature): bool {
-        $features = $acf['features'] ?? [];
+        $features = $this->normalize_array($acf['features'] ?? []);
         return in_array($feature, $features, true);
     }
 
