@@ -229,11 +229,6 @@ class ProductMigrator {
         $this->set_field('release_quarter', $acf['release_quarter'] ?? 'Unknown', $post_id);
         $this->set_field('youtube_review', $acf['youtube_review'] ?? '', $post_id);
 
-        // Coupons (repeater field).
-        if (!empty($acf['coupon']) && is_array($acf['coupon'])) {
-            $this->set_field('coupon', $acf['coupon'], $post_id);
-        }
-
         // Editor rating (from ratings.overall or calculate average).
         $editor_rating = $this->get_editor_rating($acf);
         $this->set_field('editor_rating', $editor_rating, $post_id);
@@ -389,8 +384,12 @@ class ProductMigrator {
     private function migrate_ebike_fields(int $post_id, array $acf): void {
         $ebike = $acf['e-bikes'] ?? [];
 
-        // Category.
-        $this->set_field('ebike_category', $ebike['category'] ?? [], $post_id);
+        // Category (map old labels to programmatic values).
+        $old_categories = $ebike['category'] ?? [];
+        if (!empty($old_categories)) {
+            $categories = is_array($old_categories) ? $old_categories : [$old_categories];
+            $this->set_field('ebike_category', $this->map_ebike_category($categories), $post_id);
+        }
 
         // Motor details (e-bike specific).
         $motor = $ebike['motor'] ?? [];
@@ -450,10 +449,12 @@ class ProductMigrator {
             $this->set_field('max_weight_capacity', $weight_capacity['weight_limit'], $post_id);
         }
 
-        // Speed & Class.
+        // Speed & Class (map old class labels to programmatic values).
         $speed_class = $ebike['speed_and_class'] ?? [];
+        $old_classes = $speed_class['class'] ?? [];
+        $mapped_classes = is_array($old_classes) ? $this->map_ebike_class($old_classes) : [];
         $this->set_field('ebike_class', [
-            'class'              => $speed_class['class'] ?? [],
+            'class'              => $mapped_classes,
             'top_assist_speed'   => $speed_class['top_assist_speed'] ?? '',
             'throttle_top_speed' => $speed_class['throttle_top_speed'] ?? '',
             'has_throttle'       => !empty($speed_class['throttle']),
@@ -1001,6 +1002,80 @@ class ProductMigrator {
         }
 
         return $new_features;
+    }
+
+    /**
+     * Map old e-bike class values to new programmatic values.
+     *
+     * @param array $old_classes Old class values.
+     * @return array New class values.
+     */
+    private function map_ebike_class(array $old_classes): array {
+        $map = [
+            // Handle various formats the old data might have.
+            'Class 1'                      => 'class_1',
+            'Class 1 (Pedal assist, 20 mph)' => 'class_1',
+            'class_1'                      => 'class_1',
+            'Class 2'                      => 'class_2',
+            'Class 2 (Throttle, 20 mph)'   => 'class_2',
+            'class_2'                      => 'class_2',
+            'Class 3'                      => 'class_3',
+            'Class 3 (Pedal assist, 28 mph)' => 'class_3',
+            'class_3'                      => 'class_3',
+            'EU Pedelec'                   => 'eu_pedelec',
+            'EU Pedelec (25 km/h)'         => 'eu_pedelec',
+            'eu_pedelec'                   => 'eu_pedelec',
+            'EU S-Pedelec'                 => 'eu_s_pedelec',
+            'EU S-Pedelec (45 km/h)'       => 'eu_s_pedelec',
+            'eu_s_pedelec'                 => 'eu_s_pedelec',
+            'UK EAPC'                      => 'uk_eapc',
+            'uk_eapc'                      => 'uk_eapc',
+        ];
+
+        $new_classes = [];
+        foreach ($old_classes as $class) {
+            if (isset($map[$class])) {
+                $new_classes[] = $map[$class];
+            } elseif (in_array($class, ['class_1', 'class_2', 'class_3', 'eu_pedelec', 'eu_s_pedelec', 'uk_eapc'])) {
+                // Already in correct format.
+                $new_classes[] = $class;
+            }
+        }
+
+        return array_unique($new_classes);
+    }
+
+    /**
+     * Map old e-bike category values to new programmatic values.
+     *
+     * @param array $old_categories Old category values.
+     * @return array New category values.
+     */
+    private function map_ebike_category(array $old_categories): array {
+        $map = [
+            'Commuter'         => 'commuter',
+            'Mountain'         => 'mountain',
+            'Road'             => 'road',
+            'Cargo'            => 'cargo',
+            'Folding'          => 'folding',
+            'Fat Tire'         => 'fat_tire',
+            'Gravel'           => 'gravel',
+            'Hybrid'           => 'hybrid',
+            'Cruiser'          => 'cruiser',
+            'High Performance' => 'high_performance',
+        ];
+
+        $new_categories = [];
+        foreach ($old_categories as $cat) {
+            $key = is_array($cat) ? ($cat['value'] ?? $cat['label'] ?? '') : $cat;
+            if (isset($map[$key])) {
+                $new_categories[] = $map[$key];
+            } elseif (in_array(strtolower($key), array_values($map))) {
+                $new_categories[] = strtolower($key);
+            }
+        }
+
+        return array_unique($new_categories);
     }
 
     /**

@@ -99,57 +99,6 @@
                 "return_format": "id",
                 "allow_null": 1,
                 "ui": 1
-            },
-            {
-                "key": "field_erh_coupon",
-                "label": "Coupons",
-                "name": "coupon",
-                "type": "repeater",
-                "instructions": "Add discount codes for this product",
-                "required": 0,
-                "wrapper": {
-                    "width": "",
-                    "class": "",
-                    "id": ""
-                },
-                "layout": "table",
-                "button_label": "Add Coupon",
-                "sub_fields": [
-                    {
-                        "key": "field_erh_coupon_website",
-                        "label": "Website",
-                        "name": "website",
-                        "type": "text",
-                        "wrapper": { "width": "30" }
-                    },
-                    {
-                        "key": "field_erh_coupon_code",
-                        "label": "Code",
-                        "name": "code",
-                        "type": "text",
-                        "wrapper": { "width": "25" }
-                    },
-                    {
-                        "key": "field_erh_coupon_discount_type",
-                        "label": "Discount Type",
-                        "name": "discount_type",
-                        "type": "select",
-                        "wrapper": { "width": "20" },
-                        "choices": {
-                            "percentage": "Percentage",
-                            "fixed": "Fixed Amount"
-                        },
-                        "return_format": "value"
-                    },
-                    {
-                        "key": "field_erh_coupon_discount_value",
-                        "label": "Value",
-                        "name": "discount_value",
-                        "type": "text",
-                        "wrapper": { "width": "25" },
-                        "placeholder": "e.g., 10 or 50"
-                    }
-                ]
             }
         ],
         "location": [
@@ -660,6 +609,7 @@
                 },
                 "choices": {
                     "single": "Single",
+                    "2wd": "2WD",
                     "dual": "Dual",
                     "quad": "Quad (4WD)"
                 },
