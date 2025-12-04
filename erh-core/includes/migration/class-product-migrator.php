@@ -2,8 +2,8 @@
 /**
  * Product Migration Handler
  *
- * Migrates products from old ACF structure to new structure.
- * Can pull from remote site via REST API or migrate local data.
+ * Migrates products from eridehero.com via REST API.
+ * Uses 1-to-1 field copy since source and destination ACF structures match.
  *
  * @package ERH\Migration
  */
@@ -120,9 +120,9 @@ class ProductMigrator {
     }
 
     /**
-     * Migrate a single product from old structure to new.
+     * Migrate a single product from source to local.
      *
-     * @param array $old_data The old product data (with ACF fields).
+     * @param array $old_data The product data from source (with ACF fields).
      * @return int|null The new/updated post ID or null on failure.
      */
     public function migrate_product(array $old_data): ?int {
@@ -136,18 +136,6 @@ class ProductMigrator {
         $post_id = $existing ? $existing->ID : null;
 
         $acf = $old_data['acf'] ?? [];
-
-        // Debug: Log ACF data for first product.
-        static $logged_acf_sample = false;
-        if (!$logged_acf_sample) {
-            $this->log('info', 'Sample ACF data keys: ' . implode(', ', array_keys($acf)));
-            if (!empty($acf['product_type'])) {
-                $this->log('info', "Sample product_type value: {$acf['product_type']}");
-            } else {
-                $this->log('warning', 'ACF product_type is empty - will try to infer from title');
-            }
-            $logged_acf_sample = true;
-        }
 
         // Map old product_type to taxonomy.
         $old_product_type = $acf['product_type'] ?? '';
@@ -203,7 +191,7 @@ class ProductMigrator {
             }
         }
 
-        // Migrate ACF fields.
+        // Migrate ACF fields based on product type.
         $this->migrate_acf_fields($post_id, $acf, $product_type_slug);
 
         // Migrate image.
@@ -215,15 +203,15 @@ class ProductMigrator {
     }
 
     /**
-     * Migrate ACF fields from old to new structure.
+     * Migrate ACF fields from source to local.
      *
      * @param int    $post_id          The post ID.
-     * @param array  $acf              Old ACF data.
+     * @param array  $acf              Source ACF data.
      * @param string $product_type_slug The product type slug.
      * @return void
      */
     private function migrate_acf_fields(int $post_id, array $acf, string $product_type_slug): void {
-        // Basic info.
+        // Basic info (all products).
         $this->set_field('model', $acf['model'] ?? '', $post_id);
         $this->set_field('release_year', $acf['release_year'] ?? '', $post_id);
         $this->set_field('release_quarter', $acf['release_quarter'] ?? 'Unknown', $post_id);
@@ -233,789 +221,69 @@ class ProductMigrator {
         $editor_rating = $this->get_editor_rating($acf);
         $this->set_field('editor_rating', $editor_rating, $post_id);
 
-        // Manufacturer specs.
-        $this->set_field('manufacturer_top_speed', $acf['manufacturer_top_speed'] ?? '', $post_id);
-        $this->set_field('manufacturer_range', $acf['manufacturer_range'] ?? '', $post_id);
-        $this->set_field('weight', $acf['weight'] ?? '', $post_id);
-        // max_weight_capacity might also be stored as max_load in some products.
-        $max_capacity = $acf['max_weight_capacity'] ?? $acf['max_load'] ?? '';
-        $this->set_field('max_weight_capacity', $max_capacity, $post_id);
-        $this->set_field('max_incline', $acf['max_incline'] ?? '', $post_id);
+        // Performance tests (all products) - copy directly, same field names.
+        $perf_fields = [
+            'tested_top_speed',
+            'acceleration:_0-15_mph', 'acceleration:_0-20_mph', 'acceleration:_0-25_mph',
+            'acceleration:_0-30_mph', 'acceleration:_0-to-top',
+            'fastest_0_15', 'fastest_0_20', 'fastest_0_25', 'fastest_0_30', 'fastest_0_top',
+            'tested_range_fast', 'tested_range_regular', 'tested_range_slow',
+            'tested_range_avg_speed_fast', 'tested_range_avg_speed_regular', 'tested_range_avg_speed_slow',
+            'brake_distance', 'hill_climbing',
+            'manufacturer_top_speed', 'manufacturer_range', 'max_incline', 'ideal_incline',
+        ];
 
-        // Performance tests.
-        $this->set_field('tested_top_speed', $acf['tested_top_speed'] ?? '', $post_id);
-        $this->set_field('brake_distance', $acf['brake_distance'] ?? '', $post_id);
-        $this->set_field('hill_climbing', $acf['hill_climbing'] ?? '', $post_id);
-        $this->set_field('ideal_incline', $acf['ideal_incline'] ?? '', $post_id);
-
-        // Range tests (nested).
-        $this->set_field('range_tests', [
-            'fast'             => $acf['tested_range_fast'] ?? '',
-            'regular'          => $acf['tested_range_regular'] ?? '',
-            'slow'             => $acf['tested_range_slow'] ?? '',
-            'avg_speed_fast'   => $acf['tested_range_avg_speed_fast'] ?? '',
-            'avg_speed_regular'=> $acf['tested_range_avg_speed_regular'] ?? '',
-            'avg_speed_slow'   => $acf['tested_range_avg_speed_slow'] ?? '',
-        ], $post_id);
-
-        // Acceleration tests (nested).
-        $this->set_field('acceleration', [
-            'to_15' => $acf['acceleration:_0-15_mph'] ?? '',
-            'to_20' => $acf['acceleration:_0-20_mph'] ?? '',
-            'to_25' => $acf['acceleration:_0-25_mph'] ?? '',
-            'to_30' => $acf['acceleration:_0-30_mph'] ?? '',
-            'to_top'=> $acf['acceleration:_0-to-top'] ?? '',
-        ], $post_id);
-
-        // Fastest tests (nested).
-        $this->set_field('fastest', [
-            'to_15' => $acf['fastest_0_15'] ?? '',
-            'to_20' => $acf['fastest_0_20'] ?? '',
-            'to_25' => $acf['fastest_0_25'] ?? '',
-            'to_30' => $acf['fastest_0_30'] ?? '',
-            'to_top'=> $acf['fastest_0_top'] ?? '',
-        ], $post_id);
-
-        // Battery.
-        $this->set_field('battery_capacity', $acf['battery_capacity'] ?? '', $post_id);
-        $this->set_field('battery_voltage', $acf['battery_voltage'] ?? '', $post_id);
-        $this->set_field('battery_amphours', $acf['battery_ah'] ?? '', $post_id);
-        $this->set_field('battery_type', $acf['battery_type'] ?? 'Lithium-ion', $post_id);
-        $this->set_field('charging_time', $acf['charging_time'] ?? '', $post_id);
-        $this->set_field('charger_output', $acf['charger_output'] ?? '', $post_id);
-
-        // Motor.
-        $motor_config = 'single';
-        if (!empty($acf['dual_motor']) || stripos($acf['motor_type'] ?? '', 'dual') !== false) {
-            $motor_config = 'dual';
+        foreach ($perf_fields as $field) {
+            if (isset($acf[$field]) && $acf[$field] !== '') {
+                $this->set_field($field, $acf[$field], $post_id);
+            }
         }
-        $this->set_field('motor_configuration', $motor_config, $post_id);
-        $this->set_field('motor_type', $this->map_motor_type($acf['motor_type'] ?? ''), $post_id);
-        $this->set_field('motor_position', $this->map_motor_position($acf), $post_id);
-        $this->set_field('motor_nominal_wattage', $acf['nominal_motor_wattage'] ?? '', $post_id);
-        $this->set_field('motor_peak_wattage', $acf['peak_motor_wattage'] ?? '', $post_id);
-        $this->set_field('motor_torque', $acf['motor_torque'] ?? '', $post_id);
-
-        // Brakes.
-        $this->set_field('brake_front', $this->map_brake_type($acf['front_brake_type'] ?? ''), $post_id);
-        $this->set_field('brake_rear', $this->map_brake_type($acf['rear_brake_type'] ?? ''), $post_id);
-        $this->set_field('brake_regen', !empty($acf['regen_braking']), $post_id);
-        $this->set_field('brake_abs', !empty($acf['abs']), $post_id);
 
         // Product-type specific fields.
         switch ($product_type_slug) {
-            case 'electric-scooter':
-                $this->migrate_escooter_fields($post_id, $acf);
-                break;
             case 'electric-bike':
                 $this->migrate_ebike_fields($post_id, $acf);
                 break;
+            // Other product types will be added later.
+            case 'electric-scooter':
             case 'electric-unicycle':
-                $this->migrate_euc_fields($post_id, $acf);
-                break;
             case 'electric-skateboard':
-                $this->migrate_eskate_fields($post_id, $acf);
-                break;
             case 'hoverboard':
-                $this->migrate_hoverboard_fields($post_id, $acf);
+                $this->log('info', "Product type '{$product_type_slug}' migration not yet implemented");
                 break;
         }
-    }
-
-    /**
-     * Migrate e-scooter specific fields.
-     *
-     * @param int   $post_id The post ID.
-     * @param array $acf     Old ACF data.
-     * @return void
-     */
-    private function migrate_escooter_fields(int $post_id, array $acf): void {
-        // Dimensions.
-        $this->set_field('escooter_dimensions', [
-            'deck_length'      => $acf['deck_length'] ?? '',
-            'deck_width'       => $acf['deck_width'] ?? '',
-            'handlebar_height' => $acf['handlebar_height'] ?? '',
-            'ground_clearance' => $acf['ground_clearance'] ?? '',
-            'folded_length'    => $acf['folded_length'] ?? '',
-            'folded_height'    => $acf['folded_height'] ?? '',
-        ], $post_id);
-
-        // Wheels.
-        $this->set_field('escooter_wheels', [
-            'tire_size_front'  => $acf['tire_size_front'] ?? '',
-            'tire_size_rear'   => $acf['tire_size_rear'] ?? '',
-            'tire_type'        => $this->map_tire_type($acf['tire_type'] ?? ''),
-            'suspension_front' => $this->map_suspension_type($acf['suspension_type_front'] ?? ''),
-            'suspension_rear'  => $this->map_suspension_type($acf['suspension_type_rear'] ?? ''),
-        ], $post_id);
-
-        // Lighting.
-        $this->set_field('escooter_lighting', [
-            'front_light'        => !empty($acf['front_light']),
-            'rear_light'         => !empty($acf['rear_light']),
-            'deck_lights'        => !empty($acf['deck_lights']),
-            'turn_signals'       => !empty($acf['turn_signals']),
-            'front_light_lumens' => $acf['front_light_lumens'] ?? '',
-        ], $post_id);
-
-        // Other specs.
-        $this->set_field('escooter_other', [
-            'ip_rating'          => $acf['ip_rating'] ?? '',
-            'weather_resistance' => $acf['weather_resistance'] ?? '',
-            'throttle_type'      => $this->map_throttle_type($acf['throttle_type'] ?? ''),
-            'fold_location'      => $this->map_fold_location($acf['fold_location'] ?? ''),
-            'terrain'            => $this->map_terrain($acf['terrain'] ?? ''),
-            'stem_type'          => $acf['stem_type'] ?? '',
-            'display_type'       => $acf['display_type'] ?? '',
-        ], $post_id);
-
-        // Features.
-        $features = $this->map_escooter_features($acf['features'] ?? []);
-        $this->set_field('escooter_features', $features, $post_id);
     }
 
     /**
      * Migrate e-bike specific fields.
      *
+     * Since source and destination ACF structures are identical,
+     * we just copy the entire e-bikes group as-is.
+     *
      * @param int   $post_id The post ID.
-     * @param array $acf     Old ACF data.
+     * @param array $acf     Source ACF data.
      * @return void
      */
     private function migrate_ebike_fields(int $post_id, array $acf): void {
         $ebike = $acf['e-bikes'] ?? [];
 
-        // Category (map old labels to programmatic values).
-        $old_categories = $ebike['category'] ?? [];
-        if (!empty($old_categories)) {
-            $categories = is_array($old_categories) ? $old_categories : [$old_categories];
-            $this->set_field('ebike_category', $this->map_ebike_category($categories), $post_id);
+        if (empty($ebike)) {
+            $this->log('warning', "No e-bikes data found for post {$post_id}");
+            return;
         }
 
-        // Motor details (e-bike specific).
-        $motor = $ebike['motor'] ?? [];
-        $this->set_field('ebike_motor', [
-            'brand'        => $motor['motor_brand'] ?? '',
-            'model'        => $motor['motor_model'] ?? '',
-            'assist_levels'=> $motor['assist_levels'] ?? '',
-            'sensor_type'  => $this->map_sensor_type($motor['sensor_type'] ?? ''),
-        ], $post_id);
+        // Copy the entire e-bikes group directly - structures match 1-to-1.
+        $this->set_field('e-bikes', $ebike, $post_id);
 
-        // Update shared motor fields from e-bike motor data.
-        if (!empty($motor['power_nominal'])) {
-            $this->set_field('motor_nominal_wattage', $motor['power_nominal'], $post_id);
-        }
-        if (!empty($motor['power_peak'])) {
-            $this->set_field('motor_peak_wattage', $motor['power_peak'], $post_id);
-        }
-        if (!empty($motor['torque'])) {
-            $this->set_field('motor_torque', $motor['torque'], $post_id);
-        }
-
-        // Battery details (e-bike specific).
-        $battery = $ebike['battery'] ?? [];
-        $this->set_field('ebike_battery', [
-            'position'  => $this->map_battery_position($battery['battery_position'] ?? $battery['position'] ?? ''),
-            'removable' => !empty($battery['removable']),
-        ], $post_id);
-
-        // Update shared battery fields from e-bike data.
-        if (!empty($battery['battery_capacity']) || !empty($battery['capacity'])) {
-            $this->set_field('battery_capacity', $battery['battery_capacity'] ?? $battery['capacity'] ?? '', $post_id);
-        }
-        if (!empty($battery['voltage'])) {
-            $this->set_field('battery_voltage', $battery['voltage'], $post_id);
-        }
-        if (!empty($battery['amphours']) || !empty($battery['amp_hours'])) {
-            $this->set_field('battery_amphours', $battery['amphours'] ?? $battery['amp_hours'] ?? '', $post_id);
-        }
-        if (!empty($battery['charge_time']) || !empty($battery['charging_time'])) {
-            $this->set_field('charging_time', $battery['charge_time'] ?? $battery['charging_time'] ?? '', $post_id);
-        }
-        // E-bike claimed range goes to shared manufacturer_range.
-        if (!empty($battery['range'])) {
-            $this->set_field('manufacturer_range', $battery['range'], $post_id);
-        }
-        if (!empty($battery['range_claimed'])) {
-            $this->set_field('manufacturer_range', $battery['range_claimed'], $post_id);
-        }
-
-        // Weight and capacity (e-bike stores these in a nested group).
-        $weight_capacity = $ebike['weight_and_capacity'] ?? [];
-        if (!empty($weight_capacity['weight'])) {
-            $this->set_field('weight', $weight_capacity['weight'], $post_id);
-        }
-        if (!empty($weight_capacity['weight_limit']) || !empty($weight_capacity['max_load'])) {
-            $this->set_field('max_weight_capacity', $weight_capacity['weight_limit'] ?? $weight_capacity['max_load'] ?? '', $post_id);
-        }
-
-        // Speed & Class (map old class labels to programmatic values).
-        $speed_class = $ebike['speed_and_class'] ?? [];
-        $old_classes = $speed_class['class'] ?? [];
-        $mapped_classes = is_array($old_classes) ? $this->map_ebike_class($old_classes) : [];
-        $this->set_field('ebike_class', [
-            'class'              => $mapped_classes,
-            'top_assist_speed'   => $speed_class['top_assist_speed'] ?? '',
-            'throttle_top_speed' => $speed_class['throttle_top_speed'] ?? '',
-            'has_throttle'       => !empty($speed_class['throttle']),
-        ], $post_id);
-
-        // Update shared manufacturer_top_speed from e-bike top_assist_speed if not set.
-        if (!empty($speed_class['top_assist_speed'])) {
-            $this->set_field('manufacturer_top_speed', $speed_class['top_assist_speed'], $post_id);
-        }
-
-        // Drivetrain (expanded with more fields).
-        $drivetrain = $ebike['drivetrain'] ?? [];
-        $this->set_field('ebike_drivetrain', [
-            'drive_system'     => $this->map_drive_system($drivetrain['drive_system'] ?? ''),
-            'gears'            => $drivetrain['gears'] ?? '',
-            'derailleur_type'  => $this->map_derailleur_type($drivetrain['derailleur_type'] ?? ''),
-            'derailleur_brand' => $drivetrain['derailleur_brand'] ?? $drivetrain['derailleur'] ?? '',
-            'derailleur_model' => $drivetrain['derailleur_model'] ?? '',
-            'cassette'         => $drivetrain['cassette'] ?? '',
-            'shifter'          => $drivetrain['shifter'] ?? '',
-        ], $post_id);
-
-        // Brakes (expanded with type and model).
-        $brakes = $ebike['brakes'] ?? [];
-        $this->set_field('ebike_brakes', [
-            'brake_type'  => $this->map_ebike_brake_type($brakes['brake_type'] ?? ''),
-            'brand'       => $brakes['brake_brand'] ?? $brakes['brand'] ?? '',
-            'model'       => $brakes['brake_model'] ?? $brakes['model'] ?? '',
-            'rotor_front' => $brakes['rotor_size_front'] ?? $brakes['rotor_front'] ?? '',
-            'rotor_rear'  => $brakes['rotor_size_rear'] ?? $brakes['rotor_rear'] ?? '',
-        ], $post_id);
-
-        // Frame & Geometry (expanded with more fields).
-        $frame = $ebike['frame'] ?? [];
-        $frame_geo = $ebike['frame_and_geometry'] ?? [];
-        // Merge frame and frame_and_geometry data.
-        $frame_data = array_merge($frame, $frame_geo);
-        // Determine step_through from frame_style or explicit field.
-        $frame_style_val = $this->map_frame_style($frame_data['frame_style'] ?? '');
-        $is_step_through = !empty($frame_data['step_through']) || $frame_style_val === 'step_through';
-        // Determine foldable from category, special features, or explicit field.
-        $is_foldable = !empty($frame_data['foldable'])
-            || in_array('Folding', $ebike['category'] ?? [])
-            || in_array('folding', $ebike['category'] ?? [])
-            || in_array('Folding', $ebike['special_features'] ?? [])
-            || in_array('folding', $ebike['special_features'] ?? []);
-        $this->set_field('ebike_frame', [
-            'material'          => $this->map_frame_material($frame_data['material'] ?? $frame_data['frame_material'] ?? ''),
-            'frame_style'       => $frame_style_val,
-            'step_through'      => $is_step_through,
-            'foldable'          => $is_foldable,
-            'sizes_available'   => $frame_data['sizes_available'] ?? '',
-            'wheelbase'         => $frame_data['wheelbase'] ?? '',
-            'standover_height'  => $frame_data['standover_height'] ?? '',
-            'min_rider_height'  => $frame_data['min_rider_height'] ?? '',
-            'max_rider_height'  => $frame_data['max_rider_height'] ?? '',
-            'min_seat_height'   => $frame_data['min_seat_height'] ?? '',
-            'max_seat_height'   => $frame_data['max_seat_height'] ?? '',
-            'total_length'      => $frame_data['total_length'] ?? '',
-            'handlebar_width'   => $frame_data['handlebar_width'] ?? '',
-        ], $post_id);
-
-        // Wheels & Tires (new group).
-        $wheels = $ebike['wheels_and_tires'] ?? [];
-        // Also check frame for legacy wheel_size/tire_width.
-        $this->set_field('ebike_wheels_tires', [
-            'wheel_size'          => $wheels['wheel_size'] ?? $frame['wheel_size'] ?? '',
-            'tire_width'          => $wheels['tire_width'] ?? $frame['tire_width'] ?? '',
-            'tire_brand'          => $wheels['tire_brand'] ?? '',
-            'tire_model'          => $wheels['tire_model'] ?? '',
-            'tire_type'           => $this->map_ebike_tire_type($wheels['tire_type'] ?? ''),
-            'puncture_protection' => !empty($wheels['puncture_protection']),
-        ], $post_id);
-
-        // Suspension (new group).
-        $suspension = $ebike['suspension'] ?? [];
-        // Determine overall suspension type from front/rear presence.
-        $suspension_type = 'none';
-        if (!empty($suspension['front_suspension']) && $suspension['front_suspension'] !== 'None' && $suspension['front_suspension'] !== 'none') {
-            $suspension_type = 'front';
-            if (!empty($suspension['rear_suspension']) && $suspension['rear_suspension'] !== 'None' && $suspension['rear_suspension'] !== 'none') {
-                $suspension_type = 'full';
-            }
-        }
-        $this->set_field('ebike_suspension', [
-            'type'               => $suspension_type,
-            'front_suspension'   => $this->map_suspension_fork_type($suspension['front_suspension'] ?? ''),
-            'front_travel'       => $suspension['front_travel'] ?? '',
-            'rear_suspension'    => $this->map_suspension_fork_type($suspension['rear_suspension'] ?? ''),
-            'rear_travel'        => $suspension['rear_travel'] ?? '',
-            'seatpost_suspension'=> !empty($suspension['seatpost_suspension']),
-        ], $post_id);
-
-        // Components & Display (new group).
-        $components = $ebike['components'] ?? [];
-        $connectivity = $components['connectivity'] ?? [];
-        if (is_string($connectivity)) {
-            $connectivity = [$connectivity];
-        }
-        $this->set_field('ebike_components', [
-            'display'        => $this->map_display_type($components['display'] ?? ''),
-            'display_size'   => $components['display_size'] ?? '',
-            'connectivity'   => $this->map_connectivity($connectivity),
-            'app_compatible' => !empty($components['app_compatible']),
-            'app_name'       => $components['app_name'] ?? '',
-        ], $post_id);
-
-        // Integrated Features (new group).
-        $integrated = $ebike['integrated_features'] ?? [];
-        $special_features = $ebike['special_features'] ?? [];
-        // Check turn_signals from integrated_features OR special_features array.
-        $has_turn_signals = !empty($integrated['turn_signals'])
-            || in_array('Turn Signals', $special_features)
-            || in_array('turn_signals', $special_features);
-        $this->set_field('ebike_integrated', [
-            'integrated_lights' => !empty($integrated['integrated_lights']) || !empty($integrated['lights']),
-            'front_light'       => !empty($integrated['front_light']),
-            'rear_light'        => !empty($integrated['rear_light']),
-            'turn_signals'      => $has_turn_signals,
-            'fenders'           => !empty($integrated['fenders']),
-            'rear_rack'         => !empty($integrated['rear_rack']),
-            'front_rack'        => !empty($integrated['front_rack']),
-            'kickstand'         => !empty($integrated['kickstand']),
-            'walk_assist'       => !empty($integrated['walk_assist']),
-            'usb_charging'      => !empty($integrated['usb']) || !empty($integrated['usb_charging']),
-            'bell'              => !empty($integrated['bell']),
-            'cargo_capacity'    => $integrated['cargo_capacity'] ?? '',
-        ], $post_id);
-
-        // Safety & Compliance (new group).
-        $safety = $ebike['safety_and_compliance'] ?? [];
-        $certifications = $safety['certifications'] ?? [];
-        if (is_string($certifications)) {
-            $certifications = [$certifications];
-        }
-        $this->set_field('ebike_safety', [
-            'ip_rating'      => $safety['ip_rating'] ?? '',
-            'certifications' => $this->map_certifications($certifications),
-            'reflectors'     => !empty($safety['reflectors']),
-            'anti_theft'     => !empty($safety['anti_theft']),
-        ], $post_id);
-
-        // Special Features (checkbox array).
-        $special_features = $ebike['special_features'] ?? [];
-        if (!empty($special_features)) {
-            $mapped_features = $this->map_ebike_special_features($special_features);
-            $this->set_field('ebike_special_features', $mapped_features, $post_id);
-        }
-    }
-
-    /**
-     * Map sensor type to programmatic value.
-     *
-     * @param string|array $sensor Sensor type value.
-     * @return string Mapped value.
-     */
-    private function map_sensor_type(string|array $sensor): string {
-        if (is_array($sensor)) {
-            $sensor = $sensor[0] ?? '';
-        }
-        $sensor_lower = strtolower(trim($sensor));
-        $map = [
-            'torque'      => 'torque',
-            'cadence'     => 'cadence',
-            'both'        => 'both',
-            'torque & cadence' => 'both',
-            'torque and cadence' => 'both',
-        ];
-        return $map[$sensor_lower] ?? 'unknown';
-    }
-
-    /**
-     * Map battery position to programmatic value.
-     *
-     * @param string|array $position Battery position.
-     * @return string Mapped value.
-     */
-    private function map_battery_position(string|array $position): string {
-        if (is_array($position)) {
-            $position = $position[0] ?? '';
-        }
-        $pos_lower = strtolower(trim($position));
-        $map = [
-            'downtube'    => 'downtube',
-            'down tube'   => 'downtube',
-            'rear rack'   => 'rear_rack',
-            'rear_rack'   => 'rear_rack',
-            'integrated'  => 'integrated',
-            'seat tube'   => 'seat_tube',
-            'seat_tube'   => 'seat_tube',
-            'top tube'    => 'top_tube',
-            'top_tube'    => 'top_tube',
-            'dual'        => 'dual',
-        ];
-        return $map[$pos_lower] ?? 'unknown';
-    }
-
-    /**
-     * Map drive system to programmatic value.
-     *
-     * @param string|array $system Drive system.
-     * @return string Mapped value.
-     */
-    private function map_drive_system(string|array $system): string {
-        if (is_array($system)) {
-            $system = $system[0] ?? '';
-        }
-        $sys_lower = strtolower(trim($system));
-        if (strpos($sys_lower, 'chain') !== false) {
-            return 'chain';
-        }
-        if (strpos($sys_lower, 'belt') !== false) {
-            return 'belt';
-        }
-        if (strpos($sys_lower, 'shaft') !== false) {
-            return 'shaft';
-        }
-        return '';
-    }
-
-    /**
-     * Map derailleur type to programmatic value.
-     *
-     * @param string|array $type Derailleur type.
-     * @return string Mapped value.
-     */
-    private function map_derailleur_type(string|array $type): string {
-        if (is_array($type)) {
-            $type = $type[0] ?? '';
-        }
-        $type_lower = strtolower(trim($type));
-        $map = [
-            'external'     => 'external',
-            'internal'     => 'internal',
-            'internal hub' => 'internal',
-            'single speed' => 'single_speed',
-            'single_speed' => 'single_speed',
-            'single'       => 'single_speed',
-            'cvt'          => 'cvt',
-        ];
-        return $map[$type_lower] ?? '';
-    }
-
-    /**
-     * Map e-bike brake type to programmatic value.
-     *
-     * @param string|array $type Brake type.
-     * @return string Mapped value.
-     */
-    private function map_ebike_brake_type(string|array $type): string {
-        // Handle array input (take first value).
-        if (is_array($type)) {
-            $type = $type[0] ?? '';
-        }
-        $type_lower = strtolower(trim($type));
-        if (strpos($type_lower, 'hydraulic') !== false) {
-            return 'hydraulic_disc';
-        }
-        if (strpos($type_lower, 'mechanical') !== false || strpos($type_lower, 'cable') !== false) {
-            return 'mechanical_disc';
-        }
-        if (strpos($type_lower, 'disc') !== false) {
-            // Default disc to hydraulic if not specified.
-            return 'hydraulic_disc';
-        }
-        if (strpos($type_lower, 'rim') !== false || strpos($type_lower, 'v-brake') !== false) {
-            return 'rim';
-        }
-        if (strpos($type_lower, 'coaster') !== false) {
-            return 'coaster';
-        }
-        return '';
-    }
-
-    /**
-     * Map frame material to programmatic value.
-     *
-     * @param string|array $material Frame material.
-     * @return string Mapped value.
-     */
-    private function map_frame_material(string|array $material): string {
-        if (is_array($material)) {
-            $material = $material[0] ?? '';
-        }
-        $mat_lower = strtolower(trim($material));
-        $map = [
-            'aluminum'     => 'aluminum',
-            'aluminium'    => 'aluminum',
-            'alloy'        => 'aluminum',
-            'steel'        => 'steel',
-            'carbon'       => 'carbon',
-            'carbon fiber' => 'carbon',
-            'titanium'     => 'titanium',
-            'magnesium'    => 'magnesium',
-        ];
-        return $map[$mat_lower] ?? '';
-    }
-
-    /**
-     * Map frame style to programmatic value.
-     *
-     * @param string|array $style Frame style.
-     * @return string Mapped value.
-     */
-    private function map_frame_style(string|array $style): string {
-        if (is_array($style)) {
-            $style = $style[0] ?? '';
-        }
-        $style_lower = strtolower(trim($style));
-        $map = [
-            'step-over'     => 'step_over',
-            'step_over'     => 'step_over',
-            'step over'     => 'step_over',
-            'step-through'  => 'step_through',
-            'step_through'  => 'step_through',
-            'step through'  => 'step_through',
-            'mid-step'      => 'mid_step',
-            'mid_step'      => 'mid_step',
-            'mid step'      => 'mid_step',
-        ];
-        return $map[$style_lower] ?? '';
-    }
-
-    /**
-     * Map e-bike tire type to programmatic value.
-     *
-     * @param string|array $type Tire type.
-     * @return string Mapped value.
-     */
-    private function map_ebike_tire_type(string|array $type): string {
-        if (is_array($type)) {
-            $type = $type[0] ?? '';
-        }
-        $type_lower = strtolower(trim($type));
-        $map = [
-            'street'      => 'street',
-            'knobby'      => 'knobby',
-            'slick'       => 'slick',
-            'all-terrain' => 'all_terrain',
-            'all_terrain' => 'all_terrain',
-            'all terrain' => 'all_terrain',
-            'fat'         => 'fat',
-            'fat tire'    => 'fat',
-        ];
-        return $map[$type_lower] ?? '';
-    }
-
-    /**
-     * Map suspension fork type to programmatic value.
-     *
-     * @param string|array $type Suspension type.
-     * @return string Mapped value.
-     */
-    private function map_suspension_fork_type(string|array $type): string {
-        if (is_array($type)) {
-            $type = $type[0] ?? '';
-        }
-        $type_lower = strtolower(trim($type));
-        if ($type_lower === 'none' || empty($type_lower)) {
-            return 'none';
-        }
-        $map = [
-            'coil'       => 'coil',
-            'spring'     => 'coil',
-            'air'        => 'air',
-            'hydraulic'  => 'hydraulic',
-        ];
-        return $map[$type_lower] ?? '';
-    }
-
-    /**
-     * Map display type to programmatic value.
-     *
-     * @param string|array $type Display type.
-     * @return string Mapped value.
-     */
-    private function map_display_type(string|array $type): string {
-        if (is_array($type)) {
-            $type = $type[0] ?? '';
-        }
-        $type_lower = strtolower(trim($type));
-        if (empty($type_lower) || $type_lower === 'none') {
-            return 'none';
-        }
-        $map = [
-            'led'        => 'led',
-            'lcd'        => 'lcd',
-            'lcd color'  => 'lcd_color',
-            'color lcd'  => 'lcd_color',
-            'tft'        => 'tft',
-            'tft color'  => 'tft',
-        ];
-        return $map[$type_lower] ?? 'lcd';
-    }
-
-    /**
-     * Map connectivity options to programmatic values.
-     *
-     * @param array $connectivity Connectivity options.
-     * @return array Mapped values.
-     */
-    private function map_connectivity(array $connectivity): array {
-        $map = [
-            'bluetooth'  => 'bluetooth',
-            'Bluetooth'  => 'bluetooth',
-            'ant+'       => 'ant_plus',
-            'ANT+'       => 'ant_plus',
-            'wifi'       => 'wifi',
-            'WiFi'       => 'wifi',
-            'Wi-Fi'      => 'wifi',
-            'gps'        => 'gps',
-            'GPS'        => 'gps',
-        ];
-
-        $result = [];
-        foreach ($connectivity as $item) {
-            $mapped = $map[$item] ?? strtolower($item);
-            if (!empty($mapped)) {
-                $result[] = $mapped;
-            }
-        }
-        return array_unique($result);
-    }
-
-    /**
-     * Map certifications to programmatic values.
-     *
-     * @param array $certifications Certifications.
-     * @return array Mapped values.
-     */
-    private function map_certifications(array $certifications): array {
-        $map = [
-            'UL 2849'    => 'ul_2849',
-            'ul_2849'    => 'ul_2849',
-            'UL 2271'    => 'ul_2271',
-            'ul_2271'    => 'ul_2271',
-            'EN 15194'   => 'en_15194',
-            'en_15194'   => 'en_15194',
-            'CE'         => 'ce',
-            'ce'         => 'ce',
-            'FCC'        => 'fcc',
-            'fcc'        => 'fcc',
-        ];
-
-        $result = [];
-        foreach ($certifications as $cert) {
-            $mapped = $map[$cert] ?? '';
-            if (!empty($mapped)) {
-                $result[] = $mapped;
-            }
-        }
-        return array_unique($result);
-    }
-
-    /**
-     * Map e-bike special features to programmatic values.
-     *
-     * @param array $features Special features.
-     * @return array Mapped values.
-     */
-    private function map_ebike_special_features(array $features): array {
-        $map = [
-            'Folding'               => 'folding',
-            'folding'               => 'folding',
-            'Turn Signals'          => 'turn_signals',
-            'turn_signals'          => 'turn_signals',
-            'Quick Release Battery' => 'quick_release_battery',
-            'quick_release_battery' => 'quick_release_battery',
-            'Dual Battery'          => 'dual_battery',
-            'dual_battery'          => 'dual_battery',
-            'Regenerative Braking'  => 'regenerative_braking',
-            'regenerative_braking'  => 'regenerative_braking',
-            'Reverse Mode'          => 'reverse_mode',
-            'reverse_mode'          => 'reverse_mode',
-            'Hill Start Assist'     => 'hill_start_assist',
-            'hill_start_assist'     => 'hill_start_assist',
-            'Cruise Control'        => 'cruise_control',
-            'cruise_control'        => 'cruise_control',
-            'Silent Hub'            => 'silent_hub',
-            'silent_hub'            => 'silent_hub',
-            'Torque Sensor'         => 'torque_sensor',
-            'torque_sensor'         => 'torque_sensor',
-            'Cadence Sensor'        => 'cadence_sensor',
-            'cadence_sensor'        => 'cadence_sensor',
-            'Speed Sensor'          => 'speed_sensor',
-            'speed_sensor'          => 'speed_sensor',
-        ];
-
-        $result = [];
-        foreach ($features as $feature) {
-            $mapped = $map[$feature] ?? '';
-            if (!empty($mapped)) {
-                $result[] = $mapped;
-            }
-        }
-        return array_unique($result);
-    }
-
-    /**
-     * Migrate EUC specific fields.
-     *
-     * @param int   $post_id The post ID.
-     * @param array $acf     Old ACF data.
-     * @return void
-     */
-    private function migrate_euc_fields(int $post_id, array $acf): void {
-        // EUC-specific fields if they exist.
-        $this->set_field('euc_wheel', [
-            'size'              => $acf['wheel_size'] ?? '',
-            'tire_type'         => $acf['tire_type'] ?? '',
-            'tire_width'        => $acf['tire_width'] ?? '',
-            'suspension'        => !empty($acf['suspension']),
-            'suspension_travel' => $acf['suspension_travel'] ?? '',
-        ], $post_id);
-    }
-
-    /**
-     * Migrate e-skate specific fields.
-     *
-     * @param int   $post_id The post ID.
-     * @param array $acf     Old ACF data.
-     * @return void
-     */
-    private function migrate_eskate_fields(int $post_id, array $acf): void {
-        $this->set_field('eskate_deck', [
-            'length'   => $acf['deck_length'] ?? '',
-            'width'    => $acf['deck_width'] ?? '',
-            'material' => $acf['deck_material'] ?? '',
-            'flex'     => $acf['deck_flex'] ?? '',
-            'style'    => $acf['deck_style'] ?? '',
-        ], $post_id);
-
-        $this->set_field('eskate_wheels', [
-            'size'       => $acf['wheel_size'] ?? '',
-            'type'       => $acf['wheel_type'] ?? '',
-            'durometer'  => $acf['wheel_durometer'] ?? '',
-            'trucks'     => $acf['truck_type'] ?? '',
-        ], $post_id);
-    }
-
-    /**
-     * Migrate hoverboard specific fields.
-     *
-     * @param int   $post_id The post ID.
-     * @param array $acf     Old ACF data.
-     * @return void
-     */
-    private function migrate_hoverboard_fields(int $post_id, array $acf): void {
-        $this->set_field('hoverboard_specs', [
-            'wheel_size'   => $acf['wheel_size'] ?? '',
-            'tire_type'    => $acf['tire_type'] ?? '',
-            'ip_rating'    => $acf['ip_rating'] ?? '',
-            'ul_certified' => !empty($acf['ul_certified']),
-        ], $post_id);
+        $this->log('info', "Copied e-bikes group with " . count($ebike) . " sub-groups");
     }
 
     /**
      * Migrate product image.
      *
      * @param int   $post_id  The post ID.
-     * @param array $acf      Old ACF data.
-     * @param array $old_data Full old product data.
+     * @param array $acf      Source ACF data.
+     * @param array $old_data Full source product data.
      * @return void
      */
     private function migrate_image(int $post_id, array $acf, array $old_data): void {
@@ -1039,9 +307,7 @@ class ProductMigrator {
         $attachment_id = $this->sideload_image($image_url, $post_id);
 
         if ($attachment_id) {
-            // Set as featured image (no need for separate ACF field).
             set_post_thumbnail($post_id, $attachment_id);
-
             $this->log('success', "Image uploaded successfully (attachment ID: {$attachment_id})");
         }
     }
@@ -1050,21 +316,19 @@ class ProductMigrator {
      * Get the remote image URL from ACF data or featured_media.
      *
      * @param array $acf      ACF data.
-     * @param array $old_data Full old product data.
+     * @param array $old_data Full source product data.
      * @return string|null Image URL or null.
      */
     private function get_remote_image_url(array $acf, array $old_data): ?string {
-        // Check ACF big_thumbnail field - it might be an array with URL.
+        // Check ACF big_thumbnail field.
         $big_thumbnail = $acf['big_thumbnail'] ?? null;
         if ($big_thumbnail) {
-            // ACF image field can be array, URL string, or ID.
             if (is_array($big_thumbnail) && !empty($big_thumbnail['url'])) {
                 return $big_thumbnail['url'];
             }
             if (is_string($big_thumbnail) && filter_var($big_thumbnail, FILTER_VALIDATE_URL)) {
                 return $big_thumbnail;
             }
-            // If it's an ID, we need to fetch the URL from remote.
             if (is_numeric($big_thumbnail)) {
                 $url = $this->fetch_remote_media_url((int) $big_thumbnail);
                 if ($url) {
@@ -1093,10 +357,7 @@ class ProductMigrator {
         // Fall back to featured_media from REST API.
         $featured_media_id = $old_data['featured_media'] ?? 0;
         if ($featured_media_id) {
-            $url = $this->fetch_remote_media_url((int) $featured_media_id);
-            if ($url) {
-                return $url;
-            }
+            return $this->fetch_remote_media_url((int) $featured_media_id);
         }
 
         return null;
@@ -1147,12 +408,10 @@ class ProductMigrator {
      * @return int|null The attachment ID or null on failure.
      */
     private function sideload_image(string $url, int $post_id): ?int {
-        // Require necessary files for media handling.
         require_once ABSPATH . 'wp-admin/includes/file.php';
         require_once ABSPATH . 'wp-admin/includes/media.php';
         require_once ABSPATH . 'wp-admin/includes/image.php';
 
-        // Download the file to a temp location.
         $tmp = download_url($url, 60);
 
         if (is_wp_error($tmp)) {
@@ -1160,20 +419,16 @@ class ProductMigrator {
             return null;
         }
 
-        // Get the filename from URL.
         $url_path = wp_parse_url($url, PHP_URL_PATH);
         $filename = basename($url_path);
 
-        // Prepare file array for sideloading.
         $file_array = [
             'name'     => $filename,
             'tmp_name' => $tmp,
         ];
 
-        // Sideload the file.
         $attachment_id = media_handle_sideload($file_array, $post_id);
 
-        // Clean up temp file if sideload failed.
         if (is_wp_error($attachment_id)) {
             @unlink($tmp);
             $this->log('error', "Failed to sideload image: " . $attachment_id->get_error_message());
@@ -1186,18 +441,17 @@ class ProductMigrator {
     /**
      * Get editor rating from old ratings structure.
      *
-     * @param array $acf Old ACF data.
+     * @param array $acf Source ACF data.
      * @return string The editor rating (1-10) or empty.
      */
     private function get_editor_rating(array $acf): string {
         $ratings = $acf['ratings'] ?? [];
 
-        // Use overall if it exists.
         if (!empty($ratings['overall'])) {
             return (string) $ratings['overall'];
         }
 
-        // Otherwise calculate average of available ratings.
+        // Calculate average of available ratings.
         $values = array_filter([
             $ratings['speed'] ?? null,
             $ratings['acceleration_hills'] ?? null,
@@ -1208,9 +462,7 @@ class ProductMigrator {
             $ratings['safety'] ?? null,
             $ratings['features'] ?? null,
             $ratings['value'] ?? null,
-        ], function ($v) {
-            return $v !== null && $v !== '';
-        });
+        ], fn($v) => $v !== null && $v !== '');
 
         if (empty($values)) {
             return '';
@@ -1220,29 +472,29 @@ class ProductMigrator {
     }
 
     /**
-     * Infer product type from title or ACF data when product_type field is empty.
+     * Infer product type from title or ACF data.
      *
      * @param string $title The product title.
      * @param array  $acf   The ACF data.
      * @return string|null The inferred product type slug or null.
      */
     private function infer_product_type(string $title, array $acf): ?string {
+        // Check for e-bike ACF data (has e-bikes group).
+        if (!empty($acf['e-bikes']) && is_array($acf['e-bikes'])) {
+            return 'electric-bike';
+        }
+
         $title_lower = strtolower($title);
 
-        // Check for e-bike indicators.
-        $ebike_keywords = ['e-bike', 'ebike', 'electric bike', 'eride', 'heckler', 'bullit', 'ransom', 'levo', 'turbo', 'powerfly', 'rail', 'fuel', 'shuttle', 'trance', 'reign', 'stance', 'habit', 'moterra'];
+        // E-bike keywords.
+        $ebike_keywords = ['e-bike', 'ebike', 'electric bike', 'heckler', 'bullit', 'ransom', 'levo', 'turbo', 'powerfly', 'rail', 'fuel', 'shuttle', 'trance', 'reign', 'stance', 'habit', 'moterra'];
         foreach ($ebike_keywords as $keyword) {
             if (stripos($title, $keyword) !== false) {
                 return 'electric-bike';
             }
         }
 
-        // Check for e-bike ACF data (has e-bikes group).
-        if (!empty($acf['e-bikes']) && is_array($acf['e-bikes'])) {
-            return 'electric-bike';
-        }
-
-        // Check for scooter indicators.
+        // Scooter keywords.
         $scooter_keywords = ['scooter', 'ninebot', 'kaabo', 'wolf', 'dualtron', 'vsett', 'inokim', 'emove', 'apollo', 'varla', 'gotrax', 'hiboy', 'segway', 'unagi', 'boosted rev', 'niu', 'mercane', 'zero', 'mantis', 'ghost', 'blade', 'thunder', 'eagle', 'falcon', 'phantom', 'speedway'];
         foreach ($scooter_keywords as $keyword) {
             if (stripos($title, $keyword) !== false) {
@@ -1255,7 +507,7 @@ class ProductMigrator {
             return 'electric-scooter';
         }
 
-        // Check for EUC indicators.
+        // EUC keywords.
         $euc_keywords = ['unicycle', 'euc', 'inmotion', 'gotway', 'begode', 'kingsong', 'veteran', 'leaperkim'];
         foreach ($euc_keywords as $keyword) {
             if (stripos($title, $keyword) !== false) {
@@ -1263,7 +515,7 @@ class ProductMigrator {
             }
         }
 
-        // Check for skateboard indicators.
+        // Skateboard keywords.
         $eskate_keywords = ['skateboard', 'longboard', 'boosted board', 'evolve', 'meepo', 'exway', 'wowgo', 'backfire', 'ownboard', 'teamgee'];
         foreach ($eskate_keywords as $keyword) {
             if (stripos($title, $keyword) !== false) {
@@ -1271,7 +523,7 @@ class ProductMigrator {
             }
         }
 
-        // Check for hoverboard indicators.
+        // Hoverboard keywords.
         $hoverboard_keywords = ['hoverboard', 'swagway', 'swagtron', 'razor hovertrax'];
         foreach ($hoverboard_keywords as $keyword) {
             if (stripos($title, $keyword) !== false) {
@@ -1279,261 +531,7 @@ class ProductMigrator {
             }
         }
 
-        // Could not determine type.
         return null;
-    }
-
-    /**
-     * Map old motor type to new value.
-     *
-     * @param string $old Old motor type value.
-     * @return string New motor type value.
-     */
-    private function map_motor_type(string $old): string {
-        $map = [
-            'Hub Motor'  => 'hub',
-            'Hub'        => 'hub',
-            'Belt'       => 'belt',
-            'Belt Drive' => 'belt',
-            'Mid-Drive'  => 'mid_drive',
-            'Gear Drive' => 'gear_drive',
-        ];
-        return $map[$old] ?? 'hub';
-    }
-
-    /**
-     * Map motor position from ACF data.
-     *
-     * @param array $acf ACF data.
-     * @return string Motor position.
-     */
-    private function map_motor_position(array $acf): string {
-        if (!empty($acf['dual_motor']) || !empty($acf['front_motor'])) {
-            return 'both';
-        }
-        if (!empty($acf['front_motor_only'])) {
-            return 'front';
-        }
-        return 'rear';
-    }
-
-    /**
-     * Map old brake type to new value.
-     *
-     * @param string $old Old brake type value.
-     * @return string New brake type value.
-     */
-    private function map_brake_type(string $old): string {
-        $old_lower = strtolower($old);
-        if (strpos($old_lower, 'hydraulic') !== false) {
-            return 'hydraulic_disc';
-        }
-        if (strpos($old_lower, 'disc') !== false || strpos($old_lower, 'mechanical') !== false) {
-            return 'mechanical_disc';
-        }
-        if (strpos($old_lower, 'drum') !== false) {
-            return 'drum';
-        }
-        if (strpos($old_lower, 'regen') !== false || strpos($old_lower, 'electronic') !== false) {
-            return 'regenerative';
-        }
-        if (strpos($old_lower, 'foot') !== false) {
-            return 'foot_brake';
-        }
-        if (empty($old) || strpos($old_lower, 'none') !== false) {
-            return 'none';
-        }
-        return $old_lower;
-    }
-
-    /**
-     * Map old tire type to new value.
-     *
-     * @param string $old Old tire type value.
-     * @return string New tire type value.
-     */
-    private function map_tire_type(string $old): string {
-        $map = [
-            'Pneumatic'      => 'pneumatic',
-            'Air'            => 'pneumatic',
-            'Solid'          => 'solid',
-            'Honeycomb'      => 'honeycomb',
-            'Self-Healing'   => 'self_healing',
-            'Tubeless'       => 'tubeless',
-        ];
-        return $map[$old] ?? strtolower(str_replace(' ', '_', $old));
-    }
-
-    /**
-     * Map old suspension type to new value.
-     *
-     * @param string $old Old suspension type value.
-     * @return string New suspension type value.
-     */
-    private function map_suspension_type(string $old): string {
-        $map = [
-            'None'      => 'none',
-            'Spring'    => 'spring',
-            'Hydraulic' => 'hydraulic',
-            'Air'       => 'air',
-            'Rubber'    => 'rubber',
-            'Swingarm'  => 'swingarm',
-        ];
-        return $map[$old] ?? strtolower($old);
-    }
-
-    /**
-     * Map old throttle type to new value.
-     *
-     * @param string|array $old Old throttle type value.
-     * @return string New throttle type value.
-     */
-    private function map_throttle_type($old): string {
-        if (is_array($old)) {
-            $old = $old[0] ?? '';
-        }
-        $map = [
-            'Thumb'      => 'thumb',
-            'Trigger'    => 'trigger',
-            'Half-Twist' => 'half_twist',
-            'Full-Twist' => 'full_twist',
-            'Wheel'      => 'wheel',
-        ];
-        return $map[$old] ?? strtolower(str_replace('-', '_', $old));
-    }
-
-    /**
-     * Map old fold location to new value.
-     *
-     * @param string $old Old fold location value.
-     * @return string New fold location value.
-     */
-    private function map_fold_location(string $old): string {
-        return strtolower($old);
-    }
-
-    /**
-     * Map old terrain to new value.
-     *
-     * @param string $old Old terrain value.
-     * @return string New terrain value.
-     */
-    private function map_terrain(string $old): string {
-        return strtolower(str_replace('-', '_', $old));
-    }
-
-    /**
-     * Map old features array to new format.
-     *
-     * @param array $old_features Old features array.
-     * @return array New features array.
-     */
-    private function map_escooter_features(array $old_features): array {
-        $map = [
-            'App'                         => 'app',
-            'Speed Modes'                 => 'speed_modes',
-            'Cruise Control'              => 'cruise_control',
-            'Quick-Swap Battery'          => 'quick_swap_battery',
-            'Folding Mechanism'           => 'folding',
-            'Seat Add-On'                 => 'seat_addon',
-            'Foldable Handlebars'         => 'foldable_handlebars',
-            'Zero-Start'                  => 'zero_start',
-            'Push-To-Start'               => 'push_to_start',
-            'Turn Signals'                => 'turn_signals',
-            'Brake Curve Adjustment'      => 'brake_adjustment',
-            'Acceleration Adjustment'     => 'acceleration_adjustment',
-            'Self-healing tires'          => 'self_healing_tires',
-            'Speed limiting'              => 'speed_limiting',
-            'Over-the-air firmware updates' => 'ota_updates',
-            'Adjustable suspension'       => 'adjustable_suspension',
-            'Steering dampener'           => 'steering_dampener',
-            'Location tracking'           => 'location_tracking',
-            'Electronic horn'             => 'electronic_horn',
-            'NFC Unlock'                  => 'nfc_unlock',
-        ];
-
-        $new_features = [];
-        foreach ($old_features as $feature) {
-            if (isset($map[$feature])) {
-                $new_features[] = $map[$feature];
-            }
-        }
-
-        return $new_features;
-    }
-
-    /**
-     * Map old e-bike class values to new programmatic values.
-     *
-     * @param array $old_classes Old class values.
-     * @return array New class values.
-     */
-    private function map_ebike_class(array $old_classes): array {
-        $map = [
-            // Handle various formats the old data might have.
-            'Class 1'                      => 'class_1',
-            'Class 1 (Pedal assist, 20 mph)' => 'class_1',
-            'class_1'                      => 'class_1',
-            'Class 2'                      => 'class_2',
-            'Class 2 (Throttle, 20 mph)'   => 'class_2',
-            'class_2'                      => 'class_2',
-            'Class 3'                      => 'class_3',
-            'Class 3 (Pedal assist, 28 mph)' => 'class_3',
-            'class_3'                      => 'class_3',
-            'EU Pedelec'                   => 'eu_pedelec',
-            'EU Pedelec (25 km/h)'         => 'eu_pedelec',
-            'eu_pedelec'                   => 'eu_pedelec',
-            'EU S-Pedelec'                 => 'eu_s_pedelec',
-            'EU S-Pedelec (45 km/h)'       => 'eu_s_pedelec',
-            'eu_s_pedelec'                 => 'eu_s_pedelec',
-            'UK EAPC'                      => 'uk_eapc',
-            'uk_eapc'                      => 'uk_eapc',
-        ];
-
-        $new_classes = [];
-        foreach ($old_classes as $class) {
-            if (isset($map[$class])) {
-                $new_classes[] = $map[$class];
-            } elseif (in_array($class, ['class_1', 'class_2', 'class_3', 'eu_pedelec', 'eu_s_pedelec', 'uk_eapc'])) {
-                // Already in correct format.
-                $new_classes[] = $class;
-            }
-        }
-
-        return array_unique($new_classes);
-    }
-
-    /**
-     * Map old e-bike category values to new programmatic values.
-     *
-     * @param array $old_categories Old category values.
-     * @return array New category values.
-     */
-    private function map_ebike_category(array $old_categories): array {
-        $map = [
-            'Commuter'         => 'commuter',
-            'Mountain'         => 'mountain',
-            'Road'             => 'road',
-            'Cargo'            => 'cargo',
-            'Folding'          => 'folding',
-            'Fat Tire'         => 'fat_tire',
-            'Gravel'           => 'gravel',
-            'Hybrid'           => 'hybrid',
-            'Cruiser'          => 'cruiser',
-            'High Performance' => 'high_performance',
-        ];
-
-        $new_categories = [];
-        foreach ($old_categories as $cat) {
-            $key = is_array($cat) ? ($cat['value'] ?? $cat['label'] ?? '') : $cat;
-            if (isset($map[$key])) {
-                $new_categories[] = $map[$key];
-            } elseif (in_array(strtolower($key), array_values($map))) {
-                $new_categories[] = strtolower($key);
-            }
-        }
-
-        return array_unique($new_categories);
     }
 
     /**
@@ -1595,10 +593,10 @@ class ProductMigrator {
     }
 
     /**
-     * Run full migration from remote source.
+     * Migrate a single product by ID or slug.
      *
-     * @param int $batch_size Products per batch.
-     * @return array Migration summary.
+     * @param string $identifier Product ID (numeric) or slug.
+     * @return array Migration result.
      */
     public function migrate_single_product(string $identifier): array {
         $result = [
@@ -1607,7 +605,6 @@ class ProductMigrator {
             'reason'       => '',
         ];
 
-        // Fetch the product by ID or slug.
         $product = $this->fetch_single_product($identifier);
 
         if (!$product) {
@@ -1617,7 +614,6 @@ class ProductMigrator {
 
         $result['product_name'] = $product['title']['rendered'] ?? $product['slug'] ?? $identifier;
 
-        // Migrate the product.
         $migrated_id = $this->migrate_product($product);
 
         if ($migrated_id) {
@@ -1640,7 +636,6 @@ class ProductMigrator {
      * @return array|null Product data or null if not found.
      */
     private function fetch_single_product(string $identifier): ?array {
-        // Determine if identifier is ID or slug.
         if (is_numeric($identifier)) {
             $url = sprintf(
                 '%s/wp-json/wp/v2/products/%d?_fields=id,slug,title,status,acf,featured_media',
@@ -1675,7 +670,6 @@ class ProductMigrator {
 
         $data = json_decode(wp_remote_retrieve_body($response), true);
 
-        // If fetching by slug, result is an array.
         if (!is_numeric($identifier)) {
             if (empty($data) || !is_array($data)) {
                 return null;
@@ -1713,9 +707,7 @@ class ProductMigrator {
                 $migrated_id = $this->migrate_product($product);
                 if ($migrated_id) {
                     $summary['migrated']++;
-                } elseif ($this->dry_run) {
-                    // Dry run doesn't count as migrated.
-                } else {
+                } elseif (!$this->dry_run) {
                     $summary['skipped']++;
                 }
             }
