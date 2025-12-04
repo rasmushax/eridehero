@@ -32,6 +32,13 @@ class ProductMigrator {
     private bool $dry_run = false;
 
     /**
+     * Whether to skip products that already exist locally.
+     *
+     * @var bool
+     */
+    private bool $skip_existing = true;
+
+    /**
      * Migration log.
      *
      * @var array
@@ -69,6 +76,17 @@ class ProductMigrator {
      */
     public function set_dry_run(bool $dry_run): self {
         $this->dry_run = $dry_run;
+        return $this;
+    }
+
+    /**
+     * Set skip existing mode.
+     *
+     * @param bool $skip Whether to skip products that already exist locally.
+     * @return self
+     */
+    public function set_skip_existing(bool $skip): self {
+        $this->skip_existing = $skip;
         return $this;
     }
 
@@ -146,6 +164,12 @@ class ProductMigrator {
         // Check if product already exists by slug.
         $existing = get_page_by_path($slug, OBJECT, 'products');
         $post_id = $existing ? $existing->ID : null;
+
+        // Skip if product exists and skip_existing is enabled.
+        if ($post_id && $this->skip_existing) {
+            $this->log('info', "Skipping existing: {$title} (ID: {$post_id})");
+            return $post_id;
+        }
 
         $acf = $old_data['acf'] ?? [];
 
