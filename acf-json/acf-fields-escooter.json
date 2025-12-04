@@ -35,7 +35,7 @@
                 "key": "field_erh_escooter_motor_position",
                 "label": "Motor Position",
                 "name": "motor_position",
-                "type": "checkbox",
+                "type": "select",
                 "instructions": "",
                 "required": 0,
                 "wrapper": {
@@ -48,9 +48,12 @@
                   "Rear": "Rear",
                   "Dual": "Dual"
                 },
-                "default_value": [],
+                "default_value": "",
                 "return_format": "value",
-                "layout": "horizontal"
+                "multiple": 0,
+                "allow_null": 1,
+                "ui": 0,
+                "ajax": 0
               },
               {
                 "key": "field_erh_escooter_motor_type",
@@ -60,7 +63,7 @@
                 "instructions": "",
                 "required": 0,
                 "wrapper": {
-                  "width": "25",
+                  "width": "33",
                   "class": "",
                   "id": ""
                 },
@@ -78,30 +81,6 @@
                 "ajax": 0
               },
               {
-                "key": "field_erh_escooter_wheel_drive",
-                "label": "Wheel Drive",
-                "name": "wheel_drive",
-                "type": "select",
-                "instructions": "",
-                "required": 0,
-                "wrapper": {
-                  "width": "20",
-                  "class": "",
-                  "id": ""
-                },
-                "choices": {
-                  "1WD": "1WD",
-                  "2WD": "2WD",
-                  "AWD": "AWD"
-                },
-                "default_value": "",
-                "return_format": "value",
-                "multiple": 0,
-                "allow_null": 1,
-                "ui": 0,
-                "ajax": 0
-              },
-              {
                 "key": "field_erh_escooter_voltage",
                 "label": "Voltage",
                 "name": "voltage",
@@ -109,7 +88,7 @@
                 "instructions": "System voltage (V)",
                 "required": 0,
                 "wrapper": {
-                  "width": "20",
+                  "width": "33",
                   "class": "",
                   "id": ""
                 },
@@ -128,7 +107,7 @@
                 "instructions": "Nominal wattage (W)",
                 "required": 0,
                 "wrapper": {
-                  "width": "25",
+                  "width": "50",
                   "class": "",
                   "id": ""
                 },
@@ -147,7 +126,7 @@
                 "instructions": "Peak wattage (W)",
                 "required": 0,
                 "wrapper": {
-                  "width": "25",
+                  "width": "50",
                   "class": "",
                   "id": ""
                 },
@@ -306,65 +285,69 @@
             "layout": "row",
             "sub_fields": [
               {
-                "key": "field_erh_escooter_type",
-                "label": "Brake Type",
-                "name": "type",
-                "type": "checkbox",
+                "key": "field_erh_escooter_front",
+                "label": "Front Brake",
+                "name": "front",
+                "type": "select",
                 "instructions": "",
                 "required": 0,
                 "wrapper": {
-                  "width": "50",
+                  "width": "33",
                   "class": "",
                   "id": ""
                 },
                 "choices": {
-                  "Hydraulic Disc": "Hydraulic Disc",
-                  "Mechanical Disc": "Mechanical Disc",
+                  "None": "None",
                   "Drum": "Drum",
-                  "Electronic": "Electronic",
-                  "Foot Brake": "Foot Brake"
+                  "Disc (Mechanical)": "Disc (Mechanical)",
+                  "Disc (Hydraulic)": "Disc (Hydraulic)"
                 },
-                "default_value": [],
+                "default_value": "",
                 "return_format": "value",
-                "layout": "horizontal"
+                "multiple": 0,
+                "allow_null": 1,
+                "ui": 0,
+                "ajax": 0
               },
               {
-                "key": "field_erh_escooter_rotor_front",
-                "label": "Front Rotor Size",
-                "name": "rotor_front",
-                "type": "number",
-                "instructions": "mm",
+                "key": "field_erh_escooter_rear",
+                "label": "Rear Brake",
+                "name": "rear",
+                "type": "select",
+                "instructions": "",
                 "required": 0,
                 "wrapper": {
-                  "width": "25",
+                  "width": "33",
                   "class": "",
                   "id": ""
                 },
-                "min": "",
-                "max": "",
-                "step": "",
-                "placeholder": "",
-                "prepend": "",
-                "append": ""
+                "choices": {
+                  "None": "None",
+                  "Drum": "Drum",
+                  "Disc (Mechanical)": "Disc (Mechanical)",
+                  "Disc (Hydraulic)": "Disc (Hydraulic)"
+                },
+                "default_value": "",
+                "return_format": "value",
+                "multiple": 0,
+                "allow_null": 1,
+                "ui": 0,
+                "ajax": 0
               },
               {
-                "key": "field_erh_escooter_rotor_rear",
-                "label": "Rear Rotor Size",
-                "name": "rotor_rear",
-                "type": "number",
-                "instructions": "mm",
+                "key": "field_erh_escooter_regenerative",
+                "label": "Regenerative Braking",
+                "name": "regenerative",
+                "type": "true_false",
+                "instructions": "",
                 "required": 0,
                 "wrapper": {
-                  "width": "25",
+                  "width": "33",
                   "class": "",
                   "id": ""
                 },
-                "min": "",
-                "max": "",
-                "step": "",
-                "placeholder": "",
-                "prepend": "",
-                "append": ""
+                "default_value": 0,
+                "ui": 1
               }
             ]
           },
@@ -443,23 +426,25 @@
                 "key": "field_erh_escooter_tire_type",
                 "label": "Tire Type",
                 "name": "tire_type",
-                "type": "checkbox",
+                "type": "select",
                 "instructions": "",
                 "required": 0,
                 "wrapper": {
-                  "width": "40",
+                  "width": "20",
                   "class": "",
                   "id": ""
                 },
                 "choices": {
                   "Pneumatic": "Pneumatic",
                   "Solid": "Solid",
-                  "Honeycomb": "Honeycomb",
-                  "Self-Healing": "Self-Healing"
+                  "Mixed": "Mixed"
                 },
-                "default_value": [],
+                "default_value": "",
                 "return_format": "value",
-                "layout": "horizontal"
+                "multiple": 0,
+                "allow_null": 1,
+                "ui": 0,
+                "ajax": 0
               },
               {
                 "key": "field_erh_escooter_pneumatic_type",
@@ -482,7 +467,31 @@
                 "multiple": 0,
                 "allow_null": 1,
                 "ui": 0,
-                "ajax": 0
+                "ajax": 0,
+                "conditional_logic": [
+                  [
+                    {
+                      "field": "field_erh_escooter_tire_type",
+                      "operator": "==",
+                      "value": "Pneumatic"
+                    }
+                  ]
+                ]
+              },
+              {
+                "key": "field_erh_escooter_self_healing",
+                "label": "Self-Healing Tires",
+                "name": "self_healing",
+                "type": "true_false",
+                "instructions": "",
+                "required": 0,
+                "wrapper": {
+                  "width": "20",
+                  "class": "",
+                  "id": ""
+                },
+                "default_value": 0,
+                "ui": 1
               }
             ]
           },
@@ -508,59 +517,39 @@
                 "instructions": "",
                 "required": 0,
                 "wrapper": {
-                  "width": "60",
+                  "width": "80",
                   "class": "",
                   "id": ""
                 },
                 "choices": {
-                  "Front Fork": "Front Fork",
-                  "Front Spring": "Front Spring",
-                  "Rear Spring": "Rear Spring",
-                  "Rear Swingarm": "Rear Swingarm",
-                  "Dual Spring": "Dual Spring",
-                  "Adjustable": "Adjustable"
+                  "Front hydraulic": "Front hydraulic",
+                  "Front rubber": "Front rubber",
+                  "Front spring": "Front spring",
+                  "Front fork": "Front fork",
+                  "Rear hydraulic": "Rear hydraulic",
+                  "Rear spring": "Rear spring",
+                  "Rear rubber": "Rear rubber",
+                  "Rear fork": "Rear fork",
+                  "None": "None"
                 },
                 "default_value": [],
                 "return_format": "value",
                 "layout": "horizontal"
               },
               {
-                "key": "field_erh_escooter_front_travel",
-                "label": "Front Travel",
-                "name": "front_travel",
-                "type": "number",
-                "instructions": "mm",
+                "key": "field_erh_escooter_adjustable",
+                "label": "Adjustable Suspension",
+                "name": "adjustable",
+                "type": "true_false",
+                "instructions": "",
                 "required": 0,
                 "wrapper": {
                   "width": "20",
                   "class": "",
                   "id": ""
                 },
-                "min": "",
-                "max": "",
-                "step": "",
-                "placeholder": "",
-                "prepend": "",
-                "append": ""
-              },
-              {
-                "key": "field_erh_escooter_rear_travel",
-                "label": "Rear Travel",
-                "name": "rear_travel",
-                "type": "number",
-                "instructions": "mm",
-                "required": 0,
-                "wrapper": {
-                  "width": "20",
-                  "class": "",
-                  "id": ""
-                },
-                "min": "",
-                "max": "",
-                "step": "",
-                "placeholder": "",
-                "prepend": "",
-                "append": ""
+                "default_value": 0,
+                "ui": 1
               }
             ]
           },
@@ -843,6 +832,21 @@
                 "placeholder": "",
                 "prepend": "",
                 "append": ""
+              },
+              {
+                "key": "field_erh_escooter_foldable_handlebars",
+                "label": "Foldable Handlebars",
+                "name": "foldable_handlebars",
+                "type": "true_false",
+                "instructions": "",
+                "required": 0,
+                "wrapper": {
+                  "width": "16",
+                  "class": "",
+                  "id": ""
+                },
+                "default_value": 0,
+                "ui": 1
               }
             ]
           },
@@ -868,38 +872,19 @@
                 "instructions": "",
                 "required": 0,
                 "wrapper": {
-                  "width": "40",
+                  "width": "70",
                   "class": "",
                   "id": ""
                 },
                 "choices": {
+                  "Both": "Both",
                   "Front": "Front",
                   "Rear": "Rear",
-                  "Side": "Side",
-                  "Deck": "Deck"
+                  "None": "None"
                 },
                 "default_value": [],
                 "return_format": "value",
                 "layout": "horizontal"
-              },
-              {
-                "key": "field_erh_escooter_front_lumens",
-                "label": "Front Light Lumens",
-                "name": "front_lumens",
-                "type": "number",
-                "instructions": "",
-                "required": 0,
-                "wrapper": {
-                  "width": "30",
-                  "class": "",
-                  "id": ""
-                },
-                "min": "",
-                "max": "",
-                "step": "",
-                "placeholder": "",
-                "prepend": "",
-                "append": ""
               },
               {
                 "key": "field_erh_escooter_turn_signals",
@@ -949,7 +934,7 @@
                   "Trigger": "Trigger",
                   "Half-Twist": "Half-Twist",
                   "Full-Twist": "Full-Twist",
-                  "EY3": "EY3"
+                  "Wheel": "Wheel"
                 },
                 "default_value": "",
                 "return_format": "value",
@@ -972,11 +957,10 @@
                 },
                 "choices": {
                   "Stem": "Stem",
-                  "Handlebar": "Handlebar",
-                  "Deck": "Deck",
+                  "Neck": "Neck",
                   "None": "None"
                 },
-                "default_value": "",
+                "default_value": "Stem",
                 "return_format": "value",
                 "multiple": 0,
                 "allow_null": 1,
@@ -997,8 +981,8 @@
                 },
                 "choices": {
                   "Street": "Street",
-                  "Off-road": "Off-road",
-                  "All-terrain": "All-terrain"
+                  "Hybrid": "Hybrid",
+                  "Off-road": "Off-road"
                 },
                 "default_value": "",
                 "return_format": "value",
@@ -1029,10 +1013,9 @@
                   "IP65": "IP65",
                   "IP66": "IP66",
                   "IP67": "IP67",
-                  "None": "None",
                   "Unknown": "Unknown"
                 },
-                "default_value": "",
+                "default_value": "Unknown",
                 "return_format": "value",
                 "multiple": 0,
                 "allow_null": 1,
@@ -1070,21 +1053,6 @@
                 "ui": 1
               },
               {
-                "key": "field_erh_escooter_stem_type",
-                "label": "Stem Type",
-                "name": "stem_type",
-                "type": "text",
-                "instructions": "",
-                "required": 0,
-                "wrapper": {
-                  "width": "25",
-                  "class": "",
-                  "id": ""
-                },
-                "default_value": "",
-                "placeholder": ""
-              },
-              {
                 "key": "field_erh_escooter_display_type",
                 "label": "Display Type",
                 "name": "display_type",
@@ -1101,9 +1069,10 @@
                   "LED": "LED",
                   "OLED": "OLED",
                   "TFT": "TFT",
-                  "None": "None"
+                  "None": "None",
+                  "Unknown": "Unknown"
                 },
-                "default_value": "",
+                "default_value": "Unknown",
                 "return_format": "value",
                 "multiple": 0,
                 "allow_null": 1,
@@ -1129,7 +1098,6 @@
               "Speed Modes": "Speed Modes",
               "Cruise Control": "Cruise Control",
               "Folding": "Folding",
-              "Foldable Handlebars": "Foldable Handlebars",
               "Push-To-Start": "Push-To-Start",
               "Zero-Start": "Zero-Start",
               "Turn Signals": "Turn Signals",
@@ -1139,11 +1107,9 @@
               "OTA Updates": "OTA Updates",
               "Location Tracking": "Location Tracking",
               "Quick-Swap Battery": "Quick-Swap Battery",
-              "Adjustable Suspension": "Adjustable Suspension",
               "Steering Damper": "Steering Damper",
               "Electronic Horn": "Electronic Horn",
               "NFC Unlock": "NFC Unlock",
-              "Self-Healing Tires": "Self-Healing Tires",
               "Seat Option": "Seat Option"
             },
             "default_value": [],

@@ -331,12 +331,12 @@ class ProductMigrator {
      */
     private function migrate_escooter_fields(int $post_id, array $acf): void {
         $escooter = [];
+        $features = $acf['features'] ?? [];
 
         // Motor group.
         $escooter['motor'] = [
-            'motor_position' => $this->normalize_array($acf['motors'] ?? []),
+            'motor_position' => $this->map_motor_position($acf['motors'] ?? []),
             'motor_type'     => $acf['motor_type'] ?? '',
-            'wheel_drive'    => $acf['Wheel Drive'] ?? $acf['wheel_drive'] ?? '',
             'voltage'        => $acf['voltage'] ?? $acf['battery_voltage'] ?? '',
             'power_nominal'  => $acf['nominal_motor_wattage'] ?? '',
             'power_peak'     => $acf['total_peak_wattage'] ?? '',
@@ -352,73 +352,175 @@ class ProductMigrator {
             'charging_time' => $acf['charging_time'] ?? '',
         ];
 
-        // Brakes group.
+        // Brakes group - map old array to front/rear selects.
+        $brakes = $this->normalize_array($acf['brakes'] ?? []);
         $escooter['brakes'] = [
-            'type'        => $this->normalize_array($acf['brakes'] ?? []),
-            'rotor_front' => '',
-            'rotor_rear'  => '',
+            'front'        => $this->map_brake_type_select($brakes),
+            'rear'         => $this->map_brake_type_select($brakes),
+            'regenerative' => in_array('Electronic', $brakes, true) || in_array('Regen', $brakes, true),
         ];
 
-        // Wheels group.
+        // Wheels group - fallback rear to front if not set.
+        $tire_front = $acf['tire_size_front'] ?? '';
+        $tire_rear = $acf['tire_size_rear'] ?? '';
+        if (empty($tire_rear) && !empty($tire_front)) {
+            $tire_rear = $tire_front;
+        }
         $escooter['wheels'] = [
-            'tire_size_front' => $acf['tire_size_front'] ?? '',
-            'tire_size_rear'  => $acf['tire_size_rear'] ?? '',
+            'tire_size_front' => $tire_front,
+            'tire_size_rear'  => $tire_rear,
             'tire_width'      => $acf['tire_width'] ?? '',
-            'tire_type'       => $this->normalize_array($acf['tires'] ?? []),
+            'tire_type'       => $this->map_tire_type_select($acf['tires'] ?? []),
             'pneumatic_type'  => $acf['pneumatic_type'] ?? '',
+            'self_healing'    => $this->has_feature($acf, 'Self-healing tires'),
         ];
 
         // Suspension group.
         $escooter['suspension'] = [
-            'type'         => $this->map_suspension_type($acf['suspension'] ?? []),
-            'front_travel' => '',
-            'rear_travel'  => '',
+            'type'       => $this->map_suspension_type($acf['suspension'] ?? []),
+            'adjustable' => $this->has_feature($acf, 'Adjustable suspension'),
         ];
 
         // Dimensions group.
         $escooter['dimensions'] = [
-            'deck_length'         => $acf['deck_length'] ?? '',
-            'deck_width'          => $acf['deck_width'] ?? '',
-            'ground_clearance'    => $acf['ground_clearance'] ?? '',
-            'handlebar_height_min'=> $acf['deck_to_handlebar_min'] ?? '',
-            'handlebar_height_max'=> $acf['deck_to_handlebar_max'] ?? '',
-            'handlebar_width'     => $acf['handlebar_width'] ?? '',
-            'weight'              => $acf['weight'] ?? '',
-            'max_load'            => $acf['max_load'] ?? '',
-            'unfolded_length'     => $acf['unfolded_depth'] ?? '',
-            'unfolded_width'      => $acf['unfolded_width'] ?? '',
-            'unfolded_height'     => $acf['unfolded_height'] ?? '',
-            'folded_length'       => $acf['folded_depth'] ?? '',
-            'folded_width'        => $acf['folded_width'] ?? '',
-            'folded_height'       => $acf['folded_height'] ?? '',
+            'deck_length'          => $acf['deck_length'] ?? '',
+            'deck_width'           => $acf['deck_width'] ?? '',
+            'ground_clearance'     => $acf['ground_clearance'] ?? '',
+            'handlebar_height_min' => $acf['deck_to_handlebar_min'] ?? '',
+            'handlebar_height_max' => $acf['deck_to_handlebar_max'] ?? '',
+            'handlebar_width'      => $acf['handlebar_width'] ?? '',
+            'weight'               => $acf['weight'] ?? '',
+            'max_load'             => $acf['max_load'] ?? '',
+            'unfolded_length'      => $acf['unfolded_depth'] ?? '',
+            'unfolded_width'       => $acf['unfolded_width'] ?? '',
+            'unfolded_height'      => $acf['unfolded_height'] ?? '',
+            'folded_length'        => $acf['folded_depth'] ?? '',
+            'folded_width'         => $acf['folded_width'] ?? '',
+            'folded_height'        => $acf['folded_height'] ?? '',
+            'foldable_handlebars'  => $this->has_feature($acf, 'Foldable Handlebars'),
         ];
 
         // Lighting group.
         $escooter['lighting'] = [
             'lights'       => $this->normalize_array($acf['lights'] ?? []),
-            'front_lumens' => '',
             'turn_signals' => $this->has_feature($acf, 'Turn Signals'),
         ];
 
         // Other group.
+        $ip_rating = $this->get_first($acf['weather_resistance'] ?? []);
         $escooter['other'] = [
             'throttle_type' => $this->get_first($acf['throttle_type'] ?? []),
-            'fold_location' => $acf['fold_location'] ?? '',
-            'terrain'       => $acf['terrain'] ?? '',
-            'ip_rating'     => $this->get_first($acf['weather_resistance'] ?? []),
+            'fold_location' => $acf['fold_location'] ?? 'Stem',
+            'terrain'       => $this->map_terrain($acf['terrain'] ?? ''),
+            'ip_rating'     => !empty($ip_rating) ? $ip_rating : 'Unknown',
             'footrest'      => !empty($acf['footrest']),
-            'kickstand'     => true, // Most scooters have kickstands.
-            'stem_type'     => '',
-            'display_type'  => '',
+            'kickstand'     => true,
+            'display_type'  => 'Unknown',
         ];
 
-        // Features.
-        $escooter['features'] = $this->map_escooter_features($acf['features'] ?? []);
+        // Features - exclude ones that now live elsewhere.
+        $escooter['features'] = $this->map_escooter_features($features);
 
         // Save the entire e-scooters group.
         $this->set_field('e-scooters', $escooter, $post_id);
 
         $this->log('info', "Migrated e-scooters group with " . count($escooter) . " sub-groups");
+    }
+
+    /**
+     * Map motor position array to single select value.
+     *
+     * @param array $motors Motors array (e.g., ["Rear"], ["Front", "Rear"]).
+     * @return string Motor position (Front, Rear, or Dual).
+     */
+    private function map_motor_position(array $motors): string {
+        if (empty($motors)) {
+            return 'Rear';
+        }
+        if (count($motors) > 1 || in_array('Both', $motors, true) || in_array('Dual', $motors, true)) {
+            return 'Dual';
+        }
+        $first = $motors[0] ?? '';
+        if (stripos($first, 'front') !== false) {
+            return 'Front';
+        }
+        return 'Rear';
+    }
+
+    /**
+     * Map old brake array to select value.
+     *
+     * @param array $brakes Brakes array.
+     * @return string Brake type select value.
+     */
+    private function map_brake_type_select(array $brakes): string {
+        foreach ($brakes as $brake) {
+            $lower = strtolower($brake);
+            if (strpos($lower, 'hydraulic') !== false) {
+                return 'Disc (Hydraulic)';
+            }
+            if (strpos($lower, 'mechanical') !== false || strpos($lower, 'cable') !== false) {
+                return 'Disc (Mechanical)';
+            }
+            if (strpos($lower, 'disc') !== false) {
+                return 'Disc (Mechanical)';
+            }
+            if (strpos($lower, 'drum') !== false) {
+                return 'Drum';
+            }
+        }
+        return 'None';
+    }
+
+    /**
+     * Map old tire type array to select value.
+     *
+     * @param array $tires Tires array.
+     * @return string Tire type select value (Pneumatic, Solid, Mixed).
+     */
+    private function map_tire_type_select(array $tires): string {
+        $tires = $this->normalize_array($tires);
+        if (empty($tires)) {
+            return 'Pneumatic';
+        }
+
+        $has_pneumatic = false;
+        $has_solid = false;
+
+        foreach ($tires as $tire) {
+            $lower = strtolower($tire);
+            if (strpos($lower, 'pneumatic') !== false || strpos($lower, 'air') !== false) {
+                $has_pneumatic = true;
+            }
+            if (strpos($lower, 'solid') !== false || strpos($lower, 'honeycomb') !== false) {
+                $has_solid = true;
+            }
+        }
+
+        if ($has_pneumatic && $has_solid) {
+            return 'Mixed';
+        }
+        if ($has_solid) {
+            return 'Solid';
+        }
+        return 'Pneumatic';
+    }
+
+    /**
+     * Map terrain to allowed values.
+     *
+     * @param string $terrain Old terrain value.
+     * @return string New terrain value (Street, Hybrid, Off-road).
+     */
+    private function map_terrain(string $terrain): string {
+        $lower = strtolower($terrain);
+        if (strpos($lower, 'off') !== false) {
+            return 'Off-road';
+        }
+        if (strpos($lower, 'hybrid') !== false || strpos($lower, 'all') !== false) {
+            return 'Hybrid';
+        }
+        return 'Street';
     }
 
     /**
@@ -470,33 +572,48 @@ class ProductMigrator {
      */
     private function map_suspension_type(array $suspension): array {
         $map = [
-            'Front fork'    => 'Front Fork',
-            'Front spring'  => 'Front Spring',
-            'Rear spring'   => 'Rear Spring',
-            'Rear swingarm' => 'Rear Swingarm',
-            'Dual spring'   => 'Dual Spring',
+            'Front fork'       => 'Front fork',
+            'Front spring'     => 'Front spring',
+            'Front hydraulic'  => 'Front hydraulic',
+            'Front rubber'     => 'Front rubber',
+            'Rear fork'        => 'Rear fork',
+            'Rear spring'      => 'Rear spring',
+            'Rear hydraulic'   => 'Rear hydraulic',
+            'Rear rubber'      => 'Rear rubber',
+            'Rear swingarm'    => 'Rear spring',
+            'None'             => 'None',
         ];
 
         $result = [];
         foreach ($suspension as $s) {
-            $result[] = $map[$s] ?? $s;
+            $mapped = $map[$s] ?? $s;
+            if (!in_array($mapped, $result, true)) {
+                $result[] = $mapped;
+            }
         }
         return $result;
     }
 
     /**
      * Map old feature values to new format.
+     * Excludes features that now live in dedicated fields.
      *
      * @param array $features Old feature values.
      * @return array New feature values.
      */
     private function map_escooter_features(array $features): array {
+        // Features that now live in dedicated fields (exclude from features list).
+        $excluded = [
+            'Foldable Handlebars',
+            'Adjustable suspension',
+            'Self-healing tires',
+        ];
+
         $map = [
             'App'                           => 'App',
             'Speed Modes'                   => 'Speed Modes',
             'Cruise Control'                => 'Cruise Control',
             'Folding Mechanism'             => 'Folding',
-            'Foldable Handlebars'           => 'Foldable Handlebars',
             'Push-To-Start'                 => 'Push-To-Start',
             'Zero-Start'                    => 'Zero-Start',
             'Turn Signals'                  => 'Turn Signals',
@@ -506,16 +623,18 @@ class ProductMigrator {
             'Over-the-air firmware updates' => 'OTA Updates',
             'Location tracking'             => 'Location Tracking',
             'Quick-Swap Battery'            => 'Quick-Swap Battery',
-            'Adjustable suspension'         => 'Adjustable Suspension',
             'Steering dampener'             => 'Steering Damper',
             'Electronic horn'               => 'Electronic Horn',
             'NFC Unlock'                    => 'NFC Unlock',
-            'Self-healing tires'            => 'Self-Healing Tires',
             'Seat Add-On'                   => 'Seat Option',
         ];
 
         $result = [];
         foreach ($features as $f) {
+            // Skip excluded features.
+            if (in_array($f, $excluded, true)) {
+                continue;
+            }
             if (isset($map[$f])) {
                 $result[] = $map[$f];
             } elseif (in_array($f, array_values($map), true)) {
