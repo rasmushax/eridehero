@@ -491,11 +491,20 @@ class ProductMigrator {
         $frame_geo = $ebike['frame_and_geometry'] ?? [];
         // Merge frame and frame_and_geometry data.
         $frame_data = array_merge($frame, $frame_geo);
+        // Determine step_through from frame_style or explicit field.
+        $frame_style_val = $this->map_frame_style($frame_data['frame_style'] ?? '');
+        $is_step_through = !empty($frame_data['step_through']) || $frame_style_val === 'step_through';
+        // Determine foldable from category, special features, or explicit field.
+        $is_foldable = !empty($frame_data['foldable'])
+            || in_array('Folding', $ebike['category'] ?? [])
+            || in_array('folding', $ebike['category'] ?? [])
+            || in_array('Folding', $ebike['special_features'] ?? [])
+            || in_array('folding', $ebike['special_features'] ?? []);
         $this->set_field('ebike_frame', [
             'material'          => $this->map_frame_material($frame_data['material'] ?? $frame_data['frame_material'] ?? ''),
-            'frame_style'       => $this->map_frame_style($frame_data['frame_style'] ?? ''),
-            'step_through'      => !empty($frame_data['step_through']),
-            'foldable'          => !empty($frame_data['foldable']),
+            'frame_style'       => $frame_style_val,
+            'step_through'      => $is_step_through,
+            'foldable'          => $is_foldable,
             'sizes_available'   => $frame_data['sizes_available'] ?? '',
             'wheelbase'         => $frame_data['wheelbase'] ?? '',
             'standover_height'  => $frame_data['standover_height'] ?? '',
@@ -554,11 +563,16 @@ class ProductMigrator {
 
         // Integrated Features (new group).
         $integrated = $ebike['integrated_features'] ?? [];
+        $special_features = $ebike['special_features'] ?? [];
+        // Check turn_signals from integrated_features OR special_features array.
+        $has_turn_signals = !empty($integrated['turn_signals'])
+            || in_array('Turn Signals', $special_features)
+            || in_array('turn_signals', $special_features);
         $this->set_field('ebike_integrated', [
             'integrated_lights' => !empty($integrated['integrated_lights']) || !empty($integrated['lights']),
             'front_light'       => !empty($integrated['front_light']),
             'rear_light'        => !empty($integrated['rear_light']),
-            'turn_signals'      => !empty($integrated['turn_signals']),
+            'turn_signals'      => $has_turn_signals,
             'fenders'           => !empty($integrated['fenders']),
             'rear_rack'         => !empty($integrated['rear_rack']),
             'front_rack'        => !empty($integrated['front_rack']),
@@ -874,6 +888,8 @@ class ProductMigrator {
         $map = [
             'UL 2849'    => 'ul_2849',
             'ul_2849'    => 'ul_2849',
+            'UL 2271'    => 'ul_2271',
+            'ul_2271'    => 'ul_2271',
             'EN 15194'   => 'en_15194',
             'en_15194'   => 'en_15194',
             'CE'         => 'ce',
