@@ -539,11 +539,8 @@ class ProductMigrator {
         $attachment_id = $this->sideload_image($image_url, $post_id);
 
         if ($attachment_id) {
-            // Set as featured image.
+            // Set as featured image (no need for separate ACF field).
             set_post_thumbnail($post_id, $attachment_id);
-
-            // Also set ACF product_image field.
-            $this->set_field('product_image', $attachment_id, $post_id);
 
             $this->log('success', "Image uploaded successfully (attachment ID: {$attachment_id})");
         }
