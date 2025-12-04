@@ -28,7 +28,7 @@ class Product {
      */
     public function register(): void {
         add_action('init', [$this, 'register_post_type']);
-        add_action('init', [$this, 'register_taxonomies']);
+        // Note: Taxonomies are now registered by the Taxonomies class.
     }
 
     /**
@@ -83,40 +83,6 @@ class Product {
         ];
 
         register_post_type(self::POST_TYPE, $args);
-    }
-
-    /**
-     * Register taxonomies for the Products post type.
-     *
-     * @return void
-     */
-    public function register_taxonomies(): void {
-        // Product brands taxonomy.
-        $brand_labels = [
-            'name'              => _x('Brands', 'taxonomy general name', 'erh-core'),
-            'singular_name'     => _x('Brand', 'taxonomy singular name', 'erh-core'),
-            'search_items'      => __('Search Brands', 'erh-core'),
-            'all_items'         => __('All Brands', 'erh-core'),
-            'parent_item'       => __('Parent Brand', 'erh-core'),
-            'parent_item_colon' => __('Parent Brand:', 'erh-core'),
-            'edit_item'         => __('Edit Brand', 'erh-core'),
-            'update_item'       => __('Update Brand', 'erh-core'),
-            'add_new_item'      => __('Add New Brand', 'erh-core'),
-            'new_item_name'     => __('New Brand Name', 'erh-core'),
-            'menu_name'         => __('Brands', 'erh-core'),
-        ];
-
-        $brand_args = [
-            'hierarchical'      => true,
-            'labels'            => $brand_labels,
-            'show_ui'           => true,
-            'show_admin_column' => true,
-            'query_var'         => true,
-            'rewrite'           => ['slug' => 'brand'],
-            'show_in_rest'      => true,
-        ];
-
-        register_taxonomy('product_brand', [self::POST_TYPE], $brand_args);
     }
 
     /**
