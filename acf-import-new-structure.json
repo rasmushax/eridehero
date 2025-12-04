@@ -609,6 +609,7 @@
                 },
                 "choices": {
                     "single": "Single",
+                    "2wd": "2WD",
                     "dual": "Dual",
                     "quad": "Quad (4WD)"
                 },
@@ -1031,6 +1032,22 @@
                         "type": "text",
                         "wrapper": { "width": "15" },
                         "placeholder": "e.g., IP54"
+                    },
+                    {
+                        "key": "field_erh_esc_weather_resistance",
+                        "label": "Weather Resistance",
+                        "name": "weather_resistance",
+                        "type": "select",
+                        "wrapper": { "width": "15" },
+                        "choices": {
+                            "none": "None",
+                            "light_rain": "Light Rain",
+                            "moderate": "Moderate",
+                            "heavy_rain": "Heavy Rain",
+                            "waterproof": "Waterproof"
+                        },
+                        "return_format": "value",
+                        "allow_null": 1
                     },
                     {
                         "key": "field_erh_esc_throttle_type",

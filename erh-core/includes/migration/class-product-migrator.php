@@ -237,7 +237,9 @@ class ProductMigrator {
         $this->set_field('manufacturer_top_speed', $acf['manufacturer_top_speed'] ?? '', $post_id);
         $this->set_field('manufacturer_range', $acf['manufacturer_range'] ?? '', $post_id);
         $this->set_field('weight', $acf['weight'] ?? '', $post_id);
-        $this->set_field('max_weight_capacity', $acf['max_weight_capacity'] ?? '', $post_id);
+        // max_weight_capacity might also be stored as max_load in some products.
+        $max_capacity = $acf['max_weight_capacity'] ?? $acf['max_load'] ?? '';
+        $this->set_field('max_weight_capacity', $max_capacity, $post_id);
         $this->set_field('max_incline', $acf['max_incline'] ?? '', $post_id);
 
         // Performance tests.
@@ -358,12 +360,13 @@ class ProductMigrator {
 
         // Other specs.
         $this->set_field('escooter_other', [
-            'ip_rating'     => $acf['ip_rating'] ?? '',
-            'throttle_type' => $this->map_throttle_type($acf['throttle_type'] ?? ''),
-            'fold_location' => $this->map_fold_location($acf['fold_location'] ?? ''),
-            'terrain'       => $this->map_terrain($acf['terrain'] ?? ''),
-            'stem_type'     => $acf['stem_type'] ?? '',
-            'display_type'  => $acf['display_type'] ?? '',
+            'ip_rating'          => $acf['ip_rating'] ?? '',
+            'weather_resistance' => $acf['weather_resistance'] ?? '',
+            'throttle_type'      => $this->map_throttle_type($acf['throttle_type'] ?? ''),
+            'fold_location'      => $this->map_fold_location($acf['fold_location'] ?? ''),
+            'terrain'            => $this->map_terrain($acf['terrain'] ?? ''),
+            'stem_type'          => $acf['stem_type'] ?? '',
+            'display_type'       => $acf['display_type'] ?? '',
         ], $post_id);
 
         // Features.
@@ -381,8 +384,12 @@ class ProductMigrator {
     private function migrate_ebike_fields(int $post_id, array $acf): void {
         $ebike = $acf['e-bikes'] ?? [];
 
-        // Category.
-        $this->set_field('ebike_category', $ebike['category'] ?? [], $post_id);
+        // Category (map old labels to programmatic values).
+        $old_categories = $ebike['category'] ?? [];
+        if (!empty($old_categories)) {
+            $categories = is_array($old_categories) ? $old_categories : [$old_categories];
+            $this->set_field('ebike_category', $this->map_ebike_category($categories), $post_id);
+        }
 
         // Motor details (e-bike specific).
         $motor = $ebike['motor'] ?? [];
@@ -442,10 +449,12 @@ class ProductMigrator {
             $this->set_field('max_weight_capacity', $weight_capacity['weight_limit'], $post_id);
         }
 
-        // Speed & Class.
+        // Speed & Class (map old class labels to programmatic values).
         $speed_class = $ebike['speed_and_class'] ?? [];
+        $old_classes = $speed_class['class'] ?? [];
+        $mapped_classes = is_array($old_classes) ? $this->map_ebike_class($old_classes) : [];
         $this->set_field('ebike_class', [
-            'class'              => $speed_class['class'] ?? [],
+            'class'              => $mapped_classes,
             'top_assist_speed'   => $speed_class['top_assist_speed'] ?? '',
             'throttle_top_speed' => $speed_class['throttle_top_speed'] ?? '',
             'has_throttle'       => !empty($speed_class['throttle']),
@@ -996,6 +1005,80 @@ class ProductMigrator {
     }
 
     /**
+     * Map old e-bike class values to new programmatic values.
+     *
+     * @param array $old_classes Old class values.
+     * @return array New class values.
+     */
+    private function map_ebike_class(array $old_classes): array {
+        $map = [
+            // Handle various formats the old data might have.
+            'Class 1'                      => 'class_1',
+            'Class 1 (Pedal assist, 20 mph)' => 'class_1',
+            'class_1'                      => 'class_1',
+            'Class 2'                      => 'class_2',
+            'Class 2 (Throttle, 20 mph)'   => 'class_2',
+            'class_2'                      => 'class_2',
+            'Class 3'                      => 'class_3',
+            'Class 3 (Pedal assist, 28 mph)' => 'class_3',
+            'class_3'                      => 'class_3',
+            'EU Pedelec'                   => 'eu_pedelec',
+            'EU Pedelec (25 km/h)'         => 'eu_pedelec',
+            'eu_pedelec'                   => 'eu_pedelec',
+            'EU S-Pedelec'                 => 'eu_s_pedelec',
+            'EU S-Pedelec (45 km/h)'       => 'eu_s_pedelec',
+            'eu_s_pedelec'                 => 'eu_s_pedelec',
+            'UK EAPC'                      => 'uk_eapc',
+            'uk_eapc'                      => 'uk_eapc',
+        ];
+
+        $new_classes = [];
+        foreach ($old_classes as $class) {
+            if (isset($map[$class])) {
+                $new_classes[] = $map[$class];
+            } elseif (in_array($class, ['class_1', 'class_2', 'class_3', 'eu_pedelec', 'eu_s_pedelec', 'uk_eapc'])) {
+                // Already in correct format.
+                $new_classes[] = $class;
+            }
+        }
+
+        return array_unique($new_classes);
+    }
+
+    /**
+     * Map old e-bike category values to new programmatic values.
+     *
+     * @param array $old_categories Old category values.
+     * @return array New category values.
+     */
+    private function map_ebike_category(array $old_categories): array {
+        $map = [
+            'Commuter'         => 'commuter',
+            'Mountain'         => 'mountain',
+            'Road'             => 'road',
+            'Cargo'            => 'cargo',
+            'Folding'          => 'folding',
+            'Fat Tire'         => 'fat_tire',
+            'Gravel'           => 'gravel',
+            'Hybrid'           => 'hybrid',
+            'Cruiser'          => 'cruiser',
+            'High Performance' => 'high_performance',
+        ];
+
+        $new_categories = [];
+        foreach ($old_categories as $cat) {
+            $key = is_array($cat) ? ($cat['value'] ?? $cat['label'] ?? '') : $cat;
+            if (isset($map[$key])) {
+                $new_categories[] = $map[$key];
+            } elseif (in_array(strtolower($key), array_values($map))) {
+                $new_categories[] = strtolower($key);
+            }
+        }
+
+        return array_unique($new_categories);
+    }
+
+    /**
      * Set an ACF field value.
      *
      * @param string $field_name The field name.
@@ -1055,6 +1138,98 @@ class ProductMigrator {
 
     /**
      * Run full migration from remote source.
+     *
+     * @param int $batch_size Products per batch.
+     * @return array Migration summary.
+     */
+    public function migrate_single_product(string $identifier): array {
+        $result = [
+            'success'      => false,
+            'product_name' => '',
+            'reason'       => '',
+        ];
+
+        // Fetch the product by ID or slug.
+        $product = $this->fetch_single_product($identifier);
+
+        if (!$product) {
+            $result['reason'] = "Could not find product: {$identifier}";
+            return $result;
+        }
+
+        $result['product_name'] = $product['title']['rendered'] ?? $product['slug'] ?? $identifier;
+
+        // Migrate the product.
+        $migrated_id = $this->migrate_product($product);
+
+        if ($migrated_id) {
+            $result['success'] = true;
+            $this->log('success', "Migrated product ID {$migrated_id}: " . $result['product_name']);
+        } elseif ($this->dry_run) {
+            $result['success'] = true;
+            $result['reason'] = 'Dry run - no changes made';
+        } else {
+            $result['reason'] = 'Migration failed - check debug.log for details';
+        }
+
+        return $result;
+    }
+
+    /**
+     * Fetch a single product from remote site by ID or slug.
+     *
+     * @param string $identifier Product ID (numeric) or slug.
+     * @return array|null Product data or null if not found.
+     */
+    private function fetch_single_product(string $identifier): ?array {
+        // Determine if identifier is ID or slug.
+        if (is_numeric($identifier)) {
+            $url = sprintf(
+                '%s/wp-json/wp/v2/products/%d?_fields=id,slug,title,status,acf,featured_media',
+                $this->source_url,
+                (int) $identifier
+            );
+        } else {
+            $url = sprintf(
+                '%s/wp-json/wp/v2/products?slug=%s&_fields=id,slug,title,status,acf,featured_media',
+                $this->source_url,
+                urlencode($identifier)
+            );
+        }
+
+        $this->log('info', "Fetching product from: {$url}");
+
+        $response = wp_remote_get($url, [
+            'timeout' => 30,
+            'headers' => ['Accept' => 'application/json'],
+        ]);
+
+        if (is_wp_error($response)) {
+            $this->log('error', "HTTP error: " . $response->get_error_message());
+            return null;
+        }
+
+        $code = wp_remote_retrieve_response_code($response);
+        if ($code !== 200) {
+            $this->log('error', "HTTP {$code} response");
+            return null;
+        }
+
+        $data = json_decode(wp_remote_retrieve_body($response), true);
+
+        // If fetching by slug, result is an array.
+        if (!is_numeric($identifier)) {
+            if (empty($data) || !is_array($data)) {
+                return null;
+            }
+            return $data[0] ?? null;
+        }
+
+        return $data;
+    }
+
+    /**
+     * Run full remote migration.
      *
      * @param int $batch_size Products per batch.
      * @return array Migration summary.

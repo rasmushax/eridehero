@@ -21,6 +21,7 @@ class MigrationAdmin {
         add_action('admin_menu', [$this, 'add_menu_page']);
         add_action('admin_post_erh_run_migration', [$this, 'handle_migration']);
         add_action('admin_post_erh_test_migration', [$this, 'handle_test_connection']);
+        add_action('admin_post_erh_migrate_single', [$this, 'handle_single_migration']);
     }
 
     /**
@@ -54,6 +55,14 @@ class MigrationAdmin {
             $skipped = (int) ($_GET['skipped'] ?? 0);
             $message = "Migration complete! Migrated: {$migrated}, Skipped: {$skipped}";
             $message_type = 'success';
+        } elseif (isset($_GET['single_migrated'])) {
+            $product_name = sanitize_text_field($_GET['product_name'] ?? 'Product');
+            $message = "Successfully migrated: {$product_name}";
+            $message_type = 'success';
+        } elseif (isset($_GET['single_skipped'])) {
+            $reason = sanitize_text_field($_GET['reason'] ?? 'Unknown reason');
+            $message = "Product skipped: {$reason}";
+            $message_type = 'warning';
         } elseif (isset($_GET['error'])) {
             $message = sanitize_text_field($_GET['error']);
             $message_type = 'error';
@@ -138,6 +147,49 @@ class MigrationAdmin {
                         </button>
                         <button type="submit" class="button button-primary">
                             Run Migration
+                        </button>
+                    </p>
+                </form>
+            </div>
+
+            <div class="card" style="max-width: 600px; padding: 20px; margin-top: 20px;">
+                <h2>Test Single Product</h2>
+                <p>Migrate a single product by ID or slug to verify the migration is working correctly.</p>
+
+                <form method="post" action="<?php echo esc_url(admin_url('admin-post.php')); ?>">
+                    <?php wp_nonce_field('erh_migration', 'erh_migration_nonce'); ?>
+                    <input type="hidden" name="action" value="erh_migrate_single">
+                    <input type="hidden" name="source_url" value="https://eridehero.com">
+
+                    <table class="form-table">
+                        <tr>
+                            <th scope="row">
+                                <label for="product_identifier">Product ID or Slug</label>
+                            </th>
+                            <td>
+                                <input type="text"
+                                       name="product_identifier"
+                                       id="product_identifier"
+                                       class="regular-text"
+                                       placeholder="e.g., 12345 or apollo-city-pro"
+                                       required>
+                                <p class="description">Enter the remote product ID (number) or slug.</p>
+                            </td>
+                        </tr>
+                        <tr>
+                            <th scope="row">Options</th>
+                            <td>
+                                <label>
+                                    <input type="checkbox" name="dry_run" value="1">
+                                    Dry Run (preview only, don't import)
+                                </label>
+                            </td>
+                        </tr>
+                    </table>
+
+                    <p class="submit">
+                        <button type="submit" class="button button-primary">
+                            Migrate Single Product
                         </button>
                     </p>
                 </form>
@@ -271,6 +323,60 @@ class MigrationAdmin {
                 'reason' => 'Could not fetch products',
             ], admin_url('options-general.php?page=erh-migration')));
         }
+        exit;
+    }
+
+    /**
+     * Handle single product migration.
+     *
+     * @return void
+     */
+    public function handle_single_migration(): void {
+        // Verify nonce.
+        if (!isset($_POST['erh_migration_nonce']) ||
+            !wp_verify_nonce($_POST['erh_migration_nonce'], 'erh_migration')) {
+            wp_die('Security check failed');
+        }
+
+        // Check capabilities.
+        if (!current_user_can('manage_options')) {
+            wp_die('Unauthorized');
+        }
+
+        $source_url = esc_url_raw($_POST['source_url'] ?? '');
+        $identifier = sanitize_text_field($_POST['product_identifier'] ?? '');
+        $dry_run = !empty($_POST['dry_run']);
+
+        if (empty($source_url)) {
+            wp_redirect(add_query_arg('error', 'Source URL is required', admin_url('options-general.php?page=erh-migration')));
+            exit;
+        }
+
+        if (empty($identifier)) {
+            wp_redirect(add_query_arg('error', 'Product ID or slug is required', admin_url('options-general.php?page=erh-migration')));
+            exit;
+        }
+
+        // Run single product migration.
+        $migrator = new ProductMigrator($source_url);
+        $migrator->set_dry_run($dry_run);
+
+        $result = $migrator->migrate_single_product($identifier);
+
+        // Redirect with results.
+        if ($result['success']) {
+            $redirect_url = add_query_arg([
+                'single_migrated' => '1',
+                'product_name'    => $result['product_name'] ?? 'Product',
+            ], admin_url('options-general.php?page=erh-migration'));
+        } else {
+            $redirect_url = add_query_arg([
+                'single_skipped' => '1',
+                'reason'         => $result['reason'] ?? 'Unknown error',
+            ], admin_url('options-general.php?page=erh-migration'));
+        }
+
+        wp_redirect($redirect_url);
         exit;
     }
 }
