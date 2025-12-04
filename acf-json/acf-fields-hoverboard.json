@@ -1,0 +1,638 @@
+[
+  {
+    "key": "group_erh_hoverboards",
+    "title": "Hoverboard Specifications",
+    "fields": [
+      {
+        "key": "field_erh_hoverboards",
+        "label": "Hoverboards",
+        "name": "hoverboards",
+        "type": "group",
+        "instructions": "",
+        "required": 0,
+        "wrapper": {
+          "width": "",
+          "class": "",
+          "id": ""
+        },
+        "layout": "block",
+        "sub_fields": [
+          {
+            "key": "field_erh_hoverboard_motor",
+            "label": "Motor",
+            "name": "motor",
+            "type": "group",
+            "instructions": "",
+            "required": 0,
+            "wrapper": {
+              "width": "",
+              "class": "",
+              "id": ""
+            },
+            "layout": "block",
+            "sub_fields": [
+              {
+                "key": "field_erh_hoverboard_power_nominal",
+                "label": "Nominal Power",
+                "name": "power_nominal",
+                "type": "number",
+                "instructions": "Total watts (W)",
+                "required": 0,
+                "wrapper": {
+                  "width": "50",
+                  "class": "",
+                  "id": ""
+                },
+                "min": "",
+                "max": "",
+                "step": ""
+              },
+              {
+                "key": "field_erh_hoverboard_power_peak",
+                "label": "Peak Power",
+                "name": "power_peak",
+                "type": "number",
+                "instructions": "Total watts (W)",
+                "required": 0,
+                "wrapper": {
+                  "width": "50",
+                  "class": "",
+                  "id": ""
+                },
+                "min": "",
+                "max": "",
+                "step": ""
+              }
+            ]
+          },
+          {
+            "key": "field_erh_hoverboard_battery",
+            "label": "Battery",
+            "name": "battery",
+            "type": "group",
+            "instructions": "",
+            "required": 0,
+            "wrapper": {
+              "width": "",
+              "class": "",
+              "id": ""
+            },
+            "layout": "block",
+            "sub_fields": [
+              {
+                "key": "field_erh_hoverboard_capacity",
+                "label": "Capacity",
+                "name": "capacity",
+                "type": "number",
+                "instructions": "Watt-hours (Wh)",
+                "required": 0,
+                "wrapper": {
+                  "width": "20",
+                  "class": "",
+                  "id": ""
+                },
+                "min": "",
+                "max": "",
+                "step": ""
+              },
+              {
+                "key": "field_erh_hoverboard_voltage",
+                "label": "Voltage",
+                "name": "voltage",
+                "type": "number",
+                "instructions": "Volts (V)",
+                "required": 0,
+                "wrapper": {
+                  "width": "20",
+                  "class": "",
+                  "id": ""
+                },
+                "min": "",
+                "max": "",
+                "step": ""
+              },
+              {
+                "key": "field_erh_hoverboard_amphours",
+                "label": "Amp Hours",
+                "name": "amphours",
+                "type": "number",
+                "instructions": "Ah",
+                "required": 0,
+                "wrapper": {
+                  "width": "20",
+                  "class": "",
+                  "id": ""
+                },
+                "min": "",
+                "max": "",
+                "step": ""
+              },
+              {
+                "key": "field_erh_hoverboard_battery_type",
+                "label": "Battery Type",
+                "name": "battery_type",
+                "type": "select",
+                "instructions": "",
+                "required": 0,
+                "wrapper": {
+                  "width": "20",
+                  "class": "",
+                  "id": ""
+                },
+                "choices": {
+                  "Lithium-ion": "Lithium-ion",
+                  "Lead-acid": "Lead-acid"
+                },
+                "default_value": "Lithium-ion",
+                "return_format": "value",
+                "multiple": 0,
+                "allow_null": 0,
+                "ui": 0,
+                "ajax": 0
+              },
+              {
+                "key": "field_erh_hoverboard_charging_time",
+                "label": "Charging Time",
+                "name": "charging_time",
+                "type": "number",
+                "instructions": "Hours",
+                "required": 0,
+                "wrapper": {
+                  "width": "20",
+                  "class": "",
+                  "id": ""
+                },
+                "min": "",
+                "max": "",
+                "step": ""
+              }
+            ]
+          },
+          {
+            "key": "field_erh_hoverboard_wheels",
+            "label": "Wheels",
+            "name": "wheels",
+            "type": "group",
+            "instructions": "",
+            "required": 0,
+            "wrapper": {
+              "width": "",
+              "class": "",
+              "id": ""
+            },
+            "layout": "block",
+            "sub_fields": [
+              {
+                "key": "field_erh_hoverboard_wheel_size",
+                "label": "Wheel Size",
+                "name": "wheel_size",
+                "type": "number",
+                "instructions": "Inches (6.5, 8, 8.5, 10)",
+                "required": 0,
+                "wrapper": {
+                  "width": "25",
+                  "class": "",
+                  "id": ""
+                },
+                "min": "",
+                "max": "",
+                "step": ""
+              },
+              {
+                "key": "field_erh_hoverboard_wheel_width",
+                "label": "Wheel Width",
+                "name": "wheel_width",
+                "type": "number",
+                "instructions": "Inches",
+                "required": 0,
+                "wrapper": {
+                  "width": "25",
+                  "class": "",
+                  "id": ""
+                },
+                "min": "",
+                "max": "",
+                "step": ""
+              },
+              {
+                "key": "field_erh_hoverboard_wheel_type",
+                "label": "Wheel Type",
+                "name": "wheel_type",
+                "type": "select",
+                "instructions": "",
+                "required": 0,
+                "wrapper": {
+                  "width": "25",
+                  "class": "",
+                  "id": ""
+                },
+                "choices": {
+                  "Solid": "Solid",
+                  "Pneumatic": "Pneumatic"
+                },
+                "default_value": "Solid",
+                "return_format": "value",
+                "multiple": 0,
+                "allow_null": 0,
+                "ui": 0,
+                "ajax": 0
+              },
+              {
+                "key": "field_erh_hoverboard_pneumatic_type",
+                "label": "Pneumatic Type",
+                "name": "pneumatic_type",
+                "type": "select",
+                "instructions": "",
+                "required": 0,
+                "wrapper": {
+                  "width": "25",
+                  "class": "",
+                  "id": ""
+                },
+                "choices": {
+                  "Tubed": "Tubed",
+                  "Tubeless": "Tubeless"
+                },
+                "default_value": "Tubed",
+                "return_format": "value",
+                "multiple": 0,
+                "allow_null": 0,
+                "ui": 0,
+                "ajax": 0,
+                "conditional_logic": [
+                  [
+                    {
+                      "field": "field_erh_hoverboard_wheel_type",
+                      "operator": "==",
+                      "value": "Pneumatic"
+                    }
+                  ]
+                ]
+              }
+            ]
+          },
+          {
+            "key": "field_erh_hoverboard_dimensions",
+            "label": "Dimensions",
+            "name": "dimensions",
+            "type": "group",
+            "instructions": "",
+            "required": 0,
+            "wrapper": {
+              "width": "",
+              "class": "",
+              "id": ""
+            },
+            "layout": "block",
+            "sub_fields": [
+              {
+                "key": "field_erh_hoverboard_weight",
+                "label": "Weight",
+                "name": "weight",
+                "type": "number",
+                "instructions": "Pounds",
+                "required": 0,
+                "wrapper": {
+                  "width": "20",
+                  "class": "",
+                  "id": ""
+                },
+                "min": "",
+                "max": "",
+                "step": ""
+              },
+              {
+                "key": "field_erh_hoverboard_max_load",
+                "label": "Max Load",
+                "name": "max_load",
+                "type": "number",
+                "instructions": "Pounds",
+                "required": 0,
+                "wrapper": {
+                  "width": "20",
+                  "class": "",
+                  "id": ""
+                },
+                "min": "",
+                "max": "",
+                "step": ""
+              },
+              {
+                "key": "field_erh_hoverboard_length",
+                "label": "Length",
+                "name": "length",
+                "type": "number",
+                "instructions": "Inches",
+                "required": 0,
+                "wrapper": {
+                  "width": "20",
+                  "class": "",
+                  "id": ""
+                },
+                "min": "",
+                "max": "",
+                "step": ""
+              },
+              {
+                "key": "field_erh_hoverboard_width",
+                "label": "Width",
+                "name": "width",
+                "type": "number",
+                "instructions": "Inches",
+                "required": 0,
+                "wrapper": {
+                  "width": "20",
+                  "class": "",
+                  "id": ""
+                },
+                "min": "",
+                "max": "",
+                "step": ""
+              },
+              {
+                "key": "field_erh_hoverboard_height",
+                "label": "Height",
+                "name": "height",
+                "type": "number",
+                "instructions": "Inches",
+                "required": 0,
+                "wrapper": {
+                  "width": "20",
+                  "class": "",
+                  "id": ""
+                },
+                "min": "",
+                "max": "",
+                "step": ""
+              }
+            ]
+          },
+          {
+            "key": "field_erh_hoverboard_lighting",
+            "label": "Lighting",
+            "name": "lighting",
+            "type": "group",
+            "instructions": "",
+            "required": 0,
+            "wrapper": {
+              "width": "",
+              "class": "",
+              "id": ""
+            },
+            "layout": "block",
+            "sub_fields": [
+              {
+                "key": "field_erh_hoverboard_lights",
+                "label": "Lights",
+                "name": "lights",
+                "type": "checkbox",
+                "instructions": "",
+                "required": 0,
+                "wrapper": {
+                  "width": "100",
+                  "class": "",
+                  "id": ""
+                },
+                "choices": {
+                  "Front": "Front",
+                  "Rear": "Rear",
+                  "Side": "Side",
+                  "Under": "Under",
+                  "Wheel": "Wheel",
+                  "None": "None",
+                  "Unknown": "Unknown"
+                },
+                "default_value": [],
+                "return_format": "value",
+                "layout": "horizontal"
+              }
+            ]
+          },
+          {
+            "key": "field_erh_hoverboard_connectivity",
+            "label": "Connectivity",
+            "name": "connectivity",
+            "type": "group",
+            "instructions": "",
+            "required": 0,
+            "wrapper": {
+              "width": "",
+              "class": "",
+              "id": ""
+            },
+            "layout": "block",
+            "sub_fields": [
+              {
+                "key": "field_erh_hoverboard_bluetooth_speaker",
+                "label": "Bluetooth Speaker",
+                "name": "bluetooth_speaker",
+                "type": "true_false",
+                "instructions": "",
+                "required": 0,
+                "wrapper": {
+                  "width": "33",
+                  "class": "",
+                  "id": ""
+                },
+                "default_value": 0,
+                "ui": 1
+              },
+              {
+                "key": "field_erh_hoverboard_app_enabled",
+                "label": "App Enabled",
+                "name": "app_enabled",
+                "type": "true_false",
+                "instructions": "",
+                "required": 0,
+                "wrapper": {
+                  "width": "33",
+                  "class": "",
+                  "id": ""
+                },
+                "default_value": 0,
+                "ui": 1
+              },
+              {
+                "key": "field_erh_hoverboard_speed_modes",
+                "label": "Speed Modes",
+                "name": "speed_modes",
+                "type": "true_false",
+                "instructions": "",
+                "required": 0,
+                "wrapper": {
+                  "width": "33",
+                  "class": "",
+                  "id": ""
+                },
+                "default_value": 0,
+                "ui": 1
+              }
+            ]
+          },
+          {
+            "key": "field_erh_hoverboard_safety",
+            "label": "Safety",
+            "name": "safety",
+            "type": "group",
+            "instructions": "",
+            "required": 0,
+            "wrapper": {
+              "width": "",
+              "class": "",
+              "id": ""
+            },
+            "layout": "block",
+            "sub_fields": [
+              {
+                "key": "field_erh_hoverboard_ul_2272",
+                "label": "UL 2272 Certified",
+                "name": "ul_2272",
+                "type": "true_false",
+                "instructions": "",
+                "required": 0,
+                "wrapper": {
+                  "width": "50",
+                  "class": "",
+                  "id": ""
+                },
+                "default_value": 0,
+                "ui": 1
+              },
+              {
+                "key": "field_erh_hoverboard_ip_rating",
+                "label": "IP Rating",
+                "name": "ip_rating",
+                "type": "select",
+                "instructions": "",
+                "required": 0,
+                "wrapper": {
+                  "width": "50",
+                  "class": "",
+                  "id": ""
+                },
+                "choices": {
+                  "None": "None",
+                  "IP34": "IP34",
+                  "IP45": "IP45",
+                  "IP54": "IP54",
+                  "IP55": "IP55",
+                  "IP65": "IP65",
+                  "IP66": "IP66",
+                  "IP67": "IP67",
+                  "IP77": "IP77",
+                  "IPX4": "IPX4",
+                  "IPX5": "IPX5",
+                  "IPX6": "IPX6",
+                  "IPX7": "IPX7",
+                  "Unknown": "Unknown"
+                },
+                "default_value": "Unknown",
+                "return_format": "value",
+                "multiple": 0,
+                "allow_null": 0,
+                "ui": 0,
+                "ajax": 0
+              }
+            ]
+          },
+          {
+            "key": "field_erh_hoverboard_other",
+            "label": "Other",
+            "name": "other",
+            "type": "group",
+            "instructions": "",
+            "required": 0,
+            "wrapper": {
+              "width": "",
+              "class": "",
+              "id": ""
+            },
+            "layout": "block",
+            "sub_fields": [
+              {
+                "key": "field_erh_hoverboard_terrain",
+                "label": "Terrain",
+                "name": "terrain",
+                "type": "select",
+                "instructions": "",
+                "required": 0,
+                "wrapper": {
+                  "width": "50",
+                  "class": "",
+                  "id": ""
+                },
+                "choices": {
+                  "Street": "Street",
+                  "Off-road": "Off-road"
+                },
+                "default_value": "Street",
+                "return_format": "value",
+                "multiple": 0,
+                "allow_null": 0,
+                "ui": 0,
+                "ajax": 0
+              },
+              {
+                "key": "field_erh_hoverboard_min_age",
+                "label": "Minimum Age",
+                "name": "min_age",
+                "type": "number",
+                "instructions": "Years",
+                "required": 0,
+                "wrapper": {
+                  "width": "50",
+                  "class": "",
+                  "id": ""
+                },
+                "min": "",
+                "max": "",
+                "step": ""
+              }
+            ]
+          },
+          {
+            "key": "field_erh_hoverboard_features",
+            "label": "Features",
+            "name": "features",
+            "type": "checkbox",
+            "instructions": "",
+            "required": 0,
+            "wrapper": {
+              "width": "100",
+              "class": "",
+              "id": ""
+            },
+            "choices": {
+              "Carrying Handle": "Carrying Handle",
+              "Fenders": "Fenders",
+              "Non-Slip Deck": "Non-Slip Deck",
+              "GPS Tracking": "GPS Tracking",
+              "Learning Mode": "Learning Mode",
+              "LED Lights": "LED Lights"
+            },
+            "default_value": [],
+            "return_format": "value",
+            "layout": "horizontal"
+          }
+        ]
+      }
+    ],
+    "location": [
+      [
+        {
+          "param": "post_taxonomy",
+          "operator": "==",
+          "value": "product_type:hoverboard"
+        }
+      ]
+    ],
+    "menu_order": 4,
+    "position": "normal",
+    "style": "default",
+    "label_placement": "top",
+    "instruction_placement": "label",
+    "hide_on_screen": "",
+    "active": true,
+    "show_in_rest": true
+  }
+]

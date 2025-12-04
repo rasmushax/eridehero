@@ -240,8 +240,10 @@ class ProductMigrator {
             case 'electric-skateboard':
                 $this->migrate_eskateboard_fields($post_id, $acf);
                 break;
-            case 'electric-unicycle':
             case 'hoverboard':
+                $this->migrate_hoverboard_fields($post_id, $acf);
+                break;
+            case 'electric-unicycle':
                 $this->log('info', "Product type '{$product_type_slug}' migration not yet implemented");
                 break;
         }
@@ -892,6 +894,187 @@ class ProductMigrator {
             if (isset($map[$f]) && !in_array($map[$f], $features, true)) {
                 $features[] = $map[$f];
             }
+        }
+
+        return $features;
+    }
+
+    /**
+     * Migrate hoverboard specific fields.
+     *
+     * @param int   $post_id The post ID.
+     * @param array $acf     Source ACF data.
+     * @return void
+     */
+    private function migrate_hoverboard_fields(int $post_id, array $acf): void {
+        $hoverboard = [];
+
+        // Motor group.
+        $hoverboard['motor'] = [
+            'power_nominal' => $acf['nominal_motor_wattage'] ?? '',
+            'power_peak'    => $acf['total_peak_wattage'] ?? '',
+        ];
+
+        // Battery group.
+        $hoverboard['battery'] = [
+            'capacity'      => $acf['battery_capacity'] ?? '',
+            'voltage'       => $acf['battery_voltage'] ?? $acf['voltage'] ?? '',
+            'amphours'      => $acf['battery_amphours'] ?? '',
+            'battery_type'  => $acf['battery_type'] ?? 'Lithium-ion',
+            'charging_time' => $acf['charging_time'] ?? '',
+        ];
+
+        // Wheels group.
+        $hoverboard['wheels'] = [
+            'wheel_size'     => $acf['tire_size'] ?? '',
+            'wheel_width'    => $acf['tire_width'] ?? '',
+            'wheel_type'     => $this->map_hoverboard_wheel_type($acf['tires'] ?? []),
+            'pneumatic_type' => 'Tubed', // Default for pneumatic
+        ];
+
+        // Dimensions group.
+        $hoverboard['dimensions'] = [
+            'weight'   => $acf['weight'] ?? '',
+            'max_load' => $acf['max_load'] ?? '',
+            'length'   => $acf['unfolded_depth'] ?? '',
+            'width'    => $acf['unfolded_width'] ?? '',
+            'height'   => $acf['unfolded_height'] ?? '',
+        ];
+
+        // Lighting group.
+        $hoverboard['lighting'] = [
+            'lights' => $this->map_hoverboard_lights($acf),
+        ];
+
+        // Connectivity group.
+        $hoverboard['connectivity'] = [
+            'bluetooth_speaker' => !empty($acf['bluetooth_speakers']),
+            'app_enabled'       => !empty($acf['bluetooth_app']),
+            'speed_modes'       => !empty($acf['riding_modes']),
+        ];
+
+        // Safety group.
+        $hoverboard['safety'] = [
+            'ul_2272'   => !empty($acf['ul_2272']),
+            'ip_rating' => $this->map_hoverboard_ip_rating($acf['weather_resistance'] ?? []),
+        ];
+
+        // Other group.
+        $hoverboard['other'] = [
+            'terrain' => $this->map_hoverboard_terrain($acf['terrain'] ?? ''),
+            'min_age' => '', // Not in source data
+        ];
+
+        // Features.
+        $hoverboard['features'] = $this->map_hoverboard_features($acf);
+
+        $this->set_field('hoverboards', $hoverboard, $post_id);
+        $this->log('info', "Migrated hoverboards group with " . count($hoverboard) . " sub-groups");
+    }
+
+    /**
+     * Map hoverboard wheel type.
+     *
+     * @param array $tires Tires array.
+     * @return string
+     */
+    private function map_hoverboard_wheel_type(array $tires): string {
+        $tires = $this->normalize_array($tires);
+        foreach ($tires as $tire) {
+            $lower = strtolower($tire);
+            if (strpos($lower, 'pneumatic') !== false || strpos($lower, 'inflat') !== false || strpos($lower, 'air') !== false) {
+                return 'Pneumatic';
+            }
+        }
+        return 'Solid'; // Default
+    }
+
+    /**
+     * Map hoverboard lights from source fields.
+     *
+     * @param array $acf Source ACF data.
+     * @return array
+     */
+    private function map_hoverboard_lights(array $acf): array {
+        $lights_source = $this->normalize_array($acf['lights'] ?? []);
+        $side_source = $this->normalize_array($acf['Side_visibility'] ?? []);
+
+        $lights = [];
+
+        foreach ($lights_source as $light) {
+            $lower = strtolower($light);
+            if ($lower === 'both') {
+                $lights[] = 'Front';
+                $lights[] = 'Rear';
+            } elseif ($lower === 'front') {
+                $lights[] = 'Front';
+            } elseif ($lower === 'rear') {
+                $lights[] = 'Rear';
+            } elseif ($lower === 'none') {
+                $lights[] = 'None';
+            }
+        }
+
+        // Add side lights if present
+        foreach ($side_source as $side) {
+            $lower = strtolower($side);
+            if ($lower !== 'none' && !empty($lower)) {
+                $lights[] = 'Side';
+                break;
+            }
+        }
+
+        return array_unique($lights);
+    }
+
+    /**
+     * Map hoverboard IP rating.
+     *
+     * @param array $resistance Weather resistance array.
+     * @return string
+     */
+    private function map_hoverboard_ip_rating(array $resistance): string {
+        $resistance = $this->normalize_array($resistance);
+        foreach ($resistance as $r) {
+            $r = strtoupper(trim($r));
+            if (preg_match('/^IP[X]?\d{1,2}$/i', $r)) {
+                return $r;
+            }
+        }
+        return 'Unknown';
+    }
+
+    /**
+     * Map hoverboard terrain.
+     *
+     * @param string $terrain Terrain value.
+     * @return string
+     */
+    private function map_hoverboard_terrain(string $terrain): string {
+        $lower = strtolower($terrain);
+        if (strpos($lower, 'off') !== false || strpos($lower, 'all') !== false) {
+            return 'Off-road';
+        }
+        return 'Street';
+    }
+
+    /**
+     * Map hoverboard features.
+     *
+     * @param array $acf ACF data.
+     * @return array
+     */
+    private function map_hoverboard_features(array $acf): array {
+        $features = [];
+
+        if (!empty($acf['carrying_handles'])) {
+            $features[] = 'Carrying Handle';
+        }
+
+        // Check if has lights (add LED Lights feature)
+        $lights = $this->normalize_array($acf['lights'] ?? []);
+        if (!empty($lights) && !in_array('None', $lights, true)) {
+            $features[] = 'LED Lights';
         }
 
         return $features;
