@@ -115,7 +115,8 @@
         "style": "default",
         "label_placement": "top",
         "instruction_placement": "label",
-        "active": true
+        "active": true,
+        "show_in_rest": true
     },
     {
         "key": "group_erh_products_specs",
@@ -207,7 +208,8 @@
         "style": "default",
         "label_placement": "top",
         "instruction_placement": "label",
-        "active": true
+        "active": true,
+        "show_in_rest": true
     },
     {
         "key": "group_erh_products_performance",
@@ -479,7 +481,8 @@
         "style": "default",
         "label_placement": "top",
         "instruction_placement": "label",
-        "active": true
+        "active": true,
+        "show_in_rest": true
     },
     {
         "key": "group_erh_products_battery",
@@ -589,7 +592,8 @@
         "style": "default",
         "label_placement": "top",
         "instruction_placement": "label",
-        "active": true
+        "active": true,
+        "show_in_rest": true
     },
     {
         "key": "group_erh_products_motor",
@@ -717,7 +721,8 @@
         "style": "default",
         "label_placement": "top",
         "instruction_placement": "label",
-        "active": true
+        "active": true,
+        "show_in_rest": true
     },
     {
         "key": "group_erh_products_brakes",
@@ -817,7 +822,8 @@
         "style": "default",
         "label_placement": "top",
         "instruction_placement": "label",
-        "active": true
+        "active": true,
+        "show_in_rest": true
     },
     {
         "key": "group_erh_escooter",
@@ -1182,7 +1188,8 @@
         "style": "default",
         "label_placement": "top",
         "instruction_placement": "label",
-        "active": true
+        "active": true,
+        "show_in_rest": true
     },
     {
         "key": "group_erh_ebike",
@@ -2037,7 +2044,8 @@
         "style": "default",
         "label_placement": "top",
         "instruction_placement": "label",
-        "active": true
+        "active": true,
+        "show_in_rest": true
     },
     {
         "key": "group_erh_euc",
@@ -2246,7 +2254,8 @@
         "style": "default",
         "label_placement": "top",
         "instruction_placement": "label",
-        "active": true
+        "active": true,
+        "show_in_rest": true
     },
     {
         "key": "group_erh_eskate",
@@ -2468,7 +2477,8 @@
         "style": "default",
         "label_placement": "top",
         "instruction_placement": "label",
-        "active": true
+        "active": true,
+        "show_in_rest": true
     },
     {
         "key": "group_erh_hoverboard",
@@ -2571,6 +2581,7 @@
         "style": "default",
         "label_placement": "top",
         "instruction_placement": "label",
-        "active": true
+        "active": true,
+        "show_in_rest": true
     }
 ]
