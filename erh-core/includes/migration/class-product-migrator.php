@@ -347,7 +347,7 @@ class ProductMigrator {
             'capacity'      => $acf['battery_capacity'] ?? '',
             'voltage'       => $acf['battery_voltage'] ?? '',
             'amphours'      => $acf['battery_amphours'] ?? '',
-            'type'          => $acf['battery_type'] ?? 'Lithium-ion',
+            'battery_type'  => $acf['battery_type'] ?? 'Lithium-ion',
             'brand'         => $acf['battery_brand'] ?? '',
             'charging_time' => $acf['charging_time'] ?? '',
         ];

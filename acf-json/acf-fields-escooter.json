@@ -76,7 +76,7 @@
                 "default_value": "Hub",
                 "return_format": "value",
                 "multiple": 0,
-                "allow_null": 1,
+                "allow_null": 0,
                 "ui": 0,
                 "ajax": 0
               },
@@ -211,9 +211,9 @@
                 "append": ""
               },
               {
-                "key": "field_erh_escooter_type",
+                "key": "field_erh_escooter_battery_type",
                 "label": "Battery Type",
-                "name": "type",
+                "name": "battery_type",
                 "type": "select",
                 "instructions": "",
                 "required": 0,
@@ -362,7 +362,7 @@
               "class": "",
               "id": ""
             },
-            "layout": "row",
+            "layout": "block",
             "sub_fields": [
               {
                 "key": "field_erh_escooter_tire_size_front",
@@ -506,7 +506,7 @@
               "class": "",
               "id": ""
             },
-            "layout": "row",
+            "layout": "block",
             "sub_fields": [
               {
                 "key": "field_erh_escooter_type",
@@ -564,7 +564,7 @@
               "class": "",
               "id": ""
             },
-            "layout": "row",
+            "layout": "block",
             "sub_fields": [
               {
                 "key": "field_erh_escooter_deck_length",
@@ -861,7 +861,7 @@
               "class": "",
               "id": ""
             },
-            "layout": "row",
+            "layout": "block",
             "sub_fields": [
               {
                 "key": "field_erh_escooter_lights",
@@ -914,7 +914,7 @@
               "class": "",
               "id": ""
             },
-            "layout": "row",
+            "layout": "block",
             "sub_fields": [
               {
                 "key": "field_erh_escooter_throttle_type",
