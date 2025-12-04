@@ -29,7 +29,7 @@
               "class": "",
               "id": ""
             },
-            "layout": "row",
+            "layout": "block",
             "sub_fields": [
               {
                 "key": "field_erh_escooter_motor_position",
@@ -39,7 +39,7 @@
                 "instructions": "",
                 "required": 0,
                 "wrapper": {
-                  "width": "33",
+                  "width": "20",
                   "class": "",
                   "id": ""
                 },
@@ -63,7 +63,7 @@
                 "instructions": "",
                 "required": 0,
                 "wrapper": {
-                  "width": "33",
+                  "width": "20",
                   "class": "",
                   "id": ""
                 },
@@ -73,7 +73,7 @@
                   "Gear": "Gear",
                   "Direct Drive": "Direct Drive"
                 },
-                "default_value": "",
+                "default_value": "Hub",
                 "return_format": "value",
                 "multiple": 0,
                 "allow_null": 1,
@@ -88,7 +88,7 @@
                 "instructions": "System voltage (V)",
                 "required": 0,
                 "wrapper": {
-                  "width": "33",
+                  "width": "20",
                   "class": "",
                   "id": ""
                 },
@@ -107,7 +107,7 @@
                 "instructions": "Nominal wattage (W)",
                 "required": 0,
                 "wrapper": {
-                  "width": "50",
+                  "width": "20",
                   "class": "",
                   "id": ""
                 },
@@ -126,7 +126,7 @@
                 "instructions": "Peak wattage (W)",
                 "required": 0,
                 "wrapper": {
-                  "width": "50",
+                  "width": "20",
                   "class": "",
                   "id": ""
                 },
@@ -151,7 +151,7 @@
               "class": "",
               "id": ""
             },
-            "layout": "row",
+            "layout": "block",
             "sub_fields": [
               {
                 "key": "field_erh_escooter_capacity",
@@ -161,7 +161,7 @@
                 "instructions": "Watt-hours (Wh)",
                 "required": 0,
                 "wrapper": {
-                  "width": "20",
+                  "width": "16",
                   "class": "",
                   "id": ""
                 },
@@ -173,14 +173,14 @@
                 "append": ""
               },
               {
-                "key": "field_erh_escooter_voltage",
+                "key": "field_erh_escooter_battery_voltage",
                 "label": "Voltage",
                 "name": "voltage",
                 "type": "number",
                 "instructions": "Voltage (V)",
                 "required": 0,
                 "wrapper": {
-                  "width": "20",
+                  "width": "16",
                   "class": "",
                   "id": ""
                 },
@@ -199,7 +199,7 @@
                 "instructions": "Amp-hours (Ah)",
                 "required": 0,
                 "wrapper": {
-                  "width": "20",
+                  "width": "16",
                   "class": "",
                   "id": ""
                 },
@@ -218,19 +218,18 @@
                 "instructions": "",
                 "required": 0,
                 "wrapper": {
-                  "width": "20",
+                  "width": "16",
                   "class": "",
                   "id": ""
                 },
                 "choices": {
                   "Lithium-ion": "Lithium-ion",
-                  "LiFePO4": "LiFePO4",
-                  "Lead Acid": "Lead Acid"
+                  "Lead-acid": "Lead-acid"
                 },
-                "default_value": "",
+                "default_value": "Lithium-ion",
                 "return_format": "value",
                 "multiple": 0,
-                "allow_null": 1,
+                "allow_null": 0,
                 "ui": 0,
                 "ajax": 0
               },
@@ -242,7 +241,7 @@
                 "instructions": "",
                 "required": 0,
                 "wrapper": {
-                  "width": "20",
+                  "width": "16",
                   "class": "",
                   "id": ""
                 },
@@ -257,7 +256,7 @@
                 "instructions": "Hours to full charge",
                 "required": 0,
                 "wrapper": {
-                  "width": "20",
+                  "width": "16",
                   "class": "",
                   "id": ""
                 },
@@ -282,7 +281,7 @@
               "class": "",
               "id": ""
             },
-            "layout": "row",
+            "layout": "block",
             "sub_fields": [
               {
                 "key": "field_erh_escooter_front",
@@ -1004,6 +1003,7 @@
                   "id": ""
                 },
                 "choices": {
+                  "None": "None",
                   "IPX4": "IPX4",
                   "IPX5": "IPX5",
                   "IPX6": "IPX6",
