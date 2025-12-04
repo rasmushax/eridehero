@@ -99,6 +99,57 @@
                 "return_format": "id",
                 "allow_null": 1,
                 "ui": 1
+            },
+            {
+                "key": "field_erh_coupon",
+                "label": "Coupons",
+                "name": "coupon",
+                "type": "repeater",
+                "instructions": "Add discount codes for this product",
+                "required": 0,
+                "wrapper": {
+                    "width": "",
+                    "class": "",
+                    "id": ""
+                },
+                "layout": "table",
+                "button_label": "Add Coupon",
+                "sub_fields": [
+                    {
+                        "key": "field_erh_coupon_website",
+                        "label": "Website",
+                        "name": "website",
+                        "type": "text",
+                        "wrapper": { "width": "30" }
+                    },
+                    {
+                        "key": "field_erh_coupon_code",
+                        "label": "Code",
+                        "name": "code",
+                        "type": "text",
+                        "wrapper": { "width": "25" }
+                    },
+                    {
+                        "key": "field_erh_coupon_discount_type",
+                        "label": "Discount Type",
+                        "name": "discount_type",
+                        "type": "select",
+                        "wrapper": { "width": "20" },
+                        "choices": {
+                            "percentage": "Percentage",
+                            "fixed": "Fixed Amount"
+                        },
+                        "return_format": "value"
+                    },
+                    {
+                        "key": "field_erh_coupon_discount_value",
+                        "label": "Value",
+                        "name": "discount_value",
+                        "type": "text",
+                        "wrapper": { "width": "25" },
+                        "placeholder": "e.g., 10 or 50"
+                    }
+                ]
             }
         ],
         "location": [
@@ -1031,6 +1082,22 @@
                         "type": "text",
                         "wrapper": { "width": "15" },
                         "placeholder": "e.g., IP54"
+                    },
+                    {
+                        "key": "field_erh_esc_weather_resistance",
+                        "label": "Weather Resistance",
+                        "name": "weather_resistance",
+                        "type": "select",
+                        "wrapper": { "width": "15" },
+                        "choices": {
+                            "none": "None",
+                            "light_rain": "Light Rain",
+                            "moderate": "Moderate",
+                            "heavy_rain": "Heavy Rain",
+                            "waterproof": "Waterproof"
+                        },
+                        "return_format": "value",
+                        "allow_null": 1
                     },
                     {
                         "key": "field_erh_esc_throttle_type",

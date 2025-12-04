@@ -229,6 +229,11 @@ class ProductMigrator {
         $this->set_field('release_quarter', $acf['release_quarter'] ?? 'Unknown', $post_id);
         $this->set_field('youtube_review', $acf['youtube_review'] ?? '', $post_id);
 
+        // Coupons (repeater field).
+        if (!empty($acf['coupon']) && is_array($acf['coupon'])) {
+            $this->set_field('coupon', $acf['coupon'], $post_id);
+        }
+
         // Editor rating (from ratings.overall or calculate average).
         $editor_rating = $this->get_editor_rating($acf);
         $this->set_field('editor_rating', $editor_rating, $post_id);
@@ -237,7 +242,9 @@ class ProductMigrator {
         $this->set_field('manufacturer_top_speed', $acf['manufacturer_top_speed'] ?? '', $post_id);
         $this->set_field('manufacturer_range', $acf['manufacturer_range'] ?? '', $post_id);
         $this->set_field('weight', $acf['weight'] ?? '', $post_id);
-        $this->set_field('max_weight_capacity', $acf['max_weight_capacity'] ?? '', $post_id);
+        // max_weight_capacity might also be stored as max_load in some products.
+        $max_capacity = $acf['max_weight_capacity'] ?? $acf['max_load'] ?? '';
+        $this->set_field('max_weight_capacity', $max_capacity, $post_id);
         $this->set_field('max_incline', $acf['max_incline'] ?? '', $post_id);
 
         // Performance tests.
@@ -358,12 +365,13 @@ class ProductMigrator {
 
         // Other specs.
         $this->set_field('escooter_other', [
-            'ip_rating'     => $acf['ip_rating'] ?? '',
-            'throttle_type' => $this->map_throttle_type($acf['throttle_type'] ?? ''),
-            'fold_location' => $this->map_fold_location($acf['fold_location'] ?? ''),
-            'terrain'       => $this->map_terrain($acf['terrain'] ?? ''),
-            'stem_type'     => $acf['stem_type'] ?? '',
-            'display_type'  => $acf['display_type'] ?? '',
+            'ip_rating'          => $acf['ip_rating'] ?? '',
+            'weather_resistance' => $acf['weather_resistance'] ?? '',
+            'throttle_type'      => $this->map_throttle_type($acf['throttle_type'] ?? ''),
+            'fold_location'      => $this->map_fold_location($acf['fold_location'] ?? ''),
+            'terrain'            => $this->map_terrain($acf['terrain'] ?? ''),
+            'stem_type'          => $acf['stem_type'] ?? '',
+            'display_type'       => $acf['display_type'] ?? '',
         ], $post_id);
 
         // Features.
