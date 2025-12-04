@@ -115,7 +115,8 @@
         "style": "default",
         "label_placement": "top",
         "instruction_placement": "label",
-        "active": true
+        "active": true,
+        "show_in_rest": true
     },
     {
         "key": "group_erh_products_specs",
@@ -207,7 +208,8 @@
         "style": "default",
         "label_placement": "top",
         "instruction_placement": "label",
-        "active": true
+        "active": true,
+        "show_in_rest": true
     },
     {
         "key": "group_erh_products_performance",
@@ -479,7 +481,8 @@
         "style": "default",
         "label_placement": "top",
         "instruction_placement": "label",
-        "active": true
+        "active": true,
+        "show_in_rest": true
     },
     {
         "key": "group_erh_products_battery",
@@ -589,7 +592,8 @@
         "style": "default",
         "label_placement": "top",
         "instruction_placement": "label",
-        "active": true
+        "active": true,
+        "show_in_rest": true
     },
     {
         "key": "group_erh_products_motor",
@@ -717,7 +721,8 @@
         "style": "default",
         "label_placement": "top",
         "instruction_placement": "label",
-        "active": true
+        "active": true,
+        "show_in_rest": true
     },
     {
         "key": "group_erh_products_brakes",
@@ -817,7 +822,8 @@
         "style": "default",
         "label_placement": "top",
         "instruction_placement": "label",
-        "active": true
+        "active": true,
+        "show_in_rest": true
     },
     {
         "key": "group_erh_escooter",
@@ -1182,7 +1188,8 @@
         "style": "default",
         "label_placement": "top",
         "instruction_placement": "label",
-        "active": true
+        "active": true,
+        "show_in_rest": true
     },
     {
         "key": "group_erh_ebike",
@@ -1363,18 +1370,32 @@
                 "layout": "block",
                 "sub_fields": [
                     {
+                        "key": "field_erh_eb_drive_system",
+                        "label": "Drive System",
+                        "name": "drive_system",
+                        "type": "select",
+                        "wrapper": { "width": "15" },
+                        "choices": {
+                            "chain": "Chain",
+                            "belt": "Belt",
+                            "shaft": "Shaft"
+                        },
+                        "return_format": "value",
+                        "allow_null": 1
+                    },
+                    {
                         "key": "field_erh_eb_gears",
                         "label": "Gears",
                         "name": "gears",
                         "type": "number",
-                        "wrapper": { "width": "15" }
+                        "wrapper": { "width": "10" }
                     },
                     {
                         "key": "field_erh_eb_derailleur_type",
                         "label": "Derailleur Type",
                         "name": "derailleur_type",
                         "type": "select",
-                        "wrapper": { "width": "20" },
+                        "wrapper": { "width": "15" },
                         "choices": {
                             "external": "External",
                             "internal": "Internal Hub",
@@ -1389,20 +1410,28 @@
                         "label": "Derailleur Brand",
                         "name": "derailleur_brand",
                         "type": "text",
-                        "wrapper": { "width": "20" }
+                        "wrapper": { "width": "15" }
                     },
                     {
-                        "key": "field_erh_eb_chain_type",
-                        "label": "Chain/Belt",
-                        "name": "chain_type",
-                        "type": "select",
-                        "wrapper": { "width": "20" },
-                        "choices": {
-                            "chain": "Chain",
-                            "belt": "Belt Drive"
-                        },
-                        "return_format": "value",
-                        "allow_null": 1
+                        "key": "field_erh_eb_derailleur_model",
+                        "label": "Derailleur Model",
+                        "name": "derailleur_model",
+                        "type": "text",
+                        "wrapper": { "width": "15" }
+                    },
+                    {
+                        "key": "field_erh_eb_cassette",
+                        "label": "Cassette",
+                        "name": "cassette",
+                        "type": "text",
+                        "wrapper": { "width": "15" }
+                    },
+                    {
+                        "key": "field_erh_eb_shifter",
+                        "label": "Shifter",
+                        "name": "shifter",
+                        "type": "text",
+                        "wrapper": { "width": "15" }
                     }
                 ]
             },
@@ -1416,18 +1445,40 @@
                 "layout": "block",
                 "sub_fields": [
                     {
+                        "key": "field_erh_eb_brake_type",
+                        "label": "Brake Type",
+                        "name": "brake_type",
+                        "type": "select",
+                        "wrapper": { "width": "20" },
+                        "choices": {
+                            "mechanical_disc": "Mechanical Disc",
+                            "hydraulic_disc": "Hydraulic Disc",
+                            "rim": "Rim Brake",
+                            "coaster": "Coaster Brake"
+                        },
+                        "return_format": "value",
+                        "allow_null": 1
+                    },
+                    {
                         "key": "field_erh_eb_brake_brand",
                         "label": "Brake Brand",
                         "name": "brand",
                         "type": "text",
-                        "wrapper": { "width": "25" }
+                        "wrapper": { "width": "20" }
+                    },
+                    {
+                        "key": "field_erh_eb_brake_model",
+                        "label": "Brake Model",
+                        "name": "model",
+                        "type": "text",
+                        "wrapper": { "width": "20" }
                     },
                     {
                         "key": "field_erh_eb_rotor_size_front",
                         "label": "Front Rotor",
                         "name": "rotor_front",
                         "type": "number",
-                        "wrapper": { "width": "25" },
+                        "wrapper": { "width": "20" },
                         "append": "mm"
                     },
                     {
@@ -1435,7 +1486,7 @@
                         "label": "Rear Rotor",
                         "name": "rotor_rear",
                         "type": "number",
-                        "wrapper": { "width": "25" },
+                        "wrapper": { "width": "20" },
                         "append": "mm"
                     }
                 ]
@@ -1454,7 +1505,7 @@
                         "label": "Frame Material",
                         "name": "material",
                         "type": "select",
-                        "wrapper": { "width": "20" },
+                        "wrapper": { "width": "15" },
                         "choices": {
                             "aluminum": "Aluminum",
                             "steel": "Steel",
@@ -1466,11 +1517,25 @@
                         "allow_null": 1
                     },
                     {
+                        "key": "field_erh_eb_frame_style",
+                        "label": "Frame Style",
+                        "name": "frame_style",
+                        "type": "select",
+                        "wrapper": { "width": "15" },
+                        "choices": {
+                            "step_over": "Step-Over",
+                            "step_through": "Step-Through",
+                            "mid_step": "Mid-Step"
+                        },
+                        "return_format": "value",
+                        "allow_null": 1
+                    },
+                    {
                         "key": "field_erh_eb_step_through",
                         "label": "Step-Through",
                         "name": "step_through",
                         "type": "true_false",
-                        "wrapper": { "width": "15" },
+                        "wrapper": { "width": "10" },
                         "ui": 1
                     },
                     {
@@ -1478,9 +1543,98 @@
                         "label": "Foldable",
                         "name": "foldable",
                         "type": "true_false",
-                        "wrapper": { "width": "15" },
+                        "wrapper": { "width": "10" },
                         "ui": 1
                     },
+                    {
+                        "key": "field_erh_eb_sizes_available",
+                        "label": "Sizes Available",
+                        "name": "sizes_available",
+                        "type": "text",
+                        "wrapper": { "width": "15" },
+                        "placeholder": "e.g., S, M, L"
+                    },
+                    {
+                        "key": "field_erh_eb_wheelbase",
+                        "label": "Wheelbase",
+                        "name": "wheelbase",
+                        "type": "number",
+                        "wrapper": { "width": "10" },
+                        "append": "in",
+                        "step": 0.1
+                    },
+                    {
+                        "key": "field_erh_eb_standover_height",
+                        "label": "Standover Height",
+                        "name": "standover_height",
+                        "type": "number",
+                        "wrapper": { "width": "12" },
+                        "append": "in",
+                        "step": 0.1
+                    },
+                    {
+                        "key": "field_erh_eb_min_rider_height",
+                        "label": "Min Rider Height",
+                        "name": "min_rider_height",
+                        "type": "text",
+                        "wrapper": { "width": "12" },
+                        "placeholder": "e.g., 5'2\""
+                    },
+                    {
+                        "key": "field_erh_eb_max_rider_height",
+                        "label": "Max Rider Height",
+                        "name": "max_rider_height",
+                        "type": "text",
+                        "wrapper": { "width": "12" },
+                        "placeholder": "e.g., 6'4\""
+                    },
+                    {
+                        "key": "field_erh_eb_min_seat_height",
+                        "label": "Min Seat Height",
+                        "name": "min_seat_height",
+                        "type": "number",
+                        "wrapper": { "width": "12" },
+                        "append": "in",
+                        "step": 0.1
+                    },
+                    {
+                        "key": "field_erh_eb_max_seat_height",
+                        "label": "Max Seat Height",
+                        "name": "max_seat_height",
+                        "type": "number",
+                        "wrapper": { "width": "12" },
+                        "append": "in",
+                        "step": 0.1
+                    },
+                    {
+                        "key": "field_erh_eb_total_length",
+                        "label": "Total Length",
+                        "name": "total_length",
+                        "type": "number",
+                        "wrapper": { "width": "12" },
+                        "append": "in",
+                        "step": 0.1
+                    },
+                    {
+                        "key": "field_erh_eb_handlebar_width",
+                        "label": "Handlebar Width",
+                        "name": "handlebar_width",
+                        "type": "number",
+                        "wrapper": { "width": "12" },
+                        "append": "in",
+                        "step": 0.1
+                    }
+                ]
+            },
+            {
+                "key": "field_erh_ebike_wheels_tires",
+                "label": "Wheels & Tires",
+                "name": "ebike_wheels_tires",
+                "type": "group",
+                "instructions": "",
+                "required": 0,
+                "layout": "block",
+                "sub_fields": [
                     {
                         "key": "field_erh_eb_wheel_size",
                         "label": "Wheel Size",
@@ -1500,25 +1654,351 @@
                         "step": 0.1
                     },
                     {
-                        "key": "field_erh_eb_suspension",
-                        "label": "Suspension",
-                        "name": "suspension",
+                        "key": "field_erh_eb_tire_brand",
+                        "label": "Tire Brand",
+                        "name": "tire_brand",
+                        "type": "text",
+                        "wrapper": { "width": "17" }
+                    },
+                    {
+                        "key": "field_erh_eb_tire_model",
+                        "label": "Tire Model",
+                        "name": "tire_model",
+                        "type": "text",
+                        "wrapper": { "width": "17" }
+                    },
+                    {
+                        "key": "field_erh_eb_tire_type",
+                        "label": "Tire Type",
+                        "name": "tire_type",
                         "type": "select",
-                        "wrapper": { "width": "20" },
+                        "wrapper": { "width": "18" },
                         "choices": {
-                            "none": "None (Rigid)",
-                            "front": "Front Only",
-                            "full": "Full Suspension"
+                            "street": "Street",
+                            "knobby": "Knobby",
+                            "slick": "Slick",
+                            "all_terrain": "All-Terrain",
+                            "fat": "Fat Tire"
                         },
                         "return_format": "value",
                         "allow_null": 1
+                    },
+                    {
+                        "key": "field_erh_eb_puncture_protection",
+                        "label": "Puncture Protection",
+                        "name": "puncture_protection",
+                        "type": "true_false",
+                        "wrapper": { "width": "18" },
+                        "ui": 1
                     }
                 ]
             },
             {
-                "key": "field_erh_ebike_features",
-                "label": "Features",
-                "name": "ebike_features",
+                "key": "field_erh_ebike_suspension",
+                "label": "Suspension",
+                "name": "ebike_suspension",
+                "type": "group",
+                "instructions": "",
+                "required": 0,
+                "layout": "block",
+                "sub_fields": [
+                    {
+                        "key": "field_erh_eb_suspension_type",
+                        "label": "Suspension Type",
+                        "name": "type",
+                        "type": "select",
+                        "wrapper": { "width": "20" },
+                        "choices": {
+                            "none": "None (Rigid)",
+                            "front": "Front Only (Hardtail)",
+                            "full": "Full Suspension"
+                        },
+                        "return_format": "value",
+                        "allow_null": 1
+                    },
+                    {
+                        "key": "field_erh_eb_front_suspension",
+                        "label": "Front Suspension",
+                        "name": "front_suspension",
+                        "type": "select",
+                        "wrapper": { "width": "16" },
+                        "choices": {
+                            "none": "None",
+                            "coil": "Coil",
+                            "air": "Air",
+                            "hydraulic": "Hydraulic"
+                        },
+                        "return_format": "value",
+                        "allow_null": 1
+                    },
+                    {
+                        "key": "field_erh_eb_front_travel",
+                        "label": "Front Travel",
+                        "name": "front_travel",
+                        "type": "number",
+                        "wrapper": { "width": "16" },
+                        "append": "mm"
+                    },
+                    {
+                        "key": "field_erh_eb_rear_suspension",
+                        "label": "Rear Suspension",
+                        "name": "rear_suspension",
+                        "type": "select",
+                        "wrapper": { "width": "16" },
+                        "choices": {
+                            "none": "None",
+                            "coil": "Coil",
+                            "air": "Air",
+                            "hydraulic": "Hydraulic"
+                        },
+                        "return_format": "value",
+                        "allow_null": 1
+                    },
+                    {
+                        "key": "field_erh_eb_rear_travel",
+                        "label": "Rear Travel",
+                        "name": "rear_travel",
+                        "type": "number",
+                        "wrapper": { "width": "16" },
+                        "append": "mm"
+                    },
+                    {
+                        "key": "field_erh_eb_seatpost_suspension",
+                        "label": "Seatpost Suspension",
+                        "name": "seatpost_suspension",
+                        "type": "true_false",
+                        "wrapper": { "width": "16" },
+                        "ui": 1
+                    }
+                ]
+            },
+            {
+                "key": "field_erh_ebike_components",
+                "label": "Components & Display",
+                "name": "ebike_components",
+                "type": "group",
+                "instructions": "",
+                "required": 0,
+                "layout": "block",
+                "sub_fields": [
+                    {
+                        "key": "field_erh_eb_display_type",
+                        "label": "Display Type",
+                        "name": "display",
+                        "type": "select",
+                        "wrapper": { "width": "20" },
+                        "choices": {
+                            "none": "None",
+                            "led": "LED",
+                            "lcd": "LCD",
+                            "lcd_color": "LCD Color",
+                            "tft": "TFT Color"
+                        },
+                        "return_format": "value",
+                        "allow_null": 1
+                    },
+                    {
+                        "key": "field_erh_eb_display_size",
+                        "label": "Display Size",
+                        "name": "display_size",
+                        "type": "number",
+                        "wrapper": { "width": "15" },
+                        "append": "in",
+                        "step": 0.1
+                    },
+                    {
+                        "key": "field_erh_eb_connectivity",
+                        "label": "Connectivity",
+                        "name": "connectivity",
+                        "type": "checkbox",
+                        "wrapper": { "width": "30" },
+                        "choices": {
+                            "bluetooth": "Bluetooth",
+                            "ant_plus": "ANT+",
+                            "wifi": "WiFi",
+                            "gps": "GPS"
+                        },
+                        "return_format": "value",
+                        "layout": "horizontal"
+                    },
+                    {
+                        "key": "field_erh_eb_app_compatible",
+                        "label": "App Compatible",
+                        "name": "app_compatible",
+                        "type": "true_false",
+                        "wrapper": { "width": "15" },
+                        "ui": 1
+                    },
+                    {
+                        "key": "field_erh_eb_app_name",
+                        "label": "App Name",
+                        "name": "app_name",
+                        "type": "text",
+                        "wrapper": { "width": "20" }
+                    }
+                ]
+            },
+            {
+                "key": "field_erh_ebike_integrated",
+                "label": "Integrated Features",
+                "name": "ebike_integrated",
+                "type": "group",
+                "instructions": "",
+                "required": 0,
+                "layout": "block",
+                "sub_fields": [
+                    {
+                        "key": "field_erh_eb_integrated_lights",
+                        "label": "Integrated Lights",
+                        "name": "integrated_lights",
+                        "type": "true_false",
+                        "wrapper": { "width": "12" },
+                        "ui": 1
+                    },
+                    {
+                        "key": "field_erh_eb_front_light",
+                        "label": "Front Light",
+                        "name": "front_light",
+                        "type": "true_false",
+                        "wrapper": { "width": "12" },
+                        "ui": 1
+                    },
+                    {
+                        "key": "field_erh_eb_rear_light",
+                        "label": "Rear Light",
+                        "name": "rear_light",
+                        "type": "true_false",
+                        "wrapper": { "width": "12" },
+                        "ui": 1
+                    },
+                    {
+                        "key": "field_erh_eb_turn_signals",
+                        "label": "Turn Signals",
+                        "name": "turn_signals",
+                        "type": "true_false",
+                        "wrapper": { "width": "12" },
+                        "ui": 1
+                    },
+                    {
+                        "key": "field_erh_eb_fenders",
+                        "label": "Fenders",
+                        "name": "fenders",
+                        "type": "true_false",
+                        "wrapper": { "width": "12" },
+                        "ui": 1
+                    },
+                    {
+                        "key": "field_erh_eb_rear_rack",
+                        "label": "Rear Rack",
+                        "name": "rear_rack",
+                        "type": "true_false",
+                        "wrapper": { "width": "12" },
+                        "ui": 1
+                    },
+                    {
+                        "key": "field_erh_eb_front_rack",
+                        "label": "Front Rack",
+                        "name": "front_rack",
+                        "type": "true_false",
+                        "wrapper": { "width": "12" },
+                        "ui": 1
+                    },
+                    {
+                        "key": "field_erh_eb_kickstand",
+                        "label": "Kickstand",
+                        "name": "kickstand",
+                        "type": "true_false",
+                        "wrapper": { "width": "12" },
+                        "ui": 1
+                    },
+                    {
+                        "key": "field_erh_eb_walk_assist",
+                        "label": "Walk Assist",
+                        "name": "walk_assist",
+                        "type": "true_false",
+                        "wrapper": { "width": "12" },
+                        "ui": 1
+                    },
+                    {
+                        "key": "field_erh_eb_usb_charging",
+                        "label": "USB Charging",
+                        "name": "usb_charging",
+                        "type": "true_false",
+                        "wrapper": { "width": "12" },
+                        "ui": 1
+                    },
+                    {
+                        "key": "field_erh_eb_bell",
+                        "label": "Bell",
+                        "name": "bell",
+                        "type": "true_false",
+                        "wrapper": { "width": "12" },
+                        "ui": 1
+                    },
+                    {
+                        "key": "field_erh_eb_cargo_capacity",
+                        "label": "Cargo Capacity",
+                        "name": "cargo_capacity",
+                        "type": "number",
+                        "wrapper": { "width": "12" },
+                        "append": "lbs"
+                    }
+                ]
+            },
+            {
+                "key": "field_erh_ebike_safety",
+                "label": "Safety & Compliance",
+                "name": "ebike_safety",
+                "type": "group",
+                "instructions": "",
+                "required": 0,
+                "layout": "block",
+                "sub_fields": [
+                    {
+                        "key": "field_erh_eb_ip_rating",
+                        "label": "IP Rating",
+                        "name": "ip_rating",
+                        "type": "text",
+                        "wrapper": { "width": "20" },
+                        "placeholder": "e.g., IPX5"
+                    },
+                    {
+                        "key": "field_erh_eb_certifications",
+                        "label": "Certifications",
+                        "name": "certifications",
+                        "type": "checkbox",
+                        "wrapper": { "width": "50" },
+                        "choices": {
+                            "ul_2849": "UL 2849",
+                            "en_15194": "EN 15194",
+                            "ce": "CE",
+                            "fcc": "FCC"
+                        },
+                        "return_format": "value",
+                        "layout": "horizontal"
+                    },
+                    {
+                        "key": "field_erh_eb_reflectors",
+                        "label": "Reflectors",
+                        "name": "reflectors",
+                        "type": "true_false",
+                        "wrapper": { "width": "15" },
+                        "ui": 1
+                    },
+                    {
+                        "key": "field_erh_eb_anti_theft",
+                        "label": "Anti-Theft",
+                        "name": "anti_theft",
+                        "type": "true_false",
+                        "wrapper": { "width": "15" },
+                        "ui": 1
+                    }
+                ]
+            },
+            {
+                "key": "field_erh_ebike_special_features",
+                "label": "Special Features",
+                "name": "ebike_special_features",
                 "type": "checkbox",
                 "instructions": "",
                 "required": 0,
@@ -1528,15 +2008,18 @@
                     "id": ""
                 },
                 "choices": {
-                    "app": "App Connectivity",
-                    "integrated_lights": "Integrated Lights",
-                    "rear_rack": "Rear Rack",
-                    "fenders": "Fenders",
-                    "kickstand": "Kickstand",
-                    "walk_mode": "Walk Mode",
-                    "usb_charging": "USB Charging Port",
-                    "anti_theft": "Anti-Theft System",
-                    "gps": "GPS Tracking"
+                    "folding": "Folding",
+                    "turn_signals": "Turn Signals",
+                    "quick_release_battery": "Quick Release Battery",
+                    "dual_battery": "Dual Battery Support",
+                    "regenerative_braking": "Regenerative Braking",
+                    "reverse_mode": "Reverse Mode",
+                    "hill_start_assist": "Hill Start Assist",
+                    "cruise_control": "Cruise Control",
+                    "silent_hub": "Silent Hub Motor",
+                    "torque_sensor": "Torque Sensor",
+                    "cadence_sensor": "Cadence Sensor",
+                    "speed_sensor": "Speed Sensor"
                 },
                 "return_format": "value",
                 "layout": "horizontal"
@@ -1561,7 +2044,8 @@
         "style": "default",
         "label_placement": "top",
         "instruction_placement": "label",
-        "active": true
+        "active": true,
+        "show_in_rest": true
     },
     {
         "key": "group_erh_euc",
@@ -1770,7 +2254,8 @@
         "style": "default",
         "label_placement": "top",
         "instruction_placement": "label",
-        "active": true
+        "active": true,
+        "show_in_rest": true
     },
     {
         "key": "group_erh_eskate",
@@ -1992,7 +2477,8 @@
         "style": "default",
         "label_placement": "top",
         "instruction_placement": "label",
-        "active": true
+        "active": true,
+        "show_in_rest": true
     },
     {
         "key": "group_erh_hoverboard",
@@ -2095,6 +2581,7 @@
         "style": "default",
         "label_placement": "top",
         "instruction_placement": "label",
-        "active": true
+        "active": true,
+        "show_in_rest": true
     }
 ]
