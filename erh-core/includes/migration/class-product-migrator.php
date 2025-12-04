@@ -593,10 +593,13 @@ class ProductMigrator {
     /**
      * Map sensor type to programmatic value.
      *
-     * @param string $sensor Sensor type value.
+     * @param string|array $sensor Sensor type value.
      * @return string Mapped value.
      */
-    private function map_sensor_type(string $sensor): string {
+    private function map_sensor_type(string|array $sensor): string {
+        if (is_array($sensor)) {
+            $sensor = $sensor[0] ?? '';
+        }
         $sensor_lower = strtolower(trim($sensor));
         $map = [
             'torque'      => 'torque',
@@ -611,10 +614,13 @@ class ProductMigrator {
     /**
      * Map battery position to programmatic value.
      *
-     * @param string $position Battery position.
+     * @param string|array $position Battery position.
      * @return string Mapped value.
      */
-    private function map_battery_position(string $position): string {
+    private function map_battery_position(string|array $position): string {
+        if (is_array($position)) {
+            $position = $position[0] ?? '';
+        }
         $pos_lower = strtolower(trim($position));
         $map = [
             'downtube'    => 'downtube',
@@ -634,10 +640,13 @@ class ProductMigrator {
     /**
      * Map drive system to programmatic value.
      *
-     * @param string $system Drive system.
+     * @param string|array $system Drive system.
      * @return string Mapped value.
      */
-    private function map_drive_system(string $system): string {
+    private function map_drive_system(string|array $system): string {
+        if (is_array($system)) {
+            $system = $system[0] ?? '';
+        }
         $sys_lower = strtolower(trim($system));
         if (strpos($sys_lower, 'chain') !== false) {
             return 'chain';
@@ -654,10 +663,13 @@ class ProductMigrator {
     /**
      * Map derailleur type to programmatic value.
      *
-     * @param string $type Derailleur type.
+     * @param string|array $type Derailleur type.
      * @return string Mapped value.
      */
-    private function map_derailleur_type(string $type): string {
+    private function map_derailleur_type(string|array $type): string {
+        if (is_array($type)) {
+            $type = $type[0] ?? '';
+        }
         $type_lower = strtolower(trim($type));
         $map = [
             'external'     => 'external',
@@ -674,10 +686,14 @@ class ProductMigrator {
     /**
      * Map e-bike brake type to programmatic value.
      *
-     * @param string $type Brake type.
+     * @param string|array $type Brake type.
      * @return string Mapped value.
      */
-    private function map_ebike_brake_type(string $type): string {
+    private function map_ebike_brake_type(string|array $type): string {
+        // Handle array input (take first value).
+        if (is_array($type)) {
+            $type = $type[0] ?? '';
+        }
         $type_lower = strtolower(trim($type));
         if (strpos($type_lower, 'hydraulic') !== false) {
             return 'hydraulic_disc';
@@ -701,10 +717,13 @@ class ProductMigrator {
     /**
      * Map frame material to programmatic value.
      *
-     * @param string $material Frame material.
+     * @param string|array $material Frame material.
      * @return string Mapped value.
      */
-    private function map_frame_material(string $material): string {
+    private function map_frame_material(string|array $material): string {
+        if (is_array($material)) {
+            $material = $material[0] ?? '';
+        }
         $mat_lower = strtolower(trim($material));
         $map = [
             'aluminum'     => 'aluminum',
@@ -722,10 +741,13 @@ class ProductMigrator {
     /**
      * Map frame style to programmatic value.
      *
-     * @param string $style Frame style.
+     * @param string|array $style Frame style.
      * @return string Mapped value.
      */
-    private function map_frame_style(string $style): string {
+    private function map_frame_style(string|array $style): string {
+        if (is_array($style)) {
+            $style = $style[0] ?? '';
+        }
         $style_lower = strtolower(trim($style));
         $map = [
             'step-over'     => 'step_over',
@@ -744,10 +766,13 @@ class ProductMigrator {
     /**
      * Map e-bike tire type to programmatic value.
      *
-     * @param string $type Tire type.
+     * @param string|array $type Tire type.
      * @return string Mapped value.
      */
-    private function map_ebike_tire_type(string $type): string {
+    private function map_ebike_tire_type(string|array $type): string {
+        if (is_array($type)) {
+            $type = $type[0] ?? '';
+        }
         $type_lower = strtolower(trim($type));
         $map = [
             'street'      => 'street',
@@ -765,10 +790,13 @@ class ProductMigrator {
     /**
      * Map suspension fork type to programmatic value.
      *
-     * @param string $type Suspension type.
+     * @param string|array $type Suspension type.
      * @return string Mapped value.
      */
-    private function map_suspension_fork_type(string $type): string {
+    private function map_suspension_fork_type(string|array $type): string {
+        if (is_array($type)) {
+            $type = $type[0] ?? '';
+        }
         $type_lower = strtolower(trim($type));
         if ($type_lower === 'none' || empty($type_lower)) {
             return 'none';
@@ -785,10 +813,13 @@ class ProductMigrator {
     /**
      * Map display type to programmatic value.
      *
-     * @param string $type Display type.
+     * @param string|array $type Display type.
      * @return string Mapped value.
      */
-    private function map_display_type(string $type): string {
+    private function map_display_type(string|array $type): string {
+        if (is_array($type)) {
+            $type = $type[0] ?? '';
+        }
         $type_lower = strtolower(trim($type));
         if (empty($type_lower) || $type_lower === 'none') {
             return 'none';
