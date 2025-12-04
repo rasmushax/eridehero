@@ -337,7 +337,7 @@ class ProductMigrator {
             'motor_position' => $this->normalize_array($acf['motors'] ?? []),
             'motor_type'     => $acf['motor_type'] ?? '',
             'wheel_drive'    => $acf['Wheel Drive'] ?? $acf['wheel_drive'] ?? '',
-            'voltage'        => $acf['voltage'] ?? '',
+            'voltage'        => $acf['voltage'] ?? $acf['battery_voltage'] ?? '',
             'power_nominal'  => $acf['nominal_motor_wattage'] ?? '',
             'power_peak'     => $acf['total_peak_wattage'] ?? '',
         ];
@@ -347,7 +347,7 @@ class ProductMigrator {
             'capacity'      => $acf['battery_capacity'] ?? '',
             'voltage'       => $acf['battery_voltage'] ?? '',
             'amphours'      => $acf['battery_amphours'] ?? '',
-            'type'          => $acf['battery_type'] ?? '',
+            'type'          => $acf['battery_type'] ?? 'Lithium-ion',
             'brand'         => $acf['battery_brand'] ?? '',
             'charging_time' => $acf['charging_time'] ?? '',
         ];
