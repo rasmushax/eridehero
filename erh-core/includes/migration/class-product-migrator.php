@@ -519,16 +519,171 @@ class ProductMigrator {
      * @return void
      */
     private function migrate_image(int $post_id, array $acf, array $old_data): void {
-        // Prefer big_thumbnail, fall back to thumbnail.
-        $image_id = $acf['big_thumbnail'] ?? $acf['thumbnail'] ?? null;
+        // Check if product already has a featured image (skip if already migrated).
+        if (has_post_thumbnail($post_id)) {
+            $this->log('info', "Product {$post_id} already has a featured image, skipping");
+            return;
+        }
 
-        if ($image_id) {
-            // For local migration, the image ID should work.
-            // For remote migration, we'd need to download and sideload.
-            if (is_numeric($image_id) && get_post($image_id)) {
-                $this->set_field('product_image', $image_id, $post_id);
+        // Try to get image URL from various sources.
+        $image_url = $this->get_remote_image_url($acf, $old_data);
+
+        if (empty($image_url)) {
+            $this->log('warning', "No image found for product {$post_id}");
+            return;
+        }
+
+        $this->log('info', "Downloading image: {$image_url}");
+
+        // Sideload the image.
+        $attachment_id = $this->sideload_image($image_url, $post_id);
+
+        if ($attachment_id) {
+            // Set as featured image.
+            set_post_thumbnail($post_id, $attachment_id);
+
+            // Also set ACF product_image field.
+            $this->set_field('product_image', $attachment_id, $post_id);
+
+            $this->log('success', "Image uploaded successfully (attachment ID: {$attachment_id})");
+        }
+    }
+
+    /**
+     * Get the remote image URL from ACF data or featured_media.
+     *
+     * @param array $acf      ACF data.
+     * @param array $old_data Full old product data.
+     * @return string|null Image URL or null.
+     */
+    private function get_remote_image_url(array $acf, array $old_data): ?string {
+        // Check ACF big_thumbnail field - it might be an array with URL.
+        $big_thumbnail = $acf['big_thumbnail'] ?? null;
+        if ($big_thumbnail) {
+            // ACF image field can be array, URL string, or ID.
+            if (is_array($big_thumbnail) && !empty($big_thumbnail['url'])) {
+                return $big_thumbnail['url'];
+            }
+            if (is_string($big_thumbnail) && filter_var($big_thumbnail, FILTER_VALIDATE_URL)) {
+                return $big_thumbnail;
+            }
+            // If it's an ID, we need to fetch the URL from remote.
+            if (is_numeric($big_thumbnail)) {
+                $url = $this->fetch_remote_media_url((int) $big_thumbnail);
+                if ($url) {
+                    return $url;
+                }
             }
         }
+
+        // Check ACF thumbnail field.
+        $thumbnail = $acf['thumbnail'] ?? null;
+        if ($thumbnail) {
+            if (is_array($thumbnail) && !empty($thumbnail['url'])) {
+                return $thumbnail['url'];
+            }
+            if (is_string($thumbnail) && filter_var($thumbnail, FILTER_VALIDATE_URL)) {
+                return $thumbnail;
+            }
+            if (is_numeric($thumbnail)) {
+                $url = $this->fetch_remote_media_url((int) $thumbnail);
+                if ($url) {
+                    return $url;
+                }
+            }
+        }
+
+        // Fall back to featured_media from REST API.
+        $featured_media_id = $old_data['featured_media'] ?? 0;
+        if ($featured_media_id) {
+            $url = $this->fetch_remote_media_url((int) $featured_media_id);
+            if ($url) {
+                return $url;
+            }
+        }
+
+        return null;
+    }
+
+    /**
+     * Fetch media URL from remote site by attachment ID.
+     *
+     * @param int $media_id The remote attachment ID.
+     * @return string|null The media URL or null.
+     */
+    private function fetch_remote_media_url(int $media_id): ?string {
+        if (empty($this->source_url) || $media_id <= 0) {
+            return null;
+        }
+
+        $url = sprintf(
+            '%s/wp-json/wp/v2/media/%d?_fields=source_url',
+            $this->source_url,
+            $media_id
+        );
+
+        $response = wp_remote_get($url, [
+            'timeout' => 30,
+            'headers' => ['Accept' => 'application/json'],
+        ]);
+
+        if (is_wp_error($response)) {
+            $this->log('warning', "Failed to fetch media {$media_id}: " . $response->get_error_message());
+            return null;
+        }
+
+        $code = wp_remote_retrieve_response_code($response);
+        if ($code !== 200) {
+            $this->log('warning', "HTTP {$code} fetching media {$media_id}");
+            return null;
+        }
+
+        $data = json_decode(wp_remote_retrieve_body($response), true);
+        return $data['source_url'] ?? null;
+    }
+
+    /**
+     * Sideload an image from URL to the WordPress media library.
+     *
+     * @param string $url     The image URL.
+     * @param int    $post_id The post to attach the image to.
+     * @return int|null The attachment ID or null on failure.
+     */
+    private function sideload_image(string $url, int $post_id): ?int {
+        // Require necessary files for media handling.
+        require_once ABSPATH . 'wp-admin/includes/file.php';
+        require_once ABSPATH . 'wp-admin/includes/media.php';
+        require_once ABSPATH . 'wp-admin/includes/image.php';
+
+        // Download the file to a temp location.
+        $tmp = download_url($url, 60);
+
+        if (is_wp_error($tmp)) {
+            $this->log('error', "Failed to download image: " . $tmp->get_error_message());
+            return null;
+        }
+
+        // Get the filename from URL.
+        $url_path = wp_parse_url($url, PHP_URL_PATH);
+        $filename = basename($url_path);
+
+        // Prepare file array for sideloading.
+        $file_array = [
+            'name'     => $filename,
+            'tmp_name' => $tmp,
+        ];
+
+        // Sideload the file.
+        $attachment_id = media_handle_sideload($file_array, $post_id);
+
+        // Clean up temp file if sideload failed.
+        if (is_wp_error($attachment_id)) {
+            @unlink($tmp);
+            $this->log('error', "Failed to sideload image: " . $attachment_id->get_error_message());
+            return null;
+        }
+
+        return $attachment_id;
     }
 
     /**
