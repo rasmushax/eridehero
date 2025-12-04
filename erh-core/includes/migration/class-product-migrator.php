@@ -1255,10 +1255,10 @@ class ProductMigrator {
     /**
      * Map EUC tire type.
      *
-     * @param array $tires Tires array.
+     * @param mixed $tires Tires array or string.
      * @return string
      */
-    private function map_euc_tire_type(array $tires): string {
+    private function map_euc_tire_type($tires): string {
         $tires = $this->normalize_array($tires);
         foreach ($tires as $tire) {
             $lower = strtolower($tire);
@@ -1275,10 +1275,11 @@ class ProductMigrator {
     /**
      * Map EUC tire tread from terrain.
      *
-     * @param string $terrain Terrain value.
+     * @param mixed $terrain Terrain value.
      * @return string
      */
-    private function map_euc_tire_tread(string $terrain): string {
+    private function map_euc_tire_tread($terrain): string {
+        $terrain = is_array($terrain) ? ($terrain[0] ?? '') : (string) $terrain;
         $lower = strtolower($terrain);
         if (strpos($lower, 'off') !== false) {
             return 'Knobby';
@@ -1292,10 +1293,10 @@ class ProductMigrator {
     /**
      * Map EUC suspension type to select value.
      *
-     * @param array $suspension Suspension array.
+     * @param mixed $suspension Suspension array or string.
      * @return string
      */
-    private function map_euc_suspension_type(array $suspension): string {
+    private function map_euc_suspension_type($suspension): string {
         $suspension = $this->normalize_array($suspension);
 
         foreach ($suspension as $s) {
@@ -1349,10 +1350,10 @@ class ProductMigrator {
     /**
      * Map EUC IP rating.
      *
-     * @param array $resistance Weather resistance array.
+     * @param mixed $resistance Weather resistance array or string.
      * @return string
      */
-    private function map_euc_ip_rating(array $resistance): string {
+    private function map_euc_ip_rating($resistance): string {
         $resistance = $this->normalize_array($resistance);
         foreach ($resistance as $r) {
             $r = strtoupper(trim($r));
