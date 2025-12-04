@@ -1154,7 +1154,7 @@
                     "value": "products"
                 },
                 {
-                    "param": "taxonomy",
+                    "param": "post_taxonomy",
                     "operator": "==",
                     "value": "product_type:electric-scooter"
                 }
@@ -1533,7 +1533,7 @@
                     "value": "products"
                 },
                 {
-                    "param": "taxonomy",
+                    "param": "post_taxonomy",
                     "operator": "==",
                     "value": "product_type:electric-bike"
                 }
@@ -1742,7 +1742,7 @@
                     "value": "products"
                 },
                 {
-                    "param": "taxonomy",
+                    "param": "post_taxonomy",
                     "operator": "==",
                     "value": "product_type:electric-unicycle"
                 }
@@ -1964,7 +1964,7 @@
                     "value": "products"
                 },
                 {
-                    "param": "taxonomy",
+                    "param": "post_taxonomy",
                     "operator": "==",
                     "value": "product_type:electric-skateboard"
                 }
@@ -2067,7 +2067,7 @@
                     "value": "products"
                 },
                 {
-                    "param": "taxonomy",
+                    "param": "post_taxonomy",
                     "operator": "==",
                     "value": "product_type:hoverboard"
                 }
