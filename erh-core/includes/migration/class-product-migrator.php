@@ -257,13 +257,24 @@ class ProductMigrator {
         $this->set_field('release_year', $acf['release_year'] ?? '', $post_id);
         $this->set_field('release_quarter', $acf['release_quarter'] ?? 'Unknown', $post_id);
 
-        // YouTube review might be in review.youtube_video or youtube_review.
-        $youtube = $acf['youtube_review'] ?? $acf['review']['youtube_video'] ?? '';
-        $this->set_field('youtube_review', $youtube, $post_id);
-
         // Editor rating from ratings.overall or calculate average.
         $editor_rating = $this->get_editor_rating($acf);
         $this->set_field('editor_rating', $editor_rating, $post_id);
+
+        // Review group - review_post and youtube_video.
+        $review = [
+            'review_post'   => $acf['review']['review_post'] ?? '',
+            'youtube_video' => $acf['review']['youtube_video'] ?? $acf['youtube_review'] ?? '',
+        ];
+        $this->set_field('review', $review, $post_id);
+
+        // Obsolete group.
+        $obsolete = [
+            'is_product_obsolete'           => $acf['obsolete']['is_product_obsolete'] ?? false,
+            'has_the_product_been_superseded' => $acf['obsolete']['has_the_product_been_superseded'] ?? false,
+            'new_product'                   => $acf['obsolete']['new_product'] ?? '',
+        ];
+        $this->set_field('obsolete', $obsolete, $post_id);
     }
 
     /**
