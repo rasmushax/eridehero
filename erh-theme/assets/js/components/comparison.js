@@ -417,7 +417,7 @@ export async function initComparison(options = {}) {
                                 ${isSelected
                                     ? '<span class="comparison-result-selected">Already selected</span>'
                                     : `${config.showCategoryInResults ? `<span class="comparison-result-category">${product.categoryLabel}</span>` : ''}
-                                       <span class="comparison-result-price">$${product.price.toLocaleString()}</span>`
+                                       ${product.price > 0 ? `<span class="comparison-result-price">$${product.price.toLocaleString()}</span>` : ''}`
                                 }
                             </div>
                         </div>
