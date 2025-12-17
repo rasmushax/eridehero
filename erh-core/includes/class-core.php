@@ -40,6 +40,7 @@ use ERH\Cron\NotificationJob;
 use ERH\Admin\SettingsPage;
 use ERH\Migration\MigrationAdmin;
 use ERH\Api\RestPrices;
+use ERH\Api\RestDeals;
 
 /**
  * Core plugin class that initializes all components.
@@ -504,6 +505,10 @@ class Core {
         $price_fetcher = new \ERH\Pricing\PriceFetcher();
         $this->rest_prices = new RestPrices($price_fetcher, $this->exchange_rate_service);
         $this->rest_prices->register_routes();
+
+        // Initialize and register REST Deals API.
+        $rest_deals = new RestDeals();
+        $rest_deals->register_routes();
     }
 
     /**
