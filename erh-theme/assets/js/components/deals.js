@@ -19,15 +19,6 @@ const CONFIG = {
     discountThreshold: -5,
 };
 
-// Category labels for display
-const CATEGORY_LABELS = {
-    'escooter': 'E-Scooter',
-    'ebike': 'E-Bike',
-    'eskate': 'E-Skateboard',
-    'euc': 'EUC',
-    'hoverboard': 'Hoverboard',
-};
-
 /**
  * Initialize the deals section
  */
@@ -39,8 +30,11 @@ export async function initDeals() {
     const tabs = section.querySelectorAll('.filter-pill');
     const emptyState = section.querySelector('.deals-empty');
     const template = document.getElementById('deal-card-template');
+    const ctaTemplate = document.getElementById('deal-cta-template');
     const leftArrow = section.querySelector('.carousel-arrow-left');
     const rightArrow = section.querySelector('.carousel-arrow-right');
+    const carousel = section.querySelector('.deals-carousel');
+    const dealsCountEl = document.getElementById('deals-count');
 
     if (!grid || !template) return null;
 
@@ -48,6 +42,7 @@ export async function initDeals() {
     let allDeals = [];
     let currentCategory = 'all';
     let userGeo = { geo: 'US', currency: 'USD' };
+    let totalDealsCount = 0;
 
     // Get user geo
     try {
@@ -69,8 +64,8 @@ export async function initDeals() {
         return null;
     }
 
-    // Load deal counts for tabs
-    loadDealCounts();
+    // Load deal counts
+    await loadDealCounts();
 
     // Render deals
     renderDeals(allDeals);
@@ -91,13 +86,13 @@ export async function initDeals() {
     if (leftArrow && rightArrow) {
         leftArrow.addEventListener('click', () => scrollCarousel(-1));
         rightArrow.addEventListener('click', () => scrollCarousel(1));
-        grid.addEventListener('scroll', updateScrollButtons);
-        window.addEventListener('resize', updateScrollButtons);
-        updateScrollButtons();
+        grid.addEventListener('scroll', updateScrollState);
+        window.addEventListener('resize', updateScrollState);
+        updateScrollState();
     }
 
     /**
-     * Load deal counts for each category tab
+     * Load deal counts for total display
      */
     async function loadDealCounts() {
         try {
@@ -107,13 +102,12 @@ export async function initDeals() {
             const data = await response.json();
             const counts = data.counts || {};
 
-            // Update tab count badges
-            Object.entries(counts).forEach(([category, count]) => {
-                const badge = section.querySelector(`[data-count="${category}"]`);
-                if (badge && count > 0) {
-                    badge.textContent = `(${count})`;
-                }
-            });
+            totalDealsCount = counts.all || 0;
+
+            // Update total count display
+            if (dealsCountEl && totalDealsCount > 0) {
+                dealsCountEl.textContent = `${totalDealsCount} deals today`;
+            }
         } catch (e) {
             // Silently fail - counts are optional
         }
@@ -133,12 +127,23 @@ export async function initDeals() {
 
         hideEmptyState();
 
+        // Render deal cards
         deals.forEach(deal => {
             const card = createDealCard(deal);
             grid.appendChild(card);
         });
 
-        updateScrollButtons();
+        // Add CTA card if there are more deals
+        if (ctaTemplate && totalDealsCount > deals.length) {
+            const ctaCard = ctaTemplate.content.cloneNode(true);
+            const countEl = ctaCard.querySelector('.deal-card-cta-count');
+            if (countEl) {
+                countEl.textContent = `+${totalDealsCount - deals.length}`;
+            }
+            grid.appendChild(ctaCard);
+        }
+
+        updateScrollState();
     }
 
     /**
@@ -146,38 +151,61 @@ export async function initDeals() {
      */
     function createDealCard(deal) {
         const clone = template.content.cloneNode(true);
-        const article = clone.querySelector('.deal-card');
-        const link = clone.querySelector('a');
+        const card = clone.querySelector('.deal-card');
         const thumbnail = clone.querySelector('.deal-thumbnail');
-        const discount = clone.querySelector('.deal-discount');
-        const category = clone.querySelector('.deal-category');
-        const name = clone.querySelector('.deal-name');
         const priceContainer = clone.querySelector('[data-geo-price]');
-        const avgPrice = clone.querySelector('.deal-avg-price');
+        const priceValue = clone.querySelector('.deal-price-value');
+        const priceCurrency = clone.querySelector('.deal-price-currency');
+        const title = clone.querySelector('.deal-card-title');
+        const discountText = clone.querySelector('.deal-discount-text');
 
         // Set data attributes
-        article.dataset.category = deal.category;
-        priceContainer.dataset.productId = deal.id;
+        card.dataset.category = deal.category;
+        card.href = deal.url || '#';
 
-        // Set content
-        link.href = deal.url || '#';
-        thumbnail.src = deal.thumbnail || '';
-        thumbnail.alt = deal.name || '';
-        discount.textContent = Math.round(deal.discount_percent);
-        category.textContent = CATEGORY_LABELS[deal.category] || deal.category_label || '';
-        name.textContent = deal.name || '';
-
-        // Show average price (crossed out)
-        if (deal.average_price > 0) {
-            avgPrice.textContent = formatPrice(deal.average_price, 'USD', false);
+        if (priceContainer) {
+            priceContainer.dataset.productId = deal.id;
         }
 
-        // Handle image error
-        thumbnail.onerror = () => {
-            thumbnail.src = 'data:image/svg+xml,%3Csvg xmlns="http://www.w3.org/2000/svg" width="200" height="150"%3E%3Crect fill="%23f0f0f0" width="200" height="150"/%3E%3C/svg%3E';
-        };
+        // Set content
+        if (thumbnail) {
+            thumbnail.src = deal.thumbnail || '';
+            thumbnail.alt = deal.name || '';
+            thumbnail.onerror = () => {
+                thumbnail.src = 'data:image/svg+xml,%3Csvg xmlns="http://www.w3.org/2000/svg" width="80" height="80"%3E%3Crect fill="%23f0f0f0" width="80" height="80"/%3E%3C/svg%3E';
+            };
+        }
+
+        if (title) {
+            title.textContent = deal.name || '';
+        }
+
+        if (discountText) {
+            discountText.textContent = `${Math.round(deal.discount_percent)}% below avg`;
+        }
+
+        // Set initial price from base_price
+        if (priceValue && deal.base_price > 0) {
+            const priceParts = splitPrice(deal.base_price);
+            priceValue.textContent = priceParts.whole;
+            if (priceCurrency) {
+                priceCurrency.textContent = '$';
+            }
+        }
 
         return clone;
+    }
+
+    /**
+     * Split price into whole and cents
+     */
+    function splitPrice(price) {
+        const whole = Math.floor(price);
+        const cents = Math.round((price - whole) * 100);
+        return {
+            whole: whole.toLocaleString(),
+            cents: cents.toString().padStart(2, '0')
+        };
     }
 
     /**
@@ -193,30 +221,25 @@ export async function initDeals() {
 
             // Update price elements
             deals.forEach(deal => {
-                const priceEl = grid.querySelector(`[data-product-id="${deal.id}"] [data-price]`);
-                if (!priceEl) return;
+                const priceValue = grid.querySelector(`[data-product-id="${deal.id}"] .deal-price-value`);
+                const priceCurrency = grid.querySelector(`[data-product-id="${deal.id}"] .deal-price-currency`);
+
+                if (!priceValue) return;
 
                 const priceData = prices[deal.id];
-                if (priceData) {
-                    priceEl.textContent = formatPrice(
-                        priceData.price,
-                        priceData.currency,
-                        priceData.converted
-                    );
-                } else {
-                    // Fallback to base price (USD)
-                    priceEl.textContent = formatPrice(deal.base_price, 'USD', false);
+                if (priceData && priceData.price > 0) {
+                    const priceParts = splitPrice(priceData.price);
+                    priceValue.textContent = priceParts.whole;
+                    if (priceCurrency) {
+                        // Get currency symbol
+                        const symbols = { 'USD': '$', 'EUR': '€', 'GBP': '£', 'CAD': 'CA$', 'AUD': 'A$' };
+                        priceCurrency.textContent = symbols[priceData.currency] || priceData.currency + ' ';
+                    }
                 }
             });
         } catch (error) {
             console.error('[Deals] Failed to load prices:', error);
-            // Fallback: show base prices
-            deals.forEach(deal => {
-                const priceEl = grid.querySelector(`[data-product-id="${deal.id}"] [data-price]`);
-                if (priceEl && deal.base_price > 0) {
-                    priceEl.textContent = formatPrice(deal.base_price, 'USD', false);
-                }
-            });
+            // Keep base prices shown from initial render
         }
     }
 
@@ -230,8 +253,13 @@ export async function initDeals() {
         let visibleCount = 0;
         cards.forEach(card => {
             const cardCategory = card.dataset.category;
-            const show = category === 'all' || cardCategory === category;
 
+            // Always show CTA card
+            if (card.classList.contains('deal-card-cta')) {
+                return;
+            }
+
+            const show = category === 'all' || cardCategory === category;
             card.classList.toggle('hidden', !show);
             if (show) visibleCount++;
         });
@@ -244,7 +272,7 @@ export async function initDeals() {
 
         // Reset scroll position
         grid.scrollLeft = 0;
-        updateScrollButtons();
+        updateScrollState();
     }
 
     /**
@@ -253,10 +281,7 @@ export async function initDeals() {
     function setActiveTab(activeTab) {
         tabs.forEach(tab => {
             const isActive = tab === activeTab;
-            tab.classList.toggle('bg-clmain', isActive);
-            tab.classList.toggle('text-white', isActive);
-            tab.classList.toggle('bg-white', !isActive);
-            tab.classList.toggle('text-clbody', !isActive);
+            tab.classList.toggle('active', isActive);
             tab.setAttribute('aria-selected', isActive ? 'true' : 'false');
         });
     }
@@ -265,8 +290,8 @@ export async function initDeals() {
      * Scroll carousel left/right
      */
     function scrollCarousel(direction) {
-        const cardWidth = grid.querySelector('.deal-card')?.offsetWidth || 288;
-        const gap = 16; // gap-4 = 1rem = 16px
+        const cardWidth = grid.querySelector('.deal-card')?.offsetWidth || 180;
+        const gap = 12; // var(--space-5)
         const scrollAmount = (cardWidth + gap) * 2;
 
         grid.scrollBy({
@@ -276,16 +301,23 @@ export async function initDeals() {
     }
 
     /**
-     * Update scroll button states
+     * Update scroll button states and fade masks
      */
-    function updateScrollButtons() {
-        if (!leftArrow || !rightArrow) return;
+    function updateScrollState() {
+        if (!leftArrow || !rightArrow || !carousel) return;
 
         const scrollLeft = grid.scrollLeft;
         const maxScroll = grid.scrollWidth - grid.clientWidth;
 
-        leftArrow.disabled = scrollLeft <= 0;
-        rightArrow.disabled = scrollLeft >= maxScroll - 1;
+        const canScrollLeft = scrollLeft > 0;
+        const canScrollRight = scrollLeft < maxScroll - 1;
+
+        leftArrow.disabled = !canScrollLeft;
+        rightArrow.disabled = !canScrollRight;
+
+        // Update fade mask classes
+        carousel.classList.toggle('can-scroll-left', canScrollLeft);
+        carousel.classList.toggle('can-scroll-right', canScrollRight);
     }
 
     /**
@@ -293,14 +325,18 @@ export async function initDeals() {
      */
     function showEmptyState() {
         grid.innerHTML = '';
-        emptyState?.classList.remove('hidden');
+        if (emptyState) {
+            emptyState.style.display = '';
+        }
     }
 
     /**
      * Hide empty state
      */
     function hideEmptyState() {
-        emptyState?.classList.add('hidden');
+        if (emptyState) {
+            emptyState.style.display = 'none';
+        }
     }
 
     return {

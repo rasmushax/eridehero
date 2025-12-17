@@ -363,3 +363,26 @@
         height: 70px;
     }
 }
+
+
+/* ===== DEAL CARD SKELETON ===== */
+
+.deal-card-skeleton {
+    pointer-events: none;
+}
+
+.deal-card-skeleton .skeleton-img {
+    width: 80px;
+    height: 80px;
+    border-radius: var(--radius-md);
+}
+
+.deal-card-skeleton .skeleton-text {
+    height: 14px;
+    width: 90%;
+}
+
+.deal-card-skeleton .skeleton-text-sm {
+    height: 12px;
+    width: 60%;
+}
