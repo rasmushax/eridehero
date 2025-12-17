@@ -33,6 +33,8 @@ use ERH\Cron\CronManager;
 use ERH\Cron\PriceUpdateJob;
 use ERH\Cron\CacheRebuildJob;
 use ERH\Cron\SearchJsonJob;
+use ERH\Cron\ComparisonJsonJob;
+use ERH\Cron\FinderJsonJob;
 use ERH\Cron\NotificationJob;
 use ERH\Admin\SettingsPage;
 use ERH\Migration\MigrationAdmin;
@@ -448,6 +450,16 @@ class Core {
         $this->cron_manager->add_job(
             'search-json',
             new SearchJsonJob($this->cron_manager)
+        );
+
+        $this->cron_manager->add_job(
+            'comparison-json',
+            new ComparisonJsonJob($this->cron_manager)
+        );
+
+        $this->cron_manager->add_job(
+            'finder-json',
+            new FinderJsonJob($this->cron_manager)
         );
 
         $this->cron_manager->add_job(
