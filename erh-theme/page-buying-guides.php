@@ -95,7 +95,7 @@ usort( $active_categories, function( $a, $b ) use ( $category_counts ) {
                 </button>
                 <?php foreach ( $active_categories as $cat ) : ?>
                     <button type="button" class="archive-filter" data-filter="<?php echo esc_attr( $cat->slug ); ?>">
-                        <?php echo esc_html( $cat->name ); ?>
+                        <?php echo esc_html( erh_get_category_short_name( $cat->name ) ); ?>
                         <span class="archive-filter-count"><?php echo esc_html( $category_counts[ $cat->slug ] ); ?></span>
                     </button>
                 <?php endforeach; ?>
@@ -112,12 +112,12 @@ usort( $active_categories, function( $a, $b ) use ( $category_counts ) {
                         $category_slugs = implode( ' ', $guide['categories'] );
                         $first_category = ! empty( $guide['categories'] ) ? $guide['categories'][0] : '';
 
-                        // Get category name for display
+                        // Get category name for display (use short name)
                         $category_name = '';
                         if ( $first_category ) {
                             $cat_obj = get_category_by_slug( $first_category );
                             if ( $cat_obj ) {
-                                $category_name = $cat_obj->name;
+                                $category_name = erh_get_category_short_name( $cat_obj->name );
                             }
                         }
                     ?>
