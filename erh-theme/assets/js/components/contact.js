@@ -2,6 +2,7 @@
  * Contact Form Handler
  *
  * Handles form validation and submission via REST API.
+ * Works with custom-select component for styled dropdowns.
  */
 
 export function initContactForm() {
@@ -48,6 +49,26 @@ export function initContactForm() {
     };
 
     /**
+     * Get the element to apply error class to (handles custom-select wrapper)
+     */
+    function getErrorTarget(field) {
+        // Check if this is a custom select
+        const customSelect = field.closest('.custom-select');
+        return customSelect || field;
+    }
+
+    /**
+     * Get the element to focus on error (handles custom-select trigger)
+     */
+    function getFocusTarget(field) {
+        const customSelect = field.closest('.custom-select');
+        if (customSelect) {
+            return customSelect.querySelector('.custom-select-trigger');
+        }
+        return field;
+    }
+
+    /**
      * Show field error
      */
     function showError(fieldName, message) {
@@ -60,7 +81,8 @@ export function initContactForm() {
         }
 
         if (field) {
-            field.classList.add('is-invalid');
+            const target = getErrorTarget(field);
+            target.classList.add('is-error');
             field.setAttribute('aria-invalid', 'true');
         }
     }
@@ -78,7 +100,8 @@ export function initContactForm() {
         }
 
         if (field) {
-            field.classList.remove('is-invalid');
+            const target = getErrorTarget(field);
+            target.classList.remove('is-error');
             field.removeAttribute('aria-invalid');
         }
     }
@@ -110,6 +133,7 @@ export function initContactForm() {
      */
     function validateForm() {
         let isValid = true;
+        let firstInvalidField = null;
         clearAllErrors();
 
         Object.entries(validators).forEach(([fieldName, validate]) => {
@@ -119,9 +143,18 @@ export function initContactForm() {
             const error = validate(field.value);
             if (error) {
                 showError(fieldName, error);
+                if (!firstInvalidField) {
+                    firstInvalidField = field;
+                }
                 isValid = false;
             }
         });
+
+        // Focus first invalid field
+        if (firstInvalidField) {
+            const focusTarget = getFocusTarget(firstInvalidField);
+            focusTarget?.focus();
+        }
 
         return isValid;
     }
@@ -158,7 +191,10 @@ export function initContactForm() {
     Object.entries(fields).forEach(([fieldName, field]) => {
         if (!field) return;
 
-        field.addEventListener('blur', () => {
+        // For custom selects, listen on the native select's change event
+        const eventType = field.tagName === 'SELECT' ? 'change' : 'blur';
+
+        field.addEventListener(eventType, () => {
             const validate = validators[fieldName];
             if (!validate) return;
 
@@ -170,10 +206,12 @@ export function initContactForm() {
             }
         });
 
-        // Clear error on input
-        field.addEventListener('input', () => {
-            clearError(fieldName);
-        });
+        // Clear error on input (for text inputs)
+        if (field.tagName !== 'SELECT') {
+            field.addEventListener('input', () => {
+                clearError(fieldName);
+            });
+        }
     });
 
     // Form submission
@@ -182,11 +220,6 @@ export function initContactForm() {
 
         // Validate
         if (!validateForm()) {
-            // Focus first invalid field
-            const firstInvalid = form.querySelector('.is-invalid');
-            if (firstInvalid) {
-                firstInvalid.focus();
-            }
             return;
         }
 
