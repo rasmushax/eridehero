@@ -1,0 +1,522 @@
+/* =============================================
+   ERideHero Design System - Hero Section
+   ============================================= */
+
+/* Prevent hero orbs from causing horizontal overflow on homepage */
+body.home #main-content {
+    overflow-x: clip;
+}
+
+/* ===== HERO BASE ===== */
+
+.hero {
+    background: transparent;
+    padding: 120px 0 var(--space-14);
+    position: relative;
+}
+
+/* Dot pattern overlay - fades on all edges */
+.hero-grid {
+    position: absolute;
+    top: 0;
+    left: 0;
+    right: 0;
+    bottom: 0;
+    background-image: url("data:image/svg+xml,%3Csvg xmlns='http://www.w3.org/2000/svg' width='20' height='20'%3E%3Ccircle cx='10' cy='10' r='1.5' fill='%235e2ced'/%3E%3C/svg%3E");
+    background-size: 20px 20px;
+    opacity: 0.07;
+    mask-image:
+        linear-gradient(to bottom, transparent 0%, black 15%, black 50%, transparent 85%),
+        linear-gradient(to right, transparent 0%, black 25%, black 75%, transparent 100%);
+    mask-composite: intersect;
+    -webkit-mask-image:
+        linear-gradient(to bottom, transparent 0%, black 15%, black 50%, transparent 85%),
+        linear-gradient(to right, transparent 0%, black 25%, black 75%, transparent 100%);
+    -webkit-mask-composite: source-in;
+    pointer-events: none;
+}
+
+/* Subtle orb backgrounds - no overflow hidden so they bleed into other sections */
+.hero::before {
+    content: '';
+    position: absolute;
+    top: -200px;
+    left: 0;
+    width: 800px;
+    height: 800px;
+    background: radial-gradient(circle, rgba(94, 44, 237, 0.12) 0%, transparent 50%);
+    pointer-events: none;
+}
+
+.hero::after {
+    content: '';
+    position: absolute;
+    bottom: -250px;
+    right: -100px;
+    width: 900px;
+    height: 900px;
+    background: radial-gradient(circle, rgba(56, 189, 180, 0.11) 0%, transparent 45%);
+    pointer-events: none;
+}
+
+.hero .container {
+    position: relative;
+    z-index: 1;
+}
+
+
+/* ===== HERO CONTENT LAYOUT ===== */
+
+.hero-content {
+    display: grid;
+    grid-template-columns: 1fr 480px;
+    gap: var(--space-16);
+    align-items: center;
+}
+
+.hero-left {
+    max-width: 520px;
+}
+
+.hero-right {
+    /* Animation: slide up and fade in on load */
+    animation: heroCardEntrance 0.6s ease-out;
+}
+
+@keyframes heroCardEntrance {
+    from {
+        opacity: 0;
+        transform: translateY(20px);
+    }
+    to {
+        opacity: 1;
+        transform: translateY(0);
+    }
+}
+
+
+/* ===== HERO EYEBROW ===== */
+/* Extends .eyebrow from _components.css */
+
+.hero-eyebrow {
+    font-size: var(--text-base);
+    margin-bottom: var(--space-6);
+}
+
+
+/* ===== HERO TYPOGRAPHY ===== */
+
+.hero h1 {
+    font-size: var(--text-7xl);
+    font-weight: var(--font-bold);
+    color: var(--color-dark);
+    line-height: var(--leading-tight);
+    margin-bottom: var(--space-6);
+    letter-spacing: var(--tracking-tight);
+}
+
+.hero h1 span {
+    color: var(--color-primary);
+}
+
+.hero-subtitle {
+    font-size: var(--text-lg);
+    color: var(--color-body);
+    line-height: var(--leading-relaxed);
+    margin-bottom: var(--space-10);
+}
+
+
+/* ===== HERO CTAs ===== */
+
+.hero-ctas {
+    display: flex;
+    gap: var(--space-5);
+    margin-bottom: var(--space-10);
+}
+
+
+/* ===== HERO FEATURES ===== */
+/* Uses .check-list and .check-item from _components.css */
+/* Hero-specific layout overrides only */
+
+
+/* ===== FINDER CARD ===== */
+
+.finder-card {
+    background: var(--color-white);
+    border-radius: var(--radius-3xl);
+    box-shadow: 0 25px 80px rgba(33, 39, 58, 0.12), 0 0 0 1px rgba(230, 229, 233, 0.6);
+    transition: box-shadow var(--transition-base);
+}
+
+.finder-card:hover {
+    box-shadow: 0 30px 90px rgba(33, 39, 58, 0.15), 0 0 0 1px rgba(230, 229, 233, 0.7);
+}
+
+
+/* ===== FINDER TYPE SELECTOR ===== */
+
+.finder-types {
+    display: flex;
+    gap: var(--space-2);
+    margin-bottom: var(--space-6);
+}
+
+.finder-type {
+    flex: 1;
+    display: flex;
+    flex-direction: column;
+    align-items: center;
+    gap: var(--space-1);
+    padding: var(--space-3) var(--space-2);
+    background: var(--color-background);
+    border: var(--border-width-2) solid transparent;
+    border-radius: var(--radius-lg);
+    cursor: pointer;
+    transition: all var(--transition-fast);
+}
+
+.finder-type:hover {
+    background: var(--color-white);
+    border-color: var(--color-border);
+}
+
+.finder-type.active {
+    background: var(--color-white);
+    border-color: var(--color-primary);
+}
+
+.finder-type-icon {
+    width: 28px;
+    height: 28px;
+    display: flex;
+    align-items: center;
+    justify-content: center;
+    color: var(--color-muted);
+    transition: color var(--transition-fast);
+}
+
+.finder-type-icon svg {
+    width: 24px;
+    height: 24px;
+}
+
+.finder-type-icon svg:has(use[href$="#icon-eskate"]),
+.finder-type-icon svg:has(use[href$="#icon-ebike"]) {
+    width: 32px;
+    height: 32px;
+}
+
+.finder-type-icon svg:has(use[href$="#icon-hoverboard"]) {
+    width: 30px;
+    height: 30px;
+}
+
+.finder-type:hover .finder-type-icon,
+.finder-type.active .finder-type-icon {
+    color: var(--color-primary);
+}
+
+.finder-type-label {
+    font-size: var(--text-xs);
+    font-weight: var(--font-semibold);
+    color: var(--color-muted);
+    transition: color var(--transition-fast);
+}
+
+.finder-type:hover .finder-type-label,
+.finder-type.active .finder-type-label {
+    color: var(--color-dark);
+}
+
+
+/* ===== FINDER BODY ===== */
+
+.finder-body {
+    padding: var(--space-9);
+}
+
+
+/* ===== FINDER HEADER ===== */
+
+.finder-header {
+    display: flex;
+    align-items: center;
+    gap: var(--space-4);
+    margin-bottom: var(--space-7);
+}
+
+.finder-icon {
+    /* Uses .icon-box .icon-box-gradient from _components.css */
+    border-radius: var(--radius-xl);
+}
+
+.finder-title {
+    font-size: var(--text-xl);
+    font-weight: var(--font-semibold);
+    color: var(--color-dark);
+}
+
+.finder-header p {
+    font-size: var(--text-sm);
+    color: var(--color-muted);
+}
+
+
+/* ===== FINDER FORM ===== */
+
+.finder-form {
+    display: flex;
+    flex-direction: column;
+    gap: var(--space-5);
+}
+
+.finder-row {
+    display: flex;
+    gap: var(--space-4);
+}
+
+.finder-field {
+    flex: 1;
+}
+
+.finder-field label {
+    /* Uses .form-label from _forms.css */
+    font-size: var(--text-xs);
+    margin-bottom: var(--space-2);
+}
+
+.finder-field select {
+    /* Extends .form-select from _forms.css */
+    /* Compact padding for finder card */
+    padding: var(--space-4) var(--space-5);
+    padding-right: 40px;
+    background-position: right 12px center;
+}
+
+
+/* ===== FINDER SUBMIT ===== */
+
+.finder-submit {
+    background: var(--color-dark);
+    color: var(--color-white);
+    padding: var(--space-5) var(--space-6);
+    border-radius: var(--radius-lg);
+    font-family: var(--font-family);
+    font-size: var(--text-base);
+    font-weight: var(--font-semibold);
+    border: none;
+    cursor: pointer;
+    display: flex;
+    align-items: center;
+    justify-content: center;
+    gap: var(--space-3);
+    transition: all var(--transition-base);
+    margin-top: var(--space-2);
+    position: relative;
+    overflow: hidden;
+}
+
+.finder-submit::before {
+    content: '';
+    position: absolute;
+    top: 0;
+    left: -100%;
+    width: 100%;
+    height: 100%;
+    background: linear-gradient(90deg, transparent, rgba(255, 255, 255, 0.1), transparent);
+    transition: left 0.5s ease;
+}
+
+.finder-submit:hover,
+.finder-submit:focus {
+    background: var(--color-primary);
+}
+
+.finder-submit:hover::before {
+    left: 100%;
+}
+
+.finder-submit svg {
+    width: 18px;
+    height: 18px;
+    transition: transform var(--transition-fast);
+}
+
+.finder-submit:hover svg {
+    transform: translateX(3px);
+}
+
+
+/* ===== FINDER FOOTER ===== */
+
+.finder-footer {
+    display: flex;
+    align-items: center;
+    justify-content: center;
+    gap: var(--space-6);
+    margin-top: var(--space-6);
+    padding-top: var(--space-6);
+    border-top: var(--border-width) solid var(--color-border);
+}
+
+.finder-footer a {
+    font-size: var(--text-sm);
+    color: var(--color-primary);
+    text-decoration: none;
+    font-weight: var(--font-semibold);
+    display: inline-flex;
+    align-items: center;
+    gap: var(--space-2);
+    transition: all var(--transition-fast);
+}
+
+.finder-footer a:hover,
+.finder-footer a:focus {
+    text-decoration: underline;
+}
+
+.finder-footer a svg {
+    width: 14px;
+    height: 14px;
+}
+
+.finder-footer-divider {
+    width: 1px;
+    height: 16px;
+    background: var(--color-border);
+}
+
+
+/* ===== HERO RESPONSIVE ===== */
+
+@media (max-width: 1024px) {
+    .hero {
+        padding: var(--space-13) 0 var(--space-15);
+    }
+
+    .hero::before {
+        left: -400px;
+        top: -250px;
+        background: radial-gradient(circle, rgba(94, 44, 237, 0.09) 0%, transparent 50%);
+    }
+
+    .hero::after {
+        right: -400px;
+        top: -100px;
+        bottom: auto;
+        background: radial-gradient(circle, rgba(56, 189, 180, 0.09) 0%, transparent 45%);
+    }
+
+    .hero-content {
+        grid-template-columns: 1fr;
+        gap: var(--space-12);
+    }
+
+    .hero-left {
+        max-width: 100%;
+        text-align: center;
+    }
+
+    .hero-ctas {
+        justify-content: center;
+    }
+
+    .hero .check-list {
+        justify-content: center;
+    }
+
+    .hero .check-item {
+        font-size: var(--text-sm);
+    }
+
+    .finder-card {
+        max-width: 520px;
+        margin: 0 auto;
+    }
+}
+
+@media (max-width: 820px) {
+    .hero {
+        padding: var(--space-11) 0 var(--space-13);
+    }
+
+    .hero h1 {
+        font-size: 36px;
+    }
+
+    .hero-subtitle {
+        font-size: var(--text-base);
+    }
+}
+
+@media (max-width: 600px) {
+    .finder-tabs {
+        overflow-x: auto;
+        -webkit-overflow-scrolling: touch;
+    }
+
+    .finder-tab {
+        min-width: max-content;
+        padding: var(--space-4) var(--space-5);
+        font-size: var(--text-xs);
+    }
+
+    .finder-row {
+        flex-direction: column;
+    }
+}
+
+@media (max-width: 500px) {
+    .finder-types {
+        flex-wrap: wrap;
+    }
+
+    .finder-type {
+        flex: 0 0 calc(33.333% - var(--space-2));
+    }
+}
+
+@media (max-width: 400px) {
+    .finder-type {
+        flex: 0 0 calc(50% - var(--space-1));
+    }
+}
+
+@media (max-width: 480px) {
+    .hero {
+        padding: var(--space-9) 0 var(--space-11);
+    }
+
+    .hero h1 {
+        font-size: 28px;
+    }
+
+    .hero-ctas {
+        flex-direction: column;
+    }
+
+    .hero-ctas .btn {
+        width: 100%;
+        justify-content: center;
+    }
+
+    .finder-body {
+        padding: var(--space-7);
+    }
+
+    .finder-header {
+        flex-direction: column;
+        text-align: center;
+    }
+
+    .finder-footer {
+        flex-direction: column;
+        gap: var(--space-4);
+    }
+
+    .finder-footer-divider {
+        display: none;
+    }
+}
