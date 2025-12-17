@@ -230,11 +230,8 @@ export function initContactForm() {
             const formData = new FormData(form);
             const data = Object.fromEntries(formData.entries());
 
-            // Get nonce from form
+            // Get nonce from form hidden field
             const nonce = form.querySelector('[name="erh_contact_nonce"]')?.value;
-            if (nonce) {
-                data._wpnonce = nonce;
-            }
 
             // Use localized REST URL or fallback
             const restUrl = window.erhData?.restUrl || '/wp-json/erh/v1/';
@@ -243,6 +240,7 @@ export function initContactForm() {
                 method: 'POST',
                 headers: {
                     'Content-Type': 'application/json',
+                    'X-WP-Nonce': nonce || '',
                 },
                 body: JSON.stringify(data),
             });
