@@ -27,11 +27,6 @@ class FinderJsonJob implements CronJobInterface {
     ];
 
     /**
-     * Default geo for price display.
-     */
-    private const DEFAULT_GEO = 'US';
-
-    /**
      * Cron manager reference for locking.
      *
      * @var CronManager
@@ -175,22 +170,17 @@ class FinderJsonJob implements CronJobInterface {
             $specs = maybe_unserialize($product->specs);
             $price_history = maybe_unserialize($product->price_history);
 
-            // Extract default geo pricing data for backwards compatibility.
-            $default_geo_data = $this->get_default_geo_data($price_history);
-
             // Build the finder item with all relevant data.
+            // Pricing data (current_price, instock, bestlink, averages) is geo-keyed in price_history.
             $item = [
                 'id'            => (int) $product->product_id,
                 'name'          => $product->name,
                 'category'      => $slug,
                 'url'           => $product->permalink,
                 'thumbnail'     => $product->image_url ?: $this->get_default_thumbnail(),
-                'price'         => $default_geo_data['price'],
                 'rating'        => $product->rating !== null ? (float) $product->rating : null,
                 'popularity'    => (int) $product->popularity_score,
-                'instock'       => $default_geo_data['instock'],
-                'bestlink'      => $default_geo_data['bestlink'],
-                'price_history' => is_array($price_history) ? $price_history : null,
+                'pricing'       => is_array($price_history) ? $price_history : new \stdClass(),
                 'specs'         => $this->flatten_specs($specs, $slug),
             ];
 
@@ -222,35 +212,6 @@ class FinderJsonJob implements CronJobInterface {
         ));
 
         return count($finder_items);
-    }
-
-    /**
-     * Extract pricing data for the default geo from price_history.
-     *
-     * @param mixed $price_history The price history data (geo-keyed array).
-     * @return array{price: float|null, instock: bool, bestlink: string|null}
-     */
-    private function get_default_geo_data($price_history): array {
-        $default = [
-            'price'    => null,
-            'instock'  => false,
-            'bestlink' => null,
-        ];
-
-        if (!is_array($price_history)) {
-            return $default;
-        }
-
-        $geo_data = $price_history[self::DEFAULT_GEO] ?? null;
-        if (!$geo_data || !is_array($geo_data)) {
-            return $default;
-        }
-
-        return [
-            'price'    => isset($geo_data['current_price']) ? (float) $geo_data['current_price'] : null,
-            'instock'  => !empty($geo_data['instock']),
-            'bestlink' => $geo_data['bestlink'] ?? null,
-        ];
     }
 
     /**
