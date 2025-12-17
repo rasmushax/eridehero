@@ -213,11 +213,13 @@ CREATE TABLE wp_product_data (
         'updated_at' => '2025-12-17 10:00:00',
     ],
     'GB' => [...],  // Only present if genuine GB price exists
-    'DE' => [...],
+    'EU' => [...],  // EUR prices aggregated from DE/FR/IT/ES/etc.
+    'CA' => [...],
+    'AU' => [...],
 ]
 ```
 
-**Supported Geos**: US, GB, DE, CA, AU
+**Supported Regions**: US, GB, EU, CA, AU
 
 #### `wp_product_daily_prices` - Price History (per geo/currency)
 ```sql
@@ -299,44 +301,59 @@ add_filter('hft_best_price', function($best_price, $product_id) {
 
 ### Geo-Aware Pricing Architecture
 
-The pricing system is fully geo-aware, showing users prices in their local currency when available.
+The pricing system uses a **5-region model** for simplicity and practical coverage.
 
-**Data Flow**:
-1. **HFT Plugin** scrapes prices with `geo_target` per retailer
-2. **CacheRebuildJob** builds `price_history` per geo (only genuine prices, no US fallbacks)
-3. **JSON Generators** output geo-keyed pricing data
-4. **Frontend JS** detects user geo via IPInfo, displays appropriate prices
-
-**Geo Validation Logic** (`CacheRebuildJob::is_genuine_geo_price()`):
-- Price is for requested geo if `price_geo === $geo`
-- Global prices (null geo) default to US only
-- Non-US geos require matching currency (e.g., GB requires GBP)
-- US fallbacks are NOT stored under other geo keys
-
-**Frontend Service** (`geo-price.js`):
-```javascript
-import { getUserGeo, formatPrice } from './services/geo-price.js';
-
-// Detect user's geo (cached in localStorage for 24h)
-const { geo, currency } = await getUserGeo();
-
-// Get price for user's geo, fallback to US
-const prices = product.pricing || {};
-const price = prices[geo]?.current_price ?? prices['US']?.current_price;
-const displayCurrency = prices[geo] ? currency : 'USD';
-
-// Format with proper symbol
-formatPrice(price, displayCurrency); // "$499" or "£399"
+**Architecture**:
+```
+┌─────────────┐     ┌──────────────────┐     ┌─────────────────┐
+│ HFT Plugin  │     │ CacheRebuildJob  │     │ Frontend        │
+│ (granular)  │────▶│ (groups regions) │────▶│ (detects/shows) │
+└─────────────┘     └──────────────────┘     └─────────────────┘
+     │                      │                        │
+ Per-country          5 Regions              Country → Region
+ DE, FR, IT...    US, GB, EU, CA, AU       IPInfo → mapping
 ```
 
-**Currency Mapping**:
-| Geo | Currency | Symbol |
-|-----|----------|--------|
-| US | USD | $ |
-| GB | GBP | £ |
-| DE | EUR | € |
-| CA | CAD | CA$ |
-| AU | AUD | A$ |
+**Data Flow**:
+1. **HFT Plugin** scrapes prices per-country (DE, FR, IT, ES, etc.)
+2. **CacheRebuildJob** groups into 5 regions (EU aggregates DE/FR/IT/ES/etc.)
+3. **JSON Generators** output region-keyed pricing data
+4. **Frontend** detects user's country via IPInfo, maps to region, displays prices
+
+**5 Supported Regions**:
+| Region | Currency | Countries Mapped |
+|--------|----------|------------------|
+| US | USD | United States |
+| GB | GBP | United Kingdom |
+| EU | EUR | DE, FR, IT, ES, NL, BE, AT, IE, PT, FI, GR, + more |
+| CA | CAD | Canada |
+| AU | AUD | Australia, New Zealand |
+
+**Region Validation Logic** (`CacheRebuildJob::is_genuine_region_price()`):
+- US: Accept USD prices with geo=US or null
+- EU: Accept EUR prices from any EU country (DE, FR, IT, etc.)
+- GB/CA/AU: Accept matching currency with geo match
+- US fallbacks are NOT stored under other region keys
+
+**Frontend Service** (`geo-price.js` + `geo-config.js`):
+```javascript
+import { getUserGeo, formatPrice, setUserRegion } from './services/geo-price.js';
+
+// Detect user's region (country → region mapping, cached 24h)
+const { geo, region, currency, country } = await getUserGeo();
+// French user: { geo: 'EU', region: 'EU', currency: 'EUR', country: 'FR' }
+
+// Get price for user's region, fallback to US
+const prices = product.pricing || {};
+const price = prices[region]?.current_price ?? prices['US']?.current_price;
+const displayCurrency = prices[region] ? currency : 'USD';
+
+// Format with proper symbol
+formatPrice(price, displayCurrency); // "$499" or "€399"
+
+// Manual region override (for region selector)
+setUserRegion('GB'); // User can switch to see UK prices
+```
 
 ### Generated JSON Files
 
@@ -347,7 +364,7 @@ formatPrice(price, displayCurrency); // "$499" or "£399"
     "name": "Segway Ninebot Max",
     "category": "escooter",
     "thumbnail": "...",
-    "prices": { "US": 799, "GB": 649 },
+    "prices": { "US": 799, "GB": 649, "EU": 699 },
     "url": "...",
     "popularity": 85
 }
@@ -373,6 +390,7 @@ formatPrice(price, displayCurrency); // "$499" or "£399"
             "low_3m": 749, "low_6m": 699, "low_12m": 649, "low_all": 599,
             "high_3m": 899, "high_6m": 999, "high_12m": 1099, "high_all": 1199
         },
+        "EU": { ... },  // EUR prices from DE/FR/IT/ES retailers
         "GB": { ... }
     },
     "specs": { ... }
@@ -670,7 +688,8 @@ erh-theme/
 │   │       └── style.css              # Compiled (gitignore)
 │   └── js/
 │       ├── services/
-│       │   └── geo-price.js           # Geo detection, price formatting, caching
+│       │   ├── geo-config.js          # Region configuration, country→region mapping
+│       │   └── geo-price.js           # Region detection, price formatting, caching
 │       ├── components/
 │       │   ├── header.js              # Header interactions
 │       │   ├── search.js              # Search functionality

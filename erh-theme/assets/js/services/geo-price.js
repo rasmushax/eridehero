@@ -2,27 +2,39 @@
  * Geo-Aware Price Service
  *
  * Handles:
- * - User geo detection (via IPInfo)
+ * - User region detection (via IPInfo country → region mapping)
  * - Fetching prices from REST API
  * - Currency display preferences
  * - Price caching
+ * - Manual region override
+ *
+ * Architecture:
+ * - IPInfo returns country code (e.g., 'DE', 'FR')
+ * - We map countries to 5 regions: US, GB, EU, CA, AU
+ * - Prices are stored and displayed per-region
  *
  * This allows LSCache to serve the same HTML to all users,
- * then JavaScript fetches geo-specific prices after page load.
+ * then JavaScript fetches region-specific prices after page load.
  */
 
-// Default geo when detection fails
-const DEFAULT_GEO = 'US';
-const DEFAULT_CURRENCY = 'USD';
+import {
+    REGIONS,
+    DEFAULT_REGION,
+    getRegionForCountry,
+    getRegionConfig,
+    getAvailableRegions,
+    isValidRegion,
+} from './geo-config.js';
 
-// Cache duration (5 minutes)
+// Cache duration (5 minutes for prices)
 const CACHE_DURATION = 5 * 60 * 1000;
 
-// Geo detection cache key
-const GEO_STORAGE_KEY = 'erh_user_geo';
-const GEO_EXPIRY_KEY = 'erh_user_geo_expiry';
+// Region detection cache keys (localStorage)
+const REGION_STORAGE_KEY = 'erh_user_region';
+const REGION_EXPIRY_KEY = 'erh_user_region_expiry';
+const REGION_OVERRIDE_KEY = 'erh_region_override'; // Manual override (no expiry)
 
-// Price cache
+// Price cache (in-memory)
 const priceCache = new Map();
 
 /**
@@ -39,50 +51,75 @@ function getRestUrl() {
 }
 
 /**
- * Get user's geo from IPInfo or cached value
- * @returns {Promise<{geo: string, currency: string}>}
+ * Get user's region (mapped from IPInfo country)
+ *
+ * Returns the user's region code (US, GB, EU, CA, AU) along with
+ * currency info. Checks for manual override first, then cached value,
+ * then detects via IPInfo.
+ *
+ * @returns {Promise<{geo: string, currency: string, symbol: string, region: string, country: string|null}>}
  */
 export async function getUserGeo() {
-    // Check cached geo
-    const cached = getCachedGeo();
+    // Check for manual override first (user selected a different region)
+    const override = getRegionOverride();
+    if (override) {
+        const config = getRegionConfig(override);
+        return {
+            geo: override,        // Region code (for backwards compatibility)
+            region: override,     // Explicit region code
+            currency: config.currency,
+            symbol: config.symbol,
+            country: null,        // Unknown when manually set
+        };
+    }
+
+    // Check cached region
+    const cached = getCachedRegion();
     if (cached) {
         return cached;
     }
 
+    // Detect via IPInfo
+    let detectedCountry = null;
+
     try {
-        // Try IPInfo (requires token in erhConfig)
         const ipInfoToken = window.erhConfig?.ipinfoToken;
         if (ipInfoToken) {
             const response = await fetch(`https://ipinfo.io/json?token=${ipInfoToken}`);
             if (response.ok) {
                 const data = await response.json();
-                const geoData = {
-                    geo: data.country || DEFAULT_GEO,
-                    currency: getCurrencyForGeo(data.country || DEFAULT_GEO)
-                };
-                cacheGeo(geoData);
-                return geoData;
+                detectedCountry = data.country || null;
             }
         }
     } catch (error) {
         console.warn('[GeoPriceService] IPInfo detection failed:', error.message);
     }
 
-    // Fallback to default
-    const fallback = { geo: DEFAULT_GEO, currency: DEFAULT_CURRENCY };
-    cacheGeo(fallback);
-    return fallback;
+    // Map country to region
+    const region = detectedCountry ? getRegionForCountry(detectedCountry) : DEFAULT_REGION;
+    const config = getRegionConfig(region);
+
+    const regionData = {
+        geo: region,              // For backwards compatibility with existing code
+        region: region,           // Explicit region code
+        currency: config.currency,
+        symbol: config.symbol,
+        country: detectedCountry, // Original country code (e.g., 'DE')
+    };
+
+    cacheRegion(regionData);
+    return regionData;
 }
 
 /**
- * Get cached geo from localStorage
- * @returns {{geo: string, currency: string}|null}
+ * Get cached region from localStorage
+ * @returns {{geo: string, region: string, currency: string, symbol: string, country: string|null}|null}
  */
-function getCachedGeo() {
+function getCachedRegion() {
     try {
-        const expiry = localStorage.getItem(GEO_EXPIRY_KEY);
+        const expiry = localStorage.getItem(REGION_EXPIRY_KEY);
         if (expiry && Date.now() < parseInt(expiry, 10)) {
-            const data = localStorage.getItem(GEO_STORAGE_KEY);
+            const data = localStorage.getItem(REGION_STORAGE_KEY);
             if (data) {
                 return JSON.parse(data);
             }
@@ -94,45 +131,99 @@ function getCachedGeo() {
 }
 
 /**
- * Cache geo data to localStorage
- * @param {{geo: string, currency: string}} data
+ * Cache region data to localStorage
+ * @param {{geo: string, region: string, currency: string, symbol: string, country: string|null}} data
  */
-function cacheGeo(data) {
+function cacheRegion(data) {
     try {
-        localStorage.setItem(GEO_STORAGE_KEY, JSON.stringify(data));
+        localStorage.setItem(REGION_STORAGE_KEY, JSON.stringify(data));
         // Cache for 24 hours
-        localStorage.setItem(GEO_EXPIRY_KEY, String(Date.now() + 24 * 60 * 60 * 1000));
+        localStorage.setItem(REGION_EXPIRY_KEY, String(Date.now() + 24 * 60 * 60 * 1000));
     } catch (e) {
         // localStorage not available
     }
 }
 
 /**
- * Get currency for a geo code
- * @param {string} geo
- * @returns {string}
+ * Get manual region override from localStorage
+ * @returns {string|null} Region code or null if no override
  */
-function getCurrencyForGeo(geo) {
-    const geoToCurrency = {
-        'US': 'USD',
-        'CA': 'CAD',
-        'GB': 'GBP',
-        'AU': 'AUD',
-        // Euro countries
-        'DE': 'EUR', 'FR': 'EUR', 'IT': 'EUR', 'ES': 'EUR', 'NL': 'EUR',
-        'BE': 'EUR', 'AT': 'EUR', 'IE': 'EUR', 'FI': 'EUR', 'PT': 'EUR',
-        'GR': 'EUR', 'LU': 'EUR', 'SK': 'EUR', 'SI': 'EUR', 'EE': 'EUR',
-        'LV': 'EUR', 'LT': 'EUR', 'CY': 'EUR', 'MT': 'EUR',
-        // Nordic (non-Euro)
-        'DK': 'DKK',
-        'SE': 'SEK',
-        'NO': 'NOK',
-        // Other
-        'JP': 'JPY',
-        'CN': 'CNY',
-    };
-    return geoToCurrency[geo] || 'USD';
+function getRegionOverride() {
+    try {
+        const override = localStorage.getItem(REGION_OVERRIDE_KEY);
+        if (override && isValidRegion(override)) {
+            return override;
+        }
+    } catch (e) {
+        // localStorage not available
+    }
+    return null;
 }
+
+/**
+ * Set manual region override
+ * Used when user manually selects a different region.
+ *
+ * @param {string} regionCode - Region code (US, GB, EU, CA, AU)
+ * @returns {boolean} True if set successfully
+ */
+export function setUserRegion(regionCode) {
+    if (!isValidRegion(regionCode)) {
+        console.warn(`[GeoPriceService] Invalid region code: ${regionCode}`);
+        return false;
+    }
+
+    try {
+        localStorage.setItem(REGION_OVERRIDE_KEY, regionCode);
+        // Clear cached auto-detected region so it doesn't conflict
+        localStorage.removeItem(REGION_STORAGE_KEY);
+        localStorage.removeItem(REGION_EXPIRY_KEY);
+
+        // Dispatch event for components to update
+        window.dispatchEvent(new CustomEvent('erh:region-changed', {
+            detail: {
+                region: regionCode,
+                ...getRegionConfig(regionCode),
+            },
+        }));
+
+        return true;
+    } catch (e) {
+        console.error('[GeoPriceService] Failed to set region override:', e);
+        return false;
+    }
+}
+
+/**
+ * Clear manual region override (revert to auto-detection)
+ */
+export function clearUserRegion() {
+    try {
+        localStorage.removeItem(REGION_OVERRIDE_KEY);
+        localStorage.removeItem(REGION_STORAGE_KEY);
+        localStorage.removeItem(REGION_EXPIRY_KEY);
+
+        window.dispatchEvent(new CustomEvent('erh:region-changed', {
+            detail: { region: null, autoDetect: true },
+        }));
+    } catch (e) {
+        // Ignore errors
+    }
+}
+
+/**
+ * Check if user has a manual region override set
+ * @returns {boolean}
+ */
+export function hasRegionOverride() {
+    return getRegionOverride() !== null;
+}
+
+/**
+ * Get all available regions for region selector UI
+ * @returns {Array<{code: string, currency: string, symbol: string, flag: string, label: string}>}
+ */
+export { getAvailableRegions };
 
 /**
  * Fetch best prices for multiple products
@@ -221,27 +312,24 @@ export async function getProductPrices(productId, geo, convertTo = null) {
 
 /**
  * Format a price for display
- * @param {number} price
- * @param {string} currency
- * @param {boolean} [isConverted=false]
- * @returns {string}
+ *
+ * @param {number} price - The price value
+ * @param {string} currency - Currency code (USD, EUR, GBP, CAD, AUD)
+ * @param {boolean} [isConverted=false] - Whether this is a converted/approximate price
+ * @returns {string} Formatted price string (e.g., "$499", "€399")
  */
 export function formatPrice(price, currency, isConverted = false) {
     if (price === null || price === undefined) {
         return '';
     }
 
+    // Get symbol from REGIONS config or use fallback
     const symbols = {
         'USD': '$',
-        'EUR': '\u20AC',
-        'GBP': '\u00A3',
+        'EUR': '€',
+        'GBP': '£',
         'CAD': 'CA$',
         'AUD': 'A$',
-        'DKK': 'kr',
-        'SEK': 'kr',
-        'NOK': 'kr',
-        'JPY': '\u00A5',
-        'CNY': '\u00A5'
     };
 
     const symbol = symbols[currency] || currency + ' ';
@@ -252,6 +340,23 @@ export function formatPrice(price, currency, isConverted = false) {
 
     // Add ~ prefix for converted prices to indicate approximation
     return isConverted ? `~${symbol}${formatted}` : `${symbol}${formatted}`;
+}
+
+/**
+ * Get currency symbol for a currency code
+ *
+ * @param {string} currency - Currency code
+ * @returns {string} Currency symbol
+ */
+export function getCurrencySymbol(currency) {
+    const symbols = {
+        'USD': '$',
+        'EUR': '€',
+        'GBP': '£',
+        'CAD': 'CA$',
+        'AUD': 'A$',
+    };
+    return symbols[currency] || currency;
 }
 
 /**
@@ -349,10 +454,19 @@ export async function initGeoPricing() {
 
 // Export for use in other modules
 export default {
+    // Region detection
     getUserGeo,
+    setUserRegion,
+    clearUserRegion,
+    hasRegionOverride,
+    getAvailableRegions,
+    // Price fetching
     getBestPrices,
     getProductPrices,
+    // Formatting
     formatPrice,
+    getCurrencySymbol,
+    // DOM helpers
     updatePriceElements,
-    initGeoPricing
+    initGeoPricing,
 };

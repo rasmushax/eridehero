@@ -217,19 +217,28 @@ Use this file alongside CLAUDE.md to track progress.
   - Lightweight format for head-to-head comparison widgets
 
 ### Frontend Geo Service (Theme)
+- [x] Create `erh-theme/assets/js/services/geo-config.js`
+  - 5 supported regions: US, GB, EU, CA, AU
+  - Country→region mapping (IPInfo country codes)
+  - Region configuration (currency, symbol, flag, label)
 - [x] Create `erh-theme/assets/js/services/geo-price.js`
-  - `getUserGeo()` - IPInfo integration with localStorage caching
+  - `getUserGeo()` - IPInfo detection + country→region mapping
+  - `setUserRegion()` - Manual region override for region selector
   - `formatPrice()` - Currency symbol formatting
   - ES6 module exports
 - [x] Update `erh-theme/assets/js/components/comparison.js`
   - Import geo-price service
-  - Read from geo-keyed `prices` object
+  - Read from region-keyed `prices` object
   - Format prices with correct currency symbols
+- [x] Verify `erh-theme/assets/js/components/deals.js` compatibility
+  - Already uses `getUserGeo()` - works with new region system
 
-### Geo Configuration
-- Supported geos: US, GB, DE, CA, AU
-- Price validation: Geo match OR currency match OR US default
-- Frontend fallback: Show US price if user's geo has no data
+### 5-Region Architecture
+- **Regions**: US, GB, EU, CA, AU
+- **HFT stores**: Per-country (DE, FR, IT, ES, etc.)
+- **Cache groups**: Country→Region (DE/FR/IT → EU)
+- **Validation**: Currency match required (EU = EUR only)
+- **Frontend fallback**: Show US price if user's region has no data
 
 ---
 
@@ -441,9 +450,11 @@ erh-theme/
 │   │       └── style.css
 │   └── js/
 │       ├── services/
-│       │   └── geo-price.js              # Geo detection & price formatting
+│       │   ├── geo-config.js             # 5-region config, country→region mapping
+│       │   └── geo-price.js              # Region detection & price formatting
 │       └── components/
-│           └── comparison.js             # H2H comparison widget (geo-aware)
+│           ├── comparison.js             # H2H comparison widget (region-aware)
+│           └── deals.js                  # Deals section (region-aware)
 ├── functions.php
 └── style.css
 ```
@@ -465,8 +476,9 @@ erh-theme/
 | Notifications | Every 6 hours | Balance responsiveness vs server load |
 | Cron Admin | "Run Now" buttons | User prefers GUI over WP-CLI |
 | Job Locking | Transients | Prevent duplicate cron execution |
-| Geo Pricing | Per-geo in price_history | US fallbacks only on frontend, not in data layer |
-| Geo Validation | Currency + geo_target check | Prevents US prices polluting non-US geo buckets |
+| Geo Pricing | 5 regions (US, GB, EU, CA, AU) | Simple UX, covers ~90%+ of revenue potential |
+| EU Region | Aggregate DE/FR/IT/ES/etc. | One region for EUR, HFT stores granular country data |
+| Geo Validation | Currency match required | EU = EUR only, prevents US fallback pollution |
 | JSON Generation | Static files in uploads | Fast frontend loading, CDN-friendly |
 
 ---
