@@ -18,10 +18,11 @@ if ( ! defined( 'ABSPATH' ) ) {
     $cta_pill        = get_field( 'cta_pill', 'option' ) ?: '1,200+ members';
     $cta_benefits    = get_field( 'cta_benefits', 'option' );
     $cta_button_text = get_field( 'cta_button_text', 'option' ) ?: 'Sign up free';
-    $cta_button_url  = get_field( 'cta_button_url', 'option' ) ?: home_url( '/signup/' );
+    $cta_button_page = get_field( 'cta_button_page', 'option' );
+    $cta_button_url  = $cta_button_page ? get_permalink( $cta_button_page ) : home_url( '/signup/' );
 
-    // Default benefits if none configured
-    if ( empty( $cta_benefits ) ) {
+    // Default benefits if none configured or not an array
+    if ( empty( $cta_benefits ) || ! is_array( $cta_benefits ) ) {
         $cta_benefits = array(
             array( 'text' => 'Best deals weekly' ),
             array( 'text' => 'Price drop alerts' ),
