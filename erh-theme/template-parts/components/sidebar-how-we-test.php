@@ -32,9 +32,13 @@ if ( empty( $stats ) ) {
 ?>
 
 <aside class="sidebar-card sidebar-card-with-image">
-    <?php if ( $image ) : ?>
-        <img src="<?php echo esc_url( $image['sizes']['medium_large'] ?? $image['url'] ); ?>"
-             alt="<?php echo esc_attr( $image['alt'] ?: $title ); ?>"
+    <?php if ( $image ) :
+        // Handle both array (image object) and string (URL) return formats
+        $image_url = is_array( $image ) ? ( $image['sizes']['medium_large'] ?? $image['url'] ) : $image;
+        $image_alt = is_array( $image ) ? ( $image['alt'] ?: $title ) : $title;
+    ?>
+        <img src="<?php echo esc_url( $image_url ); ?>"
+             alt="<?php echo esc_attr( $image_alt ); ?>"
              class="sidebar-card-image">
     <?php endif; ?>
 
