@@ -35,8 +35,9 @@ function filterCards(filter, cards, emptyState) {
     let visibleIndex = 0;
 
     cards.forEach((card) => {
-        const category = card.dataset.category;
-        const shouldShow = filter === 'all' || category === filter;
+        // Support space-separated categories (card can belong to multiple)
+        const categories = card.dataset.category ? card.dataset.category.split(' ') : [];
+        const shouldShow = filter === 'all' || categories.includes(filter);
 
         if (shouldShow) {
             // Show card with staggered animation based on visible order
