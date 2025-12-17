@@ -146,11 +146,6 @@ class ContactHandler {
                 'required'          => false,
                 'sanitize_callback' => 'sanitize_text_field',
             ],
-            'erh_contact_nonce' => [
-                'type'              => 'string',
-                'required'          => true,
-                'sanitize_callback' => 'sanitize_text_field',
-            ],
         ];
     }
 
@@ -161,17 +156,7 @@ class ContactHandler {
      * @return WP_REST_Response|WP_Error Response object.
      */
     public function handle_submission(WP_REST_Request $request): WP_REST_Response|WP_Error {
-        // Verify nonce from request body.
-        $nonce = $request->get_param('erh_contact_nonce');
-        if (!$nonce || !wp_verify_nonce($nonce, 'erh_contact_form')) {
-            return new WP_Error(
-                'invalid_nonce',
-                __('Security check failed. Please refresh the page and try again.', 'erh-core'),
-                ['status' => 403]
-            );
-        }
-
-        // Check honeypot (should be empty).
+        // Check honeypot first (should be empty) - primary spam protection.
         $honeypot = $request->get_param('website');
         if (!empty($honeypot)) {
             // Silently reject but return success to confuse bots.
