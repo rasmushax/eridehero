@@ -22,6 +22,7 @@ import './components/price-alert.js'; // Price alert modal interactions
 import './components/archive-filter.js'; // Auto-initializes archive filters
 import './components/archive-sort.js'; // Auto-initializes archive sorting
 import { initToc } from './components/toc.js';
+import { initContactForm } from './components/contact.js';
 
 (function() {
     'use strict';
@@ -81,6 +82,9 @@ import { initToc } from './components/toc.js';
     initToc('.toc', {
         offset: 100
     });
+
+    // Contact page: Form handling
+    initContactForm();
 
     // Review page: Sidebar comparison (with locked current product)
     initComparison({

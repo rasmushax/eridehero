@@ -7,6 +7,7 @@ $baseDir = dirname($vendorDir);
 
 return array(
     'Composer\\InstalledVersions' => $vendorDir . '/composer/InstalledVersions.php',
+    'ERH\\API\\ContactHandler' => $baseDir . '/includes/api/class-contact-handler.php',
     'ERH\\Admin\\SettingsPage' => $baseDir . '/includes/admin/class-settings-page.php',
     'ERH\\Api\\RestDeals' => $baseDir . '/includes/api/class-rest-deals.php',
     'ERH\\Api\\RestPrices' => $baseDir . '/includes/api/class-rest-prices.php',

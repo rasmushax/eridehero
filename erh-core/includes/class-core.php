@@ -42,6 +42,7 @@ use ERH\Admin\SettingsPage;
 use ERH\Migration\MigrationAdmin;
 use ERH\Api\RestPrices;
 use ERH\Api\RestDeals;
+use ERH\Api\ContactHandler;
 
 /**
  * Core plugin class that initializes all components.
@@ -189,6 +190,13 @@ class Core {
     private RestPrices $rest_prices;
 
     /**
+     * Contact form handler.
+     *
+     * @var ContactHandler
+     */
+    private ContactHandler $contact_handler;
+
+    /**
      * Initialize all plugin components.
      *
      * @return void
@@ -208,6 +216,10 @@ class Core {
 
         // Initialize user system.
         $this->init_user_system();
+
+        // Initialize contact form handler.
+        $this->contact_handler = new ContactHandler();
+        $this->contact_handler->register();
 
         // Initialize email system.
         $this->init_email();
