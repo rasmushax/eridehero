@@ -23,16 +23,16 @@ if ( ! defined( 'ABSPATH' ) ) {
 function erh_icon( string $icon, string $class = '', array $attrs = array() ): string {
     $class = trim( 'icon ' . $class );
 
-    $attr_string = '';
+    $attr_string = ' aria-hidden="true"';
     foreach ( $attrs as $key => $value ) {
         $attr_string .= sprintf( ' %s="%s"', esc_attr( $key ), esc_attr( $value ) );
     }
 
+    // Use inline sprite reference (sprite is inlined in header.php via svg-sprite.php)
     return sprintf(
-        '<svg class="%s"%s><use href="%s/assets/icons/sprite.svg#icon-%s"></use></svg>',
+        '<svg class="%s"%s><use href="#icon-%s"></use></svg>',
         esc_attr( $class ),
         $attr_string,
-        esc_url( ERH_THEME_URI ),
         esc_attr( $icon )
     );
 }
