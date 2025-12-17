@@ -171,33 +171,76 @@ CREATE TABLE wp_product_data (
     product_type varchar(50) NOT NULL,
     name varchar(255) NOT NULL,
     specs longtext,                    -- Serialized ACF fields + computed values
-    price decimal(10,2),
     rating decimal(3,1),
     popularity_score int(8),
-    instock tinyint(1),
     permalink varchar(255),
     image_url varchar(255),
-    price_history longtext,            -- Serialized: avg prices, z-scores, etc.
-    bestlink varchar(500),
+    price_history longtext,            -- Geo-keyed pricing data (see below)
     last_updated datetime,
     PRIMARY KEY (id),
     UNIQUE KEY product_id (product_id),
-    KEY product_type (product_type)
+    KEY product_type (product_type),
+    KEY popularity_score (popularity_score)
 );
 ```
 
-#### `wp_product_daily_prices` - Price History
+**Note**: The `price`, `instock`, and `bestlink` columns were removed in v1.2.1. All pricing data is now stored per-geo in the serialized `price_history` field.
+
+**`price_history` Structure** (geo-keyed):
+```php
+[
+    'US' => [
+        'current_price' => 499.99,
+        'currency'      => 'USD',
+        'instock'       => true,
+        'retailer'      => 'Amazon',
+        'bestlink'      => 'https://...',
+        // Averages
+        'avg_3m'   => 549.99,
+        'avg_6m'   => 579.99,
+        'avg_12m'  => 599.99,
+        'avg_all'  => 589.99,
+        // Lows
+        'low_3m'   => 449.99,
+        'low_6m'   => 429.99,
+        'low_12m'  => 399.99,
+        'low_all'  => 379.99,
+        // Highs
+        'high_3m'  => 649.99,
+        'high_6m'  => 699.99,
+        'high_12m' => 749.99,
+        'high_all' => 799.99,
+        'updated_at' => '2025-12-17 10:00:00',
+    ],
+    'GB' => [...],  // Only present if genuine GB price exists
+    'EU' => [...],  // EUR prices aggregated from DE/FR/IT/ES/etc.
+    'CA' => [...],
+    'AU' => [...],
+]
+```
+
+**Supported Regions**: US, GB, EU, CA, AU
+
+#### `wp_product_daily_prices` - Price History (per geo/currency)
 ```sql
 CREATE TABLE wp_product_daily_prices (
     id bigint(20) AUTO_INCREMENT,
     product_id bigint(20) NOT NULL,
     price decimal(10,2) NOT NULL,
+    currency varchar(10) NOT NULL DEFAULT 'USD',
     domain varchar(255) NOT NULL,
+    geo varchar(10) NOT NULL DEFAULT 'US',
     date date NOT NULL,
     PRIMARY KEY (id),
-    UNIQUE KEY product_date (product_id, date)
+    UNIQUE KEY product_date_geo_currency (product_id, date, geo, currency),
+    KEY product_id (product_id),
+    KEY date (date),
+    KEY geo (geo),
+    KEY currency (currency)
 );
 ```
+
+**Note**: Updated in v1.1.0 to support multiple geos and currencies per product per day.
 
 #### `wp_price_trackers` - User Price Alerts
 ```sql
@@ -238,12 +281,9 @@ CREATE TABLE wp_product_views (
 | Class | Method | Description |
 |-------|--------|-------------|
 | `PriceFetcher` | `get_prices($product_id, $geo)` | Gets prices from HFT `tracked_links` table |
-| `PriceFetcher` | `get_best_price($product_id, $geo)` | Returns lowest in-stock price |
-| `AffiliateResolver` | `resolve_domain($url)` | Extracts actual domain from affiliate network URLs |
-| `AffiliateResolver` | `get_display_name($domain)` | Maps domain to retailer name |
-| `AffiliateResolver` | `get_logo($domain)` | Returns retailer logo URL |
-| `DealsFinder` | `get_deals($product_type, $threshold)` | Products below 6-month average |
-| `DailyPriceJob` | `execute()` | Records daily snapshot for price history charts |
+| `PriceFetcher` | `get_best_price($product_id, $geo)` | Returns lowest in-stock price for geo |
+| `RetailerLogos` | `get_logo_by_id($scraper_id)` | Gets retailer logo from HFT scraper |
+| `DealsFinder` | `get_deals($type, $geo, $period)` | Products below period average |
 
 **HFT hooks to listen for**:
 ```php
@@ -258,6 +298,106 @@ add_filter('hft_best_price', function($best_price, $product_id) {
     return $best_price;
 }, 10, 2);
 ```
+
+### Geo-Aware Pricing Architecture
+
+The pricing system uses a **5-region model** for simplicity and practical coverage.
+
+**Architecture**:
+```
+┌─────────────┐     ┌──────────────────┐     ┌─────────────────┐
+│ HFT Plugin  │     │ CacheRebuildJob  │     │ Frontend        │
+│ (granular)  │────▶│ (groups regions) │────▶│ (detects/shows) │
+└─────────────┘     └──────────────────┘     └─────────────────┘
+     │                      │                        │
+ Per-country          5 Regions              Country → Region
+ DE, FR, IT...    US, GB, EU, CA, AU       IPInfo → mapping
+```
+
+**Data Flow**:
+1. **HFT Plugin** scrapes prices per-country (DE, FR, IT, ES, etc.)
+2. **CacheRebuildJob** groups into 5 regions (EU aggregates DE/FR/IT/ES/etc.)
+3. **JSON Generators** output region-keyed pricing data
+4. **Frontend** detects user's country via IPInfo, maps to region, displays prices
+
+**5 Supported Regions**:
+| Region | Currency | Countries Mapped |
+|--------|----------|------------------|
+| US | USD | United States |
+| GB | GBP | United Kingdom |
+| EU | EUR | DE, FR, IT, ES, NL, BE, AT, IE, PT, FI, GR, + more |
+| CA | CAD | Canada |
+| AU | AUD | Australia, New Zealand |
+
+**Region Validation Logic** (`CacheRebuildJob::is_genuine_region_price()`):
+- US: Accept USD prices with geo=US or null
+- EU: Accept EUR prices from any EU country (DE, FR, IT, etc.)
+- GB/CA/AU: Accept matching currency with geo match
+- US fallbacks are NOT stored under other region keys
+
+**Frontend Service** (`geo-price.js` + `geo-config.js`):
+```javascript
+import { getUserGeo, formatPrice, setUserRegion } from './services/geo-price.js';
+
+// Detect user's region (country → region mapping, cached 24h)
+const { geo, region, currency, country } = await getUserGeo();
+// French user: { geo: 'EU', region: 'EU', currency: 'EUR', country: 'FR' }
+
+// Get price for user's region, fallback to US
+const prices = product.pricing || {};
+const price = prices[region]?.current_price ?? prices['US']?.current_price;
+const displayCurrency = prices[region] ? currency : 'USD';
+
+// Format with proper symbol
+formatPrice(price, displayCurrency); // "$499" or "€399"
+
+// Manual region override (for region selector)
+setUserRegion('GB'); // User can switch to see UK prices
+```
+
+### Generated JSON Files
+
+**`comparison_products.json`** (for H2H widgets):
+```json
+{
+    "id": 123,
+    "name": "Segway Ninebot Max",
+    "category": "escooter",
+    "thumbnail": "...",
+    "prices": { "US": 799, "GB": 649, "EU": 699 },
+    "url": "...",
+    "popularity": 85
+}
+```
+
+**`finder_escooter.json`** etc (for Finder tool):
+```json
+{
+    "id": 123,
+    "name": "Segway Ninebot Max",
+    "category": "escooter",
+    "url": "...",
+    "thumbnail": "...",
+    "rating": 4.5,
+    "popularity": 85,
+    "pricing": {
+        "US": {
+            "current_price": 799,
+            "currency": "USD",
+            "instock": true,
+            "bestlink": "...",
+            "avg_3m": 825, "avg_6m": 850, "avg_12m": 875, "avg_all": 860,
+            "low_3m": 749, "low_6m": 699, "low_12m": 649, "low_all": 599,
+            "high_3m": 899, "high_6m": 999, "high_12m": 1099, "high_all": 1199
+        },
+        "EU": { ... },  // EUR prices from DE/FR/IT/ES retailers
+        "GB": { ... }
+    },
+    "specs": { ... }
+}
+```
+
+**`search_items.json`** (for search autocomplete - no pricing)
 
 ### User System (REST API - Implemented)
 
@@ -341,13 +481,20 @@ POST /erh/v1/webhooks/mailchimp - Mailchimp unsubscribe sync
 
 ### Cron Jobs
 
-| Hook | Schedule | Function |
-|------|----------|----------|
-| `update_product_daily_prices_cron` | Daily | Record daily prices |
-| `product_data_cron_job` | Twice daily | Rebuild finder cache |
-| `generate_search_items_json_hook` | Twice daily | Generate search JSON |
-| `pf_price_tracker_cron` | Daily | Check price alerts |
-| Deals email | Weekly | Send deals digest |
+| Hook | Schedule | Class | Description |
+|------|----------|-------|-------------|
+| `erh_cron_cache_rebuild` | Every 2 hours | `CacheRebuildJob` | Rebuild wp_product_data with geo-keyed pricing |
+| `erh_cron_finder_json` | Every 2 hours | `FinderJsonJob` | Generate finder_*.json files per product type |
+| `erh_cron_comparison_json` | Every 2 hours | `ComparisonJsonJob` | Generate comparison_products.json |
+| `erh_cron_search_json` | Every 2 hours | `SearchJsonJob` | Generate search_items.json |
+| `erh_cron_daily_price` | Daily | `DailyPriceJob` | Record daily price snapshots per geo |
+| `erh_cron_price_tracker` | Daily | `NotificationJob` | Check price alerts, send notifications |
+
+**Cron Manager** (`class-cron-manager.php`) handles:
+- Central job registration
+- Lock mechanism to prevent concurrent runs
+- Run time tracking for admin display
+- Manual "Run Now" capability
 
 ### Search System
 
@@ -540,11 +687,15 @@ erh-theme/
 │   │   └── dist/
 │   │       └── style.css              # Compiled (gitignore)
 │   └── js/
-│       ├── src/
+│       ├── services/
+│       │   ├── geo-config.js          # Region configuration, country→region mapping
+│       │   └── geo-price.js           # Region detection, price formatting, caching
+│       ├── components/
 │       │   ├── header.js              # Header interactions
-│       │   ├── search.js              # Search functionality  
-│       │   ├── finder.js              # Finder tool
-│       │   ├── comparison.js          # Comparison tool
+│       │   ├── search.js              # Search functionality
+│       │   ├── finder.js              # Finder tool (geo-aware)
+│       │   ├── comparison.js          # Comparison tool (geo-aware)
+│       │   ├── deals.js               # Deals section (geo-aware)
 │       │   ├── price-tracker.js       # Price tracker modal
 │       │   └── reviews.js             # Review submission
 │       └── dist/

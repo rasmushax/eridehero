@@ -192,6 +192,56 @@ Use this file alongside CLAUDE.md to track progress.
 
 ---
 
+## Phase 4.5: Geo-Aware Pricing System - COMPLETE
+
+### Database Schema Updates
+- [x] Update `wp_product_data` table - removed `price`, `instock`, `bestlink` columns
+- [x] Add geo/currency columns to `wp_product_daily_prices`
+- [x] Schema migration to v1.2.1 (forces column drops on plugin reactivation)
+
+### Cache Rebuild Job Enhancements
+- [x] Add `is_genuine_geo_price()` validation (prevents US fallbacks bleeding into other geos)
+- [x] Expand `price_history` to store per-geo pricing data:
+  - Current price, currency, stock status, retailer, best link
+  - Period averages: 3m, 6m, 12m, all-time
+  - Period lows: 3m, 6m, 12m, all-time
+  - Period highs: 3m, 6m, 12m, all-time
+- [x] Currency mapping for geos (US→USD, GB→GBP, DE→EUR, CA→CAD, AU→AUD)
+
+### JSON Generator Jobs
+- [x] Create `includes/cron/class-finder-json-job.php`
+  - Generates per-product-type JSON files with full geo pricing
+  - Files: `finder_escooter.json`, `finder_ebike.json`, etc.
+- [x] Create `includes/cron/class-comparison-json-job.php`
+  - Generates `comparison_products.json` with geo-keyed prices
+  - Lightweight format for head-to-head comparison widgets
+
+### Frontend Geo Service (Theme)
+- [x] Create `erh-theme/assets/js/services/geo-config.js`
+  - 5 supported regions: US, GB, EU, CA, AU
+  - Country→region mapping (IPInfo country codes)
+  - Region configuration (currency, symbol, flag, label)
+- [x] Create `erh-theme/assets/js/services/geo-price.js`
+  - `getUserGeo()` - IPInfo detection + country→region mapping
+  - `setUserRegion()` - Manual region override for region selector
+  - `formatPrice()` - Currency symbol formatting
+  - ES6 module exports
+- [x] Update `erh-theme/assets/js/components/comparison.js`
+  - Import geo-price service
+  - Read from region-keyed `prices` object
+  - Format prices with correct currency symbols
+- [x] Verify `erh-theme/assets/js/components/deals.js` compatibility
+  - Already uses `getUserGeo()` - works with new region system
+
+### 5-Region Architecture
+- **Regions**: US, GB, EU, CA, AU
+- **HFT stores**: Per-country (DE, FR, IT, ES, etc.)
+- **Cache groups**: Country→Region (DE/FR/IT → EU)
+- **Validation**: Currency match required (EU = EUR only)
+- **Frontend fallback**: Show US price if user's region has no data
+
+---
+
 ## Phase 5: Theme Scaffold (Days 12-13) - PENDING
 
 ### Day 12: Theme Setup
@@ -379,11 +429,34 @@ erh-core/
 │       ├── interface-cron-job.php
 │       ├── class-cron-manager.php
 │       ├── class-price-update-job.php
-│       ├── class-cache-rebuild-job.php
+│       ├── class-cache-rebuild-job.php   # Geo-aware pricing, period stats
+│       ├── class-finder-json-job.php     # Per-type finder JSON files
+│       ├── class-comparison-json-job.php # Comparison widget JSON
 │       ├── class-search-json-job.php
 │       └── class-notification-job.php
 │
 └── vendor/                           # Composer autoload
+
+
+## Current Theme Structure (Partial)
+
+```
+erh-theme/
+├── assets/
+│   ├── css/
+│   │   ├── src/
+│   │   │   └── main.css
+│   │   └── dist/
+│   │       └── style.css
+│   └── js/
+│       ├── services/
+│       │   ├── geo-config.js             # 5-region config, country→region mapping
+│       │   └── geo-price.js              # Region detection & price formatting
+│       └── components/
+│           ├── comparison.js             # H2H comparison widget (region-aware)
+│           └── deals.js                  # Deals section (region-aware)
+├── functions.php
+└── style.css
 ```
 
 ---
@@ -403,6 +476,10 @@ erh-core/
 | Notifications | Every 6 hours | Balance responsiveness vs server load |
 | Cron Admin | "Run Now" buttons | User prefers GUI over WP-CLI |
 | Job Locking | Transients | Prevent duplicate cron execution |
+| Geo Pricing | 5 regions (US, GB, EU, CA, AU) | Simple UX, covers ~90%+ of revenue potential |
+| EU Region | Aggregate DE/FR/IT/ES/etc. | One region for EUR, HFT stores granular country data |
+| Geo Validation | Currency match required | EU = EUR only, prevents US fallback pollution |
+| JSON Generation | Static files in uploads | Fast frontend loading, CDN-friendly |
 
 ---
 
@@ -431,11 +508,14 @@ erh-core/
 | Job | Hook | Schedule | Description |
 |-----|------|----------|-------------|
 | Price Update | `erh_cron_price-update` | Daily | Record daily prices to wp_product_daily_prices |
-| Cache Rebuild | `erh_cron_cache-rebuild` | Twice daily | Rebuild wp_product_data with stats |
+| Cache Rebuild | `erh_cron_cache-rebuild` | Every 2 hours | Rebuild wp_product_data with geo-aware stats |
+| Finder JSON | `erh_cron_finder-json` | Every 2 hours | Generate finder_*.json files per product type |
+| Comparison JSON | `erh_cron_comparison-json` | Every 2 hours | Generate comparison_products.json |
 | Search JSON | `erh_cron_search-json` | Twice daily | Generate search_items.json |
 | Notifications | `erh_cron_notifications` | Every 6 hours | Check price trackers, send alerts |
 
 ### Custom Schedules
+- `erh_two_hours` - Every 2 hours
 - `erh_six_hours` - Every 6 hours
 - `erh_twelve_hours` - Every 12 hours
 
