@@ -27,6 +27,11 @@ class FinderJsonJob implements CronJobInterface {
     ];
 
     /**
+     * Default geo for price display.
+     */
+    private const DEFAULT_GEO = 'US';
+
+    /**
      * Cron manager reference for locking.
      *
      * @var CronManager
@@ -139,6 +144,7 @@ class FinderJsonJob implements CronJobInterface {
         $table_name = $this->wpdb->prefix . ERH_TABLE_PRODUCT_DATA;
 
         // Get all products of this type from the cache table.
+        // Note: price, instock, bestlink are now stored per-geo in price_history.
         $products = $this->wpdb->get_results(
             $this->wpdb->prepare(
                 "SELECT
@@ -146,14 +152,11 @@ class FinderJsonJob implements CronJobInterface {
                     name,
                     product_type,
                     specs,
-                    price,
                     rating,
                     popularity_score,
-                    instock,
                     permalink,
                     image_url,
-                    price_history,
-                    bestlink
+                    price_history
                 FROM {$table_name}
                 WHERE product_type = %s
                 ORDER BY popularity_score DESC, name ASC",
@@ -172,6 +175,9 @@ class FinderJsonJob implements CronJobInterface {
             $specs = maybe_unserialize($product->specs);
             $price_history = maybe_unserialize($product->price_history);
 
+            // Extract default geo pricing data for backwards compatibility.
+            $default_geo_data = $this->get_default_geo_data($price_history);
+
             // Build the finder item with all relevant data.
             $item = [
                 'id'            => (int) $product->product_id,
@@ -179,11 +185,11 @@ class FinderJsonJob implements CronJobInterface {
                 'category'      => $slug,
                 'url'           => $product->permalink,
                 'thumbnail'     => $product->image_url ?: $this->get_default_thumbnail(),
-                'price'         => $product->price !== null ? (float) $product->price : null,
+                'price'         => $default_geo_data['price'],
                 'rating'        => $product->rating !== null ? (float) $product->rating : null,
                 'popularity'    => (int) $product->popularity_score,
-                'instock'       => (bool) $product->instock,
-                'bestlink'      => $product->bestlink ?: null,
+                'instock'       => $default_geo_data['instock'],
+                'bestlink'      => $default_geo_data['bestlink'],
                 'price_history' => is_array($price_history) ? $price_history : null,
                 'specs'         => $this->flatten_specs($specs, $slug),
             ];
@@ -216,6 +222,35 @@ class FinderJsonJob implements CronJobInterface {
         ));
 
         return count($finder_items);
+    }
+
+    /**
+     * Extract pricing data for the default geo from price_history.
+     *
+     * @param mixed $price_history The price history data (geo-keyed array).
+     * @return array{price: float|null, instock: bool, bestlink: string|null}
+     */
+    private function get_default_geo_data($price_history): array {
+        $default = [
+            'price'    => null,
+            'instock'  => false,
+            'bestlink' => null,
+        ];
+
+        if (!is_array($price_history)) {
+            return $default;
+        }
+
+        $geo_data = $price_history[self::DEFAULT_GEO] ?? null;
+        if (!$geo_data || !is_array($geo_data)) {
+            return $default;
+        }
+
+        return [
+            'price'    => isset($geo_data['current_price']) ? (float) $geo_data['current_price'] : null,
+            'instock'  => !empty($geo_data['instock']),
+            'bestlink' => $geo_data['bestlink'] ?? null,
+        ];
     }
 
     /**
