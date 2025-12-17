@@ -568,6 +568,12 @@ class AuthHandler {
             return;
         }
 
+        // Allow POST requests (actual login form submissions) to process.
+        // phpcs:ignore WordPress.Security.NonceVerification.Missing
+        if ($_SERVER['REQUEST_METHOD'] === 'POST') {
+            return;
+        }
+
         // Allow logout action.
         // phpcs:ignore WordPress.Security.NonceVerification.Recommended
         $action = isset($_GET['action']) ? sanitize_text_field($_GET['action']) : '';
