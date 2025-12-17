@@ -22,6 +22,8 @@ class MigrationAdmin {
         add_action('admin_post_erh_run_migration', [$this, 'handle_migration']);
         add_action('admin_post_erh_test_migration', [$this, 'handle_test_connection']);
         add_action('admin_post_erh_migrate_single', [$this, 'handle_single_migration']);
+        add_action('admin_post_erh_test_price_history', [$this, 'handle_test_price_history']);
+        add_action('admin_post_erh_run_price_history_migration', [$this, 'handle_price_history_migration']);
     }
 
     /**
@@ -76,6 +78,36 @@ class MigrationAdmin {
                 $message = "Connection test failed: " . sanitize_text_field($_GET['reason'] ?? 'Unknown error');
                 $message_type = 'error';
             }
+        } elseif (isset($_GET['price_history_test'])) {
+            $test = sanitize_text_field($_GET['price_history_test']);
+            if ($test === 'success') {
+                $total = (int) ($_GET['total'] ?? 0);
+                $products = (int) ($_GET['products'] ?? 0);
+                $oldest = sanitize_text_field($_GET['oldest'] ?? '');
+                $newest = sanitize_text_field($_GET['newest'] ?? '');
+                $message = sprintf(
+                    'Price history connection successful! Found %s records for %s products (%s to %s).',
+                    number_format($total),
+                    number_format($products),
+                    $oldest,
+                    $newest
+                );
+                $message_type = 'success';
+            } else {
+                $message = "Price history test failed: " . sanitize_text_field($_GET['reason'] ?? 'Unknown error');
+                $message_type = 'error';
+            }
+        } elseif (isset($_GET['price_history_migrated'])) {
+            $imported = (int) ($_GET['imported'] ?? 0);
+            $skipped = (int) ($_GET['skipped'] ?? 0);
+            $errors = (int) ($_GET['errors'] ?? 0);
+            $message = sprintf(
+                'Price history migration complete! Imported: %s, Skipped: %s, Errors: %s',
+                number_format($imported),
+                number_format($skipped),
+                number_format($errors)
+            );
+            $message_type = $errors > 0 ? 'warning' : 'success';
         }
 
         ?>
@@ -232,6 +264,106 @@ class MigrationAdmin {
                 <p>The migrator will try to <strong>infer product type</strong> from the product name (e.g., "eRide" → Electric Bike, "Kaabo" → Electric Scooter).</p>
                 <p>Check <code>wp-content/debug.log</code> for details.</p>
             </div>
+
+            <hr style="margin: 30px 0;">
+
+            <h2>Price History Migration</h2>
+
+            <div class="card" style="max-width: 600px; padding: 20px;">
+                <h3>Import Price History from Remote Site</h3>
+                <p>Import historical price data from the production database. The old data (US-only) will be imported with <code>geo=US</code> and <code>currency=USD</code>.</p>
+
+                <form method="post" action="<?php echo esc_url(admin_url('admin-post.php')); ?>">
+                    <?php wp_nonce_field('erh_migration', 'erh_migration_nonce'); ?>
+                    <input type="hidden" name="action" value="erh_run_price_history_migration">
+
+                    <table class="form-table">
+                        <tr>
+                            <th scope="row">
+                                <label for="ph_source_url">Source Site URL</label>
+                            </th>
+                            <td>
+                                <input type="url"
+                                       name="source_url"
+                                       id="ph_source_url"
+                                       class="regular-text"
+                                       value="https://eridehero.com"
+                                       placeholder="https://eridehero.com"
+                                       required>
+                            </td>
+                        </tr>
+                        <tr>
+                            <th scope="row">
+                                <label for="ph_secret_key">API Secret Key</label>
+                            </th>
+                            <td>
+                                <input type="text"
+                                       name="secret_key"
+                                       id="ph_secret_key"
+                                       class="regular-text"
+                                       placeholder="your-secret-key-here"
+                                       required>
+                                <p class="description">The secret key configured in the export endpoint on production.</p>
+                            </td>
+                        </tr>
+                        <tr>
+                            <th scope="row">
+                                <label for="ph_batch_size">Batch Size</label>
+                            </th>
+                            <td>
+                                <input type="number"
+                                       name="batch_size"
+                                       id="ph_batch_size"
+                                       value="1000"
+                                       min="100"
+                                       max="5000"
+                                       class="small-text">
+                                <p class="description">Records per request (100-5000).</p>
+                            </td>
+                        </tr>
+                        <tr>
+                            <th scope="row">Options</th>
+                            <td>
+                                <label>
+                                    <input type="checkbox" name="dry_run" value="1">
+                                    Dry Run (preview only, don't import)
+                                </label>
+                            </td>
+                        </tr>
+                    </table>
+
+                    <p class="submit">
+                        <button type="submit"
+                                class="button button-secondary"
+                                formaction="<?php echo esc_url(admin_url('admin-post.php?action=erh_test_price_history')); ?>">
+                            Test Connection
+                        </button>
+                        <button type="submit" class="button button-primary">
+                            Run Price History Migration
+                        </button>
+                    </p>
+                </form>
+            </div>
+
+            <div class="card" style="max-width: 600px; padding: 20px; margin-top: 20px;">
+                <h3>Setup Instructions</h3>
+                <ol style="margin-left: 20px;">
+                    <li>Copy <code>reference/price-history-export-endpoint.php</code> to production:</li>
+                    <li style="margin-left: 20px;"><code>wp-content/mu-plugins/price-history-export.php</code></li>
+                    <li>Edit the file and set your secret key (replace <code>your-secret-key-here</code>)</li>
+                    <li>Test the connection above</li>
+                    <li>Run the migration (this may take several minutes)</li>
+                    <li>After migration, <strong>delete the export file from production</strong></li>
+                </ol>
+
+                <h4 style="margin-top: 15px;">What Gets Imported</h4>
+                <ul style="list-style: disc; margin-left: 20px;">
+                    <li>All records from <code>wp_product_daily_prices</code></li>
+                    <li>Products matched by <strong>slug</strong> (make sure products are migrated first!)</li>
+                    <li>Old data gets <code>geo=US</code>, <code>currency=USD</code></li>
+                    <li>Duplicate records (same product/date/geo/currency) are updated</li>
+                </ul>
+            </div>
         </div>
         <?php
     }
@@ -375,6 +507,106 @@ class MigrationAdmin {
                 'reason'         => $result['reason'] ?? 'Unknown error',
             ], admin_url('options-general.php?page=erh-migration'));
         }
+
+        wp_redirect($redirect_url);
+        exit;
+    }
+
+    /**
+     * Handle price history connection test.
+     *
+     * @return void
+     */
+    public function handle_test_price_history(): void {
+        // Verify nonce.
+        if (!isset($_POST['erh_migration_nonce']) ||
+            !wp_verify_nonce($_POST['erh_migration_nonce'], 'erh_migration')) {
+            wp_die('Security check failed');
+        }
+
+        // Check capabilities.
+        if (!current_user_can('manage_options')) {
+            wp_die('Unauthorized');
+        }
+
+        $source_url = esc_url_raw($_POST['source_url'] ?? '');
+        $secret_key = sanitize_text_field($_POST['secret_key'] ?? '');
+
+        if (empty($source_url) || empty($secret_key)) {
+            wp_redirect(add_query_arg([
+                'price_history_test' => 'failed',
+                'reason'             => 'Source URL and secret key are required',
+            ], admin_url('options-general.php?page=erh-migration')));
+            exit;
+        }
+
+        // Test connection.
+        $migrator = new PriceHistoryMigrator($source_url, $secret_key);
+        $result = $migrator->test_connection();
+
+        if ($result) {
+            wp_redirect(add_query_arg([
+                'price_history_test' => 'success',
+                'total'              => $result['total_records'],
+                'products'           => $result['unique_products'],
+                'oldest'             => $result['oldest_date'],
+                'newest'             => $result['newest_date'],
+            ], admin_url('options-general.php?page=erh-migration')));
+        } else {
+            wp_redirect(add_query_arg([
+                'price_history_test' => 'failed',
+                'reason'             => 'Could not connect to price history API',
+            ], admin_url('options-general.php?page=erh-migration')));
+        }
+        exit;
+    }
+
+    /**
+     * Handle price history migration.
+     *
+     * @return void
+     */
+    public function handle_price_history_migration(): void {
+        // Verify nonce.
+        if (!isset($_POST['erh_migration_nonce']) ||
+            !wp_verify_nonce($_POST['erh_migration_nonce'], 'erh_migration')) {
+            wp_die('Security check failed');
+        }
+
+        // Check capabilities.
+        if (!current_user_can('manage_options')) {
+            wp_die('Unauthorized');
+        }
+
+        $source_url = esc_url_raw($_POST['source_url'] ?? '');
+        $secret_key = sanitize_text_field($_POST['secret_key'] ?? '');
+        $batch_size = (int) ($_POST['batch_size'] ?? 1000);
+        $dry_run = !empty($_POST['dry_run']);
+
+        if (empty($source_url) || empty($secret_key)) {
+            wp_redirect(add_query_arg('error', 'Source URL and secret key are required', admin_url('options-general.php?page=erh-migration')));
+            exit;
+        }
+
+        // Clamp batch size.
+        $batch_size = max(100, min(5000, $batch_size));
+
+        // Run migration.
+        $migrator = new PriceHistoryMigrator($source_url, $secret_key);
+        $migrator->set_dry_run($dry_run);
+
+        // Increase time limit for large migrations.
+        set_time_limit(1800); // 30 minutes
+
+        $summary = $migrator->run_migration($batch_size);
+
+        // Redirect with results.
+        $redirect_url = add_query_arg([
+            'price_history_migrated' => '1',
+            'imported'               => $summary['imported'],
+            'skipped'                => $summary['skipped'],
+            'errors'                 => $summary['errors'],
+        ], admin_url('options-general.php?page=erh-migration'));
 
         wp_redirect($redirect_url);
         exit;

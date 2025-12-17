@@ -112,7 +112,8 @@ class Schema {
     /**
      * Create the product_daily_prices table.
      *
-     * This table stores historical daily price snapshots for products.
+     * This table stores historical daily price snapshots for products,
+     * with support for multiple geos and currencies per product per day.
      *
      * @return void
      */
@@ -124,12 +125,16 @@ class Schema {
             id bigint(20) NOT NULL AUTO_INCREMENT,
             product_id bigint(20) NOT NULL,
             price decimal(10,2) NOT NULL,
+            currency varchar(10) NOT NULL DEFAULT 'USD',
             domain varchar(255) NOT NULL,
+            geo varchar(10) NOT NULL DEFAULT 'US',
             date date NOT NULL,
             PRIMARY KEY  (id),
-            UNIQUE KEY product_date (product_id, date),
+            UNIQUE KEY product_date_geo_currency (product_id, date, geo, currency),
             KEY product_id (product_id),
-            KEY date (date)
+            KEY date (date),
+            KEY geo (geo),
+            KEY currency (currency)
         ) {$charset_collate};";
 
         dbDelta($sql);
