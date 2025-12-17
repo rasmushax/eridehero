@@ -173,6 +173,58 @@ function erh_register_acf_fields(): void {
         'menu_order' => 0,
     ) );
 
+    // Buying Guides Section Fields
+    acf_add_local_field_group( array(
+        'key'      => 'group_buying_guides_section',
+        'title'    => __( 'Buying Guides Section', 'erh' ),
+        'fields'   => array(
+            array(
+                'key'           => 'field_buying_guides_title',
+                'label'         => __( 'Section Title', 'erh' ),
+                'name'          => 'buying_guides_title',
+                'type'          => 'text',
+                'default_value' => 'Buying guides',
+            ),
+            array(
+                'key'           => 'field_buying_guides_link_text',
+                'label'         => __( 'View All Link Text', 'erh' ),
+                'name'          => 'buying_guides_link_text',
+                'type'          => 'text',
+                'default_value' => 'View all guides',
+            ),
+            array(
+                'key'           => 'field_buying_guides_link_url',
+                'label'         => __( 'View All Link URL', 'erh' ),
+                'name'          => 'buying_guides_link_url',
+                'type'          => 'url',
+                'default_value' => '/buying-guides/',
+            ),
+            array(
+                'key'          => 'field_buying_guides_posts',
+                'label'        => __( 'Featured Buying Guides', 'erh' ),
+                'name'         => 'buying_guides_posts',
+                'type'         => 'relationship',
+                'post_type'    => array( 'post' ),
+                'taxonomy'     => array( 'post_tag:buying-guide' ),
+                'filters'      => array( 'search', 'taxonomy' ),
+                'return_format' => 'id',
+                'min'          => 0,
+                'max'          => 4,
+                'instructions' => __( 'Select up to 4 buying guide posts. If empty, latest posts tagged "buying-guide" will be shown.', 'erh' ),
+            ),
+        ),
+        'location' => array(
+            array(
+                array(
+                    'param'    => 'options_page',
+                    'operator' => '==',
+                    'value'    => 'erh-homepage-settings',
+                ),
+            ),
+        ),
+        'menu_order' => 30,
+    ) );
+
     // Social Links (Global Settings)
     acf_add_local_field_group( array(
         'key'      => 'group_social_links',
