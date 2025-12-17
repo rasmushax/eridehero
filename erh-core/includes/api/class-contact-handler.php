@@ -146,10 +146,6 @@ class ContactHandler {
                 'required'          => false,
                 'sanitize_callback' => 'sanitize_text_field',
             ],
-            '_wpnonce' => [
-                'type'     => 'string',
-                'required' => true,
-            ],
         ];
     }
 
@@ -160,9 +156,9 @@ class ContactHandler {
      * @return WP_REST_Response|WP_Error Response object.
      */
     public function handle_submission(WP_REST_Request $request): WP_REST_Response|WP_Error {
-        // Verify nonce.
-        $nonce = $request->get_param('_wpnonce');
-        if (!wp_verify_nonce($nonce, 'erh_contact_form')) {
+        // Verify nonce from X-WP-Nonce header.
+        $nonce = $request->get_header('X-WP-Nonce');
+        if (!$nonce || !wp_verify_nonce($nonce, 'erh_contact_form')) {
             return new WP_Error(
                 'invalid_nonce',
                 __('Security check failed. Please refresh the page and try again.', 'erh-core'),
