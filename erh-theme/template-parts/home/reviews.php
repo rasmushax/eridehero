@@ -46,7 +46,7 @@ $reviews_query = new WP_Query( array(
                         if ( $product_id ) {
                             // Get product type (category display name)
                             $product_type_raw = get_field( 'product_type', $product_id );
-                            $product_type     = erh_get_product_type_short_name( $product_type_raw );
+                            $product_type     = $product_type_raw ? erh_get_product_type_short_name( $product_type_raw ) : '';
 
                             // Get rating from product's ratings field
                             $ratings = get_field( 'ratings', $product_id );
