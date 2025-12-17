@@ -96,6 +96,11 @@ class ComparisonJsonJob implements CronJobInterface {
     }
 
     /**
+     * Default geo for price display in comparison.
+     */
+    private const DEFAULT_GEO = 'US';
+
+    /**
      * Run the comparison JSON generation logic.
      *
      * @return void
@@ -103,14 +108,15 @@ class ComparisonJsonJob implements CronJobInterface {
     private function run(): void {
         $table_name = $this->wpdb->prefix . ERH_TABLE_PRODUCT_DATA;
 
-        // Get all products from the cache table with pricing info.
+        // Get all products from the cache table.
+        // Price is now stored in price_history JSON field per-geo.
         // phpcs:ignore WordPress.DB.PreparedSQL.InterpolatedNotPrepared
         $products = $this->wpdb->get_results(
             "SELECT
                 product_id,
                 name,
                 product_type,
-                price,
+                price_history,
                 image_url,
                 permalink,
                 popularity_score
@@ -127,12 +133,15 @@ class ComparisonJsonJob implements CronJobInterface {
         $comparison_items = [];
 
         foreach ($products as $product) {
+            // Extract price from geo-keyed price_history.
+            $price = $this->get_price_from_history($product->price_history);
+
             $comparison_items[] = [
                 'id'         => (int) $product->product_id,
                 'name'       => $product->name,
                 'category'   => $this->normalize_category($product->product_type),
                 'thumbnail'  => $product->image_url ?: $this->get_default_thumbnail(),
-                'price'      => $product->price !== null ? (float) $product->price : null,
+                'price'      => $price,
                 'url'        => $product->permalink,
                 'popularity' => (int) $product->popularity_score,
             ];
@@ -163,6 +172,31 @@ class ComparisonJsonJob implements CronJobInterface {
             count($comparison_items),
             size_format($result)
         ));
+    }
+
+    /**
+     * Extract price from geo-keyed price_history data.
+     *
+     * @param string|null $price_history Serialized price history data.
+     * @return float|null The current price for default geo, or null if unavailable.
+     */
+    private function get_price_from_history(?string $price_history): ?float {
+        if (empty($price_history)) {
+            return null;
+        }
+
+        $data = maybe_unserialize($price_history);
+        if (!is_array($data)) {
+            return null;
+        }
+
+        // Get price for default geo.
+        $geo_data = $data[self::DEFAULT_GEO] ?? null;
+        if (!$geo_data || empty($geo_data['current_price'])) {
+            return null;
+        }
+
+        return (float) $geo_data['current_price'];
     }
 
     /**
