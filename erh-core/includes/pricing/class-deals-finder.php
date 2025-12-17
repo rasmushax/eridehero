@@ -13,8 +13,49 @@ use ERH\Database\ProductCache;
 
 /**
  * Finds products that are currently priced below their historical average.
+ *
+ * Price data is now geo-aware. The price_history field in wp_product_data
+ * contains per-geo pricing data pre-computed by cron:
+ *
+ * [
+ *     'US' => [
+ *         'current_price' => 499.99,
+ *         'currency' => 'USD',
+ *         'avg_price_3m' => 549.99,
+ *         'avg_price_6m' => 599.99,
+ *         'avg_price_12m' => 579.99,
+ *         'lowest_price' => 449.99,
+ *         'highest_price' => 699.99,
+ *         'instock' => true,
+ *         'retailer' => 'Amazon',
+ *         'bestlink' => 'https://...',
+ *         'updated_at' => '2025-12-17 10:00:00',
+ *     ],
+ *     'GB' => [...],
+ * ]
  */
 class DealsFinder {
+
+    /**
+     * Default geo when none specified.
+     *
+     * @var string
+     */
+    public const DEFAULT_GEO = 'US';
+
+    /**
+     * Available average periods.
+     *
+     * @var array<string>
+     */
+    public const PERIODS = ['3m', '6m', '12m'];
+
+    /**
+     * Default average period for deal comparison.
+     *
+     * @var string
+     */
+    public const DEFAULT_PERIOD = '6m';
 
     /**
      * Product cache instance.
@@ -33,75 +74,103 @@ class DealsFinder {
     }
 
     /**
-     * Get deals for a product type.
+     * Get deals for a product type (or all types).
      *
-     * @param string $product_type              The product type (e.g., 'Electric Scooter').
-     * @param float  $price_difference_threshold Minimum percentage below average (negative value, e.g., -5 for 5% below).
-     * @param int    $limit                     Maximum number of deals to return.
+     * @param string|null $product_type              The product type (e.g., 'Electric Scooter'), or null for all.
+     * @param float       $price_difference_threshold Minimum percentage below average (negative value, e.g., -5 for 5% below).
+     * @param int         $limit                     Maximum number of deals to return.
+     * @param string      $geo                       Geo code (e.g., 'US', 'GB').
+     * @param string      $period                    Average period to compare against ('3m', '6m', '12m').
      * @return array<int, array<string, mixed>> Array of deal products with price analysis.
      */
     public function get_deals(
-        string $product_type = 'Electric Scooter',
+        ?string $product_type = null,
         float $price_difference_threshold = -5.0,
-        int $limit = 50
+        int $limit = 50,
+        string $geo = self::DEFAULT_GEO,
+        string $period = self::DEFAULT_PERIOD
     ): array {
-        // Get all products of this type that are in stock with price data.
+        // Validate period.
+        if (!in_array($period, self::PERIODS, true)) {
+            $period = self::DEFAULT_PERIOD;
+        }
+
+        $avg_key = 'avg_price_' . $period;
+
+        // Build filters.
+        $filters = [];
+        if ($product_type !== null) {
+            $filters['product_type'] = $product_type;
+        }
+
+        // Get products.
         $products = $this->product_cache->get_filtered(
-            [
-                'product_type' => $product_type,
-                'instock'      => true,
-            ],
-            'price',
-            'ASC',
-            500, // Get more than needed, we'll filter.
+            $filters,
+            'popularity_score',
+            'DESC',
+            500, // Get more than needed, we'll filter by geo.
             0
         );
 
         $deals = [];
 
         foreach ($products as $product) {
-            // Skip products without price.
-            if (empty($product['price']) || $product['price'] <= 0) {
-                continue;
-            }
-
-            // Skip products without price history.
+            // Skip products without price_history.
             if (empty($product['price_history']) || !is_array($product['price_history'])) {
                 continue;
             }
 
-            $price_history = $product['price_history'];
-
-            // Check if we have 6-month average price.
-            if (!isset($price_history['average_price_6m']) || $price_history['average_price_6m'] <= 0) {
+            // Get geo-specific data.
+            $geo_data = $product['price_history'][$geo] ?? null;
+            if (!$geo_data) {
                 continue;
             }
 
-            $avg_price_6m = (float)$price_history['average_price_6m'];
-            $current_price = (float)$product['price'];
+            // Skip if not in stock for this geo.
+            if (empty($geo_data['instock'])) {
+                continue;
+            }
 
-            // Calculate price difference percentage.
-            $price_diff_percent = (($current_price - $avg_price_6m) / $avg_price_6m) * 100;
+            // Skip if no current price.
+            if (empty($geo_data['current_price']) || $geo_data['current_price'] <= 0) {
+                continue;
+            }
 
-            // Check if it qualifies as a deal.
-            if ($price_diff_percent <= $price_difference_threshold) {
+            // Skip if no average for requested period.
+            if (empty($geo_data[$avg_key]) || $geo_data[$avg_key] <= 0) {
+                continue;
+            }
+
+            // Compute deal status.
+            $avg_price = (float)$geo_data[$avg_key];
+            $current_price = (float)$geo_data['current_price'];
+            $discount = (($current_price - $avg_price) / $avg_price) * 100;
+
+            if ($discount <= $price_difference_threshold) {
                 $product['deal_analysis'] = [
-                    'current_price'       => $current_price,
-                    'average_price_6m'    => $avg_price_6m,
-                    'price_diff_percent'  => round($price_diff_percent, 1),
-                    'savings_amount'      => round($avg_price_6m - $current_price, 2),
-                    'lowest_price'        => $price_history['lowest_price'] ?? null,
-                    'highest_price'       => $price_history['highest_price'] ?? null,
-                    'z_score'             => $price_history['z_score'] ?? null,
+                    'current_price'    => $current_price,
+                    'currency'         => $geo_data['currency'] ?? 'USD',
+                    'avg_price'        => $avg_price,
+                    'avg_period'       => $period,
+                    'avg_price_3m'     => $geo_data['avg_price_3m'] ?? null,
+                    'avg_price_6m'     => $geo_data['avg_price_6m'] ?? null,
+                    'avg_price_12m'    => $geo_data['avg_price_12m'] ?? null,
+                    'discount_percent' => round($discount, 1),
+                    'savings_amount'   => round($avg_price - $current_price, 2),
+                    'lowest_price'     => $geo_data['lowest_price'] ?? null,
+                    'highest_price'    => $geo_data['highest_price'] ?? null,
+                    'retailer'         => $geo_data['retailer'] ?? null,
+                    'bestlink'         => $geo_data['bestlink'] ?? null,
+                    'instock'          => true,
                 ];
-
+                $product['geo'] = $geo;
                 $deals[] = $product;
             }
         }
 
-        // Sort by price difference (best deals first - most negative).
+        // Sort by discount (best deals first - most negative).
         usort($deals, function ($a, $b) {
-            return $a['deal_analysis']['price_diff_percent'] <=> $b['deal_analysis']['price_diff_percent'];
+            return $a['deal_analysis']['discount_percent'] <=> $b['deal_analysis']['discount_percent'];
         });
 
         // Limit results.
@@ -111,11 +180,18 @@ class DealsFinder {
     /**
      * Get deals across all product types.
      *
-     * @param float $price_difference_threshold Minimum percentage below average.
-     * @param int   $limit                      Maximum deals per product type.
+     * @param float  $price_difference_threshold Minimum percentage below average.
+     * @param int    $limit                      Maximum deals per product type.
+     * @param string $geo                        Geo code.
+     * @param string $period                     Average period ('3m', '6m', '12m').
      * @return array<string, array<int, array<string, mixed>>> Deals grouped by product type.
      */
-    public function get_all_deals(float $price_difference_threshold = -5.0, int $limit = 20): array {
+    public function get_all_deals(
+        float $price_difference_threshold = -5.0,
+        int $limit = 20,
+        string $geo = self::DEFAULT_GEO,
+        string $period = self::DEFAULT_PERIOD
+    ): array {
         $product_types = [
             'Electric Scooter',
             'Electric Bike',
@@ -127,7 +203,7 @@ class DealsFinder {
         $all_deals = [];
 
         foreach ($product_types as $type) {
-            $deals = $this->get_deals($type, $price_difference_threshold, $limit);
+            $deals = $this->get_deals($type, $price_difference_threshold, $limit, $geo, $period);
             if (!empty($deals)) {
                 $all_deals[$type] = $deals;
             }
@@ -139,11 +215,17 @@ class DealsFinder {
     /**
      * Get the best deal for each product type.
      *
-     * @param float $price_difference_threshold Minimum percentage below average.
+     * @param float  $price_difference_threshold Minimum percentage below average.
+     * @param string $geo                        Geo code.
+     * @param string $period                     Average period ('3m', '6m', '12m').
      * @return array<string, array<string, mixed>|null> Best deal per product type.
      */
-    public function get_top_deals(float $price_difference_threshold = -5.0): array {
-        $all_deals = $this->get_all_deals($price_difference_threshold, 1);
+    public function get_top_deals(
+        float $price_difference_threshold = -5.0,
+        string $geo = self::DEFAULT_GEO,
+        string $period = self::DEFAULT_PERIOD
+    ): array {
+        $all_deals = $this->get_all_deals($price_difference_threshold, 1, $geo, $period);
 
         $top_deals = [];
         foreach ($all_deals as $type => $deals) {
@@ -156,18 +238,28 @@ class DealsFinder {
     /**
      * Check if a specific product is currently a deal.
      *
-     * @param int   $product_id                 The product post ID.
-     * @param float $price_difference_threshold Minimum percentage below average.
+     * @param int    $product_id                 The product post ID.
+     * @param float  $price_difference_threshold Minimum percentage below average.
+     * @param string $geo                        Geo code.
+     * @param string $period                     Average period ('3m', '6m', '12m').
      * @return array<string, mixed>|null Deal analysis or null if not a deal.
      */
-    public function is_deal(int $product_id, float $price_difference_threshold = -5.0): ?array {
+    public function is_deal(
+        int $product_id,
+        float $price_difference_threshold = -5.0,
+        string $geo = self::DEFAULT_GEO,
+        string $period = self::DEFAULT_PERIOD
+    ): ?array {
+        // Validate period.
+        if (!in_array($period, self::PERIODS, true)) {
+            $period = self::DEFAULT_PERIOD;
+        }
+
+        $avg_key = 'avg_price_' . $period;
+
         $product = $this->product_cache->get($product_id);
 
         if (!$product) {
-            return null;
-        }
-
-        if (empty($product['price']) || $product['price'] <= 0) {
             return null;
         }
 
@@ -175,40 +267,60 @@ class DealsFinder {
             return null;
         }
 
-        $price_history = $product['price_history'];
-
-        if (!isset($price_history['average_price_6m']) || $price_history['average_price_6m'] <= 0) {
+        $geo_data = $product['price_history'][$geo] ?? null;
+        if (!$geo_data) {
             return null;
         }
 
-        $avg_price_6m = (float)$price_history['average_price_6m'];
-        $current_price = (float)$product['price'];
+        if (empty($geo_data['current_price']) || $geo_data['current_price'] <= 0) {
+            return null;
+        }
 
-        $price_diff_percent = (($current_price - $avg_price_6m) / $avg_price_6m) * 100;
+        if (empty($geo_data[$avg_key]) || $geo_data[$avg_key] <= 0) {
+            return null;
+        }
 
-        if ($price_diff_percent > $price_difference_threshold) {
+        $avg_price = (float)$geo_data[$avg_key];
+        $current_price = (float)$geo_data['current_price'];
+        $discount = (($current_price - $avg_price) / $avg_price) * 100;
+
+        if ($discount > $price_difference_threshold) {
             return null;
         }
 
         return [
-            'is_deal'             => true,
-            'current_price'       => $current_price,
-            'average_price_6m'    => $avg_price_6m,
-            'price_diff_percent'  => round($price_diff_percent, 1),
-            'savings_amount'      => round($avg_price_6m - $current_price, 2),
-            'lowest_price'        => $price_history['lowest_price'] ?? null,
-            'highest_price'       => $price_history['highest_price'] ?? null,
+            'is_deal'          => true,
+            'current_price'    => $current_price,
+            'currency'         => $geo_data['currency'] ?? 'USD',
+            'avg_price'        => $avg_price,
+            'avg_period'       => $period,
+            'avg_price_3m'     => $geo_data['avg_price_3m'] ?? null,
+            'avg_price_6m'     => $geo_data['avg_price_6m'] ?? null,
+            'avg_price_12m'    => $geo_data['avg_price_12m'] ?? null,
+            'discount_percent' => round($discount, 1),
+            'savings_amount'   => round($avg_price - $current_price, 2),
+            'lowest_price'     => $geo_data['lowest_price'] ?? null,
+            'highest_price'    => $geo_data['highest_price'] ?? null,
+            'retailer'         => $geo_data['retailer'] ?? null,
+            'bestlink'         => $geo_data['bestlink'] ?? null,
+            'instock'          => !empty($geo_data['instock']),
         ];
     }
 
     /**
      * Get deal count by product type.
      *
-     * @param float $price_difference_threshold Minimum percentage below average.
+     * @param float  $price_difference_threshold Minimum percentage below average.
+     * @param string $geo                        Geo code.
+     * @param string $period                     Average period ('3m', '6m', '12m').
      * @return array<string, int> Count of deals per product type.
      */
-    public function get_deal_counts(float $price_difference_threshold = -5.0): array {
-        $all_deals = $this->get_all_deals($price_difference_threshold, 1000);
+    public function get_deal_counts(
+        float $price_difference_threshold = -5.0,
+        string $geo = self::DEFAULT_GEO,
+        string $period = self::DEFAULT_PERIOD
+    ): array {
+        $all_deals = $this->get_all_deals($price_difference_threshold, 1000, $geo, $period);
 
         $counts = [];
         foreach ($all_deals as $type => $deals) {
@@ -216,6 +328,61 @@ class DealsFinder {
         }
 
         return $counts;
+    }
+
+    /**
+     * Get price analysis for a product (all averages).
+     *
+     * @param int    $product_id The product post ID.
+     * @param string $geo        Geo code.
+     * @return array<string, mixed>|null Price analysis or null if no data.
+     */
+    public function get_price_analysis(int $product_id, string $geo = self::DEFAULT_GEO): ?array {
+        $product = $this->product_cache->get($product_id);
+
+        if (!$product) {
+            return null;
+        }
+
+        if (empty($product['price_history']) || !is_array($product['price_history'])) {
+            return null;
+        }
+
+        $geo_data = $product['price_history'][$geo] ?? null;
+        if (!$geo_data) {
+            return null;
+        }
+
+        $current_price = (float)($geo_data['current_price'] ?? 0);
+
+        // Calculate discount for each period.
+        $discounts = [];
+        foreach (self::PERIODS as $period) {
+            $avg_key = 'avg_price_' . $period;
+            if (!empty($geo_data[$avg_key]) && $geo_data[$avg_key] > 0) {
+                $avg = (float)$geo_data[$avg_key];
+                $discounts[$period] = round((($current_price - $avg) / $avg) * 100, 1);
+            } else {
+                $discounts[$period] = null;
+            }
+        }
+
+        return [
+            'current_price'    => $current_price,
+            'currency'         => $geo_data['currency'] ?? 'USD',
+            'avg_price_3m'     => $geo_data['avg_price_3m'] ?? null,
+            'avg_price_6m'     => $geo_data['avg_price_6m'] ?? null,
+            'avg_price_12m'    => $geo_data['avg_price_12m'] ?? null,
+            'discount_vs_3m'   => $discounts['3m'],
+            'discount_vs_6m'   => $discounts['6m'],
+            'discount_vs_12m'  => $discounts['12m'],
+            'lowest_price'     => $geo_data['lowest_price'] ?? null,
+            'highest_price'    => $geo_data['highest_price'] ?? null,
+            'retailer'         => $geo_data['retailer'] ?? null,
+            'bestlink'         => $geo_data['bestlink'] ?? null,
+            'instock'          => !empty($geo_data['instock']),
+            'updated_at'       => $geo_data['updated_at'] ?? null,
+        ];
     }
 
     /**

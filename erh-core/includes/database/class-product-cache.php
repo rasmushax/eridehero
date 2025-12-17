@@ -89,6 +89,10 @@ class ProductCache {
     /**
      * Get products with filters for the finder tool.
      *
+     * Note: Price and instock filters now require a geo parameter since
+     * these values are stored per-geo in price_history. Filtering happens
+     * in PHP after fetching results.
+     *
      * @param array<string, mixed> $filters Filter criteria.
      * @param string               $orderby Column to order by.
      * @param string               $order   ASC or DESC.
@@ -112,21 +116,6 @@ class ProductCache {
             $params[] = $filters['product_type'];
         }
 
-        // In stock filter.
-        if (isset($filters['instock']) && $filters['instock']) {
-            $where_clauses[] = 'instock = 1';
-        }
-
-        // Price range filter.
-        if (!empty($filters['min_price'])) {
-            $where_clauses[] = 'price >= %f';
-            $params[] = (float)$filters['min_price'];
-        }
-        if (!empty($filters['max_price'])) {
-            $where_clauses[] = 'price <= %f';
-            $params[] = (float)$filters['max_price'];
-        }
-
         // Rating filter.
         if (!empty($filters['min_rating'])) {
             $where_clauses[] = 'rating >= %f';
@@ -139,8 +128,8 @@ class ProductCache {
             $where = 'WHERE ' . implode(' AND ', $where_clauses);
         }
 
-        // Validate orderby column.
-        $allowed_orderby = ['popularity_score', 'price', 'rating', 'name', 'last_updated'];
+        // Validate orderby column (price removed - now geo-dependent).
+        $allowed_orderby = ['popularity_score', 'rating', 'name', 'last_updated'];
         if (!in_array($orderby, $allowed_orderby, true)) {
             $orderby = 'popularity_score';
         }
@@ -148,12 +137,21 @@ class ProductCache {
         // Validate order direction.
         $order = strtoupper($order) === 'ASC' ? 'ASC' : 'DESC';
 
-        // Build query.
+        // Build query - fetch more than needed if geo filtering required.
+        $geo = $filters['geo'] ?? null;
+        $needs_geo_filter = $geo && (
+            isset($filters['instock']) ||
+            !empty($filters['min_price']) ||
+            !empty($filters['max_price'])
+        );
+
+        $fetch_limit = $needs_geo_filter ? $limit * 3 : $limit;
+
         $sql = "SELECT * FROM {$this->table_name} {$where}
                 ORDER BY {$orderby} {$order}
                 LIMIT %d OFFSET %d";
 
-        $params[] = $limit;
+        $params[] = $fetch_limit;
         $params[] = $offset;
 
         // phpcs:ignore WordPress.DB.PreparedSQL.NotPrepared
@@ -162,11 +160,59 @@ class ProductCache {
             ARRAY_A
         );
 
-        return array_map([$this, 'unserialize_row'], $results ?: []);
+        $products = array_map([$this, 'unserialize_row'], $results ?: []);
+
+        // Apply geo-dependent filters in PHP.
+        if ($needs_geo_filter) {
+            $products = $this->apply_geo_filters($products, $filters, $geo);
+        }
+
+        return array_slice($products, 0, $limit);
+    }
+
+    /**
+     * Apply geo-dependent filters to products.
+     *
+     * @param array<int, array<string, mixed>> $products Products to filter.
+     * @param array<string, mixed>             $filters  Filter criteria.
+     * @param string                           $geo      Geo code.
+     * @return array<int, array<string, mixed>> Filtered products.
+     */
+    private function apply_geo_filters(array $products, array $filters, string $geo): array {
+        return array_filter($products, function ($product) use ($filters, $geo) {
+            $geo_data = $product['price_history'][$geo] ?? null;
+
+            // Instock filter.
+            if (isset($filters['instock']) && $filters['instock']) {
+                if (!$geo_data || empty($geo_data['instock'])) {
+                    return false;
+                }
+            }
+
+            // Price range filters.
+            if (!empty($filters['min_price'])) {
+                $price = $geo_data['current_price'] ?? 0;
+                if ($price < (float)$filters['min_price']) {
+                    return false;
+                }
+            }
+            if (!empty($filters['max_price'])) {
+                $price = $geo_data['current_price'] ?? PHP_INT_MAX;
+                if ($price > (float)$filters['max_price']) {
+                    return false;
+                }
+            }
+
+            return true;
+        });
     }
 
     /**
      * Count products matching filters.
+     *
+     * Note: For geo-dependent filters (price, instock), this returns
+     * an estimate based on non-geo filters. Use get_filtered() for
+     * accurate counts with geo filters.
      *
      * @param array<string, mixed> $filters Filter criteria.
      * @return int Count of matching products.
@@ -178,19 +224,6 @@ class ProductCache {
         if (!empty($filters['product_type'])) {
             $where_clauses[] = 'product_type = %s';
             $params[] = $filters['product_type'];
-        }
-
-        if (isset($filters['instock']) && $filters['instock']) {
-            $where_clauses[] = 'instock = 1';
-        }
-
-        if (!empty($filters['min_price'])) {
-            $where_clauses[] = 'price >= %f';
-            $params[] = (float)$filters['min_price'];
-        }
-        if (!empty($filters['max_price'])) {
-            $where_clauses[] = 'price <= %f';
-            $params[] = (float)$filters['max_price'];
         }
 
         if (!empty($filters['min_rating'])) {
@@ -219,6 +252,20 @@ class ProductCache {
     /**
      * Insert or update a product in the cache.
      *
+     * Note: price_history should contain geo-keyed pricing data:
+     * [
+     *     'US' => [
+     *         'current_price' => 499.99,
+     *         'currency' => 'USD',
+     *         'avg_price_6m' => 599.99,
+     *         'discount_percent' => -16.7,
+     *         'is_deal' => true,
+     *         'instock' => true,
+     *         'retailer' => 'Amazon',
+     *     ],
+     *     'GB' => [...],
+     * ]
+     *
      * @param array<string, mixed> $data Product data.
      * @return bool True on success.
      */
@@ -235,18 +282,15 @@ class ProductCache {
             'product_type'     => $data['product_type'] ?? '',
             'name'             => $data['name'] ?? '',
             'specs'            => maybe_serialize($data['specs'] ?? []),
-            'price'            => $data['price'] ?? null,
             'rating'           => $data['rating'] ?? null,
             'popularity_score' => $data['popularity_score'] ?? 0,
-            'instock'          => $data['instock'] ?? 0,
             'permalink'        => $data['permalink'] ?? '',
             'image_url'        => $data['image_url'] ?? '',
             'price_history'    => maybe_serialize($data['price_history'] ?? []),
-            'bestlink'         => $data['bestlink'] ?? '',
             'last_updated'     => current_time('mysql'),
         ];
 
-        $formats = ['%d', '%s', '%s', '%s', '%f', '%f', '%d', '%d', '%s', '%s', '%s', '%s', '%s'];
+        $formats = ['%d', '%s', '%s', '%s', '%f', '%d', '%s', '%s', '%s', '%s'];
 
         if ($existing) {
             // Update.
@@ -330,10 +374,8 @@ class ProductCache {
         // Cast numeric fields.
         $row['id'] = isset($row['id']) ? (int)$row['id'] : 0;
         $row['product_id'] = isset($row['product_id']) ? (int)$row['product_id'] : 0;
-        $row['price'] = isset($row['price']) ? (float)$row['price'] : null;
         $row['rating'] = isset($row['rating']) ? (float)$row['rating'] : null;
         $row['popularity_score'] = isset($row['popularity_score']) ? (int)$row['popularity_score'] : 0;
-        $row['instock'] = isset($row['instock']) ? (bool)$row['instock'] : false;
 
         return $row;
     }
