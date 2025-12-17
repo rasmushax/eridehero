@@ -2,6 +2,9 @@
 /**
  * Sidebar - About ERideHero Card
  *
+ * Displays the About card with author info in horizontal layout.
+ * Content is managed via Theme Settings > Homepage.
+ *
  * @package ERideHero
  */
 
@@ -9,14 +12,35 @@
 if ( ! defined( 'ABSPATH' ) ) {
     exit;
 }
+
+// Get ACF options with defaults
+$author_photo = get_field( 'about_author_photo', 'option' );
+$author_name  = get_field( 'about_author_name', 'option' ) ?: __( 'Rasmus Barslund', 'erh' );
+$author_role  = get_field( 'about_author_role', 'option' ) ?: __( 'Founder & Lead Reviewer', 'erh' );
+$title        = get_field( 'about_title', 'option' ) ?: __( 'About ERideHero', 'erh' );
+$text         = get_field( 'about_text', 'option' ) ?: __( 'The independent, data-driven guide to electric rides. Reviews, guides, and tools built on 120+ hands-on tests to help you ride smarter.', 'erh' );
+$link_text    = get_field( 'about_link_text', 'option' ) ?: __( 'Learn more about us', 'erh' );
+$link_url     = get_field( 'about_link_url', 'option' ) ?: home_url( '/about/' );
 ?>
-<div class="sidebar-card">
-    <h3 class="sidebar-card-title"><?php esc_html_e( 'About ERideHero', 'erh' ); ?></h3>
-    <p class="sidebar-card-text">
-        <?php esc_html_e( 'ERideHero is an independent review platform dedicated to helping you find the perfect electric ride. Since 2019, we\'ve tested hundreds of products.', 'erh' ); ?>
-    </p>
-    <a href="<?php echo esc_url( home_url( '/about/' ) ); ?>" class="btn btn-link">
-        <?php esc_html_e( 'Learn more about us', 'erh' ); ?>
-        <?php erh_the_icon( 'arrow-right' ); ?>
-    </a>
-</div>
+
+<aside class="sidebar-card sidebar-card-horizontal">
+    <div class="sidebar-card-author">
+        <?php if ( $author_photo ) : ?>
+            <img src="<?php echo esc_url( $author_photo['sizes']['thumbnail'] ?? $author_photo['url'] ); ?>"
+                 alt="<?php echo esc_attr( $author_name ); ?>"
+                 class="sidebar-card-avatar">
+        <?php endif; ?>
+        <div>
+            <span class="sidebar-card-name"><?php echo esc_html( $author_name ); ?></span>
+            <span class="sidebar-card-role"><?php echo esc_html( $author_role ); ?></span>
+        </div>
+    </div>
+    <div class="sidebar-card-content">
+        <h3 class="sidebar-card-title"><?php echo esc_html( $title ); ?></h3>
+        <p class="sidebar-card-text"><?php echo esc_html( $text ); ?></p>
+        <a href="<?php echo esc_url( $link_url ); ?>" class="sidebar-card-link">
+            <?php echo esc_html( $link_text ); ?>
+            <?php erh_the_icon( 'arrow-right' ); ?>
+        </a>
+    </div>
+</aside>

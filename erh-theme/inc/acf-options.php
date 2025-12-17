@@ -466,6 +466,75 @@ function erh_register_acf_fields(): void {
         ),
         'menu_order' => 45,
     ) );
+
+    // "About ERideHero" Sidebar (Homepage)
+    acf_add_local_field_group( array(
+        'key'      => 'group_about_sidebar',
+        'title'    => __( 'About Sidebar', 'erh' ),
+        'fields'   => array(
+            array(
+                'key'           => 'field_about_author_photo',
+                'label'         => __( 'Author Photo', 'erh' ),
+                'name'          => 'about_author_photo',
+                'type'          => 'image',
+                'return_format' => 'array',
+                'preview_size'  => 'thumbnail',
+            ),
+            array(
+                'key'           => 'field_about_author_name',
+                'label'         => __( 'Author Name', 'erh' ),
+                'name'          => 'about_author_name',
+                'type'          => 'text',
+                'default_value' => 'Rasmus Barslund',
+            ),
+            array(
+                'key'           => 'field_about_author_role',
+                'label'         => __( 'Author Role', 'erh' ),
+                'name'          => 'about_author_role',
+                'type'          => 'text',
+                'default_value' => 'Founder & Lead Reviewer',
+            ),
+            array(
+                'key'           => 'field_about_title',
+                'label'         => __( 'Title', 'erh' ),
+                'name'          => 'about_title',
+                'type'          => 'text',
+                'default_value' => 'About ERideHero',
+            ),
+            array(
+                'key'           => 'field_about_text',
+                'label'         => __( 'Description', 'erh' ),
+                'name'          => 'about_text',
+                'type'          => 'textarea',
+                'rows'          => 3,
+                'default_value' => 'The independent, data-driven guide to electric rides. Reviews, guides, and tools built on 120+ hands-on tests to help you ride smarter.',
+            ),
+            array(
+                'key'           => 'field_about_link_text',
+                'label'         => __( 'Link Text', 'erh' ),
+                'name'          => 'about_link_text',
+                'type'          => 'text',
+                'default_value' => 'Learn more about us',
+            ),
+            array(
+                'key'           => 'field_about_link_url',
+                'label'         => __( 'Link URL', 'erh' ),
+                'name'          => 'about_link_url',
+                'type'          => 'url',
+                'default_value' => '/about/',
+            ),
+        ),
+        'location' => array(
+            array(
+                array(
+                    'param'    => 'options_page',
+                    'operator' => '==',
+                    'value'    => 'erh-homepage-settings',
+                ),
+            ),
+        ),
+        'menu_order' => 50,
+    ) );
 }
 add_action( 'acf/init', 'erh_register_acf_fields' );
 
