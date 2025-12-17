@@ -32,7 +32,7 @@ if ( empty( $videos ) ) {
     <div class="container">
         <div class="section-header">
             <div class="youtube-heading">
-                <?php erh_the_icon( 'youtube-logo', 'youtube-logo' ); ?>
+                <svg class="youtube-logo" aria-hidden="true"><use href="#icon-youtube-logo"></use></svg>
                 <h2><?php esc_html_e( 'YouTube', 'erh' ); ?></h2>
                 <span class="youtube-stat"><?php echo esc_html( $view_stat ); ?></span>
             </div>
