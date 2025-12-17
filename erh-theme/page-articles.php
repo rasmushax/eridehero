@@ -18,9 +18,10 @@ get_header();
 $paged = get_query_var( 'paged' ) ? get_query_var( 'paged' ) : 1;
 $posts_per_page = 12;
 
-// Get all posts (excluding buying guides if needed)
+// Get posts tagged "articles"
 $articles_query = new WP_Query( array(
     'post_type'      => 'post',
+    'tag'            => 'articles',
     'posts_per_page' => $posts_per_page,
     'paged'          => $paged,
     'post_status'    => 'publish',
@@ -28,9 +29,10 @@ $articles_query = new WP_Query( array(
     'order'          => 'DESC',
 ) );
 
-// Build category counts from ALL posts (not just current page)
+// Build category counts from ALL articles (not just current page)
 $count_query = new WP_Query( array(
     'post_type'      => 'post',
+    'tag'            => 'articles',
     'posts_per_page' => -1,
     'post_status'    => 'publish',
     'fields'         => 'ids',
