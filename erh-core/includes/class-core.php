@@ -37,6 +37,7 @@ use ERH\Cron\SearchJsonJob;
 use ERH\Cron\ComparisonJsonJob;
 use ERH\Cron\FinderJsonJob;
 use ERH\Cron\NotificationJob;
+use ERH\Cron\YouTubeSyncJob;
 use ERH\Admin\SettingsPage;
 use ERH\Migration\MigrationAdmin;
 use ERH\Api\RestPrices;
@@ -489,6 +490,11 @@ class Core {
                 $this->user_repo,
                 $this->cron_manager
             )
+        );
+
+        $this->cron_manager->add_job(
+            'youtube-sync',
+            new YouTubeSyncJob($this->cron_manager)
         );
 
         // Register the cron manager.
