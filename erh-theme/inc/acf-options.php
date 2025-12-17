@@ -13,25 +13,6 @@ if ( ! defined( 'ABSPATH' ) ) {
 }
 
 /**
- * Add ACF JSON load point for product field groups
- *
- * The product specs JSON files are stored in /acf-json/ at project root
- * (sibling to erh-theme and erh-core folders).
- */
-function erh_acf_json_load_point( array $paths ): array {
-    // acf-json is sibling to erh-theme (same parent directory)
-    $theme_parent = dirname( get_template_directory() );
-    $acf_json_path = $theme_parent . '/acf-json';
-
-    if ( is_dir( $acf_json_path ) ) {
-        $paths[] = $acf_json_path;
-    }
-
-    return $paths;
-}
-add_filter( 'acf/settings/load_json', 'erh_acf_json_load_point' );
-
-/**
  * Register ACF Options Pages
  */
 function erh_register_options_pages(): void {
