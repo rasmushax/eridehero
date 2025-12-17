@@ -273,6 +273,71 @@ function erh_register_acf_fields(): void {
         'menu_order' => -10,
     ) );
 
+    // CTA Section (Global Settings - appears in footer on all pages)
+    acf_add_local_field_group( array(
+        'key'      => 'group_cta_section',
+        'title'    => __( 'Sign Up CTA Section', 'erh' ),
+        'fields'   => array(
+            array(
+                'key'           => 'field_cta_title',
+                'label'         => __( 'Title', 'erh' ),
+                'name'          => 'cta_title',
+                'type'          => 'text',
+                'default_value' => 'Unlock all ERideHero features for free',
+            ),
+            array(
+                'key'           => 'field_cta_pill',
+                'label'         => __( 'Pill Text', 'erh' ),
+                'name'          => 'cta_pill',
+                'type'          => 'text',
+                'default_value' => '1,200+ members',
+                'instructions'  => __( 'Small badge shown next to the title.', 'erh' ),
+            ),
+            array(
+                'key'          => 'field_cta_benefits',
+                'label'        => __( 'Benefits', 'erh' ),
+                'name'         => 'cta_benefits',
+                'type'         => 'repeater',
+                'layout'       => 'table',
+                'button_label' => __( 'Add Benefit', 'erh' ),
+                'min'          => 1,
+                'max'          => 5,
+                'sub_fields'   => array(
+                    array(
+                        'key'   => 'field_cta_benefit_text',
+                        'label' => __( 'Benefit', 'erh' ),
+                        'name'  => 'text',
+                        'type'  => 'text',
+                    ),
+                ),
+            ),
+            array(
+                'key'           => 'field_cta_button_text',
+                'label'         => __( 'Button Text', 'erh' ),
+                'name'          => 'cta_button_text',
+                'type'          => 'text',
+                'default_value' => 'Sign up free',
+            ),
+            array(
+                'key'           => 'field_cta_button_url',
+                'label'         => __( 'Button URL', 'erh' ),
+                'name'          => 'cta_button_url',
+                'type'          => 'url',
+                'default_value' => '/signup/',
+            ),
+        ),
+        'location' => array(
+            array(
+                array(
+                    'param'    => 'options_page',
+                    'operator' => '==',
+                    'value'    => 'erh-global-settings',
+                ),
+            ),
+        ),
+        'menu_order' => 0,
+    ) );
+
     // Social Links (Global Settings)
     acf_add_local_field_group( array(
         'key'      => 'group_social_links',
