@@ -48,10 +48,10 @@ $reviews_query = new WP_Query( array(
                             $product_type_raw = get_field( 'product_type', $product_id );
                             $product_type     = $product_type_raw ? erh_get_product_type_short_name( $product_type_raw ) : '';
 
-                            // Get rating from product's ratings field
-                            $ratings = get_field( 'ratings', $product_id );
-                            if ( ! empty( $ratings['overall'] ) ) {
-                                $rating = floatval( $ratings['overall'] );
+                            // Get rating from product's editor_rating field
+                            $editor_rating = get_field( 'editor_rating', $product_id );
+                            if ( $editor_rating ) {
+                                $rating = floatval( $editor_rating );
                             }
                         }
                     ?>
