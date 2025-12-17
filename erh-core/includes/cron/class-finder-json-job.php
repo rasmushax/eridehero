@@ -139,6 +139,7 @@ class FinderJsonJob implements CronJobInterface {
         $table_name = $this->wpdb->prefix . ERH_TABLE_PRODUCT_DATA;
 
         // Get all products of this type from the cache table.
+        // Note: price, instock, bestlink are now stored per-geo in price_history.
         $products = $this->wpdb->get_results(
             $this->wpdb->prepare(
                 "SELECT
@@ -146,14 +147,11 @@ class FinderJsonJob implements CronJobInterface {
                     name,
                     product_type,
                     specs,
-                    price,
                     rating,
                     popularity_score,
-                    instock,
                     permalink,
                     image_url,
-                    price_history,
-                    bestlink
+                    price_history
                 FROM {$table_name}
                 WHERE product_type = %s
                 ORDER BY popularity_score DESC, name ASC",
@@ -173,18 +171,16 @@ class FinderJsonJob implements CronJobInterface {
             $price_history = maybe_unserialize($product->price_history);
 
             // Build the finder item with all relevant data.
+            // Pricing data (current_price, instock, bestlink, averages) is geo-keyed in price_history.
             $item = [
                 'id'            => (int) $product->product_id,
                 'name'          => $product->name,
                 'category'      => $slug,
                 'url'           => $product->permalink,
                 'thumbnail'     => $product->image_url ?: $this->get_default_thumbnail(),
-                'price'         => $product->price !== null ? (float) $product->price : null,
                 'rating'        => $product->rating !== null ? (float) $product->rating : null,
                 'popularity'    => (int) $product->popularity_score,
-                'instock'       => (bool) $product->instock,
-                'bestlink'      => $product->bestlink ?: null,
-                'price_history' => is_array($price_history) ? $price_history : null,
+                'pricing'       => is_array($price_history) ? $price_history : new \stdClass(),
                 'specs'         => $this->flatten_specs($specs, $slug),
             ];
 
