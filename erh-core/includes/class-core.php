@@ -29,6 +29,7 @@ use ERH\Email\EmailSender;
 use ERH\Reviews\ReviewQuery;
 use ERH\Reviews\ReviewHandler;
 use ERH\Pricing\PriceFetcher;
+use ERH\Pricing\ExchangeRateService;
 use ERH\Cron\CronManager;
 use ERH\Cron\PriceUpdateJob;
 use ERH\Cron\CacheRebuildJob;
@@ -171,6 +172,13 @@ class Core {
     private CronManager $cron_manager;
 
     /**
+     * Exchange rate service instance.
+     *
+     * @var ExchangeRateService
+     */
+    private ExchangeRateService $exchange_rate_service;
+
+    /**
      * Initialize all plugin components.
      *
      * @return void
@@ -225,6 +233,7 @@ class Core {
     private function init_services(): void {
         $this->rate_limiter = new RateLimiter();
         $this->user_repo = new UserRepository();
+        $this->exchange_rate_service = new ExchangeRateService();
 
         // Register HFT product post types filter.
         add_filter('hft_product_post_types', function () {
@@ -631,5 +640,14 @@ class Core {
      */
     public function get_cron_manager(): CronManager {
         return $this->cron_manager;
+    }
+
+    /**
+     * Get the exchange rate service instance.
+     *
+     * @return ExchangeRateService
+     */
+    public function get_exchange_rate_service(): ExchangeRateService {
+        return $this->exchange_rate_service;
     }
 }

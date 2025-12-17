@@ -14,6 +14,7 @@ use ERH\Database\PriceHistory;
 
 /**
  * Records daily price snapshots to the wp_product_daily_prices table.
+ * Records best price per product per geo per currency.
  */
 class PriceUpdateJob implements CronJobInterface {
 
@@ -70,7 +71,7 @@ class PriceUpdateJob implements CronJobInterface {
      * @return string
      */
     public function get_description(): string {
-        return __('Records daily price snapshots for price history charts.', 'erh-core');
+        return __('Records daily price snapshots per geo and currency for price history charts.', 'erh-core');
     }
 
     /**
@@ -117,12 +118,10 @@ class PriceUpdateJob implements CronJobInterface {
      * @return void
      */
     private function run(): void {
-        global $wpdb;
-
         $today = current_time('Y-m-d');
         $updated_count = 0;
         $skipped_count = 0;
-        $anomaly_count = 0;
+        $geo_currency_count = 0;
 
         // Get all published products.
         $products = get_posts([
@@ -133,30 +132,35 @@ class PriceUpdateJob implements CronJobInterface {
         ]);
 
         foreach ($products as $product_id) {
-            $prices = $this->price_fetcher->get_prices($product_id);
+            // Get ALL prices from HFT (includes all geos and currencies).
+            $all_prices = $this->price_fetcher->get_prices($product_id);
 
             // Skip if no price info available.
-            if (empty($prices)) {
+            if (empty($all_prices)) {
                 $skipped_count++;
                 continue;
             }
 
-            $current_price = $prices[0]['price'] ?? null;
-            $domain = $prices[0]['domain'] ?? '';
+            // Group prices by geo+currency, keeping only the best (lowest in-stock) for each.
+            $best_by_geo_currency = $this->get_best_prices_by_geo_currency($all_prices);
 
-            // Validate price.
-            if (!is_numeric($current_price) || $current_price <= 0) {
-                $anomaly_count++;
+            if (empty($best_by_geo_currency)) {
+                $skipped_count++;
                 continue;
             }
 
-            // Record the daily price.
-            $this->price_history->record_price(
-                $product_id,
-                (float) $current_price,
-                $domain,
-                $today
-            );
+            // Record each geo+currency combination.
+            foreach ($best_by_geo_currency as $best) {
+                $this->price_history->record_price(
+                    $product_id,
+                    $best['price'],
+                    $best['currency'],
+                    $best['domain'],
+                    $best['geo'],
+                    $today
+                );
+                $geo_currency_count++;
+            }
 
             $updated_count++;
         }
@@ -166,11 +170,69 @@ class PriceUpdateJob implements CronJobInterface {
 
         // Log results.
         error_log(sprintf(
-            '[ERH Cron] Daily price update completed. Updated: %d, Skipped: %d, Anomalies: %d',
+            '[ERH Cron] Daily price update completed. Products: %d, Skipped: %d, Geo+Currency entries: %d',
             $updated_count,
             $skipped_count,
-            $anomaly_count
+            $geo_currency_count
         ));
+    }
+
+    /**
+     * Group prices by geo+currency and return best price for each combination.
+     *
+     * @param array<int, array<string, mixed>> $prices All prices from PriceFetcher.
+     * @return array<string, array<string, mixed>> Best price per geo+currency.
+     */
+    private function get_best_prices_by_geo_currency(array $prices): array {
+        $grouped = [];
+
+        foreach ($prices as $price_data) {
+            // Skip invalid prices.
+            if (!isset($price_data['price']) || !is_numeric($price_data['price']) || $price_data['price'] <= 0) {
+                continue;
+            }
+
+            // Normalize geo and currency (default to US/USD if not set).
+            $geo = strtoupper($price_data['geo'] ?? 'US');
+            $currency = strtoupper($price_data['currency'] ?? 'USD');
+            $key = "{$geo}_{$currency}";
+
+            $price = (float)$price_data['price'];
+            $in_stock = $price_data['in_stock'] ?? false;
+
+            // Determine if this is a better price for this geo+currency.
+            $is_better = false;
+
+            if (!isset($grouped[$key])) {
+                // First entry for this geo+currency.
+                $is_better = true;
+            } else {
+                $existing = $grouped[$key];
+
+                // Prefer in-stock over out-of-stock.
+                if ($in_stock && !$existing['in_stock']) {
+                    $is_better = true;
+                } elseif ($in_stock === $existing['in_stock']) {
+                    // Same stock status, compare prices.
+                    if ($price < $existing['price']) {
+                        $is_better = true;
+                    }
+                }
+                // If current is out-of-stock but existing is in-stock, don't replace.
+            }
+
+            if ($is_better) {
+                $grouped[$key] = [
+                    'price'    => $price,
+                    'currency' => $currency,
+                    'domain'   => $price_data['domain'] ?? '',
+                    'geo'      => $geo,
+                    'in_stock' => $in_stock,
+                ];
+            }
+        }
+
+        return $grouped;
     }
 
     /**
