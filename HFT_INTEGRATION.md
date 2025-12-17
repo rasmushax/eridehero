@@ -86,6 +86,58 @@ add_filter('hft_register_product_cpt', '__return_false');
 - All HFT meta boxes, ACF fields, and scraping options appear on `products` CPT
 - `wp_hft_tracked_links.product_post_id` references ERH product IDs
 
+### ERH Geo-Aware Pricing Layer
+
+ERH-Core adds a geo-aware caching layer on top of HFT:
+
+```
+┌─────────────────────────────────────────────────────────────────────┐
+│                         ERH-Core Plugin                              │
+├─────────────────────────────────────────────────────────────────────┤
+│  ┌──────────────────┐     ┌──────────────────┐     ┌─────────────┐ │
+│  │ CacheRebuildJob  │────▶│ wp_product_data  │────▶│ JSON Files  │ │
+│  │ (every 2 hours)  │     │ price_history    │     │ (geo-keyed) │ │
+│  └────────┬─────────┘     └──────────────────┘     └─────────────┘ │
+│           │                                                          │
+│           │ Queries per geo (US, GB, DE, CA, AU)                    │
+│           ▼                                                          │
+│  ┌─────────────────────────────────────────────────────────────────┐│
+│  │                       PriceFetcher                               ││
+│  │  - Validates geo genuineness (no US fallbacks for non-US geos)  ││
+│  │  - Returns prices with currency, retailer, stock status          ││
+│  └─────────────────────────────────────────────────────────────────┘│
+└─────────────────────────────────────────────────────────────────────┘
+                              │
+                              │ Reads from HFT tables
+                              ▼
+┌─────────────────────────────────────────────────────────────────────┐
+│                     HFT Plugin (hft_tracked_links)                  │
+└─────────────────────────────────────────────────────────────────────┘
+```
+
+**Geo Validation** (`CacheRebuildJob::is_genuine_geo_price()`):
+- Prevents US-only prices from appearing under other geo keys
+- A price is genuine if:
+  - `price.geo === requested_geo` (explicit geo match), OR
+  - `price.geo === null && requested_geo === 'US'` (global = US default), OR
+  - `price.currency === expected_currency` (e.g., GBP for GB)
+
+**Generated Files**:
+| File | Content | Schedule |
+|------|---------|----------|
+| `comparison_products.json` | `prices: {US: 799, GB: 649}` | Every 2 hours |
+| `finder_escooter.json` etc | Full `pricing` object with stats | Every 2 hours |
+| `search_items.json` | No pricing (search only) | Every 2 hours |
+
+**Frontend Usage** (`geo-price.js`):
+```javascript
+import { getUserGeo, formatPrice } from './services/geo-price.js';
+
+const { geo, currency } = await getUserGeo(); // Via IPInfo
+const price = product.pricing[geo]?.current_price ?? product.pricing['US']?.current_price;
+const displayCurrency = product.pricing[geo] ? currency : 'USD';
+```
+
 ---
 
 ## Database Schema
