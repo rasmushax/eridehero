@@ -342,16 +342,27 @@ class CacheRebuildJob implements CronJobInterface {
      * @return string The image URL or empty string.
      */
     private function get_product_image(int $product_id): string {
+        // Try ACF big_thumbnail field first (legacy).
         $image_id = get_field('big_thumbnail', $product_id);
+
+        // Fall back to post featured image.
+        if (!$image_id) {
+            $image_id = get_post_thumbnail_id($product_id);
+        }
 
         if (!$image_id) {
             return '';
         }
 
+        // Try custom size first, then standard thumbnail.
         $image_url = wp_get_attachment_image_url($image_id, 'thumbnail-150');
 
         if (!$image_url) {
             $image_url = wp_get_attachment_image_url($image_id, 'thumbnail');
+        }
+
+        if (!$image_url) {
+            $image_url = wp_get_attachment_image_url($image_id, 'medium');
         }
 
         return $image_url ?: '';
