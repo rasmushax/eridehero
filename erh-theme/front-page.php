@@ -33,7 +33,5 @@ get_header();
 
     <?php get_template_part( 'template-parts/home/youtube' ); ?>
 
-    <?php get_template_part( 'template-parts/home/cta' ); ?>
-
 <?php
 get_footer();

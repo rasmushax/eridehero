@@ -9,25 +9,26 @@
 if ( ! defined( 'ABSPATH' ) ) {
     exit;
 }
-
-// Get CTA section settings
-$cta_title       = get_field( 'cta_title', 'option' ) ?: 'Unlock all ERideHero features for free';
-$cta_pill        = get_field( 'cta_pill', 'option' ) ?: '1,200+ members';
-$cta_benefits    = get_field( 'cta_benefits', 'option' );
-$cta_button_text = get_field( 'cta_button_text', 'option' ) ?: 'Sign up free';
-$cta_button_url  = get_field( 'cta_button_url', 'option' ) ?: home_url( '/signup/' );
-
-// Default benefits if none configured
-if ( empty( $cta_benefits ) ) {
-    $cta_benefits = array(
-        array( 'text' => 'Best deals weekly' ),
-        array( 'text' => 'Price drop alerts' ),
-        array( 'text' => 'Member-only discounts' ),
-    );
-}
 ?>
 </main><!-- #main-content -->
 
+<?php if ( ! is_user_logged_in() ) :
+    // Get CTA section settings
+    $cta_title       = get_field( 'cta_title', 'option' ) ?: 'Unlock all ERideHero features for free';
+    $cta_pill        = get_field( 'cta_pill', 'option' ) ?: '1,200+ members';
+    $cta_benefits    = get_field( 'cta_benefits', 'option' );
+    $cta_button_text = get_field( 'cta_button_text', 'option' ) ?: 'Sign up free';
+    $cta_button_url  = get_field( 'cta_button_url', 'option' ) ?: home_url( '/signup/' );
+
+    // Default benefits if none configured
+    if ( empty( $cta_benefits ) ) {
+        $cta_benefits = array(
+            array( 'text' => 'Best deals weekly' ),
+            array( 'text' => 'Price drop alerts' ),
+            array( 'text' => 'Member-only discounts' ),
+        );
+    }
+?>
 <!-- CTA Section -->
 <section class="cta-section">
     <div class="container">
@@ -58,6 +59,7 @@ if ( empty( $cta_benefits ) ) {
         </div>
     </div>
 </section>
+<?php endif; ?>
 
 <footer class="footer" role="contentinfo">
     <div class="container">
