@@ -73,7 +73,7 @@ $guides_query = new WP_Query( $query_args );
             <?php wp_reset_postdata(); ?>
         <?php else : ?>
             <div class="empty-state">
-                <p><?php esc_html_e( 'No buying guides found. Add posts with the "buying-guide" tag or select guides in Theme Settings > Homepage.', 'erh' ); ?></p>
+                <p><?php esc_html_e( 'No buying guides yet.', 'erh' ); ?></p>
             </div>
         <?php endif; ?>
     </div>
