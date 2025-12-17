@@ -70,7 +70,7 @@ export async function initDeals() {
         allDeals = data.deals || [];
     } catch (error) {
         console.error('[Deals] Failed to load deals:', error);
-        showEmptyState();
+        showEmptyState(true);
         return null;
     }
 
@@ -116,7 +116,7 @@ export async function initDeals() {
 
             // Update total count display
             if (dealsCountEl && totalDealsCount > 0) {
-                dealsCountEl.textContent = `${totalDealsCount} deals today`;
+                dealsCountEl.textContent = `🔥 ${totalDealsCount} deals cooking`;
             }
         } catch (e) {
             // Silently fail - counts are optional
@@ -131,7 +131,7 @@ export async function initDeals() {
         grid.innerHTML = '';
 
         if (deals.length === 0) {
-            showEmptyState();
+            showEmptyState(true);
             return;
         }
 
@@ -333,8 +333,10 @@ export async function initDeals() {
     /**
      * Show empty state
      */
-    function showEmptyState() {
-        grid.innerHTML = '';
+    function showEmptyState(clearGrid = false) {
+        if (clearGrid) {
+            grid.innerHTML = '';
+        }
         if (emptyState) {
             emptyState.style.display = '';
         }
