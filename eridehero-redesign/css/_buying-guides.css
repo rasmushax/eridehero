@@ -1,0 +1,34 @@
+/* =============================================
+   ERideHero Design System - Buying Guides Section
+   ============================================= */
+
+/* Guide cards use .content-card base styles from _components.css */
+/* Only guide-specific overrides below */
+
+.guide-card-title {
+    font-size: var(--text-md);
+}
+
+
+/* ===== RESPONSIVE ===== */
+
+@media (max-width: 600px) {
+    .buying-guides .grid-4 {
+        grid-template-columns: repeat(2, 1fr);
+        max-width: none;
+    }
+}
+
+@media (max-width: 500px) {
+    .buying-guides .grid-4 {
+        grid-template-columns: 1fr;
+    }
+
+    .buying-guides .content-card-img {
+        aspect-ratio: 2 / 1;
+    }
+
+    .guide-card-title {
+        font-size: var(--text-lg);
+    }
+}

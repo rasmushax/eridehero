@@ -1,0 +1,664 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Articles - Electric Vehicle News & Guides | ERideHero</title>
+    <link href="https://fonts.googleapis.com/css2?family=Figtree:wght@400;500;600;700;800&display=swap" rel="stylesheet">
+    <link rel="stylesheet" href="css/style.css">
+</head>
+<body>
+    <!-- SVG Sprite -->
+    <svg xmlns="http://www.w3.org/2000/svg" style="display:none">
+        <symbol id="icon-search" viewBox="0 0 24 24">
+            <circle cx="11" cy="11" r="8"></circle>
+            <line x1="21" y1="21" x2="16.65" y2="16.65"></line>
+        </symbol>
+        <symbol id="icon-book" viewBox="0 0 24 24">
+            <path d="M4 19.5A2.5 2.5 0 0 1 6.5 17H20"></path>
+            <path d="M6.5 2H20v20H6.5A2.5 2.5 0 0 1 4 19.5v-15A2.5 2.5 0 0 1 6.5 2z"></path>
+        </symbol>
+        <symbol id="icon-chevron-down" viewBox="0 0 24 24">
+            <polyline points="6 9 12 15 18 9"></polyline>
+        </symbol>
+        <symbol id="icon-chevron-left" viewBox="0 0 24 24">
+            <polyline points="15 18 9 12 15 6"></polyline>
+        </symbol>
+        <symbol id="icon-chevron-right" viewBox="0 0 24 24">
+            <polyline points="9 18 15 12 9 6"></polyline>
+        </symbol>
+        <symbol id="icon-arrow-right" viewBox="0 0 24 24">
+            <line x1="5" y1="12" x2="19" y2="12"></line>
+            <polyline points="12 5 19 12 12 19"></polyline>
+        </symbol>
+        <symbol id="icon-check" viewBox="0 0 24 24">
+            <polyline points="20 6 9 17 4 12"></polyline>
+        </symbol>
+        <symbol id="icon-x" viewBox="0 0 24 24">
+            <line x1="18" y1="6" x2="6" y2="18"></line>
+            <line x1="6" y1="6" x2="18" y2="18"></line>
+        </symbol>
+        <symbol id="icon-trending-up" viewBox="0 0 24 24">
+            <polyline points="22 7 13.5 15.5 8.5 10.5 2 17"></polyline>
+            <polyline points="16 7 22 7 22 13"></polyline>
+        </symbol>
+        <symbol id="icon-grid" viewBox="0 0 24 24">
+            <rect x="3" y="3" width="7" height="7"></rect>
+            <rect x="14" y="3" width="7" height="7"></rect>
+            <rect x="14" y="14" width="7" height="7"></rect>
+            <rect x="3" y="14" width="7" height="7"></rect>
+        </symbol>
+        <symbol id="icon-star" viewBox="0 0 24 24">
+            <polygon points="12 2 15.09 8.26 22 9.27 17 14.14 18.18 21.02 12 17.77 5.82 21.02 7 14.14 2 9.27 8.91 8.26 12 2"></polygon>
+        </symbol>
+        <symbol id="icon-user" viewBox="0 0 24 24">
+            <path d="M20 21v-2a4 4 0 0 0-4-4H8a4 4 0 0 0-4 4v2"></path>
+            <circle cx="12" cy="7" r="4"></circle>
+        </symbol>
+        <symbol id="icon-hoverboard" viewBox="0 0 525 525">
+            <path d="M462.424,180.951h-.027c-25.395.098-47.959,16.297-56.149,40.31-1.4,4.106-4.797,7.426-9.087,8.881-11.199,3.798-11.664,3.833-49.622,3.577-8.68-.059-19.263-.13-32.312-.167-9.294-.026-17.979-1.57-25.812-4.587-17.27-6.651-36.287-6.651-53.553,0-7.834,3.018-16.519,4.561-25.812,4.587-13.208.037-23.903.109-32.66.167q-38.32.255-49.604-3.641c-4.2-1.45-7.481-4.67-9.002-8.834-9.829-26.906-37.499-42.997-65.787-38.258-28.15,4.713-49.061,28.844-49.721,57.378l-.002,63.253c0,7.171,4.331,13.349,10.515,16.055v35.69c0,13.371,5.504,26.439,15.101,35.854,9.474,9.295,21.837,14.268,34.914,14.027,26.526-.507,48.106-22.512,48.106-49.052v-3.514c22.649.006,40.198.04,53.827.066q49.689.098,53.723-2.84c.081-.06.167-.124.263-.188l14.035-9.34c8.583-5.711,18.57-8.73,28.88-8.73s20.296,3.02,28.88,8.731l13.954,9.284c.091.062.167.123.239.177q3.968,3.002,53.664,2.905c13.659-.026,31.259-.061,53.989-.066v2.684c0,13.371,5.504,26.439,15.101,35.854,9.249,9.073,21.283,14.036,33.98,14.036.311,0,.622-.003.934-.009,26.526-.507,48.106-22.512,48.106-49.052v-36.521c6.185-2.706,10.516-8.884,10.516-16.055v-63.091c0-32.85-26.726-59.576-59.576-59.576ZM476.454,321.133v35.061c0,7.736-6.294,14.03-14.03,14.03s-14.03-6.294-14.03-14.03v-35.061h28.061ZM76.879,321.133v35.061c0,7.736-6.294,14.03-14.03,14.03s-14.03-6.294-14.03-14.03v-35.061h28.061ZM409.891,317.648h-83.874c-3.596,0-7.068-1.071-10.042-3.098l-2.667-1.818c-23.195-15.812-23.639-16.115-29.641-16.115h-42.061c-5.714,0-7.499,1.211-21.394,10.634-2.95,2-6.525,4.425-10.898,7.363-2.956,1.984-6.396,3.034-9.948,3.034h-83.984c4.272-3.197,7.042-8.296,7.042-14.031v-38.657c10.727,3.461,11.148,3.597,14.03,3.597,23.428,0,41.194.039,54.707.067q45.197.1,49.3-2.823c.091-.065.187-.134.302-.211,13.288-8.878,30.458-8.878,43.731-.011,2.858,1.921,6.189,2.951,9.688,2.978,23.812,0,41.873.093,55.061.161,41.214.211,43.199.223,53.606-3.528v38.427c0,5.734,2.77,10.833,7.042,14.031ZM38.289,240.084c-.415-6.56,1.749-12.889,6.094-17.822,4.345-4.932,10.351-7.877,16.911-8.293,6.553-.414,12.889,1.748,17.822,6.094,4.88,4.299,7.815,10.224,8.279,16.703v49.336h-49.091v-45.576l-.014-.442ZM486.97,240.527v45.576h-49.091v-49.099c1.754-12.112,12.175-21.127,24.488-21.022h.057c13.534,0,24.546,11.011,24.546,24.545Z"/>
+        </symbol>
+        <symbol id="icon-youtube" viewBox="0 0 24 24">
+            <path d="M22.54 6.42a2.78 2.78 0 0 0-1.94-2C18.88 4 12 4 12 4s-6.88 0-8.6.46a2.78 2.78 0 0 0-1.94 2A29 29 0 0 0 1 11.75a29 29 0 0 0 .46 5.33A2.78 2.78 0 0 0 3.4 19c1.72.46 8.6.46 8.6.46s6.88 0 8.6-.46a2.78 2.78 0 0 0 1.94-2 29 29 0 0 0 .46-5.25 29 29 0 0 0-.46-5.33z"></path>
+            <polygon points="9.75 15.02 15.5 11.75 9.75 8.48 9.75 15.02"></polygon>
+        </symbol>
+        <symbol id="icon-instagram" viewBox="0 0 24 24">
+            <rect x="2" y="2" width="20" height="20" rx="5" ry="5"></rect>
+            <path d="M16 11.37A4 4 0 1 1 12.63 8 4 4 0 0 1 16 11.37z"></path>
+            <line x1="17.5" y1="6.5" x2="17.51" y2="6.5"></line>
+        </symbol>
+        <symbol id="icon-facebook" viewBox="0 0 24 24">
+            <path d="M18 2h-3a5 5 0 0 0-5 5v3H7v4h3v8h4v-8h3l1-4h-4V7a1 1 0 0 1 1-1h3z"></path>
+        </symbol>
+        <symbol id="icon-twitter" viewBox="0 0 24 24">
+            <path d="M4 4l11.733 16h4.267l-11.733 -16z"></path>
+            <path d="M4 20l6.768 -6.768m2.46 -2.46l6.772 -6.772"></path>
+        </symbol>
+        <symbol id="icon-linkedin" viewBox="0 0 24 24">
+            <path d="M16 8a6 6 0 0 1 6 6v7h-4v-7a2 2 0 0 0-2-2 2 2 0 0 0-2 2v7h-4v-7a6 6 0 0 1 6-6z"></path>
+            <rect x="2" y="9" width="4" height="12"></rect>
+            <circle cx="4" cy="4" r="2"></circle>
+        </symbol>
+    </svg>
+
+    <!-- Skip to main content link for keyboard users -->
+    <a href="#main-content" class="skip-link">Skip to main content</a>
+
+    <!-- HEADER -->
+    <header class="header" role="banner">
+        <div class="header-inner">
+            <!-- Logo -->
+            <a href="/" class="logo" aria-label="ERideHero - Go to homepage">
+                <img src="eridehero-1.svg" alt="" class="logo-img" aria-hidden="true">
+                <span class="sr-only">ERideHero</span>
+            </a>
+
+            <!-- Main Navigation -->
+            <nav class="main-nav" role="navigation" aria-label="Main navigation">
+                <!-- E-scooters Dropdown -->
+                <div class="nav-item" data-dropdown>
+                    <button type="button" class="nav-link" aria-expanded="false" aria-haspopup="true">
+                        E-scooters
+                        <svg class="icon chevron" aria-hidden="true"><use href="#icon-chevron-down"></use></svg>
+                    </button>
+                    <div class="dropdown" role="menu" aria-label="E-scooter options">
+                        <a href="#" class="dropdown-item" role="menuitem">
+                            <div class="dropdown-icon" aria-hidden="true">
+                                <svg class="icon"><use href="#icon-book"></use></svg>
+                            </div>
+                            <div class="dropdown-content">
+                                <h4>Buying Guides</h4>
+                                <span>Find the perfect ride</span>
+                            </div>
+                        </a>
+                        <a href="#" class="dropdown-item" role="menuitem">
+                            <div class="dropdown-icon" aria-hidden="true">
+                                <svg class="icon"><use href="#icon-star"></use></svg>
+                            </div>
+                            <div class="dropdown-content">
+                                <h4>Reviews</h4>
+                                <span>200+ tested</span>
+                            </div>
+                        </a>
+                    </div>
+                </div>
+
+                <!-- E-bikes -->
+                <div class="nav-item" data-dropdown>
+                    <button type="button" class="nav-link" aria-expanded="false" aria-haspopup="true">
+                        E-bikes
+                        <svg class="icon chevron" aria-hidden="true"><use href="#icon-chevron-down"></use></svg>
+                    </button>
+                    <div class="dropdown" role="menu" aria-label="E-bike options">
+                        <a href="#" class="dropdown-item" role="menuitem">
+                            <div class="dropdown-icon" aria-hidden="true">
+                                <svg class="icon"><use href="#icon-book"></use></svg>
+                            </div>
+                            <div class="dropdown-content">
+                                <h4>Buying Guides</h4>
+                                <span>Find the perfect ride</span>
+                            </div>
+                        </a>
+                        <a href="#" class="dropdown-item" role="menuitem">
+                            <div class="dropdown-icon" aria-hidden="true">
+                                <svg class="icon"><use href="#icon-star"></use></svg>
+                            </div>
+                            <div class="dropdown-content">
+                                <h4>Reviews</h4>
+                                <span>50+ tested</span>
+                            </div>
+                        </a>
+                    </div>
+                </div>
+
+                <!-- EUCs -->
+                <div class="nav-item">
+                    <a href="#" class="nav-link">EUCs</a>
+                </div>
+
+                <!-- More Dropdown -->
+                <div class="nav-item" data-dropdown>
+                    <button type="button" class="nav-link" aria-expanded="false" aria-haspopup="true">
+                        More
+                        <svg class="icon chevron" aria-hidden="true"><use href="#icon-chevron-down"></use></svg>
+                    </button>
+                    <div class="dropdown" role="menu" aria-label="More options">
+                        <a href="#" class="dropdown-item" role="menuitem">
+                            <div class="dropdown-icon" aria-hidden="true">
+                                <svg class="icon"><use href="#icon-hoverboard"></use></svg>
+                            </div>
+                            <div class="dropdown-content">
+                                <h4>Hoverboards</h4>
+                                <span>10 reviews</span>
+                            </div>
+                        </a>
+                        <div class="dropdown-divider" role="separator"></div>
+                        <a href="articles.html" class="dropdown-item" role="menuitem">
+                            <div class="dropdown-icon" aria-hidden="true">
+                                <svg class="icon"><use href="#icon-book"></use></svg>
+                            </div>
+                            <div class="dropdown-content">
+                                <h4>All articles</h4>
+                                <span>News & guides</span>
+                            </div>
+                        </a>
+                    </div>
+                </div>
+            </nav>
+
+            <!-- Header Right -->
+            <div class="header-right">
+                <!-- Search -->
+                <div class="search-wrapper">
+                    <div class="search-inline">
+                        <svg class="icon" aria-hidden="true"><use href="#icon-search"></use></svg>
+                        <input type="text" class="search-inline-input" placeholder="Search products, reviews..." aria-label="Search">
+                    </div>
+                    <button class="search-toggle" aria-label="Open search" aria-expanded="false" aria-controls="search-dropdown">
+                        <svg class="icon" aria-hidden="true"><use href="#icon-search"></use></svg>
+                    </button>
+                    <div class="search-dropdown" id="search-dropdown" role="dialog" aria-label="Search">
+                        <div class="search-input-wrapper">
+                            <svg class="icon" aria-hidden="true"><use href="#icon-search"></use></svg>
+                            <input type="text" class="search-input" placeholder="Search products, reviews, guides..." aria-label="Search">
+                            <button type="button" class="search-close" aria-label="Close search">
+                                <svg class="icon" aria-hidden="true"><use href="#icon-x"></use></svg>
+                            </button>
+                        </div>
+                        <div class="search-suggestions">
+                            <div class="search-suggestions-label">Popular searches</div>
+                            <a href="#" class="search-suggestion">
+                                <svg class="icon" aria-hidden="true"><use href="#icon-trending-up"></use></svg>
+                                <span>Best commuter scooters 2025</span>
+                            </a>
+                            <a href="#" class="search-suggestion">
+                                <svg class="icon" aria-hidden="true"><use href="#icon-grid"></use></svg>
+                                <span>Segway Max G2 vs Navee ST3 Pro</span>
+                            </a>
+                            <a href="#" class="search-suggestion">
+                                <svg class="icon" aria-hidden="true"><use href="#icon-star"></use></svg>
+                                <span>NIU KQi 300X review</span>
+                            </a>
+                        </div>
+                    </div>
+                </div>
+
+                <!-- Login / Sign Up -->
+                <a href="#" class="btn-login">
+                    <svg class="icon" aria-hidden="true"><use href="#icon-user"></use></svg>
+                    Log in
+                </a>
+                <a href="#" class="btn-signup">
+                    Sign up free
+                </a>
+
+                <!-- Mobile menu toggle -->
+                <button class="menu-toggle" aria-label="Open menu" aria-expanded="false" aria-controls="mobile-menu">
+                    <div class="menu-toggle-inner">
+                        <span></span>
+                        <span></span>
+                        <span></span>
+                    </div>
+                </button>
+            </div>
+        </div>
+    </header>
+
+    <!-- Mobile Menu Overlay -->
+    <div class="mobile-menu" id="mobile-menu" role="dialog" aria-label="Navigation menu" aria-modal="true">
+        <div class="mobile-menu-inner">
+            <nav class="mobile-nav" role="navigation" aria-label="Mobile navigation">
+                <div class="mobile-nav-item">
+                    <a href="#" class="mobile-nav-link">E-scooters</a>
+                </div>
+                <div class="mobile-nav-item">
+                    <a href="#" class="mobile-nav-link">E-bikes</a>
+                </div>
+                <div class="mobile-nav-item">
+                    <a href="#" class="mobile-nav-link">EUCs</a>
+                </div>
+                <div class="mobile-nav-item">
+                    <a href="#" class="mobile-nav-link">More</a>
+                </div>
+            </nav>
+            <div class="mobile-menu-footer">
+                <a href="/signup" class="mobile-signup-btn">
+                    Sign up free
+                    <svg class="icon" aria-hidden="true"><use href="#icon-arrow-right"></use></svg>
+                </a>
+                <a href="#" class="mobile-login-btn">
+                    <svg class="icon" aria-hidden="true"><use href="#icon-user"></use></svg>
+                    Log in to your account
+                </a>
+            </div>
+        </div>
+    </div>
+
+    <!-- MAIN CONTENT -->
+    <main id="main-content">
+
+        <!-- ARCHIVE HEADER -->
+        <section class="archive-header">
+            <div class="container">
+                <h1 class="archive-title">Articles</h1>
+                <p class="archive-subtitle">News, guides, and insights from the world of electric mobility</p>
+
+                <nav class="archive-filters" aria-label="Filter by category" data-archive-filters>
+                    <button type="button" class="archive-filter is-active" data-filter="all">
+                        All
+                        <span class="archive-filter-count" data-count-all>16</span>
+                    </button>
+                    <button type="button" class="archive-filter" data-filter="e-scooters">
+                        E-Scooters
+                        <span class="archive-filter-count" data-count-e-scooters>10</span>
+                    </button>
+                    <button type="button" class="archive-filter" data-filter="e-bikes">
+                        E-Bikes
+                        <span class="archive-filter-count" data-count-e-bikes>3</span>
+                    </button>
+                    <button type="button" class="archive-filter" data-filter="eucs">
+                        EUCs
+                        <span class="archive-filter-count" data-count-eucs>2</span>
+                    </button>
+                    <button type="button" class="archive-filter" data-filter="hoverboards">
+                        Hoverboards
+                        <span class="archive-filter-count" data-count-hoverboards>1</span>
+                    </button>
+                </nav>
+            </div>
+        </section>
+
+        <!-- ARTICLES GRID -->
+        <section class="section archive-content">
+            <div class="container">
+                <div class="archive-grid" data-archive-grid>
+                    <!-- E-Scooter Articles -->
+                    <a href="#" class="archive-card archive-card--article" data-category="e-scooters">
+                        <div class="archive-card-img">
+                            <img src="https://placehold.co/400x225" alt="Segway announces new scooter lineup">
+                            <span class="archive-card-tag">E-Scooters</span>
+                        </div>
+                        <h3 class="archive-card-title">Segway Announces 2025 Electric Scooter Lineup with Major Battery Upgrades</h3>
+                        <p class="archive-card-excerpt">The new models feature improved battery capacity, faster charging, and enhanced safety features across the entire range.</p>
+                        <div class="archive-card-meta">
+                            <span>Dec 12, 2024</span>
+                            <span class="archive-card-meta-sep">·</span>
+                            <span>4 min read</span>
+                        </div>
+                    </a>
+
+                    <a href="#" class="archive-card archive-card--article" data-category="e-scooters">
+                        <div class="archive-card-img">
+                            <img src="https://placehold.co/400x225" alt="E-scooter regulations update">
+                            <span class="archive-card-tag">E-Scooters</span>
+                        </div>
+                        <h3 class="archive-card-title">New York City Updates E-Scooter Regulations for 2025</h3>
+                        <p class="archive-card-excerpt">The updated rules clarify speed limits, parking zones, and helmet requirements for electric scooter riders.</p>
+                        <div class="archive-card-meta">
+                            <span>Dec 10, 2024</span>
+                            <span class="archive-card-meta-sep">·</span>
+                            <span>3 min read</span>
+                        </div>
+                    </a>
+
+                    <a href="#" class="archive-card archive-card--article" data-category="e-scooters">
+                        <div class="archive-card-img">
+                            <img src="https://placehold.co/400x225" alt="NIU expansion news">
+                            <span class="archive-card-tag">E-Scooters</span>
+                        </div>
+                        <h3 class="archive-card-title">NIU Expands North American Distribution Network</h3>
+                        <p class="archive-card-excerpt">Chinese e-scooter giant partners with major retailers to improve availability and service support.</p>
+                        <div class="archive-card-meta">
+                            <span>Dec 8, 2024</span>
+                            <span class="archive-card-meta-sep">·</span>
+                            <span>2 min read</span>
+                        </div>
+                    </a>
+
+                    <a href="#" class="archive-card archive-card--article" data-category="e-scooters">
+                        <div class="archive-card-img">
+                            <img src="https://placehold.co/400x225" alt="E-scooter maintenance guide">
+                            <span class="archive-card-tag">E-Scooters</span>
+                        </div>
+                        <h3 class="archive-card-title">Essential E-Scooter Maintenance: A Complete Guide</h3>
+                        <p class="archive-card-excerpt">Keep your scooter running smoothly with these simple maintenance tips and regular check-ups.</p>
+                        <div class="archive-card-meta">
+                            <span>Dec 5, 2024</span>
+                            <span class="archive-card-meta-sep">·</span>
+                            <span>8 min read</span>
+                        </div>
+                    </a>
+
+                    <a href="#" class="archive-card archive-card--article" data-category="e-scooters">
+                        <div class="archive-card-img">
+                            <img src="https://placehold.co/400x225" alt="Apollo recall notice">
+                            <span class="archive-card-tag">E-Scooters</span>
+                        </div>
+                        <h3 class="archive-card-title">Apollo Issues Voluntary Recall for Early 2024 Models</h3>
+                        <p class="archive-card-excerpt">The recall affects specific serial numbers due to a potential brake cable issue. Here's what owners need to know.</p>
+                        <div class="archive-card-meta">
+                            <span>Nov 28, 2024</span>
+                            <span class="archive-card-meta-sep">·</span>
+                            <span>3 min read</span>
+                        </div>
+                    </a>
+
+                    <a href="#" class="archive-card archive-card--article" data-category="e-scooters">
+                        <div class="archive-card-img">
+                            <img src="https://placehold.co/400x225" alt="Battery care tips">
+                            <span class="archive-card-tag">E-Scooters</span>
+                        </div>
+                        <h3 class="archive-card-title">How to Maximize Your E-Scooter Battery Life</h3>
+                        <p class="archive-card-excerpt">Expert tips on charging habits, storage, and care to extend your battery's lifespan.</p>
+                        <div class="archive-card-meta">
+                            <span>Nov 25, 2024</span>
+                            <span class="archive-card-meta-sep">·</span>
+                            <span>6 min read</span>
+                        </div>
+                    </a>
+
+                    <a href="#" class="archive-card archive-card--article" data-category="e-scooters">
+                        <div class="archive-card-img">
+                            <img src="https://placehold.co/400x225" alt="Regulation debate">
+                            <span class="archive-card-tag">E-Scooters</span>
+                        </div>
+                        <h3 class="archive-card-title">E-Scooter Speed Limits: Too Restrictive or Just Right?</h3>
+                        <p class="archive-card-excerpt">Examining the debate around speed regulations and what they mean for riders and pedestrians.</p>
+                        <div class="archive-card-meta">
+                            <span>Nov 18, 2024</span>
+                            <span class="archive-card-meta-sep">·</span>
+                            <span>6 min read</span>
+                        </div>
+                    </a>
+
+                    <a href="#" class="archive-card archive-card--article" data-category="e-scooters">
+                        <div class="archive-card-img">
+                            <img src="https://placehold.co/400x225" alt="Tire change tutorial">
+                            <span class="archive-card-tag">E-Scooters</span>
+                        </div>
+                        <h3 class="archive-card-title">How to Change a Flat Tire on Your Electric Scooter</h3>
+                        <p class="archive-card-excerpt">Step-by-step instructions for replacing pneumatic tires at home with basic tools.</p>
+                        <div class="archive-card-meta">
+                            <span>Nov 15, 2024</span>
+                            <span class="archive-card-meta-sep">·</span>
+                            <span>10 min read</span>
+                        </div>
+                    </a>
+
+                    <a href="#" class="archive-card archive-card--article" data-category="e-scooters">
+                        <div class="archive-card-img">
+                            <img src="https://placehold.co/400x225" alt="Winter riding tips">
+                            <span class="archive-card-tag">E-Scooters</span>
+                        </div>
+                        <h3 class="archive-card-title">Riding Your E-Scooter in Winter: Safety Tips and Precautions</h3>
+                        <p class="archive-card-excerpt">Everything you need to know about cold weather riding, from tire pressure to battery care.</p>
+                        <div class="archive-card-meta">
+                            <span>Nov 10, 2024</span>
+                            <span class="archive-card-meta-sep">·</span>
+                            <span>7 min read</span>
+                        </div>
+                    </a>
+
+                    <a href="#" class="archive-card archive-card--article" data-category="e-scooters">
+                        <div class="archive-card-img">
+                            <img src="https://placehold.co/400x225" alt="Commuting guide">
+                            <span class="archive-card-tag">E-Scooters</span>
+                        </div>
+                        <h3 class="archive-card-title">How to Plan Your First E-Scooter Commute</h3>
+                        <p class="archive-card-excerpt">A practical guide to route planning, gear, and logistics for new commuters.</p>
+                        <div class="archive-card-meta">
+                            <span>Oct 30, 2024</span>
+                            <span class="archive-card-meta-sep">·</span>
+                            <span>5 min read</span>
+                        </div>
+                    </a>
+
+                    <!-- E-Bike Articles -->
+                    <a href="#" class="archive-card archive-card--article" data-category="e-bikes">
+                        <div class="archive-card-img">
+                            <img src="https://placehold.co/400x225" alt="E-bike sales statistics">
+                            <span class="archive-card-tag">E-Bikes</span>
+                        </div>
+                        <h3 class="archive-card-title">E-Bike Sales Outpace Electric Cars in the US for Third Consecutive Year</h3>
+                        <p class="archive-card-excerpt">New data shows continued growth in personal electric vehicle adoption among American consumers.</p>
+                        <div class="archive-card-meta">
+                            <span>Nov 20, 2024</span>
+                            <span class="archive-card-meta-sep">·</span>
+                            <span>5 min read</span>
+                        </div>
+                    </a>
+
+                    <a href="#" class="archive-card archive-card--article" data-category="e-bikes">
+                        <div class="archive-card-img">
+                            <img src="https://placehold.co/400x225" alt="E-bike commuting benefits">
+                            <span class="archive-card-tag">E-Bikes</span>
+                        </div>
+                        <h3 class="archive-card-title">Why E-Bikes Are the Ultimate Commuter Vehicle</h3>
+                        <p class="archive-card-excerpt">Comparing cost, convenience, and health benefits of e-bike commuting vs. cars and public transit.</p>
+                        <div class="archive-card-meta">
+                            <span>Oct 28, 2024</span>
+                            <span class="archive-card-meta-sep">·</span>
+                            <span>7 min read</span>
+                        </div>
+                    </a>
+
+                    <a href="#" class="archive-card archive-card--article" data-category="e-bikes">
+                        <div class="archive-card-img">
+                            <img src="https://placehold.co/400x225" alt="E-bike battery guide">
+                            <span class="archive-card-tag">E-Bikes</span>
+                        </div>
+                        <h3 class="archive-card-title">Understanding E-Bike Battery Specs: A Buyer's Guide</h3>
+                        <p class="archive-card-excerpt">Watt-hours, voltage, and amp-hours explained - what the numbers actually mean for your ride.</p>
+                        <div class="archive-card-meta">
+                            <span>Oct 15, 2024</span>
+                            <span class="archive-card-meta-sep">·</span>
+                            <span>6 min read</span>
+                        </div>
+                    </a>
+
+                    <!-- EUC Articles -->
+                    <a href="#" class="archive-card archive-card--article" data-category="eucs">
+                        <div class="archive-card-img">
+                            <img src="https://placehold.co/400x225" alt="EUC beginner guide">
+                            <span class="archive-card-tag">EUCs</span>
+                        </div>
+                        <h3 class="archive-card-title">Getting Started with Electric Unicycles: What to Expect</h3>
+                        <p class="archive-card-excerpt">The learning curve, safety gear, and realistic expectations for new EUC riders.</p>
+                        <div class="archive-card-meta">
+                            <span>Dec 1, 2024</span>
+                            <span class="archive-card-meta-sep">·</span>
+                            <span>9 min read</span>
+                        </div>
+                    </a>
+
+                    <a href="#" class="archive-card archive-card--article" data-category="eucs">
+                        <div class="archive-card-img">
+                            <img src="https://placehold.co/400x225" alt="EUC safety gear">
+                            <span class="archive-card-tag">EUCs</span>
+                        </div>
+                        <h3 class="archive-card-title">Essential Safety Gear for Electric Unicycle Riders</h3>
+                        <p class="archive-card-excerpt">From wrist guards to full-face helmets - protecting yourself at higher speeds.</p>
+                        <div class="archive-card-meta">
+                            <span>Nov 12, 2024</span>
+                            <span class="archive-card-meta-sep">·</span>
+                            <span>5 min read</span>
+                        </div>
+                    </a>
+
+                    <!-- Hoverboard Articles -->
+                    <a href="#" class="archive-card archive-card--article" data-category="hoverboards">
+                        <div class="archive-card-img">
+                            <img src="https://placehold.co/400x225" alt="Hoverboard safety">
+                            <span class="archive-card-tag">Hoverboards</span>
+                        </div>
+                        <h3 class="archive-card-title">Hoverboard Safety: What Parents Need to Know in 2025</h3>
+                        <p class="archive-card-excerpt">UL certification, age recommendations, and supervision tips for safe riding.</p>
+                        <div class="archive-card-meta">
+                            <span>Oct 20, 2024</span>
+                            <span class="archive-card-meta-sep">·</span>
+                            <span>4 min read</span>
+                        </div>
+                    </a>
+                </div>
+
+                <!-- Empty State (hidden by default) -->
+                <div class="archive-empty" data-archive-empty hidden>
+                    <p>No articles found in this category yet.</p>
+                </div>
+
+                <!-- Pagination -->
+                <nav class="pagination" aria-label="Pagination">
+                    <a href="#" class="pagination-btn pagination-prev" aria-disabled="true">
+                        <svg class="icon" aria-hidden="true"><use href="#icon-chevron-left"></use></svg>
+                        <span>Previous</span>
+                    </a>
+
+                    <div class="pagination-pages">
+                        <a href="#" class="pagination-page is-active" aria-current="page">1</a>
+                        <a href="#" class="pagination-page">2</a>
+                        <a href="#" class="pagination-page">3</a>
+                        <span class="pagination-ellipsis">...</span>
+                        <a href="#" class="pagination-page">8</a>
+                    </div>
+
+                    <a href="#" class="pagination-btn pagination-next">
+                        <span>Next</span>
+                        <svg class="icon" aria-hidden="true"><use href="#icon-chevron-right"></use></svg>
+                    </a>
+                </nav>
+            </div>
+        </section>
+
+        <!-- CTA SECTION -->
+        <section class="cta-section">
+            <div class="container">
+                <div class="cta-card">
+                    <div class="cta-orb" aria-hidden="true"></div>
+                    <div class="cta-content">
+                        <div class="cta-text">
+                            <div class="cta-header">
+                                <h2>Unlock all ERideHero features for free</h2>
+                                <span class="cta-pill">1,200+ members</span>
+                            </div>
+                            <ul class="cta-benefits">
+                                <li>
+                                    <svg class="icon" aria-hidden="true"><use href="#icon-check"></use></svg>
+                                    Best deals weekly
+                                </li>
+                                <li>
+                                    <svg class="icon" aria-hidden="true"><use href="#icon-check"></use></svg>
+                                    Price drop alerts
+                                </li>
+                                <li>
+                                    <svg class="icon" aria-hidden="true"><use href="#icon-check"></use></svg>
+                                    Member-only discounts
+                                </li>
+                            </ul>
+                        </div>
+                        <div class="cta-action">
+                            <a href="/signup" class="btn btn-primary btn-lg">
+                                Sign up free
+                                <svg class="icon" aria-hidden="true"><use href="#icon-arrow-right"></use></svg>
+                            </a>
+                        </div>
+                    </div>
+                </div>
+            </div>
+        </section>
+
+    </main>
+
+    <!-- FOOTER -->
+    <footer class="footer">
+        <div class="container">
+            <div class="footer-top">
+                <nav class="footer-categories">
+                    <a href="#">E-scooters</a>
+                    <a href="#">E-bikes</a>
+                    <a href="#">EUCs</a>
+                    <a href="#">E-skating</a>
+                    <a href="#">Hoverboards</a>
+                </nav>
+                <div class="footer-socials">
+                    <a href="#" class="footer-social" aria-label="YouTube">
+                        <svg class="icon" aria-hidden="true"><use href="#icon-youtube"></use></svg>
+                    </a>
+                    <a href="#" class="footer-social" aria-label="Instagram">
+                        <svg class="icon" aria-hidden="true"><use href="#icon-instagram"></use></svg>
+                    </a>
+                    <a href="#" class="footer-social" aria-label="Facebook">
+                        <svg class="icon" aria-hidden="true"><use href="#icon-facebook"></use></svg>
+                    </a>
+                    <a href="#" class="footer-social" aria-label="Twitter">
+                        <svg class="icon" aria-hidden="true"><use href="#icon-twitter"></use></svg>
+                    </a>
+                    <a href="#" class="footer-social" aria-label="LinkedIn">
+                        <svg class="icon" aria-hidden="true"><use href="#icon-linkedin"></use></svg>
+                    </a>
+                </div>
+            </div>
+            <div class="footer-bottom">
+                <div class="footer-left">
+                    <span class="footer-copyright">&copy; 2025 ERideHero</span>
+                    <span class="footer-separator">·</span>
+                    <nav class="footer-legal">
+                        <a href="#">Privacy</a>
+                        <a href="#">Cookies</a>
+                        <a href="#">Terms</a>
+                        <a href="#">Disclaimers</a>
+                    </nav>
+                </div>
+                <nav class="footer-links">
+                    <a href="#">About</a>
+                    <a href="#">Contact</a>
+                    <a href="#">How we test</a>
+                    <a href="#">Editorial</a>
+                </nav>
+            </div>
+        </div>
+    </footer>
+
+    <!-- JavaScript -->
+    <script type="module" src="js/app.js"></script>
+</body>
+</html>

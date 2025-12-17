@@ -1,0 +1,1293 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>ERideHero Design Library</title>
+    <link href="https://fonts.googleapis.com/css2?family=Figtree:wght@400;500;600;700;800&display=swap" rel="stylesheet">
+    <link rel="stylesheet" href="css/style.css">
+    <style>
+        /* Design Library specific styles */
+        .dl-header {
+            background: var(--color-dark);
+            color: var(--color-white);
+            padding: var(--space-8) 0;
+            position: sticky;
+            top: 0;
+            z-index: 100;
+        }
+
+        .dl-header-inner {
+            max-width: var(--container-max);
+            margin: 0 auto;
+            padding: 0 var(--space-11);
+            display: flex;
+            align-items: center;
+            justify-content: space-between;
+        }
+
+        .dl-title {
+            font-size: var(--text-xl);
+            font-weight: var(--font-bold);
+        }
+
+        .dl-nav {
+            display: flex;
+            gap: var(--space-2);
+        }
+
+        .dl-nav a {
+            padding: var(--space-3) var(--space-5);
+            font-size: var(--text-sm);
+            font-weight: var(--font-semibold);
+            color: var(--color-muted);
+            text-decoration: none;
+            border-radius: var(--radius-md);
+            transition: all var(--transition-fast);
+        }
+
+        .dl-nav a:hover {
+            background: rgba(255,255,255,0.1);
+            color: var(--color-white);
+        }
+
+        .dl-main {
+            max-width: var(--container-max);
+            margin: 0 auto;
+            padding: var(--space-13) var(--space-11);
+        }
+
+        .dl-section {
+            margin-bottom: var(--space-16);
+            scroll-margin-top: 80px;
+        }
+
+        .dl-section-title {
+            font-size: var(--text-3xl);
+            font-weight: var(--font-bold);
+            color: var(--color-dark);
+            margin-bottom: var(--space-3);
+            padding-bottom: var(--space-5);
+            border-bottom: var(--border-width-2) solid var(--color-border);
+        }
+
+        .dl-section-desc {
+            color: var(--color-muted);
+            margin-bottom: var(--space-11);
+        }
+
+        .dl-subsection {
+            margin-bottom: var(--space-11);
+        }
+
+        .dl-subsection-title {
+            font-size: var(--text-lg);
+            font-weight: var(--font-semibold);
+            color: var(--color-dark);
+            margin-bottom: var(--space-6);
+        }
+
+        .dl-grid {
+            display: grid;
+            grid-template-columns: repeat(auto-fill, minmax(200px, 1fr));
+            gap: var(--space-6);
+        }
+
+        .dl-grid-2 {
+            grid-template-columns: repeat(2, 1fr);
+        }
+
+        .dl-grid-3 {
+            grid-template-columns: repeat(3, 1fr);
+        }
+
+        .dl-grid-4 {
+            grid-template-columns: repeat(4, 1fr);
+        }
+
+        .dl-flex {
+            display: flex;
+            flex-wrap: wrap;
+            gap: var(--space-5);
+            align-items: flex-start;
+        }
+
+        .dl-flex-center {
+            align-items: center;
+        }
+
+        .dl-swatch {
+            border-radius: var(--radius-lg);
+            overflow: hidden;
+            border: var(--border-width) solid var(--color-border);
+        }
+
+        .dl-swatch-color {
+            height: 80px;
+        }
+
+        .dl-swatch-info {
+            padding: var(--space-4);
+            background: var(--color-white);
+        }
+
+        .dl-swatch-name {
+            font-size: var(--text-sm);
+            font-weight: var(--font-semibold);
+            color: var(--color-dark);
+        }
+
+        .dl-swatch-var {
+            font-size: var(--text-xs);
+            color: var(--color-muted);
+            font-family: monospace;
+        }
+
+        .dl-code {
+            background: var(--color-background);
+            border: var(--border-width) solid var(--color-border);
+            border-radius: var(--radius-md);
+            padding: var(--space-4) var(--space-5);
+            font-family: monospace;
+            font-size: var(--text-sm);
+            color: var(--color-body);
+            margin-top: var(--space-4);
+            overflow-x: auto;
+        }
+
+        .dl-preview {
+            background: var(--color-background);
+            border-radius: var(--radius-xl);
+            padding: var(--space-9);
+            margin-bottom: var(--space-5);
+        }
+
+        .dl-preview-white {
+            background: var(--color-white);
+            border: var(--border-width) solid var(--color-border);
+        }
+
+        .dl-label {
+            font-size: var(--text-xs);
+            font-weight: var(--font-semibold);
+            color: var(--color-muted);
+            text-transform: uppercase;
+            letter-spacing: var(--tracking-wide);
+            margin-bottom: var(--space-3);
+        }
+
+        .dl-spacing-demo {
+            background: var(--color-primary-light);
+            height: 24px;
+            border-radius: var(--radius-sm);
+        }
+
+        @media (max-width: 820px) {
+            .dl-header-inner {
+                flex-direction: column;
+                gap: var(--space-5);
+            }
+
+            .dl-nav {
+                flex-wrap: wrap;
+                justify-content: center;
+            }
+
+            .dl-main {
+                padding: var(--space-9) var(--space-7);
+            }
+
+            .dl-grid-2,
+            .dl-grid-3,
+            .dl-grid-4 {
+                grid-template-columns: 1fr;
+            }
+        }
+    </style>
+</head>
+<body>
+    <!-- Header -->
+    <header class="dl-header">
+        <div class="dl-header-inner">
+            <div class="dl-title">ERideHero Design Library</div>
+            <nav class="dl-nav">
+                <a href="#colors">Colors</a>
+                <a href="#typography">Typography</a>
+                <a href="#buttons">Buttons</a>
+                <a href="#forms">Forms</a>
+                <a href="#components">Components</a>
+                <a href="#interactive">Interactive</a>
+            </nav>
+        </div>
+    </header>
+
+    <main class="dl-main">
+
+        <!-- ==================== COLORS ==================== -->
+        <section id="colors" class="dl-section">
+            <h2 class="dl-section-title">Colors</h2>
+            <p class="dl-section-desc">Brand and UI colors. Use CSS variables for consistency.</p>
+
+            <!-- Primary Colors -->
+            <div class="dl-subsection">
+                <h3 class="dl-subsection-title">Primary</h3>
+                <div class="dl-grid dl-grid-4">
+                    <div class="dl-swatch">
+                        <div class="dl-swatch-color" style="background: var(--color-primary);"></div>
+                        <div class="dl-swatch-info">
+                            <div class="dl-swatch-name">Primary</div>
+                            <div class="dl-swatch-var">--color-primary</div>
+                        </div>
+                    </div>
+                    <div class="dl-swatch">
+                        <div class="dl-swatch-color" style="background: var(--color-primary-hover);"></div>
+                        <div class="dl-swatch-info">
+                            <div class="dl-swatch-name">Primary Hover</div>
+                            <div class="dl-swatch-var">--color-primary-hover</div>
+                        </div>
+                    </div>
+                    <div class="dl-swatch">
+                        <div class="dl-swatch-color" style="background: var(--color-primary-light);"></div>
+                        <div class="dl-swatch-info">
+                            <div class="dl-swatch-name">Primary Light</div>
+                            <div class="dl-swatch-var">--color-primary-light</div>
+                        </div>
+                    </div>
+                </div>
+            </div>
+
+            <!-- Neutral Colors -->
+            <div class="dl-subsection">
+                <h3 class="dl-subsection-title">Neutrals</h3>
+                <div class="dl-grid dl-grid-4">
+                    <div class="dl-swatch">
+                        <div class="dl-swatch-color" style="background: var(--color-dark);"></div>
+                        <div class="dl-swatch-info">
+                            <div class="dl-swatch-name">Dark</div>
+                            <div class="dl-swatch-var">--color-dark</div>
+                        </div>
+                    </div>
+                    <div class="dl-swatch">
+                        <div class="dl-swatch-color" style="background: var(--color-body);"></div>
+                        <div class="dl-swatch-info">
+                            <div class="dl-swatch-name">Body</div>
+                            <div class="dl-swatch-var">--color-body</div>
+                        </div>
+                    </div>
+                    <div class="dl-swatch">
+                        <div class="dl-swatch-color" style="background: var(--color-muted);"></div>
+                        <div class="dl-swatch-info">
+                            <div class="dl-swatch-name">Muted</div>
+                            <div class="dl-swatch-var">--color-muted</div>
+                        </div>
+                    </div>
+                    <div class="dl-swatch">
+                        <div class="dl-swatch-color" style="background: var(--color-border);"></div>
+                        <div class="dl-swatch-info">
+                            <div class="dl-swatch-name">Border</div>
+                            <div class="dl-swatch-var">--color-border</div>
+                        </div>
+                    </div>
+                    <div class="dl-swatch">
+                        <div class="dl-swatch-color" style="background: var(--color-border-hover);"></div>
+                        <div class="dl-swatch-info">
+                            <div class="dl-swatch-name">Border Hover</div>
+                            <div class="dl-swatch-var">--color-border-hover</div>
+                        </div>
+                    </div>
+                    <div class="dl-swatch">
+                        <div class="dl-swatch-color" style="background: var(--color-background);"></div>
+                        <div class="dl-swatch-info">
+                            <div class="dl-swatch-name">Background</div>
+                            <div class="dl-swatch-var">--color-background</div>
+                        </div>
+                    </div>
+                    <div class="dl-swatch">
+                        <div class="dl-swatch-color" style="background: var(--color-white); border-bottom: 1px solid var(--color-border);"></div>
+                        <div class="dl-swatch-info">
+                            <div class="dl-swatch-name">White</div>
+                            <div class="dl-swatch-var">--color-white</div>
+                        </div>
+                    </div>
+                </div>
+            </div>
+
+            <!-- Semantic Colors -->
+            <div class="dl-subsection">
+                <h3 class="dl-subsection-title">Semantic</h3>
+                <div class="dl-grid dl-grid-4">
+                    <div class="dl-swatch">
+                        <div class="dl-swatch-color" style="background: var(--color-success);"></div>
+                        <div class="dl-swatch-info">
+                            <div class="dl-swatch-name">Success</div>
+                            <div class="dl-swatch-var">--color-success</div>
+                        </div>
+                    </div>
+                    <div class="dl-swatch">
+                        <div class="dl-swatch-color" style="background: var(--color-warning);"></div>
+                        <div class="dl-swatch-info">
+                            <div class="dl-swatch-name">Warning</div>
+                            <div class="dl-swatch-var">--color-warning</div>
+                        </div>
+                    </div>
+                    <div class="dl-swatch">
+                        <div class="dl-swatch-color" style="background: var(--color-error);"></div>
+                        <div class="dl-swatch-info">
+                            <div class="dl-swatch-name">Error</div>
+                            <div class="dl-swatch-var">--color-error</div>
+                        </div>
+                    </div>
+                    <div class="dl-swatch">
+                        <div class="dl-swatch-color" style="background: var(--color-info);"></div>
+                        <div class="dl-swatch-info">
+                            <div class="dl-swatch-name">Info</div>
+                            <div class="dl-swatch-var">--color-info</div>
+                        </div>
+                    </div>
+                </div>
+            </div>
+        </section>
+
+
+        <!-- ==================== TYPOGRAPHY ==================== -->
+        <section id="typography" class="dl-section">
+            <h2 class="dl-section-title">Typography</h2>
+            <p class="dl-section-desc">Font family: Figtree. All sizes use CSS variables.</p>
+
+            <!-- Headings -->
+            <div class="dl-subsection">
+                <h3 class="dl-subsection-title">Headings</h3>
+                <div class="dl-preview dl-preview-white">
+                    <h1>Heading 1 - 52px / 800</h1>
+                    <h2>Heading 2 - 22px / 700</h2>
+                    <h3>Heading 3 - 20px / 700</h3>
+                    <h4>Heading 4 - 18px / 600</h4>
+                    <h5>Heading 5 - 16px / 600</h5>
+                    <h6>Heading 6 - 14px / 600</h6>
+                </div>
+                <div class="dl-code">&lt;h1&gt;...&lt;/h1&gt; through &lt;h6&gt;...&lt;/h6&gt;</div>
+            </div>
+
+            <!-- Body Text -->
+            <div class="dl-subsection">
+                <h3 class="dl-subsection-title">Body Text</h3>
+                <div class="dl-preview dl-preview-white">
+                    <p class="text-lg">Large text for intros and lead paragraphs. Uses --text-2xl (18px).</p>
+                    <p>Default body text at 14px. This is the standard paragraph style used throughout the site for readable content blocks.</p>
+                    <p class="text-sm">Small text at 12px for captions and secondary information.</p>
+                    <p class="text-xs">Extra small text at 11px for fine print.</p>
+                </div>
+                <div class="dl-code">&lt;p class="text-lg"&gt;...&lt;/p&gt;
+&lt;p&gt;...&lt;/p&gt;
+&lt;p class="text-sm"&gt;...&lt;/p&gt;
+&lt;p class="text-xs"&gt;...&lt;/p&gt;</div>
+            </div>
+
+            <!-- Text Colors -->
+            <div class="dl-subsection">
+                <h3 class="dl-subsection-title">Text Colors</h3>
+                <div class="dl-preview dl-preview-white">
+                    <p class="text-dark"><strong>.text-dark</strong> - Primary headings and emphasis</p>
+                    <p class="text-body"><strong>.text-body</strong> - Default body text (inherited)</p>
+                    <p class="text-muted"><strong>.text-muted</strong> - Secondary and helper text</p>
+                    <p class="text-primary"><strong>.text-primary</strong> - Accent and links</p>
+                </div>
+            </div>
+
+            <!-- Font Weights -->
+            <div class="dl-subsection">
+                <h3 class="dl-subsection-title">Font Weights</h3>
+                <div class="dl-preview dl-preview-white">
+                    <p style="font-weight: var(--font-normal);">Normal (400) - Regular body text</p>
+                    <p style="font-weight: var(--font-medium);">Medium (500) - Slight emphasis</p>
+                    <p class="font-semibold">Semibold (600) - Buttons, labels, nav</p>
+                    <p class="font-bold">Bold (700) - Headings, strong emphasis</p>
+                    <p style="font-weight: var(--font-extrabold);">Extrabold (800) - Hero headlines</p>
+                </div>
+            </div>
+
+            <!-- Links -->
+            <div class="dl-subsection">
+                <h3 class="dl-subsection-title">Links</h3>
+                <div class="dl-preview dl-preview-white">
+                    <p><a href="#" class="link">Standard link with .link class</a></p>
+                </div>
+                <div class="dl-code">&lt;a href="#" class="link"&gt;Link text&lt;/a&gt;</div>
+            </div>
+
+            <!-- Labels -->
+            <div class="dl-subsection">
+                <h3 class="dl-subsection-title">Labels</h3>
+                <div class="dl-preview dl-preview-white">
+                    <span class="label">Form Label</span>
+                    <p class="text-sm text-muted">Uppercase, small, semibold - for form labels and section headers</p>
+                </div>
+                <div class="dl-code">&lt;span class="label"&gt;Label Text&lt;/span&gt;</div>
+            </div>
+        </section>
+
+
+        <!-- ==================== BUTTONS ==================== -->
+        <section id="buttons" class="dl-section">
+            <h2 class="dl-section-title">Buttons</h2>
+            <p class="dl-section-desc">Composable button system: .btn + variant + size. All buttons require the base .btn class.</p>
+
+            <!-- Button Variants -->
+            <div class="dl-subsection">
+                <h3 class="dl-subsection-title">Variants</h3>
+                <div class="dl-preview">
+                    <div class="dl-flex dl-flex-center">
+                        <a href="#" class="btn btn-primary">Primary</a>
+                        <a href="#" class="btn btn-secondary">Secondary</a>
+                        <a href="#" class="btn btn-outline">Outline</a>
+                        <a href="#" class="btn btn-ghost">Ghost</a>
+                        <a href="#" class="btn btn-dark">Dark</a>
+                        <a href="#" class="btn btn-link">Link</a>
+                        <a href="#" class="btn btn-youtube">YouTube</a>
+                    </div>
+                </div>
+                <div class="dl-code">&lt;a class="btn btn-primary"&gt;Primary&lt;/a&gt;
+&lt;a class="btn btn-secondary"&gt;Secondary&lt;/a&gt;
+&lt;a class="btn btn-outline"&gt;Outline&lt;/a&gt;
+&lt;a class="btn btn-ghost"&gt;Ghost&lt;/a&gt;
+&lt;a class="btn btn-dark"&gt;Dark&lt;/a&gt;
+&lt;a class="btn btn-link"&gt;Link&lt;/a&gt;
+&lt;a class="btn btn-youtube"&gt;YouTube&lt;/a&gt;</div>
+            </div>
+
+            <!-- Button Sizes -->
+            <div class="dl-subsection">
+                <h3 class="dl-subsection-title">Sizes</h3>
+                <div class="dl-preview">
+                    <div class="dl-flex dl-flex-center">
+                        <a href="#" class="btn btn-primary btn-xs">XS</a>
+                        <a href="#" class="btn btn-primary btn-sm">SM</a>
+                        <a href="#" class="btn btn-primary">Default</a>
+                        <a href="#" class="btn btn-primary btn-lg">LG</a>
+                        <a href="#" class="btn btn-primary btn-xl">XL</a>
+                    </div>
+                </div>
+                <div class="dl-code">&lt;a class="btn btn-primary btn-xs"&gt;XS&lt;/a&gt;
+&lt;a class="btn btn-primary btn-sm"&gt;SM&lt;/a&gt;
+&lt;a class="btn btn-primary"&gt;Default&lt;/a&gt;
+&lt;a class="btn btn-primary btn-lg"&gt;LG&lt;/a&gt;
+&lt;a class="btn btn-primary btn-xl"&gt;XL&lt;/a&gt;</div>
+            </div>
+
+            <!-- Buttons with Icons -->
+            <div class="dl-subsection">
+                <h3 class="dl-subsection-title">With Icons</h3>
+                <div class="dl-preview">
+                    <div class="dl-flex dl-flex-center">
+                        <a href="#" class="btn btn-primary">
+                            <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round">
+                                <circle cx="11" cy="11" r="8"></circle>
+                                <path d="m21 21-4.35-4.35"></path>
+                            </svg>
+                            Search
+                        </a>
+                        <a href="#" class="btn btn-secondary btn-icon-right">
+                            Learn more
+                            <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round">
+                                <path d="M5 12h14"></path>
+                                <path d="m12 5 7 7-7 7"></path>
+                            </svg>
+                        </a>
+                    </div>
+                </div>
+                <div class="dl-code">&lt;a class="btn btn-primary"&gt;
+    &lt;svg&gt;...&lt;/svg&gt;
+    Search
+&lt;/a&gt;
+
+&lt;a class="btn btn-secondary btn-icon-right"&gt;
+    Learn more
+    &lt;svg&gt;...&lt;/svg&gt;
+&lt;/a&gt;</div>
+            </div>
+
+            <!-- Full Width -->
+            <div class="dl-subsection">
+                <h3 class="dl-subsection-title">Full Width</h3>
+                <div class="dl-preview" style="max-width: 400px;">
+                    <a href="#" class="btn btn-primary btn-block">Full Width Button</a>
+                </div>
+                <div class="dl-code">&lt;a class="btn btn-primary btn-block"&gt;Full Width&lt;/a&gt;</div>
+            </div>
+
+            <!-- Icon Button -->
+            <div class="dl-subsection">
+                <h3 class="dl-subsection-title">Icon Button</h3>
+                <p class="text-sm text-muted" style="margin-bottom: var(--space-5);">Standalone icon buttons don't need the .btn base class.</p>
+                <div class="dl-preview">
+                    <div class="dl-flex dl-flex-center">
+                        <button class="btn-icon btn-sm">
+                            <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round">
+                                <path d="M6 18L18 6M6 6l12 12"></path>
+                            </svg>
+                        </button>
+                        <button class="btn-icon">
+                            <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round">
+                                <circle cx="11" cy="11" r="8"></circle>
+                                <path d="m21 21-4.35-4.35"></path>
+                            </svg>
+                        </button>
+                        <button class="btn-icon btn-lg">
+                            <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round">
+                                <path d="M12 5v14M5 12h14"></path>
+                            </svg>
+                        </button>
+                    </div>
+                </div>
+                <div class="dl-code">&lt;button class="btn-icon btn-sm"&gt;&lt;svg&gt;...&lt;/svg&gt;&lt;/button&gt;
+&lt;button class="btn-icon"&gt;&lt;svg&gt;...&lt;/svg&gt;&lt;/button&gt;
+&lt;button class="btn-icon btn-lg"&gt;&lt;svg&gt;...&lt;/svg&gt;&lt;/button&gt;</div>
+            </div>
+
+            <!-- Disabled State -->
+            <div class="dl-subsection">
+                <h3 class="dl-subsection-title">Disabled State</h3>
+                <div class="dl-preview">
+                    <div class="dl-flex dl-flex-center">
+                        <button class="btn btn-primary" disabled>Disabled</button>
+                        <a href="#" class="btn btn-secondary is-disabled">Disabled Link</a>
+                    </div>
+                </div>
+                <div class="dl-code">&lt;button class="btn btn-primary" disabled&gt;Disabled&lt;/button&gt;
+&lt;a class="btn btn-secondary is-disabled"&gt;Disabled Link&lt;/a&gt;</div>
+            </div>
+        </section>
+
+
+        <!-- ==================== FORMS ==================== -->
+        <section id="forms" class="dl-section">
+            <h2 class="dl-section-title">Forms</h2>
+            <p class="dl-section-desc">Form elements with consistent styling and states.</p>
+
+            <!-- Text Input -->
+            <div class="dl-subsection">
+                <h3 class="dl-subsection-title">Text Input</h3>
+                <div class="dl-preview dl-preview-white" style="max-width: 400px;">
+                    <div class="form-group">
+                        <label class="form-label">Email Address</label>
+                        <input type="email" class="form-input" placeholder="you@example.com">
+                    </div>
+                </div>
+                <div class="dl-code">&lt;div class="form-group"&gt;
+    &lt;label class="form-label"&gt;Email Address&lt;/label&gt;
+    &lt;input type="email" class="form-input" placeholder="you@example.com"&gt;
+&lt;/div&gt;</div>
+            </div>
+
+            <!-- Select -->
+            <div class="dl-subsection">
+                <h3 class="dl-subsection-title">Select</h3>
+                <div class="dl-preview dl-preview-white" style="max-width: 400px;">
+                    <div class="form-group">
+                        <label class="form-label">Category</label>
+                        <select class="form-select">
+                            <option>Select an option...</option>
+                            <option>E-scooters</option>
+                            <option>E-bikes</option>
+                            <option>E-skateboards</option>
+                        </select>
+                    </div>
+                </div>
+                <div class="dl-code">&lt;select class="form-select"&gt;
+    &lt;option&gt;Select an option...&lt;/option&gt;
+&lt;/select&gt;</div>
+            </div>
+
+            <!-- Textarea -->
+            <div class="dl-subsection">
+                <h3 class="dl-subsection-title">Textarea</h3>
+                <div class="dl-preview dl-preview-white" style="max-width: 400px;">
+                    <div class="form-group">
+                        <label class="form-label">Message</label>
+                        <textarea class="form-textarea" placeholder="Write your message..."></textarea>
+                    </div>
+                </div>
+                <div class="dl-code">&lt;textarea class="form-textarea" placeholder="..."&gt;&lt;/textarea&gt;</div>
+            </div>
+
+            <!-- Checkbox & Radio -->
+            <div class="dl-subsection">
+                <h3 class="dl-subsection-title">Checkbox & Radio</h3>
+                <div class="dl-preview dl-preview-white" style="max-width: 400px;">
+                    <div style="display: flex; flex-direction: column; gap: var(--space-5);">
+                        <label class="form-check">
+                            <input type="checkbox" class="form-check-input" checked>
+                            <span class="form-check-label">I agree to the terms</span>
+                        </label>
+                        <label class="form-check">
+                            <input type="radio" name="option" class="form-check-input" checked>
+                            <span class="form-check-label">Option A</span>
+                        </label>
+                        <label class="form-check">
+                            <input type="radio" name="option" class="form-check-input">
+                            <span class="form-check-label">Option B</span>
+                        </label>
+                    </div>
+                </div>
+                <div class="dl-code">&lt;label class="form-check"&gt;
+    &lt;input type="checkbox" class="form-check-input"&gt;
+    &lt;span class="form-check-label"&gt;Label&lt;/span&gt;
+&lt;/label&gt;</div>
+            </div>
+
+            <!-- Form Row -->
+            <div class="dl-subsection">
+                <h3 class="dl-subsection-title">Form Row (Side by Side)</h3>
+                <div class="dl-preview dl-preview-white" style="max-width: 500px;">
+                    <div class="form-row">
+                        <div class="form-group">
+                            <label class="form-label">First Name</label>
+                            <input type="text" class="form-input" placeholder="John">
+                        </div>
+                        <div class="form-group">
+                            <label class="form-label">Last Name</label>
+                            <input type="text" class="form-input" placeholder="Doe">
+                        </div>
+                    </div>
+                </div>
+                <div class="dl-code">&lt;div class="form-row"&gt;
+    &lt;div class="form-group"&gt;...&lt;/div&gt;
+    &lt;div class="form-group"&gt;...&lt;/div&gt;
+&lt;/div&gt;</div>
+            </div>
+
+            <!-- Error State -->
+            <div class="dl-subsection">
+                <h3 class="dl-subsection-title">Error State</h3>
+                <div class="dl-preview dl-preview-white" style="max-width: 400px;">
+                    <div class="form-group">
+                        <label class="form-label">Email</label>
+                        <input type="email" class="form-input is-error" value="invalid-email">
+                        <p class="form-error">Please enter a valid email address.</p>
+                    </div>
+                </div>
+                <div class="dl-code">&lt;input class="form-input is-error"&gt;
+&lt;p class="form-error"&gt;Error message&lt;/p&gt;</div>
+            </div>
+
+            <!-- Success State -->
+            <div class="dl-subsection">
+                <h3 class="dl-subsection-title">Success State</h3>
+                <div class="dl-preview dl-preview-white" style="max-width: 400px;">
+                    <div class="form-group">
+                        <label class="form-label">Email</label>
+                        <input type="email" class="form-input is-success" value="valid@email.com">
+                    </div>
+                </div>
+                <div class="dl-code">&lt;input class="form-input is-success"&gt;</div>
+            </div>
+
+            <!-- Search Input -->
+            <div class="dl-subsection">
+                <h3 class="dl-subsection-title">Search Input</h3>
+                <div class="dl-preview dl-preview-white" style="max-width: 400px;">
+                    <div class="search-input-wrapper">
+                        <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round">
+                            <circle cx="11" cy="11" r="8"></circle>
+                            <path d="m21 21-4.35-4.35"></path>
+                        </svg>
+                        <input type="text" placeholder="Search...">
+                    </div>
+                </div>
+                <div class="dl-code">&lt;div class="search-input-wrapper"&gt;
+    &lt;svg&gt;...&lt;/svg&gt;
+    &lt;input type="text" placeholder="Search..."&gt;
+&lt;/div&gt;</div>
+            </div>
+        </section>
+
+
+        <!-- ==================== COMPONENTS ==================== -->
+        <section id="components" class="dl-section">
+            <h2 class="dl-section-title">Components</h2>
+            <p class="dl-section-desc">Reusable UI components for building interfaces.</p>
+
+            <!-- Cards -->
+            <div class="dl-subsection">
+                <h3 class="dl-subsection-title">Cards</h3>
+                <div class="dl-preview">
+                    <div style="display: grid; grid-template-columns: repeat(auto-fit, minmax(280px, 1fr)); gap: var(--space-7);">
+                        <div class="card">
+                            <div class="card-header">
+                                <div class="icon-box icon-box-lg icon-box-gradient">
+                                    <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round">
+                                        <circle cx="11" cy="11" r="8"></circle>
+                                        <path d="m21 21-4.35-4.35"></path>
+                                    </svg>
+                                </div>
+                                <div>
+                                    <div class="card-title">Card Title</div>
+                                    <div class="card-subtitle">Card subtitle text</div>
+                                </div>
+                            </div>
+                            <p>Card body content goes here. This is a basic card with header, body and footer.</p>
+                            <div class="card-footer">
+                                <span>Footer text</span>
+                            </div>
+                        </div>
+                        <div class="card card-flat">
+                            <div class="card-title">Flat Card</div>
+                            <p class="text-muted">Card with border instead of shadow. Use .card-flat modifier.</p>
+                        </div>
+                    </div>
+                </div>
+                <div class="dl-code">&lt;div class="card"&gt;
+    &lt;div class="card-header"&gt;...&lt;/div&gt;
+    &lt;p&gt;Card body&lt;/p&gt;
+    &lt;div class="card-footer"&gt;...&lt;/div&gt;
+&lt;/div&gt;
+
+&lt;div class="card card-flat"&gt;...&lt;/div&gt;</div>
+            </div>
+
+            <!-- Icon Box -->
+            <div class="dl-subsection">
+                <h3 class="dl-subsection-title">Icon Box</h3>
+                <div class="dl-preview">
+                    <div class="dl-flex dl-flex-center">
+                        <div>
+                            <div class="dl-label">Sizes</div>
+                            <div class="dl-flex dl-flex-center">
+                                <div class="icon-box icon-box-sm">
+                                    <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><path d="M12 5v14M5 12h14"></path></svg>
+                                </div>
+                                <div class="icon-box icon-box-md">
+                                    <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><path d="M12 5v14M5 12h14"></path></svg>
+                                </div>
+                                <div class="icon-box">
+                                    <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><path d="M12 5v14M5 12h14"></path></svg>
+                                </div>
+                                <div class="icon-box icon-box-lg">
+                                    <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><path d="M12 5v14M5 12h14"></path></svg>
+                                </div>
+                            </div>
+                        </div>
+                        <div style="margin-left: var(--space-11);">
+                            <div class="dl-label">Variants</div>
+                            <div class="dl-flex dl-flex-center">
+                                <div class="icon-box">
+                                    <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><path d="M12 5v14M5 12h14"></path></svg>
+                                </div>
+                                <div class="icon-box icon-box-primary">
+                                    <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><path d="M12 5v14M5 12h14"></path></svg>
+                                </div>
+                                <div class="icon-box icon-box-gradient">
+                                    <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><path d="M12 5v14M5 12h14"></path></svg>
+                                </div>
+                            </div>
+                        </div>
+                    </div>
+                </div>
+                <div class="dl-code">&lt;div class="icon-box icon-box-sm"&gt;&lt;svg&gt;...&lt;/svg&gt;&lt;/div&gt;
+&lt;div class="icon-box"&gt;&lt;svg&gt;...&lt;/svg&gt;&lt;/div&gt;
+&lt;div class="icon-box icon-box-lg"&gt;&lt;svg&gt;...&lt;/svg&gt;&lt;/div&gt;
+&lt;div class="icon-box icon-box-primary"&gt;&lt;svg&gt;...&lt;/svg&gt;&lt;/div&gt;
+&lt;div class="icon-box icon-box-gradient"&gt;&lt;svg&gt;...&lt;/svg&gt;&lt;/div&gt;</div>
+            </div>
+
+            <!-- Badges -->
+            <div class="dl-subsection">
+                <h3 class="dl-subsection-title">Badges</h3>
+                <div class="dl-preview">
+                    <div class="dl-flex dl-flex-center">
+                        <span class="badge">Default</span>
+                        <span class="badge badge-success">Success</span>
+                        <span class="badge badge-warning">Warning</span>
+                        <span class="badge badge-error">Error</span>
+                        <span class="badge badge-neutral">Neutral</span>
+                    </div>
+                    <div class="dl-flex dl-flex-center" style="margin-top: var(--space-5);">
+                        <span class="badge badge-sm">Small</span>
+                        <span class="badge">Default</span>
+                        <span class="badge badge-lg">Large</span>
+                    </div>
+                    <div class="dl-flex dl-flex-center" style="margin-top: var(--space-5);">
+                        <span class="badge">
+                            <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round">
+                                <polyline points="22 7 13.5 15.5 8.5 10.5 2 17"></polyline>
+                                <polyline points="16 7 22 7 22 13"></polyline>
+                            </svg>
+                            With Icon
+                        </span>
+                    </div>
+                </div>
+                <div class="dl-code">&lt;span class="badge"&gt;Default&lt;/span&gt;
+&lt;span class="badge badge-success"&gt;Success&lt;/span&gt;
+&lt;span class="badge badge-warning"&gt;Warning&lt;/span&gt;
+&lt;span class="badge badge-error"&gt;Error&lt;/span&gt;
+&lt;span class="badge badge-sm"&gt;Small&lt;/span&gt;
+&lt;span class="badge badge-lg"&gt;Large&lt;/span&gt;</div>
+            </div>
+
+            <!-- Tags -->
+            <div class="dl-subsection">
+                <h3 class="dl-subsection-title">Tags</h3>
+                <div class="dl-preview">
+                    <div class="dl-flex">
+                        <a href="#" class="tag">Default Tag</a>
+                        <a href="#" class="tag tag-primary">Primary Tag</a>
+                        <a href="#" class="tag">
+                            <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round">
+                                <path d="M20.59 13.41l-7.17 7.17a2 2 0 0 1-2.83 0L2 12V2h10l8.59 8.59a2 2 0 0 1 0 2.82z"></path>
+                                <line x1="7" y1="7" x2="7.01" y2="7"></line>
+                            </svg>
+                            With Icon
+                        </a>
+                    </div>
+                </div>
+                <div class="dl-code">&lt;a href="#" class="tag"&gt;Tag&lt;/a&gt;
+&lt;a href="#" class="tag tag-primary"&gt;Primary&lt;/a&gt;</div>
+            </div>
+
+            <!-- Stats -->
+            <div class="dl-subsection">
+                <h3 class="dl-subsection-title">Stats</h3>
+                <div class="dl-preview">
+                    <div class="dl-flex" style="gap: var(--space-11);">
+                        <div class="stat">
+                            <div class="icon-box">
+                                <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round">
+                                    <path d="M17 21v-2a4 4 0 0 0-4-4H5a4 4 0 0 0-4 4v2"></path>
+                                    <circle cx="9" cy="7" r="4"></circle>
+                                    <path d="M23 21v-2a4 4 0 0 0-3-3.87"></path>
+                                    <path d="M16 3.13a4 4 0 0 1 0 7.75"></path>
+                                </svg>
+                            </div>
+                            <div>
+                                <span class="stat-value">2.4M</span>
+                                <span class="stat-label">Users</span>
+                            </div>
+                        </div>
+                        <div class="stat">
+                            <div class="icon-box">
+                                <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round">
+                                    <polyline points="22 7 13.5 15.5 8.5 10.5 2 17"></polyline>
+                                    <polyline points="16 7 22 7 22 13"></polyline>
+                                </svg>
+                            </div>
+                            <div>
+                                <span class="stat-value">98%</span>
+                                <span class="stat-label">Satisfaction</span>
+                            </div>
+                        </div>
+                    </div>
+                </div>
+                <div class="dl-code">&lt;div class="stat"&gt;
+    &lt;div class="icon-box"&gt;&lt;svg&gt;...&lt;/svg&gt;&lt;/div&gt;
+    &lt;div&gt;
+        &lt;span class="stat-value"&gt;2.4M&lt;/span&gt;
+        &lt;span class="stat-label"&gt;Users&lt;/span&gt;
+    &lt;/div&gt;
+&lt;/div&gt;</div>
+            </div>
+
+            <!-- Avatars -->
+            <div class="dl-subsection">
+                <h3 class="dl-subsection-title">Avatars</h3>
+                <div class="dl-preview">
+                    <div class="dl-flex dl-flex-center">
+                        <div class="avatar avatar-sm">S</div>
+                        <div class="avatar">M</div>
+                        <div class="avatar avatar-lg">L</div>
+                        <div class="avatar avatar-xl">XL</div>
+                    </div>
+                </div>
+                <div class="dl-code">&lt;div class="avatar avatar-sm"&gt;S&lt;/div&gt;
+&lt;div class="avatar"&gt;M&lt;/div&gt;
+&lt;div class="avatar avatar-lg"&gt;L&lt;/div&gt;
+&lt;div class="avatar avatar-xl"&gt;XL&lt;/div&gt;</div>
+            </div>
+
+            <!-- Lists -->
+            <div class="dl-subsection">
+                <h3 class="dl-subsection-title">Lists</h3>
+                <div class="dl-preview dl-preview-white" style="max-width: 400px;">
+                    <div class="list">
+                        <a href="#" class="list-item">
+                            <div class="icon-box icon-box-sm">
+                                <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round">
+                                    <circle cx="11" cy="11" r="8"></circle>
+                                    <path d="m21 21-4.35-4.35"></path>
+                                </svg>
+                            </div>
+                            <div class="list-item-content">
+                                <h4>List Item Title</h4>
+                                <span>Description text here</span>
+                            </div>
+                        </a>
+                        <a href="#" class="list-item">
+                            <div class="icon-box icon-box-sm">
+                                <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round">
+                                    <path d="M12 20h9"></path>
+                                    <path d="M16.5 3.5a2.12 2.12 0 0 1 3 3L7 19l-4 1 1-4Z"></path>
+                                </svg>
+                            </div>
+                            <div class="list-item-content">
+                                <h4>Another Item</h4>
+                                <span>More details</span>
+                            </div>
+                        </a>
+                    </div>
+                </div>
+                <div class="dl-code">&lt;div class="list"&gt;
+    &lt;a href="#" class="list-item"&gt;
+        &lt;div class="icon-box icon-box-sm"&gt;...&lt;/div&gt;
+        &lt;div class="list-item-content"&gt;
+            &lt;h4&gt;Title&lt;/h4&gt;
+            &lt;span&gt;Description&lt;/span&gt;
+        &lt;/div&gt;
+    &lt;/a&gt;
+&lt;/div&gt;</div>
+            </div>
+
+            <!-- Dividers -->
+            <div class="dl-subsection">
+                <h3 class="dl-subsection-title">Dividers</h3>
+                <div class="dl-preview dl-preview-white">
+                    <p>Content above</p>
+                    <div class="divider divider-sm"></div>
+                    <p>Small divider (divider-sm)</p>
+                    <div class="divider"></div>
+                    <p>Default divider</p>
+                    <div class="divider divider-lg"></div>
+                    <p>Large divider (divider-lg)</p>
+                </div>
+                <div class="dl-code">&lt;div class="divider divider-sm"&gt;&lt;/div&gt;
+&lt;div class="divider"&gt;&lt;/div&gt;
+&lt;div class="divider divider-lg"&gt;&lt;/div&gt;</div>
+            </div>
+
+            <!-- Empty State -->
+            <div class="dl-subsection">
+                <h3 class="dl-subsection-title">Empty State</h3>
+                <div class="dl-preview dl-preview-white">
+                    <div class="empty-state">
+                        <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round">
+                            <circle cx="11" cy="11" r="8"></circle>
+                            <path d="m21 21-4.35-4.35"></path>
+                        </svg>
+                        <h3>No results found</h3>
+                        <p>Try adjusting your search or filters to find what you're looking for.</p>
+                    </div>
+                </div>
+                <div class="dl-code">&lt;div class="empty-state"&gt;
+    &lt;svg&gt;...&lt;/svg&gt;
+    &lt;h3&gt;No results found&lt;/h3&gt;
+    &lt;p&gt;Try adjusting your search...&lt;/p&gt;
+&lt;/div&gt;</div>
+            </div>
+
+            <!-- Skeleton Loaders -->
+            <div class="dl-subsection">
+                <h3 class="dl-subsection-title">Skeleton Loaders</h3>
+                <div class="dl-preview dl-preview-white" style="max-width: 400px;">
+                    <div style="display: flex; gap: var(--space-5); margin-bottom: var(--space-6);">
+                        <div class="skeleton skeleton-avatar"></div>
+                        <div style="flex: 1;">
+                            <div class="skeleton skeleton-heading"></div>
+                            <div class="skeleton skeleton-text"></div>
+                            <div class="skeleton skeleton-text"></div>
+                        </div>
+                    </div>
+                    <div class="skeleton skeleton-button"></div>
+                </div>
+                <div class="dl-code">&lt;div class="skeleton skeleton-avatar"&gt;&lt;/div&gt;
+&lt;div class="skeleton skeleton-heading"&gt;&lt;/div&gt;
+&lt;div class="skeleton skeleton-text"&gt;&lt;/div&gt;
+&lt;div class="skeleton skeleton-button"&gt;&lt;/div&gt;</div>
+            </div>
+
+            <!-- Tabs -->
+            <div class="dl-subsection">
+                <h3 class="dl-subsection-title">Tabs</h3>
+                <div class="dl-preview dl-preview-white">
+                    <div class="tabs">
+                        <button class="tab is-active">All</button>
+                        <button class="tab">E-scooters</button>
+                        <button class="tab">E-bikes</button>
+                        <button class="tab">EUCs</button>
+                    </div>
+                    <div style="margin-top: var(--space-6);">
+                        <div class="dl-label">Small tabs</div>
+                        <div class="tabs">
+                            <button class="tab tab-sm is-active">3M</button>
+                            <button class="tab tab-sm">6M</button>
+                            <button class="tab tab-sm">1Y</button>
+                            <button class="tab tab-sm">All</button>
+                        </div>
+                    </div>
+                    <div style="margin-top: var(--space-6);">
+                        <div class="dl-label">Flush tabs (no background)</div>
+                        <div class="tabs tabs-flush">
+                            <button class="tab is-active">Overview</button>
+                            <button class="tab">Specs</button>
+                            <button class="tab">Reviews</button>
+                        </div>
+                    </div>
+                </div>
+                <div class="dl-code">&lt;div class="tabs"&gt;
+    &lt;button class="tab is-active"&gt;Active&lt;/button&gt;
+    &lt;button class="tab"&gt;Tab&lt;/button&gt;
+&lt;/div&gt;
+
+&lt;!-- Small tabs --&gt;
+&lt;button class="tab tab-sm"&gt;Small&lt;/button&gt;
+
+&lt;!-- Flush tabs --&gt;
+&lt;div class="tabs tabs-flush"&gt;...&lt;/div&gt;</div>
+            </div>
+
+            <!-- Check Lists -->
+            <div class="dl-subsection">
+                <h3 class="dl-subsection-title">Check Lists</h3>
+                <div class="dl-preview dl-preview-white" style="max-width: 400px;">
+                    <ul class="check-list">
+                        <li class="check-item">Free shipping on orders over $50</li>
+                        <li class="check-item">30-day money back guarantee</li>
+                        <li class="check-item">1-year manufacturer warranty</li>
+                    </ul>
+                    <div style="margin-top: var(--space-6);">
+                        <div class="dl-label">Vertical layout</div>
+                        <ul class="check-list check-list-vertical">
+                            <li class="check-item">Price tracking for 500+ products</li>
+                            <li class="check-item">Email alerts when prices drop</li>
+                            <li class="check-item">Historical price charts</li>
+                        </ul>
+                    </div>
+                </div>
+                <div class="dl-code">&lt;ul class="check-list"&gt;
+    &lt;li class="check-item"&gt;Feature one&lt;/li&gt;
+    &lt;li class="check-item"&gt;Feature two&lt;/li&gt;
+&lt;/ul&gt;
+
+&lt;!-- Vertical layout --&gt;
+&lt;ul class="check-list check-list-vertical"&gt;...&lt;/ul&gt;</div>
+            </div>
+
+            <!-- Eyebrow -->
+            <div class="dl-subsection">
+                <h3 class="dl-subsection-title">Eyebrow</h3>
+                <div class="dl-preview dl-preview-white">
+                    <div class="dl-flex" style="gap: var(--space-9);">
+                        <div>
+                            <span class="eyebrow">Default eyebrow</span>
+                            <h3 style="margin-top: var(--space-2);">Section heading</h3>
+                        </div>
+                        <div>
+                            <span class="eyebrow eyebrow-muted">Muted eyebrow</span>
+                            <h3 style="margin-top: var(--space-2);">Section heading</h3>
+                        </div>
+                    </div>
+                </div>
+                <div class="dl-code">&lt;span class="eyebrow"&gt;Eyebrow text&lt;/span&gt;
+&lt;span class="eyebrow eyebrow-muted"&gt;Muted&lt;/span&gt;</div>
+            </div>
+
+            <!-- Pagination -->
+            <div class="dl-subsection">
+                <h3 class="dl-subsection-title">Pagination</h3>
+                <p style="color: var(--color-muted); margin-bottom: var(--space-6);">Navigation for multi-page content. Use <code>aria-disabled="true"</code> on prev/next when at boundaries.</p>
+
+                <div class="dl-preview dl-preview-white">
+                    <div class="dl-label">Default</div>
+                    <nav class="pagination" aria-label="Pagination" style="margin-top: 0; padding-top: 0; border-top: none;">
+                        <a href="#" class="pagination-btn pagination-prev" aria-disabled="true">
+                            <svg class="icon" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><polyline points="15 18 9 12 15 6"></polyline></svg>
+                            <span>Previous</span>
+                        </a>
+                        <div class="pagination-pages">
+                            <a href="#" class="pagination-page is-active" aria-current="page">1</a>
+                            <a href="#" class="pagination-page">2</a>
+                            <a href="#" class="pagination-page">3</a>
+                            <span class="pagination-ellipsis">...</span>
+                            <a href="#" class="pagination-page">12</a>
+                        </div>
+                        <a href="#" class="pagination-btn pagination-next">
+                            <span>Next</span>
+                            <svg class="icon" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><polyline points="9 18 15 12 9 6"></polyline></svg>
+                        </a>
+                    </nav>
+
+                    <div class="dl-label" style="margin-top: var(--space-9);">Compact variant</div>
+                    <nav class="pagination pagination--compact" aria-label="Pagination" style="margin-top: 0; padding-top: 0; border-top: none;">
+                        <a href="#" class="pagination-btn pagination-prev">
+                            <svg class="icon" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><polyline points="15 18 9 12 15 6"></polyline></svg>
+                            <span>Previous</span>
+                        </a>
+                        <div class="pagination-pages">
+                            <a href="#" class="pagination-page">1</a>
+                            <a href="#" class="pagination-page is-active" aria-current="page">2</a>
+                            <a href="#" class="pagination-page">3</a>
+                            <span class="pagination-ellipsis">...</span>
+                            <a href="#" class="pagination-page">8</a>
+                        </div>
+                        <a href="#" class="pagination-btn pagination-next">
+                            <span>Next</span>
+                            <svg class="icon" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><polyline points="9 18 15 12 9 6"></polyline></svg>
+                        </a>
+                    </nav>
+
+                    <div class="dl-label" style="margin-top: var(--space-9);">Simple variant (prev/next only)</div>
+                    <nav class="pagination pagination--simple" aria-label="Pagination" style="margin-top: 0; padding-top: 0; border-top: none;">
+                        <a href="#" class="pagination-btn pagination-prev">
+                            <svg class="icon" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><polyline points="15 18 9 12 15 6"></polyline></svg>
+                            <span>Previous</span>
+                        </a>
+                        <div class="pagination-pages">
+                            <a href="#" class="pagination-page is-active">3</a>
+                        </div>
+                        <a href="#" class="pagination-btn pagination-next">
+                            <span>Next</span>
+                            <svg class="icon" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><polyline points="9 18 15 12 9 6"></polyline></svg>
+                        </a>
+                    </nav>
+
+                    <div class="dl-label" style="margin-top: var(--space-9);">Bordered variant</div>
+                    <nav class="pagination pagination--bordered" aria-label="Pagination" style="margin-top: var(--space-4);">
+                        <a href="#" class="pagination-btn pagination-prev">
+                            <svg class="icon" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><polyline points="15 18 9 12 15 6"></polyline></svg>
+                            <span>Previous</span>
+                        </a>
+                        <div class="pagination-pages">
+                            <a href="#" class="pagination-page">1</a>
+                            <a href="#" class="pagination-page">2</a>
+                            <a href="#" class="pagination-page is-active" aria-current="page">3</a>
+                            <a href="#" class="pagination-page">4</a>
+                            <a href="#" class="pagination-page">5</a>
+                        </div>
+                        <a href="#" class="pagination-btn pagination-next">
+                            <span>Next</span>
+                            <svg class="icon" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><polyline points="9 18 15 12 9 6"></polyline></svg>
+                        </a>
+                    </nav>
+                </div>
+                <div class="dl-code">&lt;nav class="pagination" aria-label="Pagination"&gt;
+    &lt;a href="#" class="pagination-btn pagination-prev" aria-disabled="true"&gt;
+        &lt;svg class="icon"&gt;...&lt;/svg&gt;
+        &lt;span&gt;Previous&lt;/span&gt;
+    &lt;/a&gt;
+    &lt;div class="pagination-pages"&gt;
+        &lt;a href="#" class="pagination-page is-active" aria-current="page"&gt;1&lt;/a&gt;
+        &lt;a href="#" class="pagination-page"&gt;2&lt;/a&gt;
+        &lt;a href="#" class="pagination-page"&gt;3&lt;/a&gt;
+        &lt;span class="pagination-ellipsis"&gt;...&lt;/span&gt;
+        &lt;a href="#" class="pagination-page"&gt;12&lt;/a&gt;
+    &lt;/div&gt;
+    &lt;a href="#" class="pagination-btn pagination-next"&gt;
+        &lt;span&gt;Next&lt;/span&gt;
+        &lt;svg class="icon"&gt;...&lt;/svg&gt;
+    &lt;/a&gt;
+&lt;/nav&gt;
+
+&lt;!-- Variants --&gt;
+&lt;nav class="pagination pagination--compact"&gt;...&lt;/nav&gt;
+&lt;nav class="pagination pagination--simple"&gt;...&lt;/nav&gt;
+&lt;nav class="pagination pagination--bordered"&gt;...&lt;/nav&gt;</div>
+            </div>
+
+        </section>
+
+
+        <!-- ==================== INTERACTIVE ==================== -->
+        <section id="interactive" class="dl-section">
+            <h2 class="dl-section-title">Interactive</h2>
+            <p class="dl-section-desc">JavaScript-powered components for enhanced UX.</p>
+
+            <!-- Tooltips -->
+            <div class="dl-subsection">
+                <h3 class="dl-subsection-title">Tooltips</h3>
+                <div class="dl-preview">
+                    <div class="dl-flex dl-flex-center" style="gap: var(--space-9);">
+                        <button class="btn btn-secondary" data-tooltip="Helpful information" data-tooltip-position="top">Hover me (top)</button>
+                        <button class="btn btn-secondary" data-tooltip="More details here" data-tooltip-position="bottom">Hover me (bottom)</button>
+                        <button class="btn btn-secondary" data-tooltip="Left tooltip" data-tooltip-position="left">Left</button>
+                        <button class="btn btn-secondary" data-tooltip="Right tooltip" data-tooltip-position="right">Right</button>
+                    </div>
+                    <div style="margin-top: var(--space-6);">
+                        <div class="dl-label">Click tooltip (info trigger)</div>
+                        <span class="info-trigger" data-tooltip="Click tooltips are useful for longer explanations or mobile devices where hover isn't available.">
+                            <svg class="icon" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round">
+                                <circle cx="12" cy="12" r="10"></circle>
+                                <path d="M12 16v-4"></path>
+                                <path d="M12 8h.01"></path>
+                            </svg>
+                        </span>
+                    </div>
+                </div>
+                <div class="dl-code">&lt;!-- Hover tooltip --&gt;
+&lt;button data-tooltip="Helpful text" data-tooltip-position="top"&gt;
+    Hover me
+&lt;/button&gt;
+
+&lt;!-- Click tooltip --&gt;
+&lt;span class="info-trigger" data-tooltip="Click to see info"&gt;
+    &lt;svg class="icon"&gt;...&lt;/svg&gt;
+&lt;/span&gt;</div>
+            </div>
+
+            <!-- Modals -->
+            <div class="dl-subsection">
+                <h3 class="dl-subsection-title">Modals</h3>
+                <div class="dl-preview">
+                    <button class="btn btn-primary" data-modal-trigger="demo-modal">Open demo modal</button>
+                </div>
+                <div class="dl-code">&lt;!-- Trigger --&gt;
+&lt;button data-modal-trigger="my-modal"&gt;Open&lt;/button&gt;
+
+&lt;!-- Modal --&gt;
+&lt;div class="modal" id="my-modal" aria-hidden="true"&gt;
+    &lt;div class="modal-backdrop" data-modal-close&gt;&lt;/div&gt;
+    &lt;div class="modal-content"&gt;
+        &lt;div class="modal-header"&gt;
+            &lt;h2 class="modal-title"&gt;Title&lt;/h2&gt;
+            &lt;button class="modal-close" data-modal-close&gt;...&lt;/button&gt;
+        &lt;/div&gt;
+        &lt;div class="modal-body"&gt;Content&lt;/div&gt;
+        &lt;div class="modal-footer"&gt;
+            &lt;button data-modal-close&gt;Cancel&lt;/button&gt;
+            &lt;button&gt;Confirm&lt;/button&gt;
+        &lt;/div&gt;
+    &lt;/div&gt;
+&lt;/div&gt;</div>
+            </div>
+
+        </section>
+
+    </main>
+
+    <!-- Demo Modal -->
+    <div class="modal" id="demo-modal" aria-hidden="true">
+        <div class="modal-backdrop" data-modal-close></div>
+        <div class="modal-content">
+            <div class="modal-header">
+                <h2 class="modal-title">Demo modal</h2>
+                <button class="modal-close" data-modal-close aria-label="Close">
+                    <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round">
+                        <path d="M18 6L6 18M6 6l12 12"></path>
+                    </svg>
+                </button>
+            </div>
+            <div class="modal-body">
+                <p>This is a demo modal triggered from the design library. Modals support:</p>
+                <ul class="check-list check-list-vertical" style="margin-top: var(--space-5);">
+                    <li class="check-item">Click backdrop to close</li>
+                    <li class="check-item">Press Escape to close</li>
+                    <li class="check-item">Focus trapping within modal</li>
+                    <li class="check-item">Body scroll lock</li>
+                </ul>
+            </div>
+            <div class="modal-footer">
+                <button class="btn btn-secondary" data-modal-close>Cancel</button>
+                <button class="btn btn-primary" data-modal-close>Got it</button>
+            </div>
+        </div>
+    </div>
+
+    <script type="module" src="js/app.js"></script>
+</body>
+</html>

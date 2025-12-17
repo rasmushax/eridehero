@@ -1,0 +1,166 @@
+/* =============================================
+   ERideHero Design System - Variables
+   ============================================= */
+
+:root {
+    /* ===== COLORS ===== */
+
+    /* Primary */
+    --color-primary: #5e2ced;
+    --color-primary-hover: #4a1fd4;
+    --color-primary-light: rgba(94, 44, 237, 0.08);
+    --color-primary-subtle: #f4f1fd;
+    --color-primary-glow: rgba(94, 44, 237, 0.25);
+    --color-primary-glow-strong: rgba(94, 44, 237, 0.35);
+
+    /* Neutrals */
+    --color-dark: #21273a;
+    --color-dark-lighter: #2d3554;
+    --color-body: #3d4668;
+    --color-muted: #6f768f;
+    --color-border: #f3f2f5;
+    --color-border-hover: #e6e4ea;
+    --color-background: #f9fafe;
+    --color-white: #ffffff;
+
+    /* Semantic */
+    --color-success: #00b572;
+    --color-success-light: rgba(0, 181, 114, 0.08);
+    --color-warning: #ffd700;
+    --color-error: #dc3545;
+    --color-info: #fd7e14;
+
+    /* Overlays */
+    --color-overlay-light: rgba(131, 150, 225, 0.05);
+    --color-shadow: rgba(33, 39, 58, 0.15);
+    --color-shadow-strong: rgba(33, 39, 58, 0.2);
+
+    /* White overlays (for dark backgrounds) */
+    --color-white-5: rgba(255, 255, 255, 0.05);
+    --color-white-18: rgba(255, 255, 255, 0.18);
+    --color-white-75: rgba(255, 255, 255, 0.75);
+
+    /* Dark overlays */
+    --color-dark-80: rgba(33, 39, 58, 0.8);
+
+    /* Brand colors */
+    --color-youtube: #FF0000;
+    --color-youtube-hover: #CC0000;
+
+
+    /* ===== TYPOGRAPHY ===== */
+
+    /* Font Family */
+    --font-family: 'Figtree', -apple-system, BlinkMacSystemFont, 'Segoe UI', Roboto, sans-serif;
+
+    /* Font Sizes */
+    --text-tiny: 12px;
+    --text-xs: 13px;
+    --text-sm: 14px;
+    --text-base: 15px;
+    --text-md: 16px;
+    --text-lg: 17px;
+    --text-xl: 18px;
+    --text-2xl: 20px;
+    --text-3xl: 22px;
+    --text-4xl: 26px;
+    --text-5xl: 32px;
+    --text-6xl: 39px;
+    --text-7xl: 52px;
+
+    /* Font Weights */
+    --font-normal: 400;
+    --font-medium: 500;
+    --font-semibold: 600;
+    --font-bold: 700;
+    --font-extrabold: 800;
+
+    /* Line Heights */
+    --leading-tight: 1.15;
+    --leading-snug: 1.3;
+    --leading-normal: 1.6;
+    --leading-relaxed: 1.7;
+
+    /* Letter Spacing */
+    --tracking-tight: -1px;
+    --tracking-snug: -0.5px;
+    --tracking-wide: 0.5px;
+
+
+    /* ===== SPACING ===== */
+
+    --space-1: 4px;
+    --space-2: 6px;
+    --space-3: 8px;
+    --space-4: 10px;
+    --space-5: 12px;
+    --space-6: 14px;
+    --space-7: 16px;
+    --space-8: 20px;
+    --space-9: 24px;
+    --space-10: 28px;
+    --space-11: 32px;
+    --space-12: 36px;
+    --space-13: 40px;
+    --space-14: 48px;
+    --space-15: 60px;
+    --space-16: 80px;
+
+
+    /* ===== BORDERS ===== */
+
+    --radius-sm: 6px;
+    --radius-md: 8px;
+    --radius-lg: 10px;
+    --radius-xl: 12px;
+    --radius-2xl: 16px;
+    --radius-3xl: 20px;
+    --radius-full: 100px;
+
+    --border-width: 1px;
+    --border-width-2: 2px;
+
+
+    /* ===== SHADOWS ===== */
+
+    /* Primary colored shadows */
+    --shadow-sm: 0 2px 8px rgba(94, 44, 237, 0.25);
+    --shadow-md: 0 4px 12px rgba(94, 44, 237, 0.35);
+    --shadow-lg: 0 4px 20px rgba(94, 44, 237, 0.3);
+    --shadow-xl: 0 8px 30px rgba(94, 44, 237, 0.4);
+
+    /* Neutral shadows */
+    --shadow-subtle: 0 2px 8px rgba(33, 39, 58, 0.05), 0 8px 24px rgba(33, 39, 58, 0.05);
+    --shadow-soft: 0 1px 3px rgba(33, 39, 58, 0.08), 0 4px 12px rgba(33, 39, 58, 0.12);
+    --shadow-elevated: 0 10px 30px rgba(33, 39, 58, 0.08);
+    --shadow-card: 0 20px 60px rgba(33, 39, 58, 0.1), 0 0 0 1px rgba(230, 229, 233, 0.5);
+    --shadow-dropdown: 0 15px 40px rgba(33, 39, 58, 0.11), 0 0 0 1px var(--color-border);
+    --shadow-dropdown-mobile: 0 10px 35px rgba(33, 39, 58, 0.11);
+
+    --shadow-focus: 0 0 0 4px rgba(94, 44, 237, 0.1);
+
+
+    /* ===== TRANSITIONS ===== */
+
+    --transition-fast: 0.2s ease;
+    --transition-base: 0.3s ease;
+    --transition-slow: 0.4s ease;
+
+
+    /* ===== LAYOUT ===== */
+
+    --container-max: 1200px;
+    --header-height: 72px;
+    --header-height-mobile: 60px;
+
+
+    /* ===== Z-INDEX ===== */
+
+    --z-dropdown: 100;
+    --z-header: 1000;
+    --z-mobile-menu: 999;
+    --z-modal-backdrop: 999;
+    --z-modal: 1001;
+    --z-search-dropdown: 1002;
+    --z-skip-link: 10000;
+}

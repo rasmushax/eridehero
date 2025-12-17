@@ -1,0 +1,58 @@
+/* =============================================
+   Breadcrumb Component
+   Reusable breadcrumb navigation
+   ============================================= */
+
+.breadcrumb {
+    display: flex;
+    align-items: center;
+    gap: var(--space-2);
+    font-size: var(--text-sm);
+    margin-bottom: var(--space-4);
+}
+
+.breadcrumb a {
+    color: var(--color-muted);
+    text-decoration: none;
+    transition: color var(--transition-fast);
+}
+
+.breadcrumb a:hover {
+    color: var(--color-primary);
+}
+
+.breadcrumb-sep {
+    color: var(--color-border);
+}
+
+.breadcrumb-current {
+    color: var(--color-body);
+}
+
+/* Responsive: Collapse to two-level parent on mobile */
+@media (max-width: 600px) {
+    .breadcrumb {
+        flex-wrap: wrap;
+    }
+
+    /* Hide middle items, show only first parent and current */
+    .breadcrumb-middle {
+        display: none;
+    }
+
+    /* Truncate long current page titles */
+    .breadcrumb-current {
+        max-width: 200px;
+        white-space: nowrap;
+        overflow: hidden;
+        text-overflow: ellipsis;
+    }
+}
+
+@media (max-width: 400px) {
+    /* Hide current page and preceding separator */
+    .breadcrumb-current,
+    .breadcrumb-current-sep {
+        display: none;
+    }
+}

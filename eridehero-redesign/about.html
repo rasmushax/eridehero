@@ -1,0 +1,907 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>About Us – ERideHero</title>
+    <link href="https://fonts.googleapis.com/css2?family=Figtree:wght@400;500;600;700;800&display=swap" rel="stylesheet">
+    <link rel="stylesheet" href="css/style.css">
+</head>
+<body class="transparent-header">
+    <!-- SVG Sprite -->
+    <svg xmlns="http://www.w3.org/2000/svg" style="display:none">
+        <symbol id="icon-search" viewBox="0 0 24 24">
+            <circle cx="11" cy="11" r="8"></circle>
+            <line x1="21" y1="21" x2="16.65" y2="16.65"></line>
+        </symbol>
+        <symbol id="icon-book" viewBox="0 0 24 24">
+            <path d="M4 19.5A2.5 2.5 0 0 1 6.5 17H20"></path>
+            <path d="M6.5 2H20v20H6.5A2.5 2.5 0 0 1 4 19.5v-15A2.5 2.5 0 0 1 6.5 2z"></path>
+        </symbol>
+        <symbol id="icon-star" viewBox="0 0 24 24">
+            <polygon points="12 2 15.09 8.26 22 9.27 17 14.14 18.18 21.02 12 17.77 5.82 21.02 7 14.14 2 9.27 8.91 8.26 12 2"></polygon>
+        </symbol>
+        <symbol id="icon-chevron-down" viewBox="0 0 24 24">
+            <polyline points="6 9 12 15 18 9"></polyline>
+        </symbol>
+        <symbol id="icon-chevron-left" viewBox="0 0 24 24">
+            <polyline points="15 18 9 12 15 6"></polyline>
+        </symbol>
+        <symbol id="icon-chevron-right" viewBox="0 0 24 24">
+            <polyline points="9 18 15 12 9 6"></polyline>
+        </symbol>
+        <symbol id="icon-zap" viewBox="0 0 24 24">
+            <polygon points="13 2 3 14 12 14 11 22 21 10 12 10 13 2"></polygon>
+        </symbol>
+        <symbol id="icon-arrow-right" viewBox="0 0 24 24">
+            <line x1="5" y1="12" x2="19" y2="12"></line>
+            <polyline points="12 5 19 12 12 19"></polyline>
+        </symbol>
+        <symbol id="icon-check" viewBox="0 0 24 24">
+            <polyline points="20 6 9 17 4 12"></polyline>
+        </symbol>
+        <symbol id="icon-tag" viewBox="0 0 24 24">
+            <path d="M20.59 13.41l-7.17 7.17a2 2 0 0 1-2.83 0L2 12V2h10l8.59 8.59a2 2 0 0 1 0 2.82z"></path>
+            <line x1="7" y1="7" x2="7.01" y2="7"></line>
+        </symbol>
+        <symbol id="icon-grid" viewBox="0 0 24 24">
+            <rect x="3" y="3" width="7" height="7"></rect>
+            <rect x="14" y="3" width="7" height="7"></rect>
+            <rect x="14" y="14" width="7" height="7"></rect>
+            <rect x="3" y="14" width="7" height="7"></rect>
+        </symbol>
+        <symbol id="icon-x" viewBox="0 0 24 24">
+            <line x1="18" y1="6" x2="6" y2="18"></line>
+            <line x1="6" y1="6" x2="18" y2="18"></line>
+        </symbol>
+        <symbol id="icon-edit" viewBox="0 0 24 24">
+            <path d="M12 20h9"></path>
+            <path d="M16.5 3.5a2.12 2.12 0 0 1 3 3L7 19l-4 1 1-4Z"></path>
+        </symbol>
+        <symbol id="icon-trending-up" viewBox="0 0 24 24">
+            <polyline points="22 7 13.5 15.5 8.5 10.5 2 17"></polyline>
+            <polyline points="16 7 22 7 22 13"></polyline>
+        </symbol>
+        <symbol id="icon-escooter" viewBox="0 0 24 24">
+            <path d="m20.724,17.023l-3.033-13.147c-.527-2.282-2.53-3.875-4.872-3.875h-.818c-.553,0-1,.448-1,1s.447,1,1,1h.818c1.405,0,2.607.956,2.923,2.325l1.794,7.774-3.109,3.8c-.571.7-1.418,1.101-2.321,1.101H1c-.553,0-1,.448-1,1s.447,1,1,1h.351c-.219.456-.351.961-.351,1.5,0,1.93,1.57,3.5,3.5,3.5s3.5-1.57,3.5-3.5c0-.539-.133-1.044-.351-1.5h4.456c1.506,0,2.916-.668,3.869-1.834l2.13-2.602.671,2.91c-1.054.604-1.775,1.727-1.775,3.027,0,1.93,1.57,3.5,3.5,3.5s3.5-1.57,3.5-3.5c0-1.853-1.452-3.359-3.276-3.477Zm-14.724,3.477c0,.827-.673,1.5-1.5,1.5s-1.5-.673-1.5-1.5.673-1.5,1.5-1.5,1.5.673,1.5,1.5Zm14.5,1.5c-.827,0-1.5-.673-1.5-1.5s.673-1.5,1.5-1.5,1.5.673,1.5,1.5-.673,1.5-1.5,1.5Z"/>
+        </symbol>
+        <symbol id="icon-eskate" viewBox="0 0 525 525">
+            <circle cx="113.924" cy="276.711" r="46.114" fill="none" stroke="currentColor" stroke-miterlimit="10" stroke-width="31"/>
+            <path d="M295.069,230.597H87.943c-15.9,0-31.491-4.395-45.049-12.7l-25.67-15.723" fill="none" stroke="currentColor" stroke-linecap="round" stroke-miterlimit="10" stroke-width="31"/>
+            <circle cx="411.076" cy="276.711" r="46.114" fill="none" stroke="currentColor" stroke-miterlimit="10" stroke-width="31"/>
+            <path d="M229.931,230.597h207.126c15.9,0,31.491-4.395,45.049-12.7l25.67-15.723" fill="none" stroke="currentColor" stroke-linecap="round" stroke-miterlimit="10" stroke-width="31"/>
+        </symbol>
+        <symbol id="icon-euc" viewBox="306 261 450 472">
+            <path d="M586,446.71v212.29c0,31.2-24.56,56.49-54.87,56.49s-54.87-25.29-54.87-56.49v-212.29c0-31.2,24.56-56.49,54.87-56.49,15.16,0,28.87,6.32,38.8,16.54,9.93,10.23,16.07,24.35,16.07,39.95Z" fill="none" stroke="currentColor" stroke-miterlimit="10" stroke-width="35"/>
+            <path d="M646.42,417.22v198.04c0,1.15-.93,2.08-2.08,2.08h-58.34v-170.63c0-15.6-6.14-29.72-16.07-39.95-9.93-10.22-23.64-16.54-38.8-16.54-30.31,0-54.87,25.29-54.87,56.49v170.63h-58.34c-1.15,0-2.08-.93-2.08-2.08v-198.04c0-48.32,39.17-87.5,87.5-87.5h55.58c48.33,0,87.5,39.18,87.5,87.5Z" fill="none" stroke="currentColor" stroke-miterlimit="10" stroke-width="35"/>
+            <path d="M486.462,278.365h89.336c8.386,0,15.194,6.808,15.194,15.194v36.165h-119.725v-36.165c0-8.386,6.808-15.194,15.194-15.194Z" fill="none" stroke="currentColor" stroke-miterlimit="10" stroke-width="35"/>
+            <path d="M415.839,547.147l-59.86-9.338c-7.651-1.193-13.305-7.964-13.305-15.93v-31.061h73.165v56.329Z" fill="none" stroke="currentColor" stroke-miterlimit="10" stroke-width="35"/>
+            <line x1="415.839" y1="490.818" x2="323.52" y2="490.818" fill="none" stroke="currentColor" stroke-linecap="round" stroke-miterlimit="10" stroke-width="35"/>
+            <path d="M646.421,547.147l59.86-9.338c7.651-1.193,13.305-7.964,13.305-15.93v-31.061s-73.165,0-73.165,0v56.329Z" fill="none" stroke="currentColor" stroke-miterlimit="10" stroke-width="35"/>
+            <line x1="646.421" y1="490.818" x2="738.74" y2="490.818" fill="none" stroke="currentColor" stroke-linecap="round" stroke-miterlimit="10" stroke-width="35"/>
+        </symbol>
+        <symbol id="icon-hoverboard" viewBox="0 0 525 525">
+            <path d="M462.424,180.951h-.027c-25.395.098-47.959,16.297-56.149,40.31-1.4,4.106-4.797,7.426-9.087,8.881-11.199,3.798-11.664,3.833-49.622,3.577-8.68-.059-19.263-.13-32.312-.167-9.294-.026-17.979-1.57-25.812-4.587-17.27-6.651-36.287-6.651-53.553,0-7.834,3.018-16.519,4.561-25.812,4.587-13.208.037-23.903.109-32.66.167q-38.32.255-49.604-3.641c-4.2-1.45-7.481-4.67-9.002-8.834-9.829-26.906-37.499-42.997-65.787-38.258-28.15,4.713-49.061,28.844-49.721,57.378l-.002,63.253c0,7.171,4.331,13.349,10.515,16.055v35.69c0,13.371,5.504,26.439,15.101,35.854,9.474,9.295,21.837,14.268,34.914,14.027,26.526-.507,48.106-22.512,48.106-49.052v-3.514c22.649.006,40.198.04,53.827.066q49.689.098,53.723-2.84c.081-.06.167-.124.263-.188l14.035-9.34c8.583-5.711,18.57-8.73,28.88-8.73s20.296,3.02,28.88,8.731l13.954,9.284c.091.062.167.123.239.177q3.968,3.002,53.664,2.905c13.659-.026,31.259-.061,53.989-.066v2.684c0,13.371,5.504,26.439,15.101,35.854,9.249,9.073,21.283,14.036,33.98,14.036.311,0,.622-.003.934-.009,26.526-.507,48.106-22.512,48.106-49.052v-36.521c6.185-2.706,10.516-8.884,10.516-16.055v-63.091c0-32.85-26.726-59.576-59.576-59.576ZM476.454,321.133v35.061c0,7.736-6.294,14.03-14.03,14.03s-14.03-6.294-14.03-14.03v-35.061h28.061ZM76.879,321.133v35.061c0,7.736-6.294,14.03-14.03,14.03s-14.03-6.294-14.03-14.03v-35.061h28.061ZM409.891,317.648h-83.874c-3.596,0-7.068-1.071-10.042-3.098l-2.667-1.818c-23.195-15.812-23.639-16.115-29.641-16.115h-42.061c-5.714,0-7.499,1.211-21.394,10.634-2.95,2-6.525,4.425-10.898,7.363-2.956,1.984-6.396,3.034-9.948,3.034h-83.984c4.272-3.197,7.042-8.296,7.042-14.031v-38.657c10.727,3.461,11.148,3.597,14.03,3.597,23.428,0,41.194.039,54.707.067q45.197.1,49.3-2.823c.091-.065.187-.134.302-.211,13.288-8.878,30.458-8.878,43.731-.011,2.858,1.921,6.189,2.951,9.688,2.978,23.812,0,41.873.093,55.061.161,41.214.211,43.199.223,53.606-3.528v38.427c0,5.734,2.77,10.833,7.042,14.031ZM38.289,240.084c-.415-6.56,1.749-12.889,6.094-17.822,4.345-4.932,10.351-7.877,16.911-8.293,6.553-.414,12.889,1.748,17.822,6.094,4.88,4.299,7.815,10.224,8.279,16.703v49.336h-49.091v-45.576l-.014-.442ZM486.97,240.527v45.576h-49.091v-49.099c1.754-12.112,12.175-21.127,24.488-21.022h.057c13.534,0,24.546,11.011,24.546,24.545Z"/>
+        </symbol>
+        <symbol id="icon-ebike" viewBox="0 0 512 512">
+            <path d="M407.531,206.527c-13.212,0-25.855,2.471-37.501,6.966c-9.124-20.276-17.007-41.719-20.944-61.668c-6.323-32.038-34.634-55.291-67.318-55.291c-8.284,0-15,6.716-15,15s6.716,15,15,15c3.569,0,7.044,0.498,10.355,1.423c10.063,2.812,18.602,9.618,23.582,18.758c-0.403,0.512-0.787,1.043-1.128,1.618l-4.66,7.845l-23.576,39.69H160.377l-7.16-18.021h2.972c8.284,0,15-6.716,15-15s-6.716-15-15-15H104.47c-8.284,0-15,6.716-15,15s6.716,15,15,15h16.466l13.09,32.944c-9.376-2.77-19.294-4.265-29.556-4.265C46.865,206.527,0,253.392,0,310.996s46.865,104.469,104.469,104.469c52.511,0,96.091-38.946,103.388-89.469h27.547c5.292,0,10.193-2.789,12.896-7.339l78.827-132.706c4.624,14.31,10.412,28.648,16.651,42.346c-24.747,19.122-40.716,49.079-40.716,82.7c0,57.604,46.865,104.469,104.469,104.469S512,368.601,512,310.997S465.135,206.527,407.531,206.527z M104.469,325.996h72.951c-6.96,33.897-37.025,59.469-72.951,59.469C63.407,385.464,30,352.058,30,310.996c0-41.062,33.407-74.469,74.469-74.469c35.926,0,65.991,25.572,72.951,59.469h-72.951c-8.284,0-15,6.716-15,15S96.185,325.996,104.469,325.996z M226.867,295.996h-19.01c-3.481-24.099-15.216-45.561-32.241-61.421c-0.156-0.602-0.337-1.202-0.573-1.795l-2.746-6.911h96.225L226.867,295.996z M407.531,385.464c-41.063,0-74.469-33.407-74.469-74.469c0-21.753,9.378-41.355,24.301-54.983c18.448,35.256,36.467,61.538,37.823,63.504c2.911,4.217,7.594,6.48,12.358,6.48c2.938,0,5.907-0.862,8.508-2.657c6.818-4.706,8.53-14.048,3.824-20.866c-0.323-0.468-18.475-26.939-36.652-61.853c7.624-2.641,15.797-4.095,24.307-4.095c41.062,0,74.469,33.407,74.469,74.469C482,352.056,448.593,385.464,407.531,385.464z"/>
+        </symbol>
+        <symbol id="icon-user" viewBox="0 0 24 24">
+            <path d="M20 21v-2a4 4 0 0 0-4-4H8a4 4 0 0 0-4 4v2"></path>
+            <circle cx="12" cy="7" r="4"></circle>
+        </symbol>
+        <symbol id="icon-clipboard-check" viewBox="0 0 24 24">
+            <path d="M16 4h2a2 2 0 0 1 2 2v14a2 2 0 0 1-2 2H6a2 2 0 0 1-2-2V6a2 2 0 0 1 2-2h2"></path>
+            <rect x="8" y="2" width="8" height="4" rx="1" ry="1"></rect>
+            <path d="m9 14 2 2 4-4"></path>
+        </symbol>
+        <symbol id="icon-percent" viewBox="0 0 24 24">
+            <line x1="19" y1="5" x2="5" y2="19"></line>
+            <circle cx="6.5" cy="6.5" r="2.5"></circle>
+            <circle cx="17.5" cy="17.5" r="2.5"></circle>
+        </symbol>
+        <symbol id="icon-refresh" viewBox="0 0 24 24">
+            <polyline points="23 4 23 10 17 10"></polyline>
+            <polyline points="1 20 1 14 7 14"></polyline>
+            <path d="M3.51 9a9 9 0 0 1 14.85-3.36L23 10M1 14l4.64 4.36A9 9 0 0 0 20.49 15"></path>
+        </symbol>
+        <symbol id="icon-database" viewBox="0 0 24 24">
+            <ellipse cx="12" cy="5" rx="9" ry="3"></ellipse>
+            <path d="M21 12c0 1.66-4 3-9 3s-9-1.34-9-3"></path>
+            <path d="M3 5v14c0 1.66 4 3 9 3s9-1.34 9-3V5"></path>
+        </symbol>
+        <symbol id="icon-bell" viewBox="0 0 24 24">
+            <path d="M18 8A6 6 0 0 0 6 8c0 7-3 9-3 9h18s-3-2-3-9"></path>
+            <path d="M13.73 21a2 2 0 0 1-3.46 0"></path>
+        </symbol>
+        <symbol id="icon-trending-down" viewBox="0 0 24 24">
+            <polyline points="22 17 13.5 8.5 8.5 13.5 2 7"></polyline>
+            <polyline points="16 17 22 17 22 11"></polyline>
+        </symbol>
+        <symbol id="icon-youtube" viewBox="0 0 24 24">
+            <path d="M22.54 6.42a2.78 2.78 0 0 0-1.94-2C18.88 4 12 4 12 4s-6.88 0-8.6.46a2.78 2.78 0 0 0-1.94 2A29 29 0 0 0 1 11.75a29 29 0 0 0 .46 5.33A2.78 2.78 0 0 0 3.4 19c1.72.46 8.6.46 8.6.46s6.88 0 8.6-.46a2.78 2.78 0 0 0 1.94-2 29 29 0 0 0 .46-5.25 29 29 0 0 0-.46-5.33z"></path>
+            <polygon points="9.75 15.02 15.5 11.75 9.75 8.48 9.75 15.02"></polygon>
+        </symbol>
+        <symbol id="icon-instagram" viewBox="0 0 24 24">
+            <rect x="2" y="2" width="20" height="20" rx="5" ry="5"></rect>
+            <path d="M16 11.37A4 4 0 1 1 12.63 8 4 4 0 0 1 16 11.37z"></path>
+            <line x1="17.5" y1="6.5" x2="17.51" y2="6.5"></line>
+        </symbol>
+        <symbol id="icon-facebook" viewBox="0 0 24 24">
+            <path d="M18 2h-3a5 5 0 0 0-5 5v3H7v4h3v8h4v-8h3l1-4h-4V7a1 1 0 0 1 1-1h3z"></path>
+        </symbol>
+        <symbol id="icon-twitter" viewBox="0 0 24 24">
+            <path d="M4 4l11.733 16h4.267l-11.733 -16z"></path>
+            <path d="M4 20l6.768 -6.768m2.46 -2.46l6.772 -6.772"></path>
+        </symbol>
+        <symbol id="icon-linkedin" viewBox="0 0 24 24">
+            <path d="M16 8a6 6 0 0 1 6 6v7h-4v-7a2 2 0 0 0-2-2 2 2 0 0 0-2 2v7h-4v-7a6 6 0 0 1 6-6z"></path>
+            <rect x="2" y="9" width="4" height="12"></rect>
+            <circle cx="4" cy="4" r="2"></circle>
+        </symbol>
+        <symbol id="icon-play" viewBox="0 0 24 24">
+            <polygon points="5 3 19 12 5 21 5 3"></polygon>
+        </symbol>
+        <symbol id="icon-youtube-logo" viewBox="0 0 28.57 20">
+            <path d="M27.9727 3.12324C27.6435 1.89323 26.6768 0.926623 25.4468 0.597366C23.2197 2.24288e-07 14.285 0 14.285 0C14.285 0 5.35042 2.24288e-07 3.12323 0.597366C1.89323 0.926623 0.926623 1.89323 0.597366 3.12324C2.24288e-07 5.35042 0 10 0 10C0 10 2.24288e-07 14.6496 0.597366 16.8768C0.926623 18.1068 1.89323 19.0734 3.12323 19.4026C5.35042 20 14.285 20 14.285 20C14.285 20 23.2197 20 25.4468 19.4026C26.6768 19.0734 27.6435 18.1068 27.9727 16.8768C28.5701 14.6496 28.5701 10 28.5701 10C28.5701 10 28.5677 5.35042 27.9727 3.12324Z" fill="#FF0000"></path>
+            <path d="M11.4253 14.2854L18.8477 10.0004L11.4253 5.71533V14.2854Z" fill="white"></path>
+        </symbol>
+        <symbol id="icon-external-link" viewBox="0 0 24 24">
+            <path d="M18 13v6a2 2 0 0 1-2 2H5a2 2 0 0 1-2-2V8a2 2 0 0 1 2-2h6"></path>
+            <polyline points="15 3 21 3 21 9"></polyline>
+            <line x1="10" y1="14" x2="21" y2="3"></line>
+        </symbol>
+        <symbol id="icon-plus" viewBox="0 0 24 24">
+            <line x1="12" y1="5" x2="12" y2="19"></line>
+            <line x1="5" y1="12" x2="19" y2="12"></line>
+        </symbol>
+        <symbol id="icon-shield" viewBox="0 0 24 24">
+            <path d="M12 22s8-4 8-10V5l-8-3-8 3v7c0 6 8 10 8 10z"></path>
+        </symbol>
+        <symbol id="icon-battery" viewBox="0 0 24 24">
+            <rect x="1" y="6" width="18" height="12" rx="2" ry="2"></rect>
+            <line x1="23" y1="13" x2="23" y2="11"></line>
+        </symbol>
+        <symbol id="icon-mountain" viewBox="0 0 24 24">
+            <path d="m8 3 4 8 5-5 5 15H2L8 3z"></path>
+        </symbol>
+        <symbol id="icon-settings" viewBox="0 0 24 24">
+            <circle cx="12" cy="12" r="3"></circle>
+            <path d="M19.4 15a1.65 1.65 0 0 0 .33 1.82l.06.06a2 2 0 0 1 0 2.83 2 2 0 0 1-2.83 0l-.06-.06a1.65 1.65 0 0 0-1.82-.33 1.65 1.65 0 0 0-1 1.51V21a2 2 0 0 1-2 2 2 2 0 0 1-2-2v-.09A1.65 1.65 0 0 0 9 19.4a1.65 1.65 0 0 0-1.82.33l-.06.06a2 2 0 0 1-2.83 0 2 2 0 0 1 0-2.83l.06-.06a1.65 1.65 0 0 0 .33-1.82 1.65 1.65 0 0 0-1.51-1H3a2 2 0 0 1-2-2 2 2 0 0 1 2-2h.09A1.65 1.65 0 0 0 4.6 9a1.65 1.65 0 0 0-.33-1.82l-.06-.06a2 2 0 0 1 0-2.83 2 2 0 0 1 2.83 0l.06.06a1.65 1.65 0 0 0 1.82.33H9a1.65 1.65 0 0 0 1-1.51V3a2 2 0 0 1 2-2 2 2 0 0 1 2 2v.09a1.65 1.65 0 0 0 1 1.51 1.65 1.65 0 0 0 1.82-.33l.06-.06a2 2 0 0 1 2.83 0 2 2 0 0 1 0 2.83l-.06.06a1.65 1.65 0 0 0-.33 1.82V9a1.65 1.65 0 0 0 1.51 1H21a2 2 0 0 1 2 2 2 2 0 0 1-2 2h-.09a1.65 1.65 0 0 0-1.51 1z"></path>
+        </symbol>
+        <symbol id="icon-compass" viewBox="0 0 24 24">
+            <circle cx="12" cy="12" r="10"></circle>
+            <polygon points="16.24 7.76 14.12 14.12 7.76 16.24 9.88 9.88 16.24 7.76"></polygon>
+        </symbol>
+    </svg>
+
+    <!-- Skip to main content link for keyboard users -->
+    <a href="#main-content" class="skip-link">Skip to main content</a>
+
+    <!-- HEADER -->
+    <header class="header" role="banner">
+        <div class="header-inner">
+            <!-- Logo -->
+            <a href="/" class="logo" aria-label="ERideHero - Go to homepage">
+                <img src="eridehero-1.svg" alt="" class="logo-img" aria-hidden="true">
+                <span class="sr-only">ERideHero</span>
+            </a>
+
+            <!-- Main Navigation -->
+            <nav class="main-nav" role="navigation" aria-label="Main navigation">
+                <!-- E-scooters (Mega Menu) -->
+                <div class="nav-item" data-dropdown>
+                    <button type="button" class="nav-link" aria-expanded="false" aria-haspopup="true" aria-controls="dropdown-escooters">
+                        E-scooters
+                        <svg class="icon chevron" aria-hidden="true"><use href="#icon-chevron-down"></use></svg>
+                    </button>
+                    <div class="dropdown mega-dropdown" id="dropdown-escooters" role="menu" aria-label="E-scooters submenu">
+                        <div class="mega-dropdown-header">
+                            <h3 id="escooters-menu-label">Electric scooters</h3>
+                            <a href="#" role="menuitem">
+                                View all
+                                <svg class="icon" aria-hidden="true"><use href="#icon-arrow-right"></use></svg>
+                            </a>
+                        </div>
+                        <div class="mega-grid" role="group" aria-label="E-scooter pages">
+                            <a href="#" class="mega-item" role="menuitem">
+                                <div class="mega-icon" aria-hidden="true">
+                                    <svg class="icon"><use href="#icon-search"></use></svg>
+                                </div>
+                                <div class="mega-content">
+                                    <h4>Product finder</h4>
+                                    <span>200+ scooters</span>
+                                </div>
+                            </a>
+                            <a href="#" class="mega-item" role="menuitem">
+                                <div class="mega-icon" aria-hidden="true">
+                                    <svg class="icon"><use href="#icon-star"></use></svg>
+                                </div>
+                                <div class="mega-content">
+                                    <h4>Reviews</h4>
+                                    <span>58 in-depth reviews</span>
+                                </div>
+                            </a>
+                            <a href="#" class="mega-item" role="menuitem">
+                                <div class="mega-icon" aria-hidden="true">
+                                    <svg class="icon"><use href="#icon-grid"></use></svg>
+                                </div>
+                                <div class="mega-content">
+                                    <h4>H2H Compare</h4>
+                                    <span>Side-by-side specs</span>
+                                </div>
+                            </a>
+                            <a href="#" class="mega-item" role="menuitem">
+                                <div class="mega-icon" aria-hidden="true">
+                                    <svg class="icon"><use href="#icon-book"></use></svg>
+                                </div>
+                                <div class="mega-content">
+                                    <h4>Buying guides</h4>
+                                    <span>Expert recommendations</span>
+                                </div>
+                            </a>
+                        </div>
+                        <div class="mega-footer" role="group" aria-label="Quick links">
+                            <a href="#" class="mega-footer-link" role="menuitem">
+                                <svg class="icon" aria-hidden="true"><use href="#icon-percent"></use></svg>
+                                Best deals
+                            </a>
+                            <a href="#" class="mega-footer-link" role="menuitem">
+                                <svg class="icon" aria-hidden="true"><use href="#icon-tag"></use></svg>
+                                Coupon codes
+                            </a>
+                        </div>
+                    </div>
+                </div>
+
+                <!-- E-bikes (Mega Menu) -->
+                <div class="nav-item" data-dropdown>
+                    <button type="button" class="nav-link" aria-expanded="false" aria-haspopup="true" aria-controls="dropdown-ebikes">
+                        E-bikes
+                        <svg class="icon chevron" aria-hidden="true"><use href="#icon-chevron-down"></use></svg>
+                    </button>
+                    <div class="dropdown mega-dropdown" id="dropdown-ebikes" role="menu" aria-label="E-bikes submenu">
+                        <div class="mega-dropdown-header">
+                            <h3>Electric bikes</h3>
+                            <a href="#" role="menuitem">
+                                View all
+                                <svg class="icon" aria-hidden="true"><use href="#icon-arrow-right"></use></svg>
+                            </a>
+                        </div>
+                        <div class="mega-grid" role="group" aria-label="E-bike pages">
+                            <a href="#" class="mega-item" role="menuitem">
+                                <div class="mega-icon" aria-hidden="true">
+                                    <svg class="icon"><use href="#icon-search"></use></svg>
+                                </div>
+                                <div class="mega-content">
+                                    <h4>Product finder</h4>
+                                    <span>80+ e-bikes</span>
+                                </div>
+                            </a>
+                            <a href="#" class="mega-item" role="menuitem">
+                                <div class="mega-icon" aria-hidden="true">
+                                    <svg class="icon"><use href="#icon-star"></use></svg>
+                                </div>
+                                <div class="mega-content">
+                                    <h4>Reviews</h4>
+                                    <span>12 in-depth reviews</span>
+                                </div>
+                            </a>
+                            <a href="#" class="mega-item" role="menuitem">
+                                <div class="mega-icon" aria-hidden="true">
+                                    <svg class="icon"><use href="#icon-grid"></use></svg>
+                                </div>
+                                <div class="mega-content">
+                                    <h4>H2H Compare</h4>
+                                    <span>Side-by-side specs</span>
+                                </div>
+                            </a>
+                            <a href="#" class="mega-item" role="menuitem">
+                                <div class="mega-icon" aria-hidden="true">
+                                    <svg class="icon"><use href="#icon-book"></use></svg>
+                                </div>
+                                <div class="mega-content">
+                                    <h4>Buying guides</h4>
+                                    <span>Expert recommendations</span>
+                                </div>
+                            </a>
+                        </div>
+                        <div class="mega-footer" role="group" aria-label="Quick links">
+                            <a href="#" class="mega-footer-link" role="menuitem">
+                                <svg class="icon" aria-hidden="true"><use href="#icon-percent"></use></svg>
+                                Best deals
+                            </a>
+                            <a href="#" class="mega-footer-link" role="menuitem">
+                                <svg class="icon" aria-hidden="true"><use href="#icon-tag"></use></svg>
+                                Coupon codes
+                            </a>
+                        </div>
+                    </div>
+                </div>
+
+                <!-- EUCs -->
+                <div class="nav-item">
+                    <a href="#" class="nav-link">EUCs</a>
+                </div>
+
+                <!-- More Dropdown -->
+                <div class="nav-item" data-dropdown>
+                    <button type="button" class="nav-link" aria-expanded="false" aria-haspopup="true" aria-controls="dropdown-more">
+                        More
+                        <svg class="icon chevron" aria-hidden="true"><use href="#icon-chevron-down"></use></svg>
+                    </button>
+                    <div class="dropdown" id="dropdown-more" role="menu" aria-label="More options">
+                        <a href="#" class="dropdown-item" role="menuitem">
+                            <div class="dropdown-icon" aria-hidden="true">
+                                <svg class="icon"><use href="#icon-hoverboard"></use></svg>
+                            </div>
+                            <div class="dropdown-content">
+                                <h4>Hoverboards</h4>
+                                <span>10 reviews</span>
+                            </div>
+                        </a>
+                        <a href="#" class="dropdown-item" role="menuitem">
+                            <div class="dropdown-icon" aria-hidden="true">
+                                <svg class="icon"><use href="#icon-eskate"></use></svg>
+                            </div>
+                            <div class="dropdown-content">
+                                <h4>E-Skateboards</h4>
+                                <span>8 reviews</span>
+                            </div>
+                        </a>
+                        <a href="#" class="dropdown-item" role="menuitem">
+                            <div class="dropdown-icon" aria-hidden="true">
+                                <svg class="icon"><use href="#icon-book"></use></svg>
+                            </div>
+                            <div class="dropdown-content">
+                                <h4>Skating</h4>
+                                <span>6 guides</span>
+                            </div>
+                        </a>
+                        <div class="dropdown-divider" role="separator"></div>
+                        <a href="#" class="dropdown-item" role="menuitem">
+                            <div class="dropdown-icon" aria-hidden="true">
+                                <svg class="icon"><use href="#icon-book"></use></svg>
+                            </div>
+                            <div class="dropdown-content">
+                                <h4>All buying guides</h4>
+                                <span>14 guides</span>
+                            </div>
+                        </a>
+                    </div>
+                </div>
+            </nav>
+
+            <!-- Header Right -->
+            <div class="header-right">
+                <!-- Search - Desktop inline -->
+                <div class="search-wrapper">
+                    <div class="search-inline">
+                        <svg class="icon" aria-hidden="true"><use href="#icon-search"></use></svg>
+                        <input type="text" class="search-inline-input" placeholder="Search products, reviews..." aria-label="Search">
+                    </div>
+                    <!-- Search toggle for smaller screens -->
+                    <button class="search-toggle" aria-label="Open search" aria-expanded="false" aria-controls="search-dropdown">
+                        <svg class="icon" aria-hidden="true"><use href="#icon-search"></use></svg>
+                    </button>
+                    <!-- Search dropdown for expanded search -->
+                    <div class="search-dropdown" id="search-dropdown" role="dialog" aria-label="Search">
+                        <div class="search-input-wrapper">
+                            <svg class="icon" aria-hidden="true"><use href="#icon-search"></use></svg>
+                            <input type="text" class="search-input" placeholder="Search products, reviews, guides..." aria-label="Search">
+                            <button type="button" class="search-close" aria-label="Close search">
+                                <svg class="icon" aria-hidden="true"><use href="#icon-x"></use></svg>
+                            </button>
+                        </div>
+                        <div class="search-suggestions">
+                            <div class="search-suggestions-label">Popular searches</div>
+                            <a href="#" class="search-suggestion">
+                                <svg class="icon" aria-hidden="true"><use href="#icon-trending-up"></use></svg>
+                                <span>Best commuter scooters 2025</span>
+                            </a>
+                            <a href="#" class="search-suggestion">
+                                <svg class="icon" aria-hidden="true"><use href="#icon-grid"></use></svg>
+                                <span>Segway Max G2 vs Navee ST3 Pro</span>
+                            </a>
+                            <a href="#" class="search-suggestion">
+                                <svg class="icon" aria-hidden="true"><use href="#icon-star"></use></svg>
+                                <span>NIU KQi 300X review</span>
+                            </a>
+                        </div>
+                    </div>
+                </div>
+
+                <!-- Login / Sign Up -->
+                <a href="#" class="btn-login">
+                    <svg class="icon" aria-hidden="true"><use href="#icon-user"></use></svg>
+                    Log in
+                </a>
+                <a href="#" class="btn-signup">
+                    Sign up free
+                </a>
+
+                <!-- Mobile menu toggle -->
+                <button class="menu-toggle" aria-label="Open menu" aria-expanded="false" aria-controls="mobile-menu">
+                    <div class="menu-toggle-inner">
+                        <span></span>
+                        <span></span>
+                        <span></span>
+                    </div>
+                </button>
+            </div>
+        </div>
+    </header>
+
+    <!-- Mobile Menu Overlay -->
+    <div class="mobile-menu" id="mobile-menu" role="dialog" aria-label="Navigation menu" aria-modal="true">
+        <div class="mobile-menu-inner">
+            <nav class="mobile-nav" role="navigation" aria-label="Mobile navigation">
+                <!-- E-scooters -->
+                <div class="mobile-nav-item" data-has-submenu>
+                    <button class="mobile-nav-link" aria-expanded="false">
+                        E-scooters
+                        <svg class="icon" aria-hidden="true"><use href="#icon-chevron-down"></use></svg>
+                    </button>
+                    <div class="mobile-submenu">
+                        <div class="mobile-submenu-inner">
+                            <a href="#" class="mobile-submenu-viewall">
+                                View all e-scooters
+                                <svg class="icon" aria-hidden="true"><use href="#icon-arrow-right"></use></svg>
+                            </a>
+                            <a href="#" class="mobile-submenu-item">
+                                <div class="mobile-submenu-icon">
+                                    <svg class="icon" aria-hidden="true"><use href="#icon-search"></use></svg>
+                                </div>
+                                <div class="mobile-submenu-content">
+                                    <h4>Product finder</h4>
+                                    <span>200+ scooters</span>
+                                </div>
+                            </a>
+                            <a href="#" class="mobile-submenu-item">
+                                <div class="mobile-submenu-icon">
+                                    <svg class="icon" aria-hidden="true"><use href="#icon-star"></use></svg>
+                                </div>
+                                <div class="mobile-submenu-content">
+                                    <h4>Reviews</h4>
+                                    <span>58 in-depth reviews</span>
+                                </div>
+                            </a>
+                            <a href="#" class="mobile-submenu-item">
+                                <div class="mobile-submenu-icon">
+                                    <svg class="icon" aria-hidden="true"><use href="#icon-grid"></use></svg>
+                                </div>
+                                <div class="mobile-submenu-content">
+                                    <h4>H2H Compare</h4>
+                                    <span>Side-by-side specs</span>
+                                </div>
+                            </a>
+                            <a href="#" class="mobile-submenu-item">
+                                <div class="mobile-submenu-icon">
+                                    <svg class="icon" aria-hidden="true"><use href="#icon-book"></use></svg>
+                                </div>
+                                <div class="mobile-submenu-content">
+                                    <h4>Buying guides</h4>
+                                    <span>Expert recommendations</span>
+                                </div>
+                            </a>
+                            <div class="mobile-submenu-secondary">
+                                <a href="#" class="mobile-submenu-tag">
+                                    <svg class="icon" aria-hidden="true"><use href="#icon-percent"></use></svg>
+                                    Deals
+                                </a>
+                                <a href="#" class="mobile-submenu-tag">
+                                    <svg class="icon" aria-hidden="true"><use href="#icon-tag"></use></svg>
+                                    Coupons
+                                </a>
+                            </div>
+                        </div>
+                    </div>
+                </div>
+
+                <!-- E-bikes -->
+                <div class="mobile-nav-item" data-has-submenu>
+                    <button class="mobile-nav-link" aria-expanded="false">
+                        E-bikes
+                        <svg class="icon" aria-hidden="true"><use href="#icon-chevron-down"></use></svg>
+                    </button>
+                    <div class="mobile-submenu">
+                        <div class="mobile-submenu-inner">
+                            <a href="#" class="mobile-submenu-viewall">
+                                View all e-bikes
+                                <svg class="icon" aria-hidden="true"><use href="#icon-arrow-right"></use></svg>
+                            </a>
+                            <a href="#" class="mobile-submenu-item">
+                                <div class="mobile-submenu-icon">
+                                    <svg class="icon" aria-hidden="true"><use href="#icon-search"></use></svg>
+                                </div>
+                                <div class="mobile-submenu-content">
+                                    <h4>Product finder</h4>
+                                    <span>80+ e-bikes</span>
+                                </div>
+                            </a>
+                            <a href="#" class="mobile-submenu-item">
+                                <div class="mobile-submenu-icon">
+                                    <svg class="icon" aria-hidden="true"><use href="#icon-star"></use></svg>
+                                </div>
+                                <div class="mobile-submenu-content">
+                                    <h4>Reviews</h4>
+                                    <span>12 in-depth reviews</span>
+                                </div>
+                            </a>
+                            <a href="#" class="mobile-submenu-item">
+                                <div class="mobile-submenu-icon">
+                                    <svg class="icon" aria-hidden="true"><use href="#icon-grid"></use></svg>
+                                </div>
+                                <div class="mobile-submenu-content">
+                                    <h4>H2H Compare</h4>
+                                    <span>Side-by-side specs</span>
+                                </div>
+                            </a>
+                            <a href="#" class="mobile-submenu-item">
+                                <div class="mobile-submenu-icon">
+                                    <svg class="icon" aria-hidden="true"><use href="#icon-book"></use></svg>
+                                </div>
+                                <div class="mobile-submenu-content">
+                                    <h4>Buying guides</h4>
+                                    <span>Expert recommendations</span>
+                                </div>
+                            </a>
+                            <div class="mobile-submenu-secondary">
+                                <a href="#" class="mobile-submenu-tag">
+                                    <svg class="icon" aria-hidden="true"><use href="#icon-percent"></use></svg>
+                                    Deals
+                                </a>
+                                <a href="#" class="mobile-submenu-tag">
+                                    <svg class="icon" aria-hidden="true"><use href="#icon-tag"></use></svg>
+                                    Coupons
+                                </a>
+                            </div>
+                        </div>
+                    </div>
+                </div>
+
+                <!-- EUCs -->
+                <div class="mobile-nav-item">
+                    <a href="#" class="mobile-nav-link">EUCs</a>
+                </div>
+
+                <!-- More -->
+                <div class="mobile-nav-item" data-has-submenu>
+                    <button class="mobile-nav-link" aria-expanded="false">
+                        More
+                        <svg class="icon" aria-hidden="true"><use href="#icon-chevron-down"></use></svg>
+                    </button>
+                    <div class="mobile-submenu">
+                        <div class="mobile-submenu-inner">
+                            <a href="#" class="mobile-submenu-item">
+                                <div class="mobile-submenu-icon">
+                                    <svg class="icon" aria-hidden="true"><use href="#icon-hoverboard"></use></svg>
+                                </div>
+                                <div class="mobile-submenu-content">
+                                    <h4>Hoverboards</h4>
+                                    <span>10 reviews</span>
+                                </div>
+                            </a>
+                            <a href="#" class="mobile-submenu-item">
+                                <div class="mobile-submenu-icon">
+                                    <svg class="icon" aria-hidden="true"><use href="#icon-eskate"></use></svg>
+                                </div>
+                                <div class="mobile-submenu-content">
+                                    <h4>E-Skateboards</h4>
+                                    <span>8 reviews</span>
+                                </div>
+                            </a>
+                            <a href="#" class="mobile-submenu-item">
+                                <div class="mobile-submenu-icon">
+                                    <svg class="icon" aria-hidden="true"><use href="#icon-book"></use></svg>
+                                </div>
+                                <div class="mobile-submenu-content">
+                                    <h4>Skating</h4>
+                                    <span>6 guides</span>
+                                </div>
+                            </a>
+                            <div class="mobile-submenu-divider"></div>
+                            <a href="#" class="mobile-submenu-item">
+                                <div class="mobile-submenu-icon">
+                                    <svg class="icon" aria-hidden="true"><use href="#icon-book"></use></svg>
+                                </div>
+                                <div class="mobile-submenu-content">
+                                    <h4>All buying guides</h4>
+                                    <span>14 guides</span>
+                                </div>
+                            </a>
+                        </div>
+                    </div>
+                </div>
+            </nav>
+
+            <!-- Mobile menu footer with login -->
+            <div class="mobile-menu-footer">
+                <a href="/signup" class="mobile-signup-btn">
+                    Sign up free
+                    <svg class="icon" aria-hidden="true"><use href="#icon-arrow-right"></use></svg>
+                </a>
+                <a href="#" class="mobile-login-btn">
+                    <svg class="icon" aria-hidden="true"><use href="#icon-user"></use></svg>
+                    Log in to your account
+                </a>
+            </div>
+        </div>
+    </div>
+
+    <!-- MAIN CONTENT -->
+    <main id="main-content">
+        <!-- HERO SECTION -->
+        <section class="about-hero">
+            <div class="about-hero-grid" aria-hidden="true"></div>
+            <div class="container">
+                <div class="about-hero-content">
+                    <div class="about-hero-eyebrow">About ERideHero</div>
+                    <h1>The data-driven guide<br><span>to electric rides</span></h1>
+                    <p class="about-hero-subtitle">In-depth reviews backed by real performance data. Price tracking, comparison tools, and buying guides to help you find the right ride.</p>
+                </div>
+
+                <!-- Optional: Decorative scooter silhouettes image -->
+                <!-- <div class="about-hero-visual">
+                    <img src="images/scooter-silhouettes.png" alt="" aria-hidden="true">
+                </div> -->
+            </div>
+        </section>
+
+        <!-- STATS BAR -->
+        <section class="about-stats">
+            <div class="container">
+                <div class="about-stats-grid">
+                    <div class="about-stat">
+                        <div class="about-stat-value">2019</div>
+                        <div class="about-stat-label">Year founded</div>
+                    </div>
+                    <div class="about-stat">
+                        <div class="about-stat-value">127</div>
+                        <div class="about-stat-label">Products tested</div>
+                    </div>
+                    <div class="about-stat">
+                        <div class="about-stat-value">8.5K<span>+</span></div>
+                        <div class="about-stat-label">Miles ridden</div>
+                    </div>
+                    <div class="about-stat">
+                        <div class="about-stat-value">3</div>
+                        <div class="about-stat-label">Contributors</div>
+                    </div>
+                </div>
+            </div>
+        </section>
+
+        <!-- OUR MISSION SECTION -->
+        <section class="about-approach">
+            <div class="container">
+                <div class="about-approach-grid">
+                    <div class="about-approach-content">
+                        <div class="about-approach-eyebrow">Our mission</div>
+                        <h2>Making sense of the electric ride market</h2>
+                        <p>ERideHero started in 2019 when Rasmus Barslund noticed a problem: the micro-mobility market was growing fast, but there was nowhere to get unbiased information.</p>
+                        <p>Since then, we've helped <strong>8 million+ readers</strong> and <strong>800K+ YouTube viewers</strong> find the right ride. We publish in-depth reviews and buying guides, and we've built tools for price tracking, deal alerts, product comparisons, and more.</p>
+                    </div>
+
+                    <div class="about-approach-image">
+                        <!-- Replace with your actual image (e.g., scooter lineup) -->
+                        <img src="https://placehold.co/600x450/f4f1fd/5e2ced?text=Scooter+Lineup" alt="Multiple electric scooters tested by ERideHero">
+                    </div>
+                </div>
+            </div>
+        </section>
+
+        <!-- HOW WE TEST SECTION -->
+        <section class="about-approach">
+            <div class="container">
+                <div class="about-approach-grid about-approach-grid--flipped">
+                    <div class="about-approach-content">
+                        <div class="about-approach-eyebrow">How we test</div>
+                        <h2>30-point methodology with pro-grade equipment</h2>
+                        <p>Every product goes through the same rigorous process. We're talking <strong>weeks of real-world riding</strong>, not a quick spin around the block. GPS-verified range, real top speeds, hill climbs, brake distances. We collect all the data ourselves.</p>
+                        <p>And we don't just test once and move on. We revisit products over time to track long-term reliability, and we update reviews as the market evolves and new competitors arrive.</p>
+
+                        <a href="how-we-test.html" class="about-approach-link">
+                            See our full methodology
+                            <svg class="icon" aria-hidden="true"><use href="#icon-arrow-right"></use></svg>
+                        </a>
+                    </div>
+
+                    <div class="about-approach-image">
+                        <!-- Replace with your actual image (e.g., analyzing GPS data) -->
+                        <img src="https://placehold.co/600x450/f4f1fd/5e2ced?text=Testing+Data" alt="Analyzing GPS and performance data from electric scooter tests">
+                    </div>
+                </div>
+            </div>
+        </section>
+
+        <!-- EDITORIAL STANDARDS SECTION -->
+        <section class="about-approach">
+            <div class="container">
+                <div class="about-approach-grid">
+                    <div class="about-approach-content">
+                        <div class="about-approach-eyebrow">Editorial standards</div>
+                        <h2>Independent and transparent</h2>
+                        <p>We're reader-supported through affiliate links. When you buy through our site, we may earn a commission. It doesn't affect what you pay, and it's how we keep everything free.</p>
+                        <p>Brands sometimes send us review units, but <strong>the data always leads</strong>. No pre-publish approval, no sponsored rankings. If a product underperforms, we say so.</p>
+
+                        <a href="editorial.html" class="about-approach-link">
+                            Read our editorial guidelines
+                            <svg class="icon" aria-hidden="true"><use href="#icon-arrow-right"></use></svg>
+                        </a>
+                    </div>
+
+                    <div class="about-approach-image">
+                        <!-- Replace with your actual image (e.g., riding/testing shot) -->
+                        <img src="https://placehold.co/600x450/f4f1fd/5e2ced?text=Riding+Photo" alt="Testing an electric scooter in real-world conditions">
+                    </div>
+                </div>
+            </div>
+        </section>
+
+        <!-- MEET THE TEAM SECTION -->
+        <section class="about-team">
+            <div class="container">
+                <div class="about-team-header">
+                    <div class="about-approach-eyebrow">Meet the team</div>
+                    <h2>The experts behind ERideHero</h2>
+                    <p>Real-world riding experience and thousands of miles logged across every category.</p>
+                </div>
+
+                <div class="about-team-grid">
+                    <!-- Rasmus Barslund -->
+                    <div class="about-team-card">
+                        <div class="about-team-image">
+                            <img src="https://placehold.co/300x300/f4f1fd/5e2ced?text=RB" alt="Rasmus Barslund">
+                        </div>
+                        <div class="about-team-info">
+                            <div class="about-team-socials">
+                                <a href="#" aria-label="Rasmus on YouTube">
+                                    <svg class="icon" aria-hidden="true"><use href="#icon-youtube"></use></svg>
+                                </a>
+                                <a href="#" aria-label="Rasmus on LinkedIn">
+                                    <svg class="icon" aria-hidden="true"><use href="#icon-linkedin"></use></svg>
+                                </a>
+                                <a href="#" aria-label="Rasmus on Twitter">
+                                    <svg class="icon" aria-hidden="true"><use href="#icon-twitter"></use></svg>
+                                </a>
+                            </div>
+                            <h3>Rasmus Barslund</h3>
+                            <span class="about-team-role">Founder &amp; Lead Reviewer</span>
+                            <p>Founded ERideHero in 2019. Personally tested 100+ electric scooters and logged over 7,000 miles. Develops the testing methodology and data collection systems.</p>
+                        </div>
+                    </div>
+
+                    <!-- Ryan Smith -->
+                    <div class="about-team-card">
+                        <div class="about-team-image">
+                            <img src="https://placehold.co/300x300/f4f1fd/5e2ced?text=RS" alt="Ryan Smith">
+                        </div>
+                        <div class="about-team-info">
+                            <div class="about-team-socials">
+                                <a href="#" aria-label="Ryan on LinkedIn">
+                                    <svg class="icon" aria-hidden="true"><use href="#icon-linkedin"></use></svg>
+                                </a>
+                            </div>
+                            <h3>Ryan Smith</h3>
+                            <span class="about-team-role">E-bike Specialist</span>
+                            <p>Cycling background and deep e-bike knowledge. Reviews electric bikes across commuter, cargo, and performance categories.</p>
+                        </div>
+                    </div>
+
+                    <!-- Abuga Aroni -->
+                    <div class="about-team-card">
+                        <div class="about-team-image">
+                            <img src="https://placehold.co/300x300/f4f1fd/5e2ced?text=AA" alt="Abuga Aroni">
+                        </div>
+                        <div class="about-team-info">
+                            <div class="about-team-socials">
+                                <a href="#" aria-label="Abuga on Twitter">
+                                    <svg class="icon" aria-hidden="true"><use href="#icon-twitter"></use></svg>
+                                </a>
+                            </div>
+                            <h3>Abuga Aroni</h3>
+                            <span class="about-team-role">EUC &amp; Tech Contributor</span>
+                            <p>Electric unicycle enthusiast and technical contributor. Handles EUC reviews and helps maintain the product database.</p>
+                        </div>
+                    </div>
+                </div>
+            </div>
+        </section>
+
+        <!-- BOTTOM SECTION -->
+        <section class="about-bottom">
+            <div class="container">
+                <div class="about-bottom-grid">
+                    <div class="about-bottom-cta">
+                        <h2>Ready to find your ride?</h2>
+                        <p>Browse our product database or check out the latest reviews and buying guides.</p>
+                        <div class="about-bottom-actions">
+                            <a href="#" class="btn btn-primary">
+                                Browse products
+                                <svg class="icon" aria-hidden="true"><use href="#icon-arrow-right"></use></svg>
+                            </a>
+                            <a href="#" class="btn btn-secondary">
+                                Buying guides
+                            </a>
+                        </div>
+                    </div>
+
+                    <div class="about-bottom-social">
+                        <h3>Follow along</h3>
+                        <p>Latest reviews, deals, and news.</p>
+                        <div class="about-social-links">
+                            <a href="#" aria-label="YouTube">
+                                <svg class="icon" aria-hidden="true"><use href="#icon-youtube"></use></svg>
+                            </a>
+                            <a href="#" aria-label="Instagram">
+                                <svg class="icon" aria-hidden="true"><use href="#icon-instagram"></use></svg>
+                            </a>
+                            <a href="#" aria-label="Facebook">
+                                <svg class="icon" aria-hidden="true"><use href="#icon-facebook"></use></svg>
+                            </a>
+                            <a href="#" aria-label="Twitter">
+                                <svg class="icon" aria-hidden="true"><use href="#icon-twitter"></use></svg>
+                            </a>
+                        </div>
+                    </div>
+                </div>
+            </div>
+        </section>
+
+    </main>
+
+    <!-- FOOTER -->
+    <footer class="footer">
+        <div class="container">
+            <div class="footer-top">
+                <nav class="footer-categories">
+                    <a href="#">E-scooters</a>
+                    <a href="#">E-bikes</a>
+                    <a href="#">EUCs</a>
+                    <a href="#">E-skating</a>
+                    <a href="#">Hoverboards</a>
+                </nav>
+                <div class="footer-socials">
+                    <a href="#" class="footer-social" aria-label="YouTube">
+                        <svg class="icon" aria-hidden="true"><use href="#icon-youtube"></use></svg>
+                    </a>
+                    <a href="#" class="footer-social" aria-label="Instagram">
+                        <svg class="icon" aria-hidden="true"><use href="#icon-instagram"></use></svg>
+                    </a>
+                    <a href="#" class="footer-social" aria-label="Facebook">
+                        <svg class="icon" aria-hidden="true"><use href="#icon-facebook"></use></svg>
+                    </a>
+                    <a href="#" class="footer-social" aria-label="Twitter">
+                        <svg class="icon" aria-hidden="true"><use href="#icon-twitter"></use></svg>
+                    </a>
+                    <a href="#" class="footer-social" aria-label="LinkedIn">
+                        <svg class="icon" aria-hidden="true"><use href="#icon-linkedin"></use></svg>
+                    </a>
+                </div>
+            </div>
+            <div class="footer-bottom">
+                <div class="footer-left">
+                    <span class="footer-copyright">&copy; 2025 ERideHero</span>
+                    <span class="footer-separator">·</span>
+                    <nav class="footer-legal">
+                        <a href="privacy-policy.html">Privacy</a>
+                        <a href="#">Cookies</a>
+                        <a href="#">Terms</a>
+                        <a href="#">Disclaimers</a>
+                    </nav>
+                </div>
+                <nav class="footer-links">
+                    <a href="about.html" aria-current="page">About</a>
+                    <a href="contact.html">Contact</a>
+                    <a href="#">How we test</a>
+                    <a href="#">Editorial</a>
+                </nav>
+            </div>
+        </div>
+    </footer>
+
+    <!-- JavaScript -->
+    <script type="module" src="js/app.js"></script>
+</body>
+</html>
