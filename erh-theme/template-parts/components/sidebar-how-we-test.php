@@ -19,10 +19,11 @@ $title     = get_field( 'how_we_test_title', 'option' ) ?: __( 'How we test', 'e
 $text      = get_field( 'how_we_test_text', 'option' ) ?: __( 'We measure real-world range, top speed, acceleration, and hill climbing. 30+ data-driven tests on every vehicle.', 'erh' );
 $stats     = get_field( 'how_we_test_stats', 'option' );
 $link_text = get_field( 'how_we_test_link_text', 'option' ) ?: __( 'Learn about our process', 'erh' );
-$link_url  = get_field( 'how_we_test_link_url', 'option' ) ?: home_url( '/how-we-test/' );
+$link_page = get_field( 'how_we_test_link_page', 'option' );
+$link_url  = $link_page ? get_permalink( $link_page ) : home_url( '/how-we-test/' );
 
-// Default stats if none configured
-if ( empty( $stats ) ) {
+// Default stats if none configured or not an array
+if ( empty( $stats ) || ! is_array( $stats ) ) {
     $stats = array(
         array( 'value' => '120+', 'label' => 'rides tested' ),
         array( 'value' => '12,000+', 'label' => 'miles ridden' ),
