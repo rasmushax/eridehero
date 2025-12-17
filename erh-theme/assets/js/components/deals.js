@@ -13,11 +13,21 @@ import { getUserGeo, getBestPrices, formatPrice } from '../services/geo-price.js
 
 // Configuration
 const CONFIG = {
-    apiEndpoint: '/wp-json/erh/v1/deals',
-    pricesEndpoint: '/wp-json/erh/v1/prices/best',
     dealsLimit: 12,
     discountThreshold: -5,
 };
+
+/**
+ * Get REST URL base from WordPress localized data
+ */
+function getRestUrl() {
+    // Use WordPress localized data if available
+    if (typeof erhData !== 'undefined' && erhData.restUrl) {
+        return erhData.restUrl;
+    }
+    // Fallback - should not happen in production
+    return '/wp-json/erh/v1/';
+}
 
 /**
  * Initialize the deals section
@@ -53,7 +63,7 @@ export async function initDeals() {
 
     // Load deals
     try {
-        const response = await fetch(`${CONFIG.apiEndpoint}?category=all&limit=${CONFIG.dealsLimit}&threshold=${CONFIG.discountThreshold}`);
+        const response = await fetch(`${getRestUrl()}deals?category=all&limit=${CONFIG.dealsLimit}&threshold=${CONFIG.discountThreshold}`);
         if (!response.ok) throw new Error(`HTTP ${response.status}`);
 
         const data = await response.json();
@@ -96,7 +106,7 @@ export async function initDeals() {
      */
     async function loadDealCounts() {
         try {
-            const response = await fetch(`${CONFIG.apiEndpoint}/counts?threshold=${CONFIG.discountThreshold}`);
+            const response = await fetch(`${getRestUrl()}deals/counts?threshold=${CONFIG.discountThreshold}`);
             if (!response.ok) return;
 
             const data = await response.json();
@@ -342,7 +352,7 @@ export async function initDeals() {
     return {
         refresh: async () => {
             try {
-                const response = await fetch(`${CONFIG.apiEndpoint}?category=all&limit=${CONFIG.dealsLimit}`);
+                const response = await fetch(`${getRestUrl()}deals?category=all&limit=${CONFIG.dealsLimit}`);
                 const data = await response.json();
                 allDeals = data.deals || [];
                 renderDeals(allDeals);
