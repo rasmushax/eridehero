@@ -386,58 +386,6 @@ function erh_register_acf_fields(): void {
     // HOMEPAGE SECTION SETTINGS
     // ===========================================
 
-    // Reviews Section Fields (Homepage)
-    acf_add_local_field_group( array(
-        'key'      => 'group_reviews_section',
-        'title'    => __( 'Latest Reviews Section', 'erh' ),
-        'fields'   => array(
-            array(
-                'key'           => 'field_reviews_section_title',
-                'label'         => __( 'Section Title', 'erh' ),
-                'name'          => 'reviews_section_title',
-                'type'          => 'text',
-                'default_value' => 'Latest reviews',
-            ),
-            array(
-                'key'           => 'field_reviews_link_text',
-                'label'         => __( 'View All Link Text', 'erh' ),
-                'name'          => 'reviews_link_text',
-                'type'          => 'text',
-                'default_value' => 'View all reviews',
-            ),
-            array(
-                'key'           => 'field_reviews_link_url',
-                'label'         => __( 'View All Link URL', 'erh' ),
-                'name'          => 'reviews_link_url',
-                'type'          => 'url',
-                'default_value' => '/reviews/',
-            ),
-            array(
-                'key'          => 'field_reviews_posts',
-                'label'        => __( 'Featured Reviews', 'erh' ),
-                'name'         => 'reviews_posts',
-                'type'         => 'relationship',
-                'post_type'    => array( 'post' ),
-                'taxonomy'     => array( 'post_tag:review' ),
-                'filters'      => array( 'search', 'taxonomy' ),
-                'return_format' => 'id',
-                'min'          => 0,
-                'max'          => 4,
-                'instructions' => __( 'Select up to 4 review posts. If empty, latest posts tagged "review" will be shown.', 'erh' ),
-            ),
-        ),
-        'location' => array(
-            array(
-                array(
-                    'param'    => 'options_page',
-                    'operator' => '==',
-                    'value'    => 'erh-homepage-settings',
-                ),
-            ),
-        ),
-        'menu_order' => 40,
-    ) );
-
     // "How We Test" Sidebar (Homepage)
     acf_add_local_field_group( array(
         'key'      => 'group_how_we_test',

@@ -13,43 +13,23 @@ if ( ! defined( 'ABSPATH' ) ) {
     exit;
 }
 
-// Get ACF options with defaults
-$section_title  = get_field( 'reviews_section_title', 'option' ) ?: __( 'Latest reviews', 'erh' );
-$link_text      = get_field( 'reviews_link_text', 'option' ) ?: __( 'View all reviews', 'erh' );
-$link_url       = get_field( 'reviews_link_url', 'option' ) ?: home_url( '/reviews/' );
-$selected_posts = get_field( 'reviews_posts', 'option' );
-
-// Build query args
-if ( ! empty( $selected_posts ) ) {
-    // Use manually selected posts
-    $query_args = array(
-        'post_type'      => 'post',
-        'post__in'       => $selected_posts,
-        'orderby'        => 'post__in',
-        'posts_per_page' => 4,
-        'post_status'    => 'publish',
-    );
-} else {
-    // Fallback: latest posts with 'review' tag
-    $query_args = array(
-        'post_type'      => 'post',
-        'tag'            => 'review',
-        'posts_per_page' => 4,
-        'post_status'    => 'publish',
-        'orderby'        => 'date',
-        'order'          => 'DESC',
-    );
-}
-
-$reviews_query = new WP_Query( $query_args );
+// Query latest 4 posts with 'review' tag
+$reviews_query = new WP_Query( array(
+    'post_type'      => 'post',
+    'tag'            => 'review',
+    'posts_per_page' => 4,
+    'post_status'    => 'publish',
+    'orderby'        => 'date',
+    'order'          => 'DESC',
+) );
 ?>
 
 <section class="section latest-reviews">
     <div class="container">
         <div class="section-header">
-            <h2><?php echo esc_html( $section_title ); ?></h2>
-            <a href="<?php echo esc_url( $link_url ); ?>" class="btn btn-secondary">
-                <?php echo esc_html( $link_text ); ?>
+            <h2><?php esc_html_e( 'Latest reviews', 'erh' ); ?></h2>
+            <a href="<?php echo esc_url( home_url( '/reviews/' ) ); ?>" class="btn btn-secondary">
+                <?php esc_html_e( 'View all reviews', 'erh' ); ?>
                 <?php erh_the_icon( 'arrow-right' ); ?>
             </a>
         </div>
@@ -101,7 +81,7 @@ $reviews_query = new WP_Query( $query_args );
                 <?php wp_reset_postdata(); ?>
             <?php else : ?>
                 <div class="empty-state">
-                    <p><?php esc_html_e( 'No reviews found. Add posts with the "review" tag or select reviews in Theme Settings > Homepage.', 'erh' ); ?></p>
+                    <p><?php esc_html_e( 'No reviews yet.', 'erh' ); ?></p>
                 </div>
             <?php endif; ?>
 
