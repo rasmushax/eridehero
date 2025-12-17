@@ -794,6 +794,7 @@ class SettingsPage {
                 <tr>
                     <td><strong><?php esc_html_e('Custom Schedules', 'erh-core'); ?></strong></td>
                     <td>
+                        <code>erh_two_hours</code> - <?php esc_html_e('Every 2 hours', 'erh-core'); ?><br>
                         <code>erh_six_hours</code> - <?php esc_html_e('Every 6 hours', 'erh-core'); ?><br>
                         <code>erh_twelve_hours</code> - <?php esc_html_e('Every 12 hours', 'erh-core'); ?>
                     </td>
@@ -857,6 +858,7 @@ class SettingsPage {
             'daily'            => __('Daily', 'erh-core'),
             'twicedaily'       => __('Twice Daily', 'erh-core'),
             'hourly'           => __('Hourly', 'erh-core'),
+            'erh_two_hours'    => __('Every 2 Hours', 'erh-core'),
             'erh_six_hours'    => __('Every 6 Hours', 'erh-core'),
             'erh_twelve_hours' => __('Every 12 Hours', 'erh-core'),
         ];

@@ -21,6 +21,8 @@ get_header();
 
     <?php get_template_part( 'template-parts/home/features' ); ?>
 
+    <?php get_template_part( 'template-parts/home/comparison' ); ?>
+
     <?php get_template_part( 'template-parts/home/deals' ); ?>
 
     <?php get_template_part( 'template-parts/home/buying-guides' ); ?>

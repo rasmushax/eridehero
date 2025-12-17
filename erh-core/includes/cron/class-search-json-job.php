@@ -73,7 +73,7 @@ class SearchJsonJob implements CronJobInterface {
      * @return string
      */
     public function get_schedule(): string {
-        return 'twicedaily';
+        return 'erh_two_hours';
     }
 
     /**

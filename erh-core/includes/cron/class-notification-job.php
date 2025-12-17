@@ -115,7 +115,7 @@ class NotificationJob implements CronJobInterface {
      * @return string
      */
     public function get_schedule(): string {
-        return 'erh_six_hours'; // Run every 6 hours.
+        return 'erh_two_hours';
     }
 
     /**
