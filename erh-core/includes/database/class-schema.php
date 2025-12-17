@@ -61,14 +61,98 @@ class Schema {
     public function maybe_upgrade(): void {
         $current_version = get_option('erh_db_version', '0');
 
-        // Add upgrade logic here as needed.
-        // Example:
-        // if (version_compare($current_version, '1.1.0', '<')) {
-        //     $this->upgrade_to_1_1_0();
-        // }
+        // Upgrade to add geo/currency columns to price history table.
+        if (version_compare($current_version, '1.1.0', '<')) {
+            $this->upgrade_price_history_geo_currency();
+        }
 
         // Re-run table creation to ensure all tables and columns exist.
         $this->create_tables();
+    }
+
+    /**
+     * Upgrade price history table to add geo and currency columns.
+     *
+     * @return void
+     */
+    private function upgrade_price_history_geo_currency(): void {
+        $table_name = $this->get_table_name(ERH_TABLE_PRICE_HISTORY);
+
+        // Check if table exists.
+        $table_exists = $this->wpdb->get_var(
+            $this->wpdb->prepare('SHOW TABLES LIKE %s', $table_name)
+        );
+
+        if (!$table_exists) {
+            return; // Table will be created by create_tables().
+        }
+
+        // Check if currency column exists.
+        $currency_exists = $this->wpdb->get_var(
+            "SHOW COLUMNS FROM {$table_name} LIKE 'currency'"
+        );
+
+        if (!$currency_exists) {
+            // Add currency column after price.
+            $this->wpdb->query(
+                "ALTER TABLE {$table_name} ADD COLUMN currency varchar(10) NOT NULL DEFAULT 'USD' AFTER price"
+            );
+            error_log('[ERH Schema] Added currency column to price history table');
+        }
+
+        // Check if geo column exists.
+        $geo_exists = $this->wpdb->get_var(
+            "SHOW COLUMNS FROM {$table_name} LIKE 'geo'"
+        );
+
+        if (!$geo_exists) {
+            // Add geo column after domain.
+            $this->wpdb->query(
+                "ALTER TABLE {$table_name} ADD COLUMN geo varchar(10) NOT NULL DEFAULT 'US' AFTER domain"
+            );
+            error_log('[ERH Schema] Added geo column to price history table');
+        }
+
+        // Drop old unique key and add new one (if needed).
+        $index_exists = $this->wpdb->get_var(
+            "SHOW INDEX FROM {$table_name} WHERE Key_name = 'product_date'"
+        );
+
+        if ($index_exists) {
+            // Drop old unique key.
+            $this->wpdb->query("ALTER TABLE {$table_name} DROP INDEX product_date");
+            error_log('[ERH Schema] Dropped old product_date index');
+        }
+
+        // Check if new unique key exists.
+        $new_index_exists = $this->wpdb->get_var(
+            "SHOW INDEX FROM {$table_name} WHERE Key_name = 'product_date_geo_currency'"
+        );
+
+        if (!$new_index_exists) {
+            // Add new unique key.
+            $this->wpdb->query(
+                "ALTER TABLE {$table_name} ADD UNIQUE KEY product_date_geo_currency (product_id, date, geo, currency)"
+            );
+            error_log('[ERH Schema] Added new product_date_geo_currency index');
+        }
+
+        // Add individual indexes for geo and currency if missing.
+        $geo_index = $this->wpdb->get_var(
+            "SHOW INDEX FROM {$table_name} WHERE Key_name = 'geo'"
+        );
+        if (!$geo_index) {
+            $this->wpdb->query("ALTER TABLE {$table_name} ADD KEY geo (geo)");
+        }
+
+        $currency_index = $this->wpdb->get_var(
+            "SHOW INDEX FROM {$table_name} WHERE Key_name = 'currency'"
+        );
+        if (!$currency_index) {
+            $this->wpdb->query("ALTER TABLE {$table_name} ADD KEY currency (currency)");
+        }
+
+        error_log('[ERH Schema] Price history table upgraded with geo/currency support');
     }
 
     /**

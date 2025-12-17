@@ -39,6 +39,7 @@ use ERH\Cron\FinderJsonJob;
 use ERH\Cron\NotificationJob;
 use ERH\Admin\SettingsPage;
 use ERH\Migration\MigrationAdmin;
+use ERH\Api\RestPrices;
 
 /**
  * Core plugin class that initializes all components.
@@ -177,6 +178,13 @@ class Core {
      * @var ExchangeRateService
      */
     private ExchangeRateService $exchange_rate_service;
+
+    /**
+     * REST Prices API instance.
+     *
+     * @var RestPrices
+     */
+    private RestPrices $rest_prices;
 
     /**
      * Initialize all plugin components.
@@ -492,10 +500,10 @@ class Core {
      * @return void
      */
     public function init_rest_api(): void {
-        // REST API endpoints will be registered here.
-        // Example:
-        // $products_api = new Api\RestProducts();
-        // $products_api->register_routes();
+        // Initialize and register REST Prices API.
+        $price_fetcher = new \ERH\Pricing\PriceFetcher();
+        $this->rest_prices = new RestPrices($price_fetcher, $this->exchange_rate_service);
+        $this->rest_prices->register_routes();
     }
 
     /**
