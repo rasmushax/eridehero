@@ -203,16 +203,19 @@ class CacheRebuildJob implements CronJobInterface {
      * @return array<int> Product IDs.
      */
     private function get_products_by_type(string $product_type): array {
+        // Convert "Electric Scooter" to "electric-scooter" for taxonomy query.
+        $taxonomy_slug = sanitize_title($product_type);
+
         return get_posts([
             'post_type'      => 'products',
             'post_status'    => 'publish',
             'posts_per_page' => -1,
             'fields'         => 'ids',
-            'meta_query'     => [
+            'tax_query'      => [
                 [
-                    'key'     => 'product_type',
-                    'value'   => $product_type,
-                    'compare' => '=',
+                    'taxonomy' => 'product_type',
+                    'field'    => 'slug',
+                    'terms'    => $taxonomy_slug,
                 ],
             ],
         ]);
