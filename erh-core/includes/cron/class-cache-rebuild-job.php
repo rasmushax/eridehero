@@ -19,19 +19,29 @@ use ERH\Reviews\ReviewQuery;
 /**
  * Rebuilds the product_data cache table with fresh data.
  *
- * The price_history field now contains geo-keyed pricing data:
+ * The price_history field contains geo-keyed pricing data:
  * [
  *     'US' => [
  *         'current_price' => 499.99,
  *         'currency' => 'USD',
- *         'avg_price_3m' => 549.99,
- *         'avg_price_6m' => 599.99,
- *         'avg_price_12m' => 579.99,
- *         'lowest_price' => 449.99,
- *         'highest_price' => 699.99,
  *         'instock' => true,
  *         'retailer' => 'Amazon',
  *         'bestlink' => 'https://...',
+ *         // Averages
+ *         'avg_3m' => 549.99,
+ *         'avg_6m' => 579.99,
+ *         'avg_12m' => 599.99,
+ *         'avg_all' => 589.99,
+ *         // Lows
+ *         'low_3m' => 449.99,
+ *         'low_6m' => 429.99,
+ *         'low_12m' => 399.99,
+ *         'low_all' => 379.99,
+ *         // Highs
+ *         'high_3m' => 649.99,
+ *         'high_6m' => 699.99,
+ *         'high_12m' => 749.99,
+ *         'high_all' => 799.99,
  *         'updated_at' => '2025-12-17 10:00:00',
  *     ],
  *     'GB' => [...],
@@ -394,24 +404,12 @@ class CacheRebuildJob implements CronJobInterface {
     /**
      * Build geo-specific pricing data for a product.
      *
-     * Returns pricing data structure for a single geo:
-     * [
-     *     'current_price' => 499.99,
-     *     'currency' => 'USD',
-     *     'avg_price_3m' => 549.99,
-     *     'avg_price_6m' => 599.99,
-     *     'avg_price_12m' => 579.99,
-     *     'lowest_price' => 449.99,
-     *     'highest_price' => 699.99,
-     *     'instock' => true,
-     *     'retailer' => 'Amazon',
-     *     'bestlink' => 'https://...',
-     *     'updated_at' => '2025-12-17 10:00:00',
-     * ]
+     * Returns pricing data structure for a single geo with current price,
+     * stock status, and period statistics (avg/low/high for 3m/6m/12m/all).
      *
      * @param int    $product_id The product ID.
      * @param string $geo        The geo code (e.g., 'US', 'GB').
-     * @return array|null Geo pricing data or null if no data for this geo.
+     * @return array|null Geo pricing data or null if no genuine data for this geo.
      */
     private function build_geo_pricing_data(int $product_id, string $geo): ?array {
         // Get best current price for this geo.
@@ -435,17 +433,27 @@ class CacheRebuildJob implements CronJobInterface {
         }
 
         $geo_data = [
-            'current_price'  => null,
-            'currency'       => $this->get_currency_for_geo($geo),
-            'avg_price_3m'   => null,
-            'avg_price_6m'   => null,
-            'avg_price_12m'  => null,
-            'lowest_price'   => null,
-            'highest_price'  => null,
-            'instock'        => false,
-            'retailer'       => null,
-            'bestlink'       => null,
-            'updated_at'     => current_time('mysql'),
+            'current_price' => null,
+            'currency'      => $this->get_currency_for_geo($geo),
+            'instock'       => false,
+            'retailer'      => null,
+            'bestlink'      => null,
+            // Averages
+            'avg_3m'        => null,
+            'avg_6m'        => null,
+            'avg_12m'       => null,
+            'avg_all'       => null,
+            // Lows
+            'low_3m'        => null,
+            'low_6m'        => null,
+            'low_12m'       => null,
+            'low_all'       => null,
+            // Highs
+            'high_3m'       => null,
+            'high_6m'       => null,
+            'high_12m'      => null,
+            'high_all'      => null,
+            'updated_at'    => current_time('mysql'),
         ];
 
         // Populate current price data from best price.
@@ -457,27 +465,37 @@ class CacheRebuildJob implements CronJobInterface {
             $geo_data['bestlink'] = $best_price['url'] ?? null;
         }
 
-        // Calculate period averages from historical data.
+        // Calculate period statistics from historical data.
         if (!empty($history)) {
-            $averages = $this->calculate_period_averages($history);
+            $stats = $this->calculate_period_stats($history);
 
-            $geo_data['avg_price_3m'] = $averages['avg_3m'];
-            $geo_data['avg_price_6m'] = $averages['avg_6m'];
-            $geo_data['avg_price_12m'] = $averages['avg_12m'];
-            $geo_data['lowest_price'] = $averages['lowest'];
-            $geo_data['highest_price'] = $averages['highest'];
+            // Merge all stats into geo_data.
+            $geo_data['avg_3m']   = $stats['avg_3m'];
+            $geo_data['avg_6m']   = $stats['avg_6m'];
+            $geo_data['avg_12m']  = $stats['avg_12m'];
+            $geo_data['avg_all']  = $stats['avg_all'];
+            $geo_data['low_3m']   = $stats['low_3m'];
+            $geo_data['low_6m']   = $stats['low_6m'];
+            $geo_data['low_12m']  = $stats['low_12m'];
+            $geo_data['low_all']  = $stats['low_all'];
+            $geo_data['high_3m']  = $stats['high_3m'];
+            $geo_data['high_6m']  = $stats['high_6m'];
+            $geo_data['high_12m'] = $stats['high_12m'];
+            $geo_data['high_all'] = $stats['high_all'];
         }
 
         return $geo_data;
     }
 
     /**
-     * Calculate period averages from price history.
+     * Calculate period statistics from price history.
+     *
+     * Returns averages, lows, and highs for 3m, 6m, 12m, and all-time periods.
      *
      * @param array $history Price history records.
-     * @return array Calculated averages.
+     * @return array Calculated statistics.
      */
-    private function calculate_period_averages(array $history): array {
+    private function calculate_period_stats(array $history): array {
         $now = new \DateTime();
 
         $prices_all = [];
@@ -508,11 +526,21 @@ class CacheRebuildJob implements CronJobInterface {
         }
 
         return [
-            'avg_3m'  => !empty($prices_3m) ? round(array_sum($prices_3m) / count($prices_3m), 2) : null,
-            'avg_6m'  => !empty($prices_6m) ? round(array_sum($prices_6m) / count($prices_6m), 2) : null,
-            'avg_12m' => !empty($prices_12m) ? round(array_sum($prices_12m) / count($prices_12m), 2) : null,
-            'lowest'  => !empty($prices_all) ? round(min($prices_all), 2) : null,
-            'highest' => !empty($prices_all) ? round(max($prices_all), 2) : null,
+            // Averages
+            'avg_3m'   => !empty($prices_3m) ? round(array_sum($prices_3m) / count($prices_3m), 2) : null,
+            'avg_6m'   => !empty($prices_6m) ? round(array_sum($prices_6m) / count($prices_6m), 2) : null,
+            'avg_12m'  => !empty($prices_12m) ? round(array_sum($prices_12m) / count($prices_12m), 2) : null,
+            'avg_all'  => !empty($prices_all) ? round(array_sum($prices_all) / count($prices_all), 2) : null,
+            // Lows
+            'low_3m'   => !empty($prices_3m) ? round(min($prices_3m), 2) : null,
+            'low_6m'   => !empty($prices_6m) ? round(min($prices_6m), 2) : null,
+            'low_12m'  => !empty($prices_12m) ? round(min($prices_12m), 2) : null,
+            'low_all'  => !empty($prices_all) ? round(min($prices_all), 2) : null,
+            // Highs
+            'high_3m'  => !empty($prices_3m) ? round(max($prices_3m), 2) : null,
+            'high_6m'  => !empty($prices_6m) ? round(max($prices_6m), 2) : null,
+            'high_12m' => !empty($prices_12m) ? round(max($prices_12m), 2) : null,
+            'high_all' => !empty($prices_all) ? round(max($prices_all), 2) : null,
         ];
     }
 
