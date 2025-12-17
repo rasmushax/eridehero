@@ -31,7 +31,7 @@ $categories = [
                 <h2 class="section-title"><?php esc_html_e( "Today's Best Deals", 'erh' ); ?></h2>
                 <span class="deals-stat" id="deals-count"></span>
             </div>
-            <a href="<?php echo esc_url( home_url( '/deals/' ) ); ?>" class="section-link">
+            <a href="<?php echo esc_url( home_url( '/deals/' ) ); ?>" class="btn btn-secondary">
                 <?php esc_html_e( 'View all deals', 'erh' ); ?>
                 <?php erh_the_icon( 'arrow-right' ); ?>
             </a>

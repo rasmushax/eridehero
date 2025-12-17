@@ -26,6 +26,19 @@ const GEO_EXPIRY_KEY = 'erh_user_geo_expiry';
 const priceCache = new Map();
 
 /**
+ * Get REST URL base from WordPress localized data
+ * @returns {string}
+ */
+function getRestUrl() {
+    // Use WordPress localized data if available
+    if (typeof erhData !== 'undefined' && erhData.restUrl) {
+        return erhData.restUrl;
+    }
+    // Fallback - should not happen in production
+    return '/wp-json/erh/v1/';
+}
+
+/**
  * Get user's geo from IPInfo or cached value
  * @returns {Promise<{geo: string, currency: string}>}
  */
@@ -145,7 +158,7 @@ export async function getBestPrices(productIds, geo, convertTo = null) {
             params.append('convert_to', convertTo);
         }
 
-        const response = await fetch(`/wp-json/erh/v1/prices/best?${params}`);
+        const response = await fetch(`${getRestUrl()}prices/best?${params}`);
         if (!response.ok) {
             throw new Error(`HTTP ${response.status}`);
         }
@@ -186,7 +199,7 @@ export async function getProductPrices(productId, geo, convertTo = null) {
             params.append('convert_to', convertTo);
         }
 
-        const response = await fetch(`/wp-json/erh/v1/prices/${productId}?${params}`);
+        const response = await fetch(`${getRestUrl()}prices/${productId}?${params}`);
         if (!response.ok) {
             throw new Error(`HTTP ${response.status}`);
         }
