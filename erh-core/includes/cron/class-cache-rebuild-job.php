@@ -27,6 +27,9 @@ class CacheRebuildJob implements CronJobInterface {
     private const PRODUCT_TYPES = [
         'Electric Scooter',
         'Electric Bike',
+        'Electric Skateboard',
+        'Electric Unicycle',
+        'Hoverboard',
     ];
 
     /**
