@@ -8,6 +8,7 @@ import { initSearch } from './components/search.js';
 import { initDropdowns } from './components/dropdown.js';
 import { initFinderTabs } from './components/finder-tabs.js';
 import { initDealsTabs } from './components/deals-tabs.js';
+import { initDeals } from './components/deals.js';
 import { initCustomSelects } from './components/custom-select.js';
 import { initHeaderScroll } from './components/header-scroll.js';
 import { initComparison } from './components/comparison.js';
@@ -32,14 +33,8 @@ import { initToc } from './components/toc.js';
     const finderTabs = initFinderTabs();
     const customSelects = initCustomSelects();
 
-    // Homepage deals (filter by category)
-    initDealsTabs({
-        tabsSelector: '.deals-tabs',
-        gridSelector: '.deals-grid',
-        carouselSelector: '.deals-carousel',
-        filterType: 'category',
-        filterAttribute: 'category'
-    });
+    // Homepage deals (dynamic loading with geo-aware pricing)
+    initDeals();
 
     // Hub deals (filter by price range)
     initDealsTabs({
