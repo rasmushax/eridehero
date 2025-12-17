@@ -18,6 +18,24 @@ use ERH\Reviews\ReviewQuery;
 
 /**
  * Rebuilds the product_data cache table with fresh data.
+ *
+ * The price_history field now contains geo-keyed pricing data:
+ * [
+ *     'US' => [
+ *         'current_price' => 499.99,
+ *         'currency' => 'USD',
+ *         'avg_price_3m' => 549.99,
+ *         'avg_price_6m' => 599.99,
+ *         'avg_price_12m' => 579.99,
+ *         'lowest_price' => 449.99,
+ *         'highest_price' => 699.99,
+ *         'instock' => true,
+ *         'retailer' => 'Amazon',
+ *         'bestlink' => 'https://...',
+ *         'updated_at' => '2025-12-17 10:00:00',
+ *     ],
+ *     'GB' => [...],
+ * ]
  */
 class CacheRebuildJob implements CronJobInterface {
 
@@ -31,6 +49,12 @@ class CacheRebuildJob implements CronJobInterface {
         'Electric Unicycle',
         'Hoverboard',
     ];
+
+    /**
+     * Geos to build price data for.
+     * These are the primary markets we track prices for.
+     */
+    private const GEOS = ['US', 'GB', 'DE', 'CA', 'AU'];
 
     /**
      * Price fetcher instance.
@@ -234,35 +258,40 @@ class CacheRebuildJob implements CronJobInterface {
             'product_type'     => $product_type,
             'name'             => get_the_title($product_id),
             'specs'            => $this->get_normalized_specs($product_id, $product_type),
-            'price'            => null,
-            'instock'          => 0,
             'permalink'        => get_permalink($product_id),
             'image_url'        => $this->get_product_image($product_id),
             'rating'           => null,
             'popularity_score' => 0,
-            'bestlink'         => '',
             'price_history'    => [],
         ];
 
-        // Get pricing data.
-        $prices = $this->price_fetcher->get_prices($product_id);
-        if (!empty($prices)) {
-            $best_price = $prices[0];
-            $product_data['price'] = isset($best_price['price']) && is_numeric($best_price['price']) && $best_price['price'] > 0
-                ? (float) $best_price['price']
-                : null;
-            $product_data['instock'] = isset($best_price['stock_status']) && $best_price['stock_status'] == 1 ? 1 : 0;
-            $product_data['bestlink'] = $best_price['url'] ?? '';
+        // Build geo-keyed price_history.
+        $price_history = [];
+        $has_instock = false;
+        $best_price_for_computed_specs = null;
+
+        foreach (self::GEOS as $geo) {
+            $geo_data = $this->build_geo_pricing_data($product_id, $geo);
+            if ($geo_data !== null) {
+                $price_history[$geo] = $geo_data;
+
+                // Track if in stock in any geo (for popularity boost).
+                if (!empty($geo_data['instock'])) {
+                    $has_instock = true;
+                }
+
+                // Use first geo with price for computed specs (US preferred).
+                if ($best_price_for_computed_specs === null && !empty($geo_data['current_price'])) {
+                    $best_price_for_computed_specs = $geo_data['current_price'];
+                }
+            }
         }
+
+        $product_data['price_history'] = $price_history;
 
         // Popularity boost for in-stock items.
-        if ($product_data['instock']) {
+        if ($has_instock) {
             $product_data['popularity_score'] += 5;
-        }
-
-        // Get price history statistics.
-        if ($product_data['price'] !== null) {
-            $product_data['price_history'] = $this->calculate_price_history_stats($product_id, $product_data['price']);
         }
 
         // Get review rating and count.
@@ -299,8 +328,8 @@ class CacheRebuildJob implements CronJobInterface {
             $product_data['popularity_score'] += 5;
         }
 
-        // Add computed comparisons to specs.
-        $product_data['specs'] = $this->add_computed_specs($product_data['specs'], $product_data['price'], $product_type);
+        // Add computed comparisons to specs (using best price from any geo, prefer US).
+        $product_data['specs'] = $this->add_computed_specs($product_data['specs'], $best_price_for_computed_specs, $product_type);
 
         // Save to cache.
         $this->product_cache->upsert($product_data);
@@ -363,22 +392,85 @@ class CacheRebuildJob implements CronJobInterface {
     }
 
     /**
-     * Calculate price history statistics for a product.
+     * Build geo-specific pricing data for a product.
      *
-     * @param int $product_id The product ID.
-     * @param float $current_price The current price.
-     * @return array Price history statistics.
+     * Returns pricing data structure for a single geo:
+     * [
+     *     'current_price' => 499.99,
+     *     'currency' => 'USD',
+     *     'avg_price_3m' => 549.99,
+     *     'avg_price_6m' => 599.99,
+     *     'avg_price_12m' => 579.99,
+     *     'lowest_price' => 449.99,
+     *     'highest_price' => 699.99,
+     *     'instock' => true,
+     *     'retailer' => 'Amazon',
+     *     'bestlink' => 'https://...',
+     *     'updated_at' => '2025-12-17 10:00:00',
+     * ]
+     *
+     * @param int    $product_id The product ID.
+     * @param string $geo        The geo code (e.g., 'US', 'GB').
+     * @return array|null Geo pricing data or null if no data for this geo.
      */
-    private function calculate_price_history_stats(int $product_id, float $current_price): array {
-        $history = $this->price_history->get_history($product_id, 0, 'DESC');
+    private function build_geo_pricing_data(int $product_id, string $geo): ?array {
+        // Get best current price for this geo.
+        $best_price = $this->price_fetcher->get_best_price($product_id, $geo);
 
-        if (empty($history)) {
-            return [];
+        // Get price history for this geo.
+        $history = $this->price_history->get_history($product_id, 0, $geo, null, 'DESC');
+
+        // Need at least current price OR historical data to return anything.
+        if ($best_price === null && empty($history)) {
+            return null;
         }
 
+        $geo_data = [
+            'current_price'  => null,
+            'currency'       => $this->get_currency_for_geo($geo),
+            'avg_price_3m'   => null,
+            'avg_price_6m'   => null,
+            'avg_price_12m'  => null,
+            'lowest_price'   => null,
+            'highest_price'  => null,
+            'instock'        => false,
+            'retailer'       => null,
+            'bestlink'       => null,
+            'updated_at'     => current_time('mysql'),
+        ];
+
+        // Populate current price data from best price.
+        if ($best_price !== null) {
+            $geo_data['current_price'] = (float) $best_price['price'];
+            $geo_data['currency'] = $best_price['currency'] ?? $this->get_currency_for_geo($geo);
+            $geo_data['instock'] = !empty($best_price['in_stock']);
+            $geo_data['retailer'] = $best_price['retailer'] ?? null;
+            $geo_data['bestlink'] = $best_price['url'] ?? null;
+        }
+
+        // Calculate period averages from historical data.
+        if (!empty($history)) {
+            $averages = $this->calculate_period_averages($history);
+
+            $geo_data['avg_price_3m'] = $averages['avg_3m'];
+            $geo_data['avg_price_6m'] = $averages['avg_6m'];
+            $geo_data['avg_price_12m'] = $averages['avg_12m'];
+            $geo_data['lowest_price'] = $averages['lowest'];
+            $geo_data['highest_price'] = $averages['highest'];
+        }
+
+        return $geo_data;
+    }
+
+    /**
+     * Calculate period averages from price history.
+     *
+     * @param array $history Price history records.
+     * @return array Calculated averages.
+     */
+    private function calculate_period_averages(array $history): array {
         $now = new \DateTime();
 
-        // Categorize prices by time period.
         $prices_all = [];
         $prices_12m = [];
         $prices_6m = [];
@@ -406,49 +498,31 @@ class CacheRebuildJob implements CronJobInterface {
             }
         }
 
-        if (empty($prices_all)) {
-            return [];
-        }
+        return [
+            'avg_3m'  => !empty($prices_3m) ? round(array_sum($prices_3m) / count($prices_3m), 2) : null,
+            'avg_6m'  => !empty($prices_6m) ? round(array_sum($prices_6m) / count($prices_6m), 2) : null,
+            'avg_12m' => !empty($prices_12m) ? round(array_sum($prices_12m) / count($prices_12m), 2) : null,
+            'lowest'  => !empty($prices_all) ? round(min($prices_all), 2) : null,
+            'highest' => !empty($prices_all) ? round(max($prices_all), 2) : null,
+        ];
+    }
 
-        // Calculate all-time statistics.
-        $mean = round(array_sum($prices_all) / count($prices_all), 2);
-        $variance = array_sum(array_map(function ($x) use ($mean) {
-            return pow($x - $mean, 2);
-        }, $prices_all)) / count($prices_all);
-        $std_dev = round(sqrt($variance), 2);
-
-        $stats = [
-            'average_price'  => $mean,
-            'lowest_price'   => (string) round(min($prices_all), 2),
-            'highest_price'  => (string) round(max($prices_all), 2),
-            'std_dev'        => $std_dev,
+    /**
+     * Get the default currency for a geo.
+     *
+     * @param string $geo The geo code.
+     * @return string The currency code.
+     */
+    private function get_currency_for_geo(string $geo): string {
+        $geo_currencies = [
+            'US' => 'USD',
+            'GB' => 'GBP',
+            'DE' => 'EUR',
+            'CA' => 'CAD',
+            'AU' => 'AUD',
         ];
 
-        // Add time-period averages.
-        if (!empty($prices_12m)) {
-            $stats['average_price_12m'] = round(array_sum($prices_12m) / count($prices_12m), 2);
-        }
-
-        if (!empty($prices_6m)) {
-            $stats['average_price_6m'] = round(array_sum($prices_6m) / count($prices_6m), 2);
-        }
-
-        if (!empty($prices_3m)) {
-            $stats['average_price_3m'] = round(array_sum($prices_3m) / count($prices_3m), 2);
-        }
-
-        // Calculate Z-score.
-        if ($std_dev > 0) {
-            $stats['z_score'] = round(($current_price - $mean) / $std_dev, 2);
-        } else {
-            $stats['z_score'] = 0;
-        }
-
-        // Calculate price difference from average.
-        $stats['price_difference'] = round($mean - $current_price, 2);
-        $stats['price_difference_percentage'] = round((($current_price - $mean) / $mean) * 100, 2);
-
-        return $stats;
+        return $geo_currencies[$geo] ?? 'USD';
     }
 
     /**

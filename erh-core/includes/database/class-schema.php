@@ -66,6 +66,12 @@ class Schema {
             $this->upgrade_price_history_geo_currency();
         }
 
+        // Upgrade to remove geo-dependent columns from product_data table.
+        if (version_compare($current_version, '1.2.0', '<')) {
+            $this->upgrade_product_data_remove_geo_fields();
+            update_option('erh_db_version', '1.2.0');
+        }
+
         // Re-run table creation to ensure all tables and columns exist.
         $this->create_tables();
     }
@@ -156,10 +162,81 @@ class Schema {
     }
 
     /**
+     * Upgrade product_data table to remove geo-dependent columns.
+     *
+     * With geo-aware pricing, price/instock/bestlink are now stored
+     * per-geo in the serialized price_history field instead.
+     *
+     * @return void
+     */
+    private function upgrade_product_data_remove_geo_fields(): void {
+        $table_name = $this->get_table_name(ERH_TABLE_PRODUCT_DATA);
+
+        // Check if table exists.
+        $table_exists = $this->wpdb->get_var(
+            $this->wpdb->prepare('SHOW TABLES LIKE %s', $table_name)
+        );
+
+        if (!$table_exists) {
+            return; // Table will be created by create_tables().
+        }
+
+        // Drop price column if it exists.
+        $price_exists = $this->wpdb->get_var(
+            "SHOW COLUMNS FROM {$table_name} LIKE 'price'"
+        );
+        if ($price_exists) {
+            $this->wpdb->query("ALTER TABLE {$table_name} DROP COLUMN price");
+            error_log('[ERH Schema] Dropped price column from product_data');
+        }
+
+        // Drop instock column if it exists.
+        $instock_exists = $this->wpdb->get_var(
+            "SHOW COLUMNS FROM {$table_name} LIKE 'instock'"
+        );
+        if ($instock_exists) {
+            $this->wpdb->query("ALTER TABLE {$table_name} DROP COLUMN instock");
+            error_log('[ERH Schema] Dropped instock column from product_data');
+        }
+
+        // Drop bestlink column if it exists.
+        $bestlink_exists = $this->wpdb->get_var(
+            "SHOW COLUMNS FROM {$table_name} LIKE 'bestlink'"
+        );
+        if ($bestlink_exists) {
+            $this->wpdb->query("ALTER TABLE {$table_name} DROP COLUMN bestlink");
+            error_log('[ERH Schema] Dropped bestlink column from product_data');
+        }
+
+        // Drop price index if it exists.
+        $price_index = $this->wpdb->get_var(
+            "SHOW INDEX FROM {$table_name} WHERE Key_name = 'price'"
+        );
+        if ($price_index) {
+            $this->wpdb->query("ALTER TABLE {$table_name} DROP INDEX price");
+            error_log('[ERH Schema] Dropped price index from product_data');
+        }
+
+        // Drop instock index if it exists.
+        $instock_index = $this->wpdb->get_var(
+            "SHOW INDEX FROM {$table_name} WHERE Key_name = 'instock'"
+        );
+        if ($instock_index) {
+            $this->wpdb->query("ALTER TABLE {$table_name} DROP INDEX instock");
+            error_log('[ERH Schema] Dropped instock index from product_data');
+        }
+
+        error_log('[ERH Schema] Product data table upgraded - removed geo-dependent columns');
+    }
+
+    /**
      * Create the product_data table (Finder tool cache).
      *
      * This table stores pre-computed product data for the finder tool
      * to enable fast filtering and sorting without querying post meta.
+     *
+     * Note: price, instock, bestlink were removed in v1.2.0 - these are now
+     * stored per-geo in the serialized price_history field.
      *
      * @return void
      */
@@ -173,20 +250,15 @@ class Schema {
             product_type varchar(50) NOT NULL,
             name varchar(255) NOT NULL,
             specs longtext,
-            price decimal(10,2) DEFAULT NULL,
             rating decimal(3,1) DEFAULT NULL,
             popularity_score int(8) DEFAULT 0,
-            instock tinyint(1) DEFAULT 0,
             permalink varchar(255) DEFAULT NULL,
             image_url varchar(255) DEFAULT NULL,
             price_history longtext,
-            bestlink varchar(500) DEFAULT NULL,
             last_updated datetime DEFAULT CURRENT_TIMESTAMP ON UPDATE CURRENT_TIMESTAMP,
             PRIMARY KEY  (id),
             UNIQUE KEY product_id (product_id),
             KEY product_type (product_type),
-            KEY instock (instock),
-            KEY price (price),
             KEY popularity_score (popularity_score)
         ) {$charset_collate};";
 
