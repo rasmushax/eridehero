@@ -417,6 +417,15 @@ class CacheRebuildJob implements CronJobInterface {
         // Get best current price for this geo.
         $best_price = $this->price_fetcher->get_best_price($product_id, $geo);
 
+        // Check if price is genuinely for this geo (not a US fallback).
+        // A price is genuine if:
+        // - It's specifically targeted to this geo, OR
+        // - It's a global price (null geo) AND we're requesting US, OR
+        // - The currency matches the expected currency for this geo.
+        if ($best_price !== null && !$this->is_genuine_geo_price($best_price, $geo)) {
+            $best_price = null;
+        }
+
         // Get price history for this geo.
         $history = $this->price_history->get_history($product_id, 0, $geo, null, 'DESC');
 
@@ -523,6 +532,45 @@ class CacheRebuildJob implements CronJobInterface {
         ];
 
         return $geo_currencies[$geo] ?? 'USD';
+    }
+
+    /**
+     * Check if a price is genuinely for the requested geo.
+     *
+     * This prevents US fallback prices from being stored under non-US geos.
+     * A price is genuine if:
+     * - It's specifically targeted to this geo (geo_target matches), OR
+     * - It's a global price (null geo) AND we're requesting US (US is the default), OR
+     * - The currency matches the expected currency for this geo.
+     *
+     * @param array  $price The price data from PriceFetcher.
+     * @param string $geo   The requested geo code.
+     * @return bool True if this price is genuine for the geo.
+     */
+    private function is_genuine_geo_price(array $price, string $geo): bool {
+        $price_geo = $price['geo'] ?? null;
+        $price_currency = $price['currency'] ?? 'USD';
+
+        // If price is specifically for this geo, it's genuine.
+        if ($price_geo === $geo) {
+            return true;
+        }
+
+        // If we're requesting US and price has no geo target, it's genuine.
+        // Global/null-geo prices default to US market.
+        if ($geo === 'US' && (empty($price_geo))) {
+            return true;
+        }
+
+        // For non-US geos with global prices, check if currency matches.
+        // If a global price has EUR currency, it's likely a European retailer.
+        $expected_currency = $this->get_currency_for_geo($geo);
+        if (empty($price_geo) && $price_currency === $expected_currency) {
+            return true;
+        }
+
+        // Otherwise, this is likely a US fallback - don't include it.
+        return false;
     }
 
     /**
