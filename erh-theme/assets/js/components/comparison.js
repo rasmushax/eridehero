@@ -81,11 +81,41 @@ export async function initComparison(options = {}) {
         });
     }
 
-    // Load products
+    // Category labels for display
+    const categoryLabels = {
+        'escooter': 'E-Scooters',
+        'ebike': 'E-Bikes',
+        'eskate': 'E-Skateboards',
+        'euc': 'Electric Unicycles',
+        'hoverboard': 'Hoverboards'
+    };
+
+    // Load products from JSON URL (from data attribute or default path)
     try {
-        const response = await fetch('js/data/products.json');
+        const jsonUrl = container.dataset.jsonUrl || '/wp-content/uploads/comparison_products.json';
+        const response = await fetch(jsonUrl);
+        if (!response.ok) {
+            throw new Error(`HTTP ${response.status}`);
+        }
         const data = await response.json();
-        products = data.products;
+
+        // Handle both formats: direct array (cron) or {products: []} (static)
+        const rawProducts = Array.isArray(data) ? data : (data.products || []);
+
+        // Map to expected format with category labels
+        products = rawProducts.map(p => ({
+            id: String(p.id),
+            name: p.name,
+            category: p.category,
+            categoryLabel: categoryLabels[p.category] || p.categoryLabel || p.category,
+            image: p.thumbnail || p.image,
+            price: p.price || 0,
+            url: p.url,
+            popularity: p.popularity || 0
+        }));
+
+        // Sort by popularity (highest first)
+        products.sort((a, b) => b.popularity - a.popularity);
 
         // Pre-filter if category specified
         if (config.categoryFilter) {
