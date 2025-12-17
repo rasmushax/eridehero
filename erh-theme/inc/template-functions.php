@@ -131,6 +131,37 @@ function erh_get_product_type_short_name( string $type ): string {
 }
 
 /**
+ * Get category short name for display in badges/cards (plural form)
+ *
+ * Maps WordPress category names to short display names.
+ *
+ * @param string $category Category name
+ * @return string Short display name
+ */
+function erh_get_category_short_name( string $category ): string {
+    $short_names = array(
+        // Plural forms (category names)
+        'Electric Scooters'    => 'E-Scooters',
+        'Electric Bikes'       => 'E-Bikes',
+        'Electric Skateboards' => 'E-Skateboards',
+        'Electric Unicycles'   => 'EUCs',
+        'Hoverboards'          => 'Hoverboards',
+        // Singular forms (in case they're used)
+        'Electric Scooter'     => 'E-Scooters',
+        'Electric Bike'        => 'E-Bikes',
+        'Electric Skateboard'  => 'E-Skateboards',
+        'Electric Unicycle'    => 'EUCs',
+        'Hoverboard'           => 'Hoverboards',
+        // Common variations
+        'E-Scooter'            => 'E-Scooters',
+        'E-Bike'               => 'E-Bikes',
+        'EUC'                  => 'EUCs',
+    );
+
+    return $short_names[ $category ] ?? $category;
+}
+
+/**
  * Format price for display
  *
  * @param float  $price Price value

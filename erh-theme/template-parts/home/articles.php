@@ -40,9 +40,9 @@ $articles_query = new WP_Query( array(
             <?php if ( $articles_query->have_posts() ) : ?>
                 <div class="card-scroll-grid">
                     <?php while ( $articles_query->have_posts() ) : $articles_query->the_post();
-                        // Get first category for badge
+                        // Get first category for badge (with short name)
                         $categories = get_the_category();
-                        $category   = ! empty( $categories ) ? $categories[0]->name : '';
+                        $category   = ! empty( $categories ) ? erh_get_category_short_name( $categories[0]->name ) : '';
                     ?>
                         <a href="<?php the_permalink(); ?>" class="content-card">
                             <div class="content-card-img">
