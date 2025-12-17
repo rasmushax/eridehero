@@ -33,7 +33,7 @@ $categories = [
             <a href="<?php echo esc_url( home_url( '/deals/' ) ); ?>"
                class="hidden sm:flex items-center gap-1.5 text-clmain font-medium hover:underline">
                 <?php esc_html_e( 'View all deals', 'erh' ); ?>
-                <svg class="w-4 h-4" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                <svg width="16" height="16" fill="none" stroke="currentColor" viewBox="0 0 24 24">
                     <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M9 5l7 7-7 7"/>
                 </svg>
             </a>
@@ -63,7 +63,7 @@ $categories = [
                           hover:shadow-dropdown transition-shadow disabled:opacity-30 disabled:cursor-not-allowed"
                     aria-label="<?php esc_attr_e( 'Previous deals', 'erh' ); ?>"
                     disabled>
-                <svg class="w-5 h-5 text-cldark" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                <svg width="20" height="20" fill="none" stroke="currentColor" viewBox="0 0 24 24">
                     <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M15 19l-7-7 7-7"/>
                 </svg>
             </button>
@@ -71,7 +71,7 @@ $categories = [
                           hidden lg:flex items-center justify-center w-10 h-10 rounded-full bg-white shadow-card
                           hover:shadow-dropdown transition-shadow disabled:opacity-30 disabled:cursor-not-allowed"
                     aria-label="<?php esc_attr_e( 'Next deals', 'erh' ); ?>">
-                <svg class="w-5 h-5 text-cldark" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                <svg width="20" height="20" fill="none" stroke="currentColor" viewBox="0 0 24 24">
                     <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M9 5l7 7-7 7"/>
                 </svg>
             </button>
@@ -96,7 +96,7 @@ $categories = [
             <!-- Empty state (hidden by default) -->
             <div class="deals-empty hidden text-center py-12">
                 <div class="inline-flex items-center justify-center w-16 h-16 rounded-full bg-gray-100 mb-4">
-                    <svg class="w-8 h-8 text-gray-400" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                    <svg width="32" height="32" fill="none" stroke="currentColor" viewBox="0 0 24 24" class="text-gray-400">
                         <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2"
                               d="M9.172 16.172a4 4 0 015.656 0M9 10h.01M15 10h.01M12 2a10 10 0 110 20 10 10 0 010-20z"/>
                     </svg>
@@ -115,7 +115,7 @@ $categories = [
             <a href="<?php echo esc_url( home_url( '/deals/' ) ); ?>"
                class="inline-flex items-center gap-1.5 text-clmain font-medium">
                 <?php esc_html_e( 'View all deals', 'erh' ); ?>
-                <svg class="w-4 h-4" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                <svg width="16" height="16" fill="none" stroke="currentColor" viewBox="0 0 24 24">
                     <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M9 5l7 7-7 7"/>
                 </svg>
             </a>
@@ -156,7 +156,7 @@ $categories = [
                     <span class="text-sm text-clbody">
                         <?php esc_html_e( 'View deal', 'erh' ); ?>
                     </span>
-                    <svg class="w-4 h-4 text-clmain group-hover:translate-x-1 transition-transform" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                    <svg width="16" height="16" fill="none" stroke="currentColor" viewBox="0 0 24 24" class="text-clmain group-hover:translate-x-1 transition-transform">
                         <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M9 5l7 7-7 7"/>
                     </svg>
                 </div>
