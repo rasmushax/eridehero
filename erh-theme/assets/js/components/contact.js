@@ -236,7 +236,10 @@ export function initContactForm() {
                 data._wpnonce = nonce;
             }
 
-            const response = await fetch('/wp-json/erh/v1/contact', {
+            // Use localized REST URL or fallback
+            const restUrl = window.erhData?.restUrl || '/wp-json/erh/v1/';
+
+            const response = await fetch(restUrl + 'contact', {
                 method: 'POST',
                 headers: {
                     'Content-Type': 'application/json',
@@ -244,7 +247,15 @@ export function initContactForm() {
                 body: JSON.stringify(data),
             });
 
-            const result = await response.json();
+            // Try to parse JSON response
+            let result;
+            const contentType = response.headers.get('content-type');
+            if (contentType && contentType.includes('application/json')) {
+                result = await response.json();
+            } else {
+                // Non-JSON response (likely PHP error)
+                throw new Error('Server error. Please try again later.');
+            }
 
             if (!response.ok) {
                 throw new Error(result.message || 'Something went wrong. Please try again.');
