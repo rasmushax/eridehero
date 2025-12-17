@@ -272,6 +272,252 @@ function erh_register_acf_fields(): void {
         ),
         'menu_order' => 0,
     ) );
+    // ===========================================
+    // POST-LEVEL FIELD GROUPS (for individual posts)
+    // ===========================================
+
+    // Review Post Fields (shown when post has 'review' tag)
+    acf_add_local_field_group( array(
+        'key'      => 'group_review_post',
+        'title'    => __( 'Review Details', 'erh' ),
+        'fields'   => array(
+            array(
+                'key'           => 'field_review_product',
+                'label'         => __( 'Linked Product', 'erh' ),
+                'name'          => 'review_product',
+                'type'          => 'post_object',
+                'post_type'     => array( 'products' ),
+                'return_format' => 'id',
+                'ui'            => 1,
+                'instructions'  => __( 'Select the product this review is for. Rating will be pulled from the product.', 'erh' ),
+            ),
+            array(
+                'key'          => 'field_review_tldr',
+                'label'        => __( 'TL;DR', 'erh' ),
+                'name'         => 'review_tldr',
+                'type'         => 'textarea',
+                'rows'         => 2,
+                'instructions' => __( 'Very short summary (1-2 sentences) for cards and previews.', 'erh' ),
+            ),
+            array(
+                'key'          => 'field_review_quick_take',
+                'label'        => __( 'Quick Take', 'erh' ),
+                'name'         => 'review_quick_take',
+                'type'         => 'textarea',
+                'rows'         => 4,
+                'instructions' => __( 'Brief overview of the product (shown at top of review).', 'erh' ),
+            ),
+            array(
+                'key'          => 'field_review_pros',
+                'label'        => __( 'Pros', 'erh' ),
+                'name'         => 'review_pros',
+                'type'         => 'textarea',
+                'rows'         => 5,
+                'instructions' => __( 'One pro per line.', 'erh' ),
+            ),
+            array(
+                'key'          => 'field_review_cons',
+                'label'        => __( 'Cons', 'erh' ),
+                'name'         => 'review_cons',
+                'type'         => 'textarea',
+                'rows'         => 5,
+                'instructions' => __( 'One con per line.', 'erh' ),
+            ),
+        ),
+        'location' => array(
+            array(
+                array(
+                    'param'    => 'post_type',
+                    'operator' => '==',
+                    'value'    => 'post',
+                ),
+                array(
+                    'param'    => 'post_taxonomy',
+                    'operator' => '==',
+                    'value'    => 'post_tag:review',
+                ),
+            ),
+        ),
+        'position'   => 'normal',
+        'style'      => 'default',
+        'menu_order' => 0,
+    ) );
+
+    // Buying Guide Post Fields (shown when post has 'buying-guide' tag)
+    acf_add_local_field_group( array(
+        'key'      => 'group_buying_guide_post',
+        'title'    => __( 'Buying Guide Details', 'erh' ),
+        'fields'   => array(
+            array(
+                'key'          => 'field_buying_guide_card_title',
+                'label'        => __( 'Card Title', 'erh' ),
+                'name'         => 'buying_guide_card_title',
+                'type'         => 'text',
+                'instructions' => __( 'Short title for cards/lists (e.g., "Best E-Scooters 2025"). Leave empty to use post title.', 'erh' ),
+            ),
+            array(
+                'key'          => 'field_buying_guide_subtitle',
+                'label'        => __( 'Subtitle', 'erh' ),
+                'name'         => 'buying_guide_subtitle',
+                'type'         => 'text',
+                'instructions' => __( 'Optional subtitle shown below the title.', 'erh' ),
+            ),
+        ),
+        'location' => array(
+            array(
+                array(
+                    'param'    => 'post_type',
+                    'operator' => '==',
+                    'value'    => 'post',
+                ),
+                array(
+                    'param'    => 'post_taxonomy',
+                    'operator' => '==',
+                    'value'    => 'post_tag:buying-guide',
+                ),
+            ),
+        ),
+        'position'   => 'normal',
+        'style'      => 'default',
+        'menu_order' => 0,
+    ) );
+
+    // ===========================================
+    // HOMEPAGE SECTION SETTINGS
+    // ===========================================
+
+    // Reviews Section Fields (Homepage)
+    acf_add_local_field_group( array(
+        'key'      => 'group_reviews_section',
+        'title'    => __( 'Latest Reviews Section', 'erh' ),
+        'fields'   => array(
+            array(
+                'key'           => 'field_reviews_section_title',
+                'label'         => __( 'Section Title', 'erh' ),
+                'name'          => 'reviews_section_title',
+                'type'          => 'text',
+                'default_value' => 'Latest reviews',
+            ),
+            array(
+                'key'           => 'field_reviews_link_text',
+                'label'         => __( 'View All Link Text', 'erh' ),
+                'name'          => 'reviews_link_text',
+                'type'          => 'text',
+                'default_value' => 'View all reviews',
+            ),
+            array(
+                'key'           => 'field_reviews_link_url',
+                'label'         => __( 'View All Link URL', 'erh' ),
+                'name'          => 'reviews_link_url',
+                'type'          => 'url',
+                'default_value' => '/reviews/',
+            ),
+            array(
+                'key'          => 'field_reviews_posts',
+                'label'        => __( 'Featured Reviews', 'erh' ),
+                'name'         => 'reviews_posts',
+                'type'         => 'relationship',
+                'post_type'    => array( 'post' ),
+                'taxonomy'     => array( 'post_tag:review' ),
+                'filters'      => array( 'search', 'taxonomy' ),
+                'return_format' => 'id',
+                'min'          => 0,
+                'max'          => 4,
+                'instructions' => __( 'Select up to 4 review posts. If empty, latest posts tagged "review" will be shown.', 'erh' ),
+            ),
+        ),
+        'location' => array(
+            array(
+                array(
+                    'param'    => 'options_page',
+                    'operator' => '==',
+                    'value'    => 'erh-homepage-settings',
+                ),
+            ),
+        ),
+        'menu_order' => 40,
+    ) );
+
+    // "How We Test" Sidebar (Homepage)
+    acf_add_local_field_group( array(
+        'key'      => 'group_how_we_test',
+        'title'    => __( 'How We Test Sidebar', 'erh' ),
+        'fields'   => array(
+            array(
+                'key'           => 'field_how_we_test_image',
+                'label'         => __( 'Image', 'erh' ),
+                'name'          => 'how_we_test_image',
+                'type'          => 'image',
+                'return_format' => 'array',
+                'preview_size'  => 'medium',
+                'instructions'  => __( 'Photo for the sidebar card.', 'erh' ),
+            ),
+            array(
+                'key'           => 'field_how_we_test_title',
+                'label'         => __( 'Title', 'erh' ),
+                'name'          => 'how_we_test_title',
+                'type'          => 'text',
+                'default_value' => 'How we test',
+            ),
+            array(
+                'key'           => 'field_how_we_test_text',
+                'label'         => __( 'Description', 'erh' ),
+                'name'          => 'how_we_test_text',
+                'type'          => 'textarea',
+                'rows'          => 3,
+                'default_value' => 'We measure real-world range, top speed, acceleration, and hill climbing. 30+ data-driven tests on every vehicle.',
+            ),
+            array(
+                'key'          => 'field_how_we_test_stats',
+                'label'        => __( 'Stats', 'erh' ),
+                'name'         => 'how_we_test_stats',
+                'type'         => 'repeater',
+                'layout'       => 'table',
+                'button_label' => __( 'Add Stat', 'erh' ),
+                'max'          => 3,
+                'sub_fields'   => array(
+                    array(
+                        'key'   => 'field_how_we_test_stat_value',
+                        'label' => __( 'Value', 'erh' ),
+                        'name'  => 'value',
+                        'type'  => 'text',
+                        'wrapper' => array( 'width' => '50' ),
+                    ),
+                    array(
+                        'key'   => 'field_how_we_test_stat_label',
+                        'label' => __( 'Label', 'erh' ),
+                        'name'  => 'label',
+                        'type'  => 'text',
+                        'wrapper' => array( 'width' => '50' ),
+                    ),
+                ),
+            ),
+            array(
+                'key'           => 'field_how_we_test_link_text',
+                'label'         => __( 'Link Text', 'erh' ),
+                'name'          => 'how_we_test_link_text',
+                'type'          => 'text',
+                'default_value' => 'Learn about our process',
+            ),
+            array(
+                'key'           => 'field_how_we_test_link_url',
+                'label'         => __( 'Link URL', 'erh' ),
+                'name'          => 'how_we_test_link_url',
+                'type'          => 'url',
+                'default_value' => '/how-we-test/',
+            ),
+        ),
+        'location' => array(
+            array(
+                array(
+                    'param'    => 'options_page',
+                    'operator' => '==',
+                    'value'    => 'erh-homepage-settings',
+                ),
+            ),
+        ),
+        'menu_order' => 45,
+    ) );
 }
 add_action( 'acf/init', 'erh_register_acf_fields' );
 

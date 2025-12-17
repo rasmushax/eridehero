@@ -113,6 +113,24 @@ function erh_product_type_slug( string $type ): string {
 }
 
 /**
+ * Get product type short name for display in badges/cards
+ *
+ * @param string $type Full product type label
+ * @return string Short display name
+ */
+function erh_get_product_type_short_name( string $type ): string {
+    $short_names = array(
+        'Electric Scooter'    => 'E-Scooter',
+        'Electric Bike'       => 'E-Bike',
+        'Electric Skateboard' => 'E-Skateboard',
+        'Electric Unicycle'   => 'EUC',
+        'Hoverboard'          => 'Hoverboard',
+    );
+
+    return $short_names[ $type ] ?? $type;
+}
+
+/**
  * Format price for display
  *
  * @param float  $price Price value
