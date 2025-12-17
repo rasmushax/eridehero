@@ -1,0 +1,96 @@
+:root {
+    --contrast: #000;
+    --base-3: #fff;
+    --secondary: #ffb439;
+    --primary: #3984ff;
+}
+
+.hft-affiliate-links-container {
+    display: flex;
+    flex-wrap: wrap;
+    gap: 1rem; /* 16px gap */
+    min-height: 55px;
+    margin:1.5rem 0;
+    align-items: center;
+    justify-content: center;
+    opacity: 1;
+    transition: opacity 0.1s ease-in-out;
+}
+
+.hft-affiliate-links-container.is-loading {
+    opacity: 1; /* Keep visible during loading to show spinner */
+}
+
+/* Loading spinner */
+.hft-affiliate-links-container.is-loading::before {
+    content: '';
+    display: inline-block;
+    width: 24px;
+    height: 24px;
+    border: 3px solid rgba(0, 0, 0, 0.1);
+    border-radius: 50%;
+    border-top-color: var(--contrast);
+    animation: hft-spin 0.8s ease infinite;
+}
+
+@keyframes hft-spin {
+    to { transform: rotate(360deg); }
+}
+
+/* Base button styling */
+.hft-affiliate-button {
+    display: inline-flex;
+    flex-direction: row; /* Icon on the right, text on the left */
+    align-items: center;
+    column-gap: 0.5em; /* 8px gap between text and icon */
+    font-weight: 500;
+    text-transform: uppercase;
+    padding: 0.875em 1.25em; /* 14px 20px */
+    border-radius: 0.5rem; /* 8px */
+    border: 3px solid var(--secondary); /* Default yellow border */
+    background-color: var(--base-3); /* White background */
+    color: var(--contrast); /* Black text */
+    text-decoration: none;
+    font-size: 16px;
+    line-height: 1.3;
+    box-sizing: border-box;
+    cursor: pointer;
+    transition: all 0.2s ease-in-out;
+}
+
+/* Icon styling */
+.hft-affiliate-button svg {
+    width: 1em;
+    height: 1em;
+    flex-shrink: 0;
+}
+
+/* Amazon-specific styling (orange/yellow border) */
+.hft-affiliate-button.amazon {
+    border-color: var(--secondary); /* Orange/yellow border */
+}
+
+/* Non-Amazon styling (blue border) */
+.hft-affiliate-button:not(.amazon) {
+    border-color: var(--primary); /* Blue border */
+}
+
+/* Hover, focus, and active states */
+.hft-affiliate-button:hover,
+.hft-affiliate-button:focus,
+.hft-affiliate-button:active {
+    border-color: var(--contrast); /* Black border */
+    background-color: var(--contrast); /* Black background */
+    color: var(--base-3); /* White text */
+    text-decoration: none;
+}
+
+/* Styling for messages inside the container */
+.hft-affiliate-links-container .hft-no-links-message,
+.hft-affiliate-links-container .hft-error-message {
+    width: 100%; 
+    text-align: center;
+    font-size: 14px;
+    color: #555;
+    padding: 10px 0;
+} 

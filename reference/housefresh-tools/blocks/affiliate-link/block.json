@@ -1,0 +1,21 @@
+{
+  "name": "acf/hft-affiliate-link",
+  "title": "Affiliate Link (HFT)",
+  "description": "Displays a dynamic, GEO-targeted affiliate link for a selected product.",
+  "style": ["file:./affiliate-link-block.css"],
+  "viewScript": "file:./affiliate-link-block.js",
+  "category": "housefresh-tools",
+  "icon": "admin-links",
+  "keywords": ["link", "affiliate", "product", "housefresh"],
+  "acf": {
+    "mode": "preview",
+    "renderTemplate": "template.php",
+    "postTypes": ["post", "page", "hf_product"]
+  },
+  "supports": {
+    "align": ["wide", "full"],
+    "anchor": true,
+    "jsx": true 
+  },
+  "apiVersion": 2
+} 
