@@ -44,9 +44,11 @@ $reviews_query = new WP_Query( array(
                         $rating       = null;
 
                         if ( $product_id ) {
-                            // Get product type (category display name)
-                            $product_type_raw = get_field( 'product_type', $product_id );
-                            $product_type     = $product_type_raw ? erh_get_product_type_short_name( $product_type_raw ) : '';
+                            // Get product type from taxonomy
+                            $product_type_terms = get_the_terms( $product_id, 'product_type' );
+                            if ( $product_type_terms && ! is_wp_error( $product_type_terms ) ) {
+                                $product_type = erh_get_product_type_short_name( $product_type_terms[0]->name );
+                            }
 
                             // Get rating from product's editor_rating field
                             $editor_rating = get_field( 'editor_rating', $product_id );
