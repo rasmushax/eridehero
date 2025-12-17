@@ -13,9 +13,22 @@ if ( ! defined( 'ABSPATH' ) ) {
     exit;
 }
 
-// Get the JSON URL for the comparison products
+// Get the JSON file path and URL
 $upload_dir = wp_upload_dir();
+$json_path  = $upload_dir['basedir'] . '/comparison_products.json';
 $json_url   = $upload_dir['baseurl'] . '/comparison_products.json';
+
+// Only render section if JSON file exists and has data
+if ( ! file_exists( $json_path ) ) {
+    return;
+}
+
+// Check if JSON has products (not empty array)
+$json_content = file_get_contents( $json_path );
+$products     = json_decode( $json_content, true );
+if ( empty( $products ) ) {
+    return;
+}
 ?>
 
 <section class="comparison-section">
