@@ -20,13 +20,17 @@ $author_role  = get_field( 'about_author_role', 'option' ) ?: __( 'Founder & Lea
 $title        = get_field( 'about_title', 'option' ) ?: __( 'About ERideHero', 'erh' );
 $text         = get_field( 'about_text', 'option' ) ?: __( 'The independent, data-driven guide to electric rides. Reviews, guides, and tools built on 120+ hands-on tests to help you ride smarter.', 'erh' );
 $link_text    = get_field( 'about_link_text', 'option' ) ?: __( 'Learn more about us', 'erh' );
-$link_url     = get_field( 'about_link_url', 'option' ) ?: home_url( '/about/' );
+$link_page    = get_field( 'about_link_page', 'option' );
+$link_url     = $link_page ? get_permalink( $link_page ) : home_url( '/about/' );
 ?>
 
 <aside class="sidebar-card sidebar-card-horizontal">
     <div class="sidebar-card-author">
-        <?php if ( $author_photo ) : ?>
-            <img src="<?php echo esc_url( $author_photo['sizes']['thumbnail'] ?? $author_photo['url'] ); ?>"
+        <?php if ( $author_photo ) :
+            // Handle both array (image object) and string (URL) return formats
+            $photo_url = is_array( $author_photo ) ? ( $author_photo['sizes']['thumbnail'] ?? $author_photo['url'] ) : $author_photo;
+        ?>
+            <img src="<?php echo esc_url( $photo_url ); ?>"
                  alt="<?php echo esc_attr( $author_name ); ?>"
                  class="sidebar-card-avatar">
         <?php endif; ?>

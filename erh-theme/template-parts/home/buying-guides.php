@@ -17,11 +17,12 @@ if ( ! defined( 'ABSPATH' ) ) {
 // Get ACF options with defaults
 $section_title   = get_field( 'buying_guides_title', 'option' ) ?: __( 'Buying guides', 'erh' );
 $link_text       = get_field( 'buying_guides_link_text', 'option' ) ?: __( 'View all guides', 'erh' );
-$link_url        = get_field( 'buying_guides_link_url', 'option' ) ?: home_url( '/buying-guides/' );
+$link_page       = get_field( 'buying_guides_link_page', 'option' );
+$link_url        = $link_page ? get_permalink( $link_page ) : home_url( '/buying-guides/' );
 $selected_posts  = get_field( 'buying_guides_posts', 'option' );
 
 // Build query args
-if ( ! empty( $selected_posts ) ) {
+if ( ! empty( $selected_posts ) && is_array( $selected_posts ) ) {
     // Use manually selected posts
     $query_args = array(
         'post_type'      => 'post',
