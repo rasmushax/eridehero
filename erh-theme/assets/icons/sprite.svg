@@ -1,0 +1,112 @@
+<svg xmlns="http://www.w3.org/2000/svg" style="display:none">
+    <!-- Search -->
+    <symbol id="icon-search" viewBox="0 0 24 24">
+        <circle cx="11" cy="11" r="8"></circle>
+        <line x1="21" y1="21" x2="16.65" y2="16.65"></line>
+    </symbol>
+
+    <!-- Book -->
+    <symbol id="icon-book" viewBox="0 0 24 24">
+        <path d="M4 19.5A2.5 2.5 0 0 1 6.5 17H20"></path>
+        <path d="M6.5 2H20v20H6.5A2.5 2.5 0 0 1 4 19.5v-15A2.5 2.5 0 0 1 6.5 2z"></path>
+    </symbol>
+
+    <!-- Star -->
+    <symbol id="icon-star" viewBox="0 0 24 24">
+        <polygon points="12 2 15.09 8.26 22 9.27 17 14.14 18.18 21.02 12 17.77 5.82 21.02 7 14.14 2 9.27 8.91 8.26 12 2"></polygon>
+    </symbol>
+
+    <!-- Chevron Down -->
+    <symbol id="icon-chevron-down" viewBox="0 0 24 24">
+        <polyline points="6 9 12 15 18 9"></polyline>
+    </symbol>
+
+    <!-- Lightning / Zap -->
+    <symbol id="icon-zap" viewBox="0 0 24 24">
+        <polygon points="13 2 3 14 12 14 11 22 21 10 12 10 13 2"></polygon>
+    </symbol>
+
+    <!-- Arrow Right -->
+    <symbol id="icon-arrow-right" viewBox="0 0 24 24">
+        <line x1="5" y1="12" x2="19" y2="12"></line>
+        <polyline points="12 5 19 12 12 19"></polyline>
+    </symbol>
+
+    <!-- Check -->
+    <symbol id="icon-check" viewBox="0 0 24 24">
+        <polyline points="20 6 9 17 4 12"></polyline>
+    </symbol>
+
+    <!-- Tag -->
+    <symbol id="icon-tag" viewBox="0 0 24 24">
+        <path d="M20.59 13.41l-7.17 7.17a2 2 0 0 1-2.83 0L2 12V2h10l8.59 8.59a2 2 0 0 1 0 2.82z"></path>
+        <line x1="7" y1="7" x2="7.01" y2="7"></line>
+    </symbol>
+
+    <!-- Grid -->
+    <symbol id="icon-grid" viewBox="0 0 24 24">
+        <rect x="3" y="3" width="7" height="7"></rect>
+        <rect x="14" y="3" width="7" height="7"></rect>
+        <rect x="14" y="14" width="7" height="7"></rect>
+        <rect x="3" y="14" width="7" height="7"></rect>
+    </symbol>
+
+    <!-- X / Close -->
+    <symbol id="icon-x" viewBox="0 0 24 24">
+        <line x1="18" y1="6" x2="6" y2="18"></line>
+        <line x1="6" y1="6" x2="18" y2="18"></line>
+    </symbol>
+
+    <!-- Edit / Pencil -->
+    <symbol id="icon-edit" viewBox="0 0 24 24">
+        <path d="M12 20h9"></path>
+        <path d="M16.5 3.5a2.12 2.12 0 0 1 3 3L7 19l-4 1 1-4Z"></path>
+    </symbol>
+
+    <!-- Trending Up -->
+    <symbol id="icon-trending-up" viewBox="0 0 24 24">
+        <polyline points="22 7 13.5 15.5 8.5 10.5 2 17"></polyline>
+        <polyline points="16 7 22 7 22 13"></polyline>
+    </symbol>
+
+    <!-- E-Scooter -->
+    <symbol id="icon-escooter" viewBox="0 0 24 24">
+        <circle cx="5" cy="18" r="3"></circle>
+        <circle cx="19" cy="18" r="3"></circle>
+        <path d="M10 18h4"></path>
+        <path d="M14 4h-4a2 2 0 0 0-2 2v4"></path>
+    </symbol>
+
+    <!-- E-Skate -->
+    <symbol id="icon-eskate" viewBox="0 0 24 24">
+        <rect x="2" y="10" width="20" height="4" rx="2"></rect>
+        <circle cx="6" cy="14" r="2"></circle>
+        <circle cx="18" cy="14" r="2"></circle>
+    </symbol>
+
+    <!-- EUC -->
+    <symbol id="icon-euc" viewBox="0 0 24 24">
+        <circle cx="12" cy="12" r="10"></circle>
+        <circle cx="12" cy="12" r="3"></circle>
+    </symbol>
+
+    <!-- Hoverboard -->
+    <symbol id="icon-hoverboard" viewBox="0 0 24 24">
+        <rect x="2" y="9" width="20" height="6" rx="3"></rect>
+        <circle cx="6" cy="12" r="2"></circle>
+        <circle cx="18" cy="12" r="2"></circle>
+    </symbol>
+
+    <!-- User -->
+    <symbol id="icon-user" viewBox="0 0 24 24">
+        <path d="M20 21v-2a4 4 0 0 0-4-4H8a4 4 0 0 0-4 4v2"></path>
+        <circle cx="12" cy="7" r="4"></circle>
+    </symbol>
+
+    <!-- Percent -->
+    <symbol id="icon-percent" viewBox="0 0 24 24">
+        <line x1="19" y1="5" x2="5" y2="19"></line>
+        <circle cx="6.5" cy="6.5" r="2.5"></circle>
+        <circle cx="17.5" cy="17.5" r="2.5"></circle>
+    </symbol>
+</svg>

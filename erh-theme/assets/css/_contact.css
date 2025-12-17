@@ -1,0 +1,198 @@
+/* =============================================
+   ERideHero Design System - Contact Page
+   ============================================= */
+
+/* ===== CONTACT PAGE ===== */
+
+.contact-page {
+    background: var(--color-white);
+    padding: var(--space-16) 0;
+}
+
+/* ===== CONTACT LAYOUT ===== */
+
+.contact-layout {
+    display: grid;
+    grid-template-columns: 1fr auto;
+    gap: var(--space-15);
+    align-items: start;
+}
+
+/* ===== CONTACT FORM WRAPPER ===== */
+
+.contact-form-wrapper {
+    /* No max-width constraint */
+}
+
+/* ===== CONTACT HEADER ===== */
+
+.contact-header {
+    margin-bottom: var(--space-10);
+}
+
+.contact-title {
+    font-size: var(--text-7xl);
+    font-weight: var(--font-bold);
+    color: var(--color-dark);
+    margin: 0 0 var(--space-3);
+}
+
+.contact-subtitle {
+    font-size: var(--text-lg);
+    color: var(--color-muted);
+    margin: 0;
+    line-height: var(--leading-relaxed);
+}
+
+/* ===== CONTACT FORM ===== */
+
+.contact-form {
+    display: flex;
+    flex-direction: column;
+}
+
+.contact-form .form-group {
+    margin-bottom: var(--space-6);
+}
+
+.contact-form .form-row {
+    margin-bottom: 0;
+}
+
+.contact-form .form-row .form-group {
+    margin-bottom: var(--space-6);
+}
+
+.contact-form .btn {
+    align-self: flex-start;
+    margin-top: var(--space-2);
+}
+
+/* Override form labels - sentence case and bigger */
+.contact-form .form-label {
+    text-transform: none;
+    letter-spacing: normal;
+    font-size: var(--text-base);
+}
+
+/* ===== CONTACT SIDEBAR ===== */
+
+.contact-sidebar {
+    display: flex;
+    flex-direction: column;
+    gap: var(--space-10);
+    padding-top: var(--space-4);
+}
+
+/* ===== CONTACT SIDEBAR SECTIONS ===== */
+
+.contact-card {
+    /* No background, padding, or border */
+}
+
+.contact-card-title {
+    font-size: var(--text-lg);
+    font-weight: var(--font-semibold);
+    color: var(--color-dark);
+    margin: 0 0 var(--space-2);
+}
+
+/* ===== CONTACT EMAIL LIST ===== */
+
+.contact-email-list {
+    list-style: none;
+    padding: 0;
+    margin: var(--space-4) 0 0;
+    display: flex;
+    flex-direction: column;
+    gap: var(--space-4);
+}
+
+.contact-email-list li {
+    display: flex;
+    flex-direction: column;
+    gap: var(--space-1);
+}
+
+.contact-email-label {
+    font-size: var(--text-xs);
+    color: var(--color-muted);
+    text-transform: uppercase;
+    letter-spacing: 0.05em;
+}
+
+.contact-email-list a {
+    font-size: var(--text-sm);
+    font-weight: var(--font-medium);
+    color: var(--color-primary);
+    text-decoration: none;
+    transition: color var(--transition-fast);
+}
+
+.contact-email-list a:hover {
+    color: var(--color-primary-hover);
+}
+
+/* ===== CONTACT ADDRESS ===== */
+
+.contact-address {
+    font-style: normal;
+    font-size: var(--text-sm);
+    color: var(--color-body);
+    line-height: var(--leading-relaxed);
+}
+
+/* ===== CONTACT SOCIAL ===== */
+
+.contact-sidebar .footer-socials {
+    margin-top: var(--space-4);
+}
+
+/* ===== RESPONSIVE ===== */
+
+@media (max-width: 1024px) {
+    .contact-layout {
+        grid-template-columns: 1fr;
+        gap: var(--space-12);
+    }
+
+    .contact-form-wrapper {
+        max-width: none;
+    }
+
+    .contact-sidebar {
+        display: grid;
+        grid-template-columns: repeat(2, 1fr);
+        gap: var(--space-8);
+        padding-top: 0;
+    }
+}
+
+@media (max-width: 768px) {
+    .contact-page {
+        padding: var(--space-10) 0;
+    }
+
+    .contact-sidebar {
+        grid-template-columns: 1fr;
+        gap: var(--space-8);
+    }
+}
+
+@media (max-width: 480px) {
+    .contact-page {
+        padding: var(--space-8) 0;
+    }
+
+    .contact-title {
+        font-size: var(--text-4xl);
+    }
+
+    .contact-subtitle {
+        font-size: var(--text-base);
+    }
+
+    .contact-form .btn {
+        width: 100%;
+    }
+}

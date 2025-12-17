@@ -1,0 +1,29 @@
+{
+  "name": "erh-theme",
+  "version": "1.0.0",
+  "description": "ERideHero WordPress Theme",
+  "private": true,
+  "scripts": {
+    "build:css": "postcss assets/css/style.css -o assets/css/dist/style.min.css",
+    "build:js": "esbuild assets/js/app.js --bundle --minify --outfile=assets/js/dist/app.min.js --format=esm",
+    "build": "npm run build:css && npm run build:js",
+    "watch:css": "postcss assets/css/style.css -o assets/css/dist/style.min.css --watch",
+    "watch:js": "esbuild assets/js/app.js --bundle --outfile=assets/js/dist/app.min.js --format=esm --watch",
+    "watch": "concurrently \"npm run watch:css\" \"npm run watch:js\"",
+    "dev": "npm run watch"
+  },
+  "devDependencies": {
+    "autoprefixer": "^10.4.16",
+    "concurrently": "^8.2.2",
+    "cssnano": "^6.0.2",
+    "esbuild": "^0.19.8",
+    "postcss": "^8.4.32",
+    "postcss-cli": "^10.1.0",
+    "postcss-import": "^15.1.0"
+  },
+  "browserslist": [
+    "last 2 versions",
+    "> 1%",
+    "not dead"
+  ]
+}
