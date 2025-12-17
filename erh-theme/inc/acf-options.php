@@ -225,6 +225,54 @@ function erh_register_acf_fields(): void {
         'menu_order' => 30,
     ) );
 
+    // YouTube API Settings (Global Settings)
+    acf_add_local_field_group( array(
+        'key'      => 'group_youtube_settings',
+        'title'    => __( 'YouTube Settings', 'erh' ),
+        'fields'   => array(
+            array(
+                'key'          => 'field_youtube_api_key',
+                'label'        => __( 'YouTube API Key', 'erh' ),
+                'name'         => 'youtube_api_key',
+                'type'         => 'text',
+                'instructions' => __( 'Google Cloud API key with YouTube Data API v3 enabled.', 'erh' ),
+            ),
+            array(
+                'key'          => 'field_youtube_channel_id',
+                'label'        => __( 'YouTube Channel ID', 'erh' ),
+                'name'         => 'youtube_channel_id',
+                'type'         => 'text',
+                'instructions' => __( 'Channel ID (starts with UC...). Find it in YouTube Studio > Settings > Channel > Advanced.', 'erh' ),
+            ),
+            array(
+                'key'           => 'field_youtube_channel_url',
+                'label'         => __( 'YouTube Channel URL', 'erh' ),
+                'name'          => 'youtube_channel_url',
+                'type'          => 'url',
+                'default_value' => 'https://youtube.com/@eridehero',
+                'instructions'  => __( 'Full URL for the subscribe button.', 'erh' ),
+            ),
+            array(
+                'key'           => 'field_youtube_view_stat',
+                'label'         => __( 'View Stats Text', 'erh' ),
+                'name'          => 'youtube_view_stat',
+                'type'          => 'text',
+                'default_value' => '800K+ views',
+                'instructions'  => __( 'Displayed next to the YouTube heading.', 'erh' ),
+            ),
+        ),
+        'location' => array(
+            array(
+                array(
+                    'param'    => 'options_page',
+                    'operator' => '==',
+                    'value'    => 'erh-global-settings',
+                ),
+            ),
+        ),
+        'menu_order' => -10,
+    ) );
+
     // Social Links (Global Settings)
     acf_add_local_field_group( array(
         'key'      => 'group_social_links',
