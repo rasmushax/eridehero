@@ -5,9 +5,12 @@
  * - Category filtering with visual indicator
  * - Dynamic row management
  * - Full accessibility support
+ * - Geo-aware pricing
  *
  * Supports multiple instances with different configurations.
  */
+
+import { getUserGeo, formatPrice } from '../services/geo-price.js';
 
 export async function initComparison(options = {}) {
     // Default configuration
@@ -48,6 +51,9 @@ export async function initComparison(options = {}) {
         : (rightColumn || container);
 
     if (!container) return null;
+
+    // Get user's geo for pricing
+    const { geo: userGeo, currency: userCurrency } = await getUserGeo();
 
     // State
     let products = [];
@@ -102,17 +108,26 @@ export async function initComparison(options = {}) {
         // Handle both formats: direct array (cron) or {products: []} (static)
         const rawProducts = Array.isArray(data) ? data : (data.products || []);
 
-        // Map to expected format with category labels
-        products = rawProducts.map(p => ({
-            id: String(p.id),
-            name: p.name,
-            category: p.category,
-            categoryLabel: categoryLabels[p.category] || p.categoryLabel || p.category,
-            image: p.thumbnail || p.image,
-            price: p.price || 0,
-            url: p.url,
-            popularity: p.popularity || 0
-        }));
+        // Map to expected format with category labels and geo-aware pricing
+        products = rawProducts.map(p => {
+            // Get price for user's geo, fallback to US if not available
+            const prices = p.prices || {};
+            const geoPrice = prices[userGeo] ?? prices['US'] ?? null;
+            // Determine which currency to display
+            const displayCurrency = prices[userGeo] ? userCurrency : 'USD';
+
+            return {
+                id: String(p.id),
+                name: p.name,
+                category: p.category,
+                categoryLabel: categoryLabels[p.category] || p.categoryLabel || p.category,
+                image: p.thumbnail || p.image,
+                price: geoPrice,
+                currency: displayCurrency,
+                url: p.url,
+                popularity: p.popularity || 0
+            };
+        });
 
         // Sort by popularity (highest first)
         products.sort((a, b) => b.popularity - a.popularity);
@@ -417,7 +432,7 @@ export async function initComparison(options = {}) {
                                 ${isSelected
                                     ? '<span class="comparison-result-selected">Already selected</span>'
                                     : `${config.showCategoryInResults ? `<span class="comparison-result-category">${product.categoryLabel}</span>` : ''}
-                                       ${product.price > 0 ? `<span class="comparison-result-price">$${product.price.toLocaleString()}</span>` : ''}`
+                                       ${product.price > 0 ? `<span class="comparison-result-price">${formatPrice(product.price, product.currency)}</span>` : ''}`
                                 }
                             </div>
                         </div>

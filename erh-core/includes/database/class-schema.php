@@ -67,9 +67,10 @@ class Schema {
         }
 
         // Upgrade to remove geo-dependent columns from product_data table.
-        if (version_compare($current_version, '1.2.0', '<')) {
+        // Re-run at 1.2.1 to ensure columns are actually dropped.
+        if (version_compare($current_version, '1.2.1', '<')) {
             $this->upgrade_product_data_remove_geo_fields();
-            update_option('erh_db_version', '1.2.0');
+            update_option('erh_db_version', '1.2.1');
         }
 
         // Re-run table creation to ensure all tables and columns exist.
