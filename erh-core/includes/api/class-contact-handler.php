@@ -32,11 +32,11 @@ class ContactHandler {
     private RateLimiter $rate_limiter;
 
     /**
-     * Topic to email mapping.
+     * Topic to email mapping (lazy-loaded).
      *
-     * @var array<string, string>
+     * @var array<string, string>|null
      */
-    private array $topic_emails;
+    private ?array $topic_emails = null;
 
     /**
      * Topic display names.
@@ -58,7 +58,7 @@ class ContactHandler {
      */
     public function __construct() {
         $this->rate_limiter = new RateLimiter();
-        $this->load_topic_emails();
+        // Topic emails are lazy-loaded to avoid calling ACF too early.
     }
 
     /**
@@ -364,6 +364,11 @@ class ContactHandler {
      * @return string Email address.
      */
     private function get_email_for_topic(string $topic): string {
+        // Lazy-load topic emails on first access.
+        if ($this->topic_emails === null) {
+            $this->load_topic_emails();
+        }
+
         return $this->topic_emails[$topic] ?? get_option('admin_email');
     }
 }
