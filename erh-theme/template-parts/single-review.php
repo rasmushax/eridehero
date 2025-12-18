@@ -14,16 +14,18 @@ if ( ! defined( 'ABSPATH' ) ) {
 
 $post_id = get_the_ID();
 
-// Get the related product via HFT field
-$product = get_field( 'hft_selected_product', $post_id );
+// Get the related product via ACF relationship field
+$relationship = get_field( 'relationship', $post_id );
 
 // If no product linked, we can't show the review properly
-if ( ! $product ) {
+if ( empty( $relationship ) || ! isset( $relationship[0] ) ) {
     get_template_part( 'template-parts/single', 'post' );
     return;
 }
 
-$product_id   = $product->ID;
+// Relationship field returns array - first element is the product (ID or object depending on ACF settings)
+$product      = $relationship[0];
+$product_id   = is_object( $product ) ? $product->ID : $product;
 $product_type = get_field( 'product_type', $product_id );
 
 // Get product category for breadcrumb
