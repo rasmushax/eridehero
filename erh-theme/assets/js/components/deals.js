@@ -1,15 +1,15 @@
 /**
  * Deals Section Component
  *
- * Loads deals from REST API and displays with geo-aware pricing.
+ * Loads deals from REST API with geo-aware pricing.
  * Features:
  * - Category tab filtering
  * - Carousel navigation (desktop)
- * - Dynamic price loading per geo
+ * - Prices included in deals API response (single request)
  * - Skeleton loading states
  */
 
-import { getUserGeo, getBestPrices, formatPrice } from '../services/geo-price.js';
+import { getUserGeo } from '../services/geo-price.js';
 
 // Configuration
 const CONFIG = {
@@ -119,13 +119,10 @@ export async function initDeals() {
     console.log('--- LOADING DEAL COUNTS ---');
     await loadDealCounts();
 
-    // Render deals
+    // Render deals (prices already included from deals API - geo-specific)
     console.log('--- RENDERING DEALS ---');
     console.log('[Deals] About to render', allDeals.length, 'deals');
     renderDeals(allDeals);
-
-    // Load geo-aware prices
-    await loadPrices(allDeals);
 
     console.log('--- DEALS INITIALIZATION COMPLETE ---');
     console.log('[Deals] Summary:');
@@ -255,12 +252,13 @@ export async function initDeals() {
             discountText.textContent = `${Math.round(deal.discount_percent)}% below avg`;
         }
 
-        // Set initial price from base_price
-        if (priceValue && deal.base_price > 0) {
-            const priceParts = splitPrice(deal.base_price);
+        // Set price from deals API response (already geo-specific)
+        if (priceValue && deal.current_price > 0) {
+            const priceParts = splitPrice(deal.current_price);
             priceValue.textContent = priceParts.whole;
             if (priceCurrency) {
-                priceCurrency.textContent = '$';
+                const symbols = { 'USD': '$', 'EUR': '€', 'GBP': '£', 'CAD': 'CA$', 'AUD': 'A$' };
+                priceCurrency.textContent = symbols[deal.currency] || '$';
             }
         }
 
@@ -277,58 +275,6 @@ export async function initDeals() {
             whole: whole.toLocaleString(),
             cents: cents.toString().padStart(2, '0')
         };
-    }
-
-    /**
-     * Load geo-aware prices for all deals
-     */
-    async function loadPrices(deals) {
-        console.log('--- LOADING GEO-AWARE PRICES ---');
-        if (deals.length === 0) {
-            console.log('[Deals] No deals to load prices for');
-            return;
-        }
-
-        const productIds = deals.map(d => d.id);
-        console.log('[Deals] Loading prices for product IDs:', productIds);
-        console.log('[Deals] Using geo:', userGeo.geo, 'currency:', userGeo.currency);
-
-        try {
-            const prices = await getBestPrices(productIds, userGeo.geo, userGeo.currency);
-            console.log('[Deals] Prices received:', prices);
-
-            // Update price elements
-            let updatedCount = 0;
-            deals.forEach(deal => {
-                const priceValue = grid.querySelector(`[data-product-id="${deal.id}"] .deal-price-value`);
-                const priceCurrency = grid.querySelector(`[data-product-id="${deal.id}"] .deal-price-currency`);
-
-                if (!priceValue) {
-                    console.warn(`[Deals] Price element not found for deal ${deal.id}`);
-                    return;
-                }
-
-                const priceData = prices[deal.id];
-                console.log(`[Deals] Price data for ${deal.id}:`, priceData);
-
-                if (priceData && priceData.price > 0) {
-                    const priceParts = splitPrice(priceData.price);
-                    priceValue.textContent = priceParts.whole;
-                    if (priceCurrency) {
-                        // Get currency symbol
-                        const symbols = { 'USD': '$', 'EUR': '€', 'GBP': '£', 'CAD': 'CA$', 'AUD': 'A$' };
-                        priceCurrency.textContent = symbols[priceData.currency] || priceData.currency + ' ';
-                    }
-                    updatedCount++;
-                } else {
-                    console.warn(`[Deals] No price data for deal ${deal.id}`);
-                }
-            });
-            console.log(`[Deals] Updated prices for ${updatedCount}/${deals.length} deals`);
-        } catch (error) {
-            console.error('[Deals] Failed to load prices:', error);
-            // Keep base prices shown from initial render
-        }
     }
 
     /**
@@ -436,7 +382,6 @@ export async function initDeals() {
                 const data = await response.json();
                 allDeals = data.deals || [];
                 renderDeals(allDeals);
-                await loadPrices(allDeals);
                 filterDeals(currentCategory);
             } catch (e) {
                 console.error('[Deals] Refresh failed:', e);
