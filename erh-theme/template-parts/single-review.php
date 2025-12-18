@@ -27,15 +27,26 @@ if ( ! $product ) {
 $product_id   = is_object( $product ) ? $product->ID : (int) $product;
 $product_type = get_field( 'product_type', $product_id );
 
-// Fallback if product_type not set
+// Fallback chain if product_type not set
 if ( empty( $product_type ) ) {
-    // Try to get from post category as fallback
-    $categories = get_the_category( $post_id );
-    if ( ! empty( $categories ) ) {
-        $product_type = $categories[0]->name;
-    } else {
-        $product_type = 'Electric Scooter'; // Default fallback
+    // Try product_type taxonomy on the product
+    $product_type_terms = get_the_terms( $product_id, 'product_type' );
+    if ( ! empty( $product_type_terms ) && ! is_wp_error( $product_type_terms ) ) {
+        $product_type = $product_type_terms[0]->name;
     }
+}
+
+if ( empty( $product_type ) ) {
+    // Try post category as fallback
+    $categories = get_the_category( $post_id );
+    if ( ! empty( $categories ) && ! is_wp_error( $categories ) ) {
+        $product_type = $categories[0]->name;
+    }
+}
+
+// Final fallback
+if ( empty( $product_type ) ) {
+    $product_type = 'Electric Scooter';
 }
 
 // Get product category for breadcrumb
