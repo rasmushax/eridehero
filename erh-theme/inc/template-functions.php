@@ -371,3 +371,67 @@ function erh_get_template_part( string $slug, string $name = '', array $data = a
         include $located;
     }
 }
+
+/**
+ * Render review breadcrumb
+ *
+ * Custom breadcrumb for review posts: Category > Reviews > Post Title
+ *
+ * @param string $category_slug Category slug (e.g., 'e-scooters')
+ * @param string $category_name Category display name (e.g., 'E-Scooters')
+ */
+function erh_review_breadcrumb( string $category_slug, string $category_name ): void {
+    $reviews_url = home_url( '/' . $category_slug . '-reviews/' );
+    $hub_url     = home_url( '/' . $category_slug . '/' );
+    ?>
+    <nav class="breadcrumb" aria-label="Breadcrumb">
+        <a href="<?php echo esc_url( $hub_url ); ?>"><?php echo esc_html( $category_name ); ?></a>
+        <span class="breadcrumb-sep">/</span>
+        <a href="<?php echo esc_url( $reviews_url ); ?>">Reviews</a>
+        <span class="breadcrumb-sep breadcrumb-current-sep">/</span>
+        <span class="breadcrumb-current"><?php the_title(); ?></span>
+    </nav>
+    <?php
+}
+
+/**
+ * Get score label from numeric rating
+ *
+ * @param float $score The score value (0-10)
+ * @return string The label (e.g., 'Excellent', 'Great', 'Good')
+ */
+function erh_get_score_label( float $score ): string {
+    if ( $score >= 9.0 ) {
+        return 'Excellent';
+    } elseif ( $score >= 8.0 ) {
+        return 'Great';
+    } elseif ( $score >= 7.0 ) {
+        return 'Good';
+    } elseif ( $score >= 5.0 ) {
+        return 'Average';
+    } else {
+        return 'Poor';
+    }
+}
+
+/**
+ * Get score data attribute from numeric rating
+ *
+ * Used for CSS styling variants.
+ *
+ * @param float $score The score value (0-10)
+ * @return string The data attribute value
+ */
+function erh_get_score_attr( float $score ): string {
+    if ( $score >= 9.0 ) {
+        return 'excellent';
+    } elseif ( $score >= 8.0 ) {
+        return 'great';
+    } elseif ( $score >= 7.0 ) {
+        return 'good';
+    } elseif ( $score >= 5.0 ) {
+        return 'average';
+    } else {
+        return 'poor';
+    }
+}
