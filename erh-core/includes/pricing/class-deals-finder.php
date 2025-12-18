@@ -45,6 +45,14 @@ class DealsFinder {
     public const DEFAULT_GEO = 'US';
 
     /**
+     * Cache duration in seconds (5 minutes).
+     * Deals data changes infrequently (cron runs every 2 hours).
+     *
+     * @var int
+     */
+    private const CACHE_DURATION = 300;
+
+    /**
      * Available average periods.
      * Maps to cache keys: avg_3m, avg_6m, avg_12m, avg_all.
      *
@@ -95,6 +103,22 @@ class DealsFinder {
         // Validate period.
         if (!in_array($period, self::PERIODS, true)) {
             $period = self::DEFAULT_PERIOD;
+        }
+
+        // Build cache key from parameters.
+        $cache_key = sprintf(
+            'erh_deals_%s_%s_%s_%d_%d',
+            $product_type ?? 'all',
+            $geo,
+            $period,
+            (int)($price_difference_threshold * 10), // -5.0 -> -50
+            $limit
+        );
+
+        // Check transient cache.
+        $cached = get_transient($cache_key);
+        if ($cached !== false) {
+            return $cached;
         }
 
         // Cache stores keys as avg_3m, avg_6m, avg_12m, avg_all.
@@ -178,7 +202,12 @@ class DealsFinder {
         });
 
         // Limit results.
-        return array_slice($deals, 0, $limit);
+        $deals = array_slice($deals, 0, $limit);
+
+        // Cache the results.
+        set_transient($cache_key, $deals, self::CACHE_DURATION);
+
+        return $deals;
     }
 
     /**
@@ -326,12 +355,29 @@ class DealsFinder {
         string $geo = self::DEFAULT_GEO,
         string $period = self::DEFAULT_PERIOD
     ): array {
+        // Build cache key.
+        $cache_key = sprintf(
+            'erh_deal_counts_%s_%s_%d',
+            $geo,
+            $period,
+            (int)($price_difference_threshold * 10)
+        );
+
+        // Check transient cache.
+        $cached = get_transient($cache_key);
+        if ($cached !== false) {
+            return $cached;
+        }
+
         $all_deals = $this->get_all_deals($price_difference_threshold, 1000, $geo, $period);
 
         $counts = [];
         foreach ($all_deals as $type => $deals) {
             $counts[$type] = count($deals);
         }
+
+        // Cache the counts.
+        set_transient($cache_key, $counts, self::CACHE_DURATION);
 
         return $counts;
     }

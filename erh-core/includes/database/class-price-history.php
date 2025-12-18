@@ -437,6 +437,45 @@ class PriceHistory {
     }
 
     /**
+     * Get price history for multiple products at once.
+     *
+     * This is an optimization to avoid N+1 queries in bulk operations.
+     *
+     * @param array<int> $product_ids Array of product post IDs.
+     * @return array<int, array<int, array<string, mixed>>> History indexed by product ID.
+     */
+    public function get_history_bulk(array $product_ids): array {
+        if (empty($product_ids)) {
+            return [];
+        }
+
+        $placeholders = implode(',', array_fill(0, count($product_ids), '%d'));
+
+        // phpcs:ignore WordPress.DB.PreparedSQL.InterpolatedNotPrepared
+        $results = $this->wpdb->get_results(
+            $this->wpdb->prepare(
+                "SELECT * FROM {$this->table_name}
+                 WHERE product_id IN ({$placeholders})
+                 ORDER BY product_id, date DESC",
+                ...$product_ids
+            ),
+            ARRAY_A
+        );
+
+        // Group by product ID.
+        $grouped = [];
+        foreach ($results ?: [] as $row) {
+            $pid = (int)$row['product_id'];
+            if (!isset($grouped[$pid])) {
+                $grouped[$pid] = [];
+            }
+            $grouped[$pid][] = $this->cast_row($row);
+        }
+
+        return $grouped;
+    }
+
+    /**
      * Cast numeric fields in a row.
      *
      * @param array<string, mixed> $row Database row.
