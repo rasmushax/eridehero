@@ -63,6 +63,21 @@ export async function getUserGeo() {
     console.group('[GeoPriceService] getUserGeo()');
     console.log('Starting geo detection...');
 
+    // ========== TEMPORARY TEST OVERRIDE ==========
+    // Hardcode to Denmark (DK) -> EU region for testing
+    // REMOVE THIS AFTER TESTING!
+    const TEST_GEO = {
+        geo: 'EU',
+        region: 'EU',
+        currency: 'EUR',
+        symbol: '€',
+        country: 'DK',
+    };
+    console.log('⚠️ USING HARDCODED TEST GEO:', TEST_GEO);
+    console.groupEnd();
+    return TEST_GEO;
+    // ========== END TEST OVERRIDE ==========
+
     // Check for manual override first (user selected a different region)
     const override = getRegionOverride();
     if (override) {
