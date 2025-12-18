@@ -45,12 +45,22 @@ class DealsFinder {
     public const DEFAULT_GEO = 'US';
 
     /**
-     * Cache duration in seconds (5 minutes).
-     * Deals data changes infrequently (cron runs every 2 hours).
+     * Cache duration in seconds (30 minutes).
+     * Deals data only changes when cache rebuild cron runs (every 2 hours),
+     * so a longer TTL is safe and reduces redundant processing.
      *
      * @var int
      */
-    private const CACHE_DURATION = 300;
+    private const CACHE_DURATION = 1800;
+
+    /**
+     * Maximum deals to cache per query.
+     * We cache up to this limit and slice in memory for smaller requests.
+     * This prevents duplicate cache entries for different limit values.
+     *
+     * @var int
+     */
+    private const CACHE_MAX_LIMIT = 100;
 
     /**
      * Available average periods.
@@ -105,20 +115,20 @@ class DealsFinder {
             $period = self::DEFAULT_PERIOD;
         }
 
-        // Build cache key from parameters.
+        // Build cache key WITHOUT limit - we cache up to CACHE_MAX_LIMIT and slice.
+        // This prevents duplicate cache entries for limit=12 vs limit=100 requests.
         $cache_key = sprintf(
-            'erh_deals_%s_%s_%s_%d_%d',
+            'erh_deals_%s_%s_%s_%d',
             $product_type ?? 'all',
             $geo,
             $period,
-            (int)($price_difference_threshold * 10), // -5.0 -> -50
-            $limit
+            (int)($price_difference_threshold * 10) // -5.0 -> -50
         );
 
-        // Check transient cache.
+        // Check transient cache - slice to requested limit.
         $cached = get_transient($cache_key);
         if ($cached !== false) {
-            return $cached;
+            return array_slice($cached, 0, $limit);
         }
 
         // Cache stores keys as avg_3m, avg_6m, avg_12m, avg_all.
@@ -201,13 +211,12 @@ class DealsFinder {
             return $a['deal_analysis']['discount_percent'] <=> $b['deal_analysis']['discount_percent'];
         });
 
-        // Limit results.
-        $deals = array_slice($deals, 0, $limit);
+        // Cache up to CACHE_MAX_LIMIT results (limit is applied via slice on retrieval).
+        $deals_to_cache = array_slice($deals, 0, self::CACHE_MAX_LIMIT);
+        set_transient($cache_key, $deals_to_cache, self::CACHE_DURATION);
 
-        // Cache the results.
-        set_transient($cache_key, $deals, self::CACHE_DURATION);
-
-        return $deals;
+        // Return only the requested limit.
+        return array_slice($deals, 0, $limit);
     }
 
     /**
