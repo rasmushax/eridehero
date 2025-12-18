@@ -154,11 +154,25 @@ class RestDeals extends WP_REST_Controller {
         $geo = $request->get_param('geo');
         $period = $request->get_param('period');
 
+        // DEBUG: Log request parameters.
+        error_log('[ERH Deals API] === GET /deals REQUEST ===');
+        error_log("[ERH Deals API] category: {$category}");
+        error_log("[ERH Deals API] limit: {$limit}");
+        error_log("[ERH Deals API] threshold: {$threshold}");
+        error_log("[ERH Deals API] geo: {$geo}");
+        error_log("[ERH Deals API] period: {$period}");
+
         $deals = [];
 
         if ($category === 'all') {
             // Get deals from all categories.
+            error_log('[ERH Deals API] Fetching deals from ALL categories...');
             $all_deals = $this->deals_finder->get_all_deals($threshold, $limit, $geo, $period);
+
+            // DEBUG: Log deals per category.
+            foreach ($all_deals as $type => $type_deals) {
+                error_log("[ERH Deals API] {$type}: " . count($type_deals) . ' deals found');
+            }
 
             // Flatten and mix all deals, then sort by discount.
             foreach ($all_deals as $type => $type_deals) {
@@ -168,6 +182,8 @@ class RestDeals extends WP_REST_Controller {
                 }
             }
 
+            error_log('[ERH Deals API] Total deals before sort/limit: ' . count($deals));
+
             // Sort by best discount.
             usort($deals, function ($a, $b) {
                 return $a['deal_analysis']['discount_percent'] <=> $b['deal_analysis']['discount_percent'];
@@ -175,19 +191,35 @@ class RestDeals extends WP_REST_Controller {
 
             // Limit total.
             $deals = array_slice($deals, 0, $limit);
+            error_log('[ERH Deals API] Deals after limit: ' . count($deals));
         } else {
             // Get deals for specific category.
             $product_type = $this->category_map[$category] ?? '';
+            error_log("[ERH Deals API] Fetching deals for category: {$category} (product_type: {$product_type})");
+
             if ($product_type) {
                 $deals = $this->deals_finder->get_deals($product_type, $threshold, $limit, $geo, $period);
+                error_log("[ERH Deals API] Found " . count($deals) . " deals for {$product_type}");
                 foreach ($deals as &$deal) {
                     $deal['category_slug'] = $category;
                 }
+            } else {
+                error_log("[ERH Deals API] WARNING: Unknown category '{$category}'");
             }
         }
 
         // Transform deals for frontend.
         $transformed = array_map([$this, 'transform_deal'], $deals);
+
+        // DEBUG: Log response summary.
+        error_log('[ERH Deals API] === RESPONSE ===');
+        error_log('[ERH Deals API] Returning ' . count($transformed) . ' transformed deals');
+        if (count($transformed) > 0) {
+            $first = $transformed[0];
+            error_log("[ERH Deals API] First deal: {$first['name']} (ID: {$first['id']}, discount: {$first['discount_percent']}%)");
+        } else {
+            error_log('[ERH Deals API] WARNING: No deals to return!');
+        }
 
         return new WP_REST_Response([
             'deals'    => $transformed,

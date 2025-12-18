@@ -33,8 +33,16 @@ function getRestUrl() {
  * Initialize the deals section
  */
 export async function initDeals() {
+    console.group('[Deals] initDeals()');
+    console.log('Initializing deals section...');
+
     const section = document.getElementById('deals-section');
-    if (!section) return null;
+    if (!section) {
+        console.warn('deals-section element not found - skipping');
+        console.groupEnd();
+        return null;
+    }
+    console.log('Found deals-section element');
 
     const grid = section.querySelector('.deals-grid');
     const tabs = section.querySelectorAll('.filter-pill');
@@ -46,7 +54,12 @@ export async function initDeals() {
     const carousel = section.querySelector('.deals-carousel');
     const dealsCountEl = document.getElementById('deals-count');
 
-    if (!grid || !template) return null;
+    if (!grid || !template) {
+        console.warn('Missing required elements - grid:', !!grid, 'template:', !!template);
+        console.groupEnd();
+        return null;
+    }
+    console.log('All required DOM elements found');
 
     // State
     let allDeals = [];
@@ -55,33 +68,71 @@ export async function initDeals() {
     let totalDealsCount = 0;
 
     // Get user geo
+    console.log('--- GEO DETECTION ---');
     try {
         userGeo = await getUserGeo();
+        console.log('[Deals] User geo detected:', userGeo);
     } catch (e) {
-        console.warn('[Deals] Failed to detect geo, using defaults');
+        console.warn('[Deals] Failed to detect geo, using defaults:', e);
     }
 
     // Load deals
+    console.log('--- LOADING DEALS ---');
+    const dealsUrl = `${getRestUrl()}deals?category=all&limit=${CONFIG.dealsLimit}&threshold=${CONFIG.discountThreshold}`;
+    console.log('[Deals] Fetching from:', dealsUrl);
     try {
-        const response = await fetch(`${getRestUrl()}deals?category=all&limit=${CONFIG.dealsLimit}&threshold=${CONFIG.discountThreshold}`);
+        const response = await fetch(dealsUrl);
+        console.log('[Deals] Response status:', response.status, response.statusText);
+
         if (!response.ok) throw new Error(`HTTP ${response.status}`);
 
         const data = await response.json();
+        console.log('[Deals] Raw API response:', data);
+        console.log('[Deals] Response keys:', Object.keys(data));
+        console.log('[Deals] Deals count from API:', data.count);
+        console.log('[Deals] Geo from API:', data.geo);
+        console.log('[Deals] Period from API:', data.period);
+
         allDeals = data.deals || [];
+        console.log('[Deals] Number of deals received:', allDeals.length);
+
+        if (allDeals.length > 0) {
+            console.log('[Deals] First deal sample:', allDeals[0]);
+            console.log('[Deals] All deal IDs:', allDeals.map(d => d.id));
+            console.log('[Deals] All deal names:', allDeals.map(d => d.name));
+            console.log('[Deals] All discount %:', allDeals.map(d => d.discount_percent));
+        } else {
+            console.warn('[Deals] NO DEALS RETURNED! This might indicate:');
+            console.warn('  1. No products in wp_product_data table');
+            console.warn('  2. No products with price_history for geo:', data.geo);
+            console.warn('  3. No products meet the -5% threshold');
+            console.warn('  4. All products are out of stock');
+        }
     } catch (error) {
         console.error('[Deals] Failed to load deals:', error);
         showEmptyState(true);
+        console.groupEnd();
         return null;
     }
 
     // Load deal counts
+    console.log('--- LOADING DEAL COUNTS ---');
     await loadDealCounts();
 
     // Render deals
+    console.log('--- RENDERING DEALS ---');
+    console.log('[Deals] About to render', allDeals.length, 'deals');
     renderDeals(allDeals);
 
     // Load geo-aware prices
     await loadPrices(allDeals);
+
+    console.log('--- DEALS INITIALIZATION COMPLETE ---');
+    console.log('[Deals] Summary:');
+    console.log('  - User geo:', userGeo);
+    console.log('  - Deals loaded:', allDeals.length);
+    console.log('  - Total deals available:', totalDealsCount);
+    console.groupEnd();
 
     // Tab click handlers
     tabs.forEach(tab => {
@@ -105,21 +156,31 @@ export async function initDeals() {
      * Load deal counts for total display
      */
     async function loadDealCounts() {
+        const countsUrl = `${getRestUrl()}deals/counts?threshold=${CONFIG.discountThreshold}`;
+        console.log('[Deals] Fetching counts from:', countsUrl);
         try {
-            const response = await fetch(`${getRestUrl()}deals/counts?threshold=${CONFIG.discountThreshold}`);
-            if (!response.ok) return;
+            const response = await fetch(countsUrl);
+            console.log('[Deals] Counts response status:', response.status);
+            if (!response.ok) {
+                console.warn('[Deals] Counts request failed:', response.status);
+                return;
+            }
 
             const data = await response.json();
+            console.log('[Deals] Counts data:', data);
             const counts = data.counts || {};
+            console.log('[Deals] Deal counts by category:', counts);
 
             totalDealsCount = counts.all || 0;
+            console.log('[Deals] Total deals count:', totalDealsCount);
 
             // Update total count display
             if (dealsCountEl && totalDealsCount > 0) {
                 dealsCountEl.textContent = `🔥 ${totalDealsCount} deals cooking`;
+                console.log('[Deals] Updated count display element');
             }
         } catch (e) {
-            // Silently fail - counts are optional
+            console.warn('[Deals] Failed to load counts:', e);
         }
     }
 
@@ -222,21 +283,34 @@ export async function initDeals() {
      * Load geo-aware prices for all deals
      */
     async function loadPrices(deals) {
-        if (deals.length === 0) return;
+        console.log('--- LOADING GEO-AWARE PRICES ---');
+        if (deals.length === 0) {
+            console.log('[Deals] No deals to load prices for');
+            return;
+        }
 
         const productIds = deals.map(d => d.id);
+        console.log('[Deals] Loading prices for product IDs:', productIds);
+        console.log('[Deals] Using geo:', userGeo.geo, 'currency:', userGeo.currency);
 
         try {
             const prices = await getBestPrices(productIds, userGeo.geo, userGeo.currency);
+            console.log('[Deals] Prices received:', prices);
 
             // Update price elements
+            let updatedCount = 0;
             deals.forEach(deal => {
                 const priceValue = grid.querySelector(`[data-product-id="${deal.id}"] .deal-price-value`);
                 const priceCurrency = grid.querySelector(`[data-product-id="${deal.id}"] .deal-price-currency`);
 
-                if (!priceValue) return;
+                if (!priceValue) {
+                    console.warn(`[Deals] Price element not found for deal ${deal.id}`);
+                    return;
+                }
 
                 const priceData = prices[deal.id];
+                console.log(`[Deals] Price data for ${deal.id}:`, priceData);
+
                 if (priceData && priceData.price > 0) {
                     const priceParts = splitPrice(priceData.price);
                     priceValue.textContent = priceParts.whole;
@@ -245,8 +319,12 @@ export async function initDeals() {
                         const symbols = { 'USD': '$', 'EUR': '€', 'GBP': '£', 'CAD': 'CA$', 'AUD': 'A$' };
                         priceCurrency.textContent = symbols[priceData.currency] || priceData.currency + ' ';
                     }
+                    updatedCount++;
+                } else {
+                    console.warn(`[Deals] No price data for deal ${deal.id}`);
                 }
             });
+            console.log(`[Deals] Updated prices for ${updatedCount}/${deals.length} deals`);
         } catch (error) {
             console.error('[Deals] Failed to load prices:', error);
             // Keep base prices shown from initial render
