@@ -110,11 +110,10 @@ export async function initComparison(options = {}) {
 
         // Map to expected format with category labels and geo-aware pricing
         products = rawProducts.map(p => {
-            // Get price for user's geo, fallback to US if not available
+            // Get price for user's geo ONLY - no fallback to other regions
+            // (Users from unmapped countries already default to US at geo-detection level)
             const prices = p.prices || {};
-            const geoPrice = prices[userGeo] ?? prices['US'] ?? null;
-            // Determine which currency to display
-            const displayCurrency = prices[userGeo] ? userCurrency : 'USD';
+            const geoPrice = prices[userGeo] ?? null;
 
             return {
                 id: String(p.id),
@@ -123,7 +122,7 @@ export async function initComparison(options = {}) {
                 categoryLabel: categoryLabels[p.category] || p.categoryLabel || p.category,
                 image: p.thumbnail || p.image,
                 price: geoPrice,
-                currency: displayCurrency,
+                currency: userCurrency,
                 url: p.url,
                 popularity: p.popularity || 0
             };
