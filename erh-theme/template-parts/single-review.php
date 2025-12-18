@@ -24,8 +24,19 @@ if ( ! $product ) {
 }
 
 // post_object field returns the post object directly (or ID depending on settings)
-$product_id   = is_object( $product ) ? $product->ID : $product;
+$product_id   = is_object( $product ) ? $product->ID : (int) $product;
 $product_type = get_field( 'product_type', $product_id );
+
+// Fallback if product_type not set
+if ( empty( $product_type ) ) {
+    // Try to get from post category as fallback
+    $categories = get_the_category( $post_id );
+    if ( ! empty( $categories ) ) {
+        $product_type = $categories[0]->name;
+    } else {
+        $product_type = 'Electric Scooter'; // Default fallback
+    }
+}
 
 // Get product category for breadcrumb
 $category_slug = erh_product_type_slug( $product_type );
