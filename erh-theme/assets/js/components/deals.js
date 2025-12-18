@@ -78,7 +78,7 @@ export async function initDeals() {
 
     // Load deals
     console.log('--- LOADING DEALS ---');
-    const dealsUrl = `${getRestUrl()}deals?category=all&limit=${CONFIG.dealsLimit}&threshold=${CONFIG.discountThreshold}`;
+    const dealsUrl = `${getRestUrl()}deals?category=all&limit=${CONFIG.dealsLimit}&threshold=${CONFIG.discountThreshold}&geo=${userGeo.geo}`;
     console.log('[Deals] Fetching from:', dealsUrl);
     try {
         const response = await fetch(dealsUrl);
@@ -153,7 +153,7 @@ export async function initDeals() {
      * Load deal counts for total display
      */
     async function loadDealCounts() {
-        const countsUrl = `${getRestUrl()}deals/counts?threshold=${CONFIG.discountThreshold}`;
+        const countsUrl = `${getRestUrl()}deals/counts?threshold=${CONFIG.discountThreshold}&geo=${userGeo.geo}`;
         console.log('[Deals] Fetching counts from:', countsUrl);
         try {
             const response = await fetch(countsUrl);
@@ -378,7 +378,7 @@ export async function initDeals() {
     return {
         refresh: async () => {
             try {
-                const response = await fetch(`${getRestUrl()}deals?category=all&limit=${CONFIG.dealsLimit}`);
+                const response = await fetch(`${getRestUrl()}deals?category=all&limit=${CONFIG.dealsLimit}&geo=${userGeo.geo}`);
                 const data = await response.json();
                 allDeals = data.deals || [];
                 renderDeals(allDeals);
