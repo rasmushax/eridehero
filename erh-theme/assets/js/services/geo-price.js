@@ -60,6 +60,20 @@ function getRestUrl() {
  * @returns {Promise<{geo: string, currency: string, symbol: string, region: string, country: string|null}>}
  */
 export async function getUserGeo() {
+    // DEV OVERRIDE: Hardcode country for testing (uncomment to enable)
+    // const DEV_COUNTRY_OVERRIDE = 'DK'; // Set to 'DK', 'DE', 'GB', etc.
+    // if (DEV_COUNTRY_OVERRIDE) {
+    //     const region = getRegionForCountry(DEV_COUNTRY_OVERRIDE);
+    //     const config = getRegionConfig(region);
+    //     return {
+    //         geo: region,
+    //         region: region,
+    //         currency: config.currency,
+    //         symbol: config.symbol,
+    //         country: DEV_COUNTRY_OVERRIDE,
+    //     };
+    // }
+
     // Check for manual override first (user selected a different region)
     const override = getRegionOverride();
     if (override) {

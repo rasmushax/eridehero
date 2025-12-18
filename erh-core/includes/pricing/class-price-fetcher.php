@@ -290,11 +290,11 @@ class PriceFetcher {
         // Build the affiliate URL.
         $url = $row['affiliate_link_override'] ?: $this->build_affiliate_url($row);
 
-        // Get retailer logo from HFT scraper.
+        // Get retailer logo from HFT scraper (use 'erh-logo-small' - 48px height).
         $logo_url = null;
         $scraper_id = isset($row['scraper_id']) ? (int)$row['scraper_id'] : 0;
         if ($scraper_id > 0) {
-            $logo_url = $this->logos->get_logo_by_id($scraper_id, 'thumbnail');
+            $logo_url = $this->logos->get_logo_by_id($scraper_id, 'erh-logo-small');
         }
 
         return [

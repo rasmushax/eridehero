@@ -70,7 +70,12 @@ class Schema {
         // Re-run at 1.2.1 to ensure columns are actually dropped.
         if (version_compare($current_version, '1.2.1', '<')) {
             $this->upgrade_product_data_remove_geo_fields();
-            update_option('erh_db_version', '1.2.1');
+        }
+
+        // Upgrade to add geo/currency columns to price_trackers table.
+        if (version_compare($current_version, '1.3.0', '<')) {
+            $this->upgrade_price_trackers_geo_currency();
+            update_option('erh_db_version', '1.3.0');
         }
 
         // Re-run table creation to ensure all tables and columns exist.
@@ -231,6 +236,60 @@ class Schema {
     }
 
     /**
+     * Upgrade price_trackers table to add geo and currency columns.
+     *
+     * This enables geo-aware price tracking so users track prices
+     * in their own region/currency.
+     *
+     * @return void
+     */
+    private function upgrade_price_trackers_geo_currency(): void {
+        $table_name = $this->get_table_name(ERH_TABLE_PRICE_TRACKERS);
+
+        // Check if table exists.
+        $table_exists = $this->wpdb->get_var(
+            $this->wpdb->prepare('SHOW TABLES LIKE %s', $table_name)
+        );
+
+        if (!$table_exists) {
+            return; // Table will be created by create_tables().
+        }
+
+        // Add geo column if missing.
+        $geo_exists = $this->wpdb->get_var(
+            "SHOW COLUMNS FROM {$table_name} LIKE 'geo'"
+        );
+        if (!$geo_exists) {
+            $this->wpdb->query(
+                "ALTER TABLE {$table_name} ADD COLUMN geo varchar(10) NOT NULL DEFAULT 'US' AFTER product_id"
+            );
+            error_log('[ERH Schema] Added geo column to price_trackers');
+        }
+
+        // Add currency column if missing.
+        $currency_exists = $this->wpdb->get_var(
+            "SHOW COLUMNS FROM {$table_name} LIKE 'currency'"
+        );
+        if (!$currency_exists) {
+            $this->wpdb->query(
+                "ALTER TABLE {$table_name} ADD COLUMN currency varchar(10) NOT NULL DEFAULT 'USD' AFTER geo"
+            );
+            error_log('[ERH Schema] Added currency column to price_trackers');
+        }
+
+        // Add geo index if missing.
+        $geo_index = $this->wpdb->get_var(
+            "SHOW INDEX FROM {$table_name} WHERE Key_name = 'geo'"
+        );
+        if (!$geo_index) {
+            $this->wpdb->query("ALTER TABLE {$table_name} ADD KEY geo (geo)");
+            error_log('[ERH Schema] Added geo index to price_trackers');
+        }
+
+        error_log('[ERH Schema] Price trackers table upgraded with geo/currency support');
+    }
+
+    /**
      * Create the product_data table (Finder tool cache).
      *
      * This table stores pre-computed product data for the finder tool
@@ -312,6 +371,8 @@ class Schema {
             id bigint(20) NOT NULL AUTO_INCREMENT,
             user_id bigint(20) NOT NULL,
             product_id bigint(20) NOT NULL,
+            geo varchar(10) NOT NULL DEFAULT 'US',
+            currency varchar(10) NOT NULL DEFAULT 'USD',
             start_price decimal(10,2) DEFAULT NULL,
             current_price decimal(10,2) DEFAULT NULL,
             target_price decimal(10,2) DEFAULT NULL,
@@ -323,7 +384,8 @@ class Schema {
             PRIMARY KEY  (id),
             KEY user_id (user_id),
             KEY product_id (product_id),
-            KEY user_product (user_id, product_id)
+            KEY user_product (user_id, product_id),
+            KEY geo (geo)
         ) {$charset_collate};";
 
         dbDelta($sql);

@@ -19,6 +19,31 @@ use ERH\Database\PriceHistory;
 class PriceUpdateJob implements CronJobInterface {
 
     /**
+     * The 5 primary regions we track prices for.
+     */
+    private const REGIONS = ['US', 'GB', 'EU', 'CA', 'AU'];
+
+    /**
+     * EU country codes that map to the EU region.
+     */
+    private const EU_COUNTRIES = [
+        'DE', 'FR', 'IT', 'ES', 'NL', 'BE', 'AT', 'IE', 'PT', 'FI',
+        'GR', 'LU', 'SK', 'SI', 'EE', 'LV', 'LT', 'CY', 'MT',
+        'PL', 'CZ', 'HU', 'RO', 'BG', 'HR', 'DK', 'SE', 'NO', 'CH', 'EU',
+    ];
+
+    /**
+     * Region to currency mapping.
+     */
+    private const REGION_CURRENCIES = [
+        'US' => 'USD',
+        'GB' => 'GBP',
+        'EU' => 'EUR',
+        'CA' => 'CAD',
+        'AU' => 'AUD',
+    ];
+
+    /**
      * Price fetcher instance.
      *
      * @var PriceFetcher
@@ -141,7 +166,7 @@ class PriceUpdateJob implements CronJobInterface {
                 continue;
             }
 
-            // Group prices by geo+currency, keeping only the best (lowest in-stock) for each.
+            // Group prices by region, keeping only the best (lowest in-stock) for each.
             $best_by_geo_currency = $this->get_best_prices_by_geo_currency($all_prices);
 
             if (empty($best_by_geo_currency)) {
@@ -149,7 +174,7 @@ class PriceUpdateJob implements CronJobInterface {
                 continue;
             }
 
-            // Record each geo+currency combination.
+            // Record each region's price.
             foreach ($best_by_geo_currency as $best) {
                 $this->price_history->record_price(
                     $product_id,
@@ -178,10 +203,13 @@ class PriceUpdateJob implements CronJobInterface {
     }
 
     /**
-     * Group prices by geo+currency and return best price for each combination.
+     * Group prices by region and return best price for each region.
+     *
+     * Maps country codes to the 5-region model (US, GB, EU, CA, AU) and
+     * validates that currency matches the expected region currency.
      *
      * @param array<int, array<string, mixed>> $prices All prices from PriceFetcher.
-     * @return array<string, array<string, mixed>> Best price per geo+currency.
+     * @return array<string, array<string, mixed>> Best price per region.
      */
     private function get_best_prices_by_geo_currency(array $prices): array {
         $grouped = [];
@@ -192,22 +220,32 @@ class PriceUpdateJob implements CronJobInterface {
                 continue;
             }
 
-            // Normalize geo and currency (default to US/USD if not set).
-            $geo = strtoupper($price_data['geo'] ?? 'US');
+            $raw_geo = strtoupper($price_data['geo'] ?? '');
             $currency = strtoupper($price_data['currency'] ?? 'USD');
-            $key = "{$geo}_{$currency}";
+
+            // Map to region and validate currency matches.
+            $region = $this->map_to_region($raw_geo, $currency);
+            if ($region === null) {
+                continue; // Skip prices that don't fit our region model.
+            }
+
+            // Verify currency matches expected for this region.
+            $expected_currency = self::REGION_CURRENCIES[$region] ?? 'USD';
+            if ($currency !== $expected_currency) {
+                continue;
+            }
 
             $price = (float)$price_data['price'];
             $in_stock = $price_data['in_stock'] ?? false;
 
-            // Determine if this is a better price for this geo+currency.
+            // Determine if this is a better price for this region.
             $is_better = false;
 
-            if (!isset($grouped[$key])) {
-                // First entry for this geo+currency.
+            if (!isset($grouped[$region])) {
+                // First entry for this region.
                 $is_better = true;
             } else {
-                $existing = $grouped[$key];
+                $existing = $grouped[$region];
 
                 // Prefer in-stock over out-of-stock.
                 if ($in_stock && !$existing['in_stock']) {
@@ -222,17 +260,54 @@ class PriceUpdateJob implements CronJobInterface {
             }
 
             if ($is_better) {
-                $grouped[$key] = [
+                $grouped[$region] = [
                     'price'    => $price,
                     'currency' => $currency,
                     'domain'   => $price_data['domain'] ?? '',
-                    'geo'      => $geo,
+                    'geo'      => $region, // Store the region, not the raw geo.
                     'in_stock' => $in_stock,
                 ];
             }
         }
 
         return $grouped;
+    }
+
+    /**
+     * Map a geo code and currency to one of the 5 regions.
+     *
+     * @param string $geo      The raw geo/country code (e.g., 'US', 'DE', 'FR').
+     * @param string $currency The currency code.
+     * @return string|null The region code or null if no match.
+     */
+    private function map_to_region(string $geo, string $currency): ?string {
+        // Direct region matches.
+        if (in_array($geo, self::REGIONS, true)) {
+            return $geo;
+        }
+
+        // EU country codes map to EU region.
+        if (in_array($geo, self::EU_COUNTRIES, true)) {
+            return 'EU';
+        }
+
+        // Empty geo: infer from currency.
+        if ($geo === '') {
+            switch ($currency) {
+                case 'USD':
+                    return 'US';
+                case 'EUR':
+                    return 'EU';
+                case 'GBP':
+                    return 'GB';
+                case 'CAD':
+                    return 'CA';
+                case 'AUD':
+                    return 'AU';
+            }
+        }
+
+        return null;
     }
 
     /**

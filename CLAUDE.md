@@ -560,6 +560,26 @@ Nested under `e-bikes` group:
 
 **Important**: E-bike fields are nested differently than scooter fields. The `product_data_cron_job` handles this with special logic.
 
+### User Profile Fields (ACF)
+Registered via PHP in `inc/acf-options.php` on `user-form` and `user-edit-form` locations:
+```
+- user_title: Text (role/title displayed on author box)
+- profile_image: Image (custom avatar, falls back to Gravatar)
+- social_linkedin: URL
+- social_facebook: URL
+- social_instagram: URL
+- social_twitter: URL
+- social_youtube: URL
+```
+
+**Usage in templates**:
+```php
+$author_id = get_post_field( 'post_author', $post_id );
+$role = get_field( 'user_title', 'user_' . $author_id );
+$linkedin = get_field( 'social_linkedin', 'user_' . $author_id );
+$profile_image = get_field( 'profile_image', 'user_' . $author_id );
+```
+
 ### ACF Restructuring (Post-Launch)
 
 The current scooter fields are flat (~100+ fields at root level), while e-bikes are properly nested. A restructuring plan exists in `ACF_RESTRUCTURE_PLAN.md` to:
@@ -682,71 +702,81 @@ erh-core/
 erh-theme/
 ├── assets/
 │   ├── css/
-│   │   ├── src/
-│   │   │   └── main.css               # Tailwind directives + custom
-│   │   └── dist/
-│   │       └── style.css              # Compiled (gitignore)
-│   └── js/
-│       ├── services/
-│       │   ├── geo-config.js          # Region configuration, country→region mapping
-│       │   └── geo-price.js           # Region detection, price formatting, caching
-│       ├── components/
-│       │   ├── header.js              # Header interactions
-│       │   ├── search.js              # Search functionality
-│       │   ├── finder.js              # Finder tool (geo-aware)
-│       │   ├── comparison.js          # Comparison tool (geo-aware)
-│       │   ├── deals.js               # Deals section (geo-aware)
-│       │   ├── price-tracker.js       # Price tracker modal
-│       │   └── reviews.js             # Review submission
-│       └── dist/
-│           └── main.min.js            # Bundled (gitignore)
+│   │   ├── _variables.css             # Design tokens, colors, spacing
+│   │   ├── _base.css                  # Reset, typography, globals
+│   │   ├── _header.css                # Header, nav, search
+│   │   ├── _footer.css                # Footer styles
+│   │   ├── _buttons.css               # Button variants
+│   │   ├── _single-review.css         # Review page layout
+│   │   ├── _gallery.css               # Image gallery
+│   │   ├── _price-intel.css           # Price intelligence section
+│   │   ├── _pros-cons.css             # Pros/cons component
+│   │   ├── _author-box.css            # Author box
+│   │   ├── _content-grid.css          # Related content grids
+│   │   ├── _components.css            # Shared components
+│   │   └── style.css                  # Main stylesheet
+│   ├── js/
+│   │   ├── app.js                     # Main entry with dynamic imports
+│   │   ├── services/
+│   │   │   ├── geo-config.js          # Region config, country→region mapping
+│   │   │   └── geo-price.js           # Region detection, price formatting
+│   │   └── components/
+│   │       ├── gallery.js             # Image gallery with lightbox
+│   │       ├── price-intel.js         # Price data loading
+│   │       ├── mobile-menu.js         # Mobile navigation
+│   │       ├── search.js              # Search functionality
+│   │       ├── dropdown.js            # Dropdown menus
+│   │       ├── comparison.js          # H2H comparison (geo-aware)
+│   │       ├── deals.js               # Deals section (geo-aware)
+│   │       ├── chart.js               # Price history charts
+│   │       ├── modal.js               # Modal dialogs
+│   │       ├── tooltip.js             # Tooltips
+│   │       ├── popover.js             # Popovers
+│   │       ├── toast.js               # Toast notifications
+│   │       ├── toc.js                 # Table of contents
+│   │       ├── auth-modal.js          # Login/register modal
+│   │       └── price-alert.js         # Price alert modal
+│   └── images/
+│       └── logos/                     # Retailer logos
 │
 ├── template-parts/
-│   ├── header.php                     # Main header
-│   ├── footer.php                     # Main footer
-│   ├── product/
-│   │   ├── card.php                   # Product card (grid/list)
-│   │   ├── specs-table.php            # Specifications table
-│   │   ├── price-box.php              # Price display with offers
-│   │   ├── offers-modal.php           # All offers modal
-│   │   └── related.php                # Related products
-│   ├── finder/
-│   │   ├── filters.php                # Filter sidebar
-│   │   ├── results.php                # Results grid
-│   │   └── pagination.php
-│   ├── review/
-│   │   ├── form.php                   # Review submission form
-│   │   ├── list.php                   # Reviews list
-│   │   └── item.php                   # Single review
-│   ├── account/
-│   │   ├── nav.php                    # Account navigation
-│   │   ├── reviews.php                # User's reviews
-│   │   ├── trackers.php               # User's price trackers
-│   │   └── settings.php               # User settings
-│   └── components/
-│       ├── deals-list.php
-│       ├── comparison-table.php
-│       └── newsletter-form.php
+│   ├── header.php                     # Site header with mega menu
+│   ├── footer.php                     # Site footer
+│   ├── svg-sprite.php                 # Inlined SVG sprite
+│   ├── single-review.php              # Review post template
+│   ├── components/
+│   │   ├── gallery.php                # Image gallery
+│   │   ├── byline.php                 # Author & dates
+│   │   ├── quick-take.php             # Score + summary
+│   │   ├── pros-cons.php              # Pros/cons lists
+│   │   ├── price-intel.php            # Price intelligence
+│   │   ├── tested-performance.php     # Performance data
+│   │   ├── full-specs.php             # Specifications table
+│   │   ├── author-box.php             # Author bio with socials
+│   │   └── related-reviews.php        # Related reviews grid
+│   ├── product/                       # (pending)
+│   ├── finder/                        # (pending)
+│   ├── account/                       # (pending)
+│   └── home/
+│       └── comparison.php             # Homepage comparison widget
 │
 ├── templates/
-│   ├── single-products.php            # Single product page
-│   ├── archive-products.php           # Products archive
-│   ├── page-finder.php                # Finder tool
-│   ├── page-comparison.php            # Comparison tool
-│   ├── page-deals.php                 # Deals page
-│   └── page-account.php               # User account
+│   ├── single-products.php            # (pending) Single product page
+│   ├── archive-products.php           # (pending) Products archive
+│   ├── page-finder.php                # (pending) Finder tool
+│   └── page-account.php               # (pending) User account
 │
 ├── inc/
 │   ├── enqueue.php                    # Asset registration
 │   ├── theme-setup.php                # Theme supports, menus
-│   ├── template-functions.php         # Helper functions
-│   └── acf-fields.php                 # ACF field exports (optional)
+│   ├── template-functions.php         # Helper functions (icons, scores, specs)
+│   └── acf-options.php                # ACF options pages & user fields
 │
-├── functions.php                      # Minimal, includes inc/*
-├── style.css                          # WP theme header only
-├── tailwind.config.js
-├── postcss.config.js
-└── package.json
+├── functions.php                      # Includes inc/*
+├── header.php                         # WP header wrapper
+├── footer.php                         # WP footer wrapper
+├── single.php                         # Routes to single-review.php
+└── style.css                          # WP theme header
 ```
 
 ---
@@ -894,6 +924,43 @@ esc_smart($content)              // Smart HTML entity handling
 
 // Email
 get_email_template($content)     // Wrap in branded template
+```
+
+### Theme Helper Functions (new)
+Located in `erh-theme/inc/template-functions.php`:
+
+```php
+// Icons
+erh_icon($name, $class)          // Get SVG icon from sprite
+erh_the_icon($name, $class)      // Echo SVG icon
+
+// Product types
+erh_product_type_slug($type)     // "Electric Scooter" → "e-scooters"
+erh_get_product_type_short_name($type)  // "Electric Scooter" → "E-Scooter"
+
+// Scores & ratings
+erh_get_score_label($score)      // 9.0 → "Excellent", 8.0 → "Great", etc.
+erh_get_score_attr($score)       // 9.0 → "excellent" (for data attributes)
+
+// Specifications
+erh_get_spec_groups($product_id, $product_type)  // Get organized spec groups
+erh_filter_specs($specs)         // Remove empty specs
+erh_format_boolean($value)       // true → "Yes"
+erh_format_tire_sizes($front, $rear)  // "10" / "10" → '10"'
+erh_format_range($min, $max, $unit)   // "38–42""
+erh_format_dimensions($l, $w, $h)     // "45 × 22 × 48""
+
+// Breadcrumbs
+erh_review_breadcrumb($slug, $name)  // Category > Reviews > Title
+
+// Formatting
+erh_format_price($price, $currency)  // 499.99, "USD" → "$500"
+erh_split_price($price)          // ['whole' => '499', 'decimal' => '99']
+erh_time_elapsed($datetime)      // "2 hours ago"
+erh_truncate_text($text, $length)  // With "show more" support
+
+// YouTube
+erh_extract_youtube_id($url)     // Extract video ID from URL
 ```
 
 ---

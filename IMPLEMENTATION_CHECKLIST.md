@@ -242,30 +242,81 @@ Use this file alongside CLAUDE.md to track progress.
 
 ---
 
-## Phase 5: Theme Scaffold (Days 12-13) - PENDING
+## Phase 5: Theme Scaffold (Days 12-13) - COMPLETE
 
 ### Day 12: Theme Setup
-- [ ] Create `erh-theme/` directory structure
-- [ ] Create `package.json` with Tailwind dependencies
-- [ ] Create `tailwind.config.js` with ERH colors
-- [ ] Create `postcss.config.js`
-- [ ] Create `assets/css/src/main.css` with Tailwind directives
-- [ ] Run `npm run build` - verify CSS compiles
-- [ ] Create `functions.php` with includes
-- [ ] Create `inc/enqueue.php` for asset loading
-- [ ] Create `inc/theme-setup.php` for theme supports
+- [x] Create `erh-theme/` directory structure
+- [x] Create `package.json` with dependencies
+- [x] Create CSS architecture with modular partials
+- [x] Create `functions.php` with includes
+- [x] Create `inc/enqueue.php` for asset loading
+- [x] Create `inc/theme-setup.php` for theme supports
+- [x] Create `inc/template-functions.php` for helper functions
+- [x] Create `inc/acf-options.php` for ACF field registration
 
 ### Day 13: Header & Footer
-- [ ] Create `template-parts/header.php` (port from header-menu.html we built!)
-- [ ] Create `template-parts/footer.php`
-- [ ] Create `header.php` and `footer.php` wrappers
-- [ ] Test: Header renders correctly with dropdowns working
+- [x] Create `template-parts/header.php` with mega menu dropdowns
+- [x] Create `template-parts/footer.php`
+- [x] Create `header.php` and `footer.php` wrappers
+- [x] Create SVG sprite system (`svg-sprite.php`)
+- [x] Header works with search, mobile menu, dropdowns
 
 ---
 
-## Phase 6: Templates (Days 14-16) - PENDING
+## Phase 6: Single Review Template - COMPLETE
 
-### Day 14: Product Templates
+### Core Components
+- [x] Create `template-parts/single-review.php` - Main review layout
+- [x] Create `template-parts/components/gallery.php` - Image gallery with video lightbox
+- [x] Create `template-parts/components/byline.php` - Author, date, updated date
+- [x] Create `template-parts/components/quick-take.php` - Score badge + summary
+- [x] Create `template-parts/components/pros-cons.php` - Pros/cons lists
+- [x] Create `template-parts/components/price-intel.php` - Price intelligence section
+- [x] Create `template-parts/components/tested-performance.php` - Performance data
+- [x] Create `template-parts/components/full-specs.php` - Full specifications table
+- [x] Create `template-parts/components/author-box.php` - Author bio with socials
+- [x] Create `template-parts/components/related-reviews.php` - Related reviews grid
+
+### JavaScript Components
+- [x] Create `assets/js/app.js` - Main entry with dynamic imports
+- [x] Create `assets/js/components/gallery.js` - Gallery with keyboard nav
+- [x] Create `assets/js/components/price-intel.js` - Price data loading
+- [x] Create `assets/js/components/mobile-menu.js`
+- [x] Create `assets/js/components/search.js`
+- [x] Create `assets/js/components/dropdown.js`
+- [x] Create `assets/js/components/custom-select.js`
+- [x] Create `assets/js/components/header-scroll.js`
+- [x] Create `assets/js/components/popover.js`
+- [x] Create `assets/js/components/modal.js`
+- [x] Create `assets/js/components/tooltip.js`
+- [x] Create `assets/js/components/toast.js`
+- [x] Create `assets/js/components/toc.js`
+- [x] Create `assets/js/components/sticky-buy-bar.js`
+- [x] Create `assets/js/components/chart.js`
+- [x] Create `assets/js/components/comparison.js`
+- [x] Create `assets/js/components/deals.js`
+- [x] Create `assets/js/components/deals-tabs.js`
+- [x] Create `assets/js/components/finder-tabs.js`
+- [x] Create `assets/js/components/archive-filter.js`
+- [x] Create `assets/js/components/archive-sort.js`
+- [x] Create `assets/js/components/auth-modal.js`
+- [x] Create `assets/js/components/price-alert.js`
+
+### CSS Architecture
+- [x] Modular CSS with partials (`_variables.css`, `_base.css`, `_header.css`, etc.)
+- [x] Component-specific stylesheets
+- [x] Rating color system (`--color-rating-excellent`, etc.)
+
+### Optimizations
+- [x] Dynamic imports for conditional component loading
+- [x] Components only load when their DOM elements exist
+- [x] Removed all debug logging from production code
+
+---
+
+## Phase 6B: Remaining Templates - PENDING
+
+### Product Templates
 - [ ] Create `template-parts/product/card.php`
 - [ ] Create `template-parts/product/specs-table.php`
 - [ ] Create `template-parts/product/price-box.php`
@@ -273,15 +324,14 @@ Use this file alongside CLAUDE.md to track progress.
 - [ ] Create `templates/single-products.php`
 - [ ] Test: Single product page renders
 
-### Day 15: Tool Pages
+### Tool Pages
 - [ ] Create `template-parts/finder/filters.php`
 - [ ] Create `template-parts/finder/results.php`
 - [ ] Create `templates/page-finder.php`
 - [ ] Create `templates/page-deals.php`
-- [ ] Create JS: `assets/js/src/finder.js`
 - [ ] Test: Finder tool works
 
-### Day 16: Account Pages
+### Account Pages
 - [ ] Create `template-parts/account/nav.php`
 - [ ] Create `template-parts/account/reviews.php`
 - [ ] Create `template-parts/account/trackers.php`
@@ -438,25 +488,74 @@ erh-core/
 └── vendor/                           # Composer autoload
 
 
-## Current Theme Structure (Partial)
+## Current Theme Structure
 
 ```
 erh-theme/
 ├── assets/
 │   ├── css/
-│   │   ├── src/
-│   │   │   └── main.css
-│   │   └── dist/
-│   │       └── style.css
-│   └── js/
-│       ├── services/
-│       │   ├── geo-config.js             # 5-region config, country→region mapping
-│       │   └── geo-price.js              # Region detection & price formatting
-│       └── components/
-│           ├── comparison.js             # H2H comparison widget (region-aware)
-│           └── deals.js                  # Deals section (region-aware)
+│   │   ├── _variables.css          # Design tokens, colors, spacing
+│   │   ├── _base.css               # Reset, typography, global styles
+│   │   ├── _header.css             # Header, navigation, search
+│   │   ├── _footer.css             # Footer styles
+│   │   ├── _buttons.css            # Button variants
+│   │   ├── _forms.css              # Form elements
+│   │   ├── _components.css         # Shared components (cards, badges, etc.)
+│   │   ├── _single-review.css      # Review page layout
+│   │   ├── _gallery.css            # Image gallery
+│   │   ├── _price-intel.css        # Price intelligence section
+│   │   ├── _pros-cons.css          # Pros/cons component
+│   │   ├── _author-box.css         # Author box
+│   │   ├── _content-grid.css       # Related content grids
+│   │   ├── _latest-reviews.css     # Review cards, sidebar cards
+│   │   └── style.css               # Main compiled stylesheet
+│   ├── js/
+│   │   ├── app.js                  # Main entry, dynamic imports
+│   │   ├── services/
+│   │   │   ├── geo-config.js       # 5-region config, country→region mapping
+│   │   │   └── geo-price.js        # Region detection & price formatting
+│   │   └── components/
+│   │       ├── gallery.js          # Image gallery with lightbox
+│   │       ├── price-intel.js      # Price data loading (skeleton states)
+│   │       ├── mobile-menu.js      # Mobile navigation
+│   │       ├── search.js           # Search functionality
+│   │       ├── dropdown.js         # Dropdown menus
+│   │       ├── comparison.js       # H2H comparison widget
+│   │       ├── deals.js            # Deals section
+│   │       ├── chart.js            # Price history charts
+│   │       ├── toc.js              # Table of contents
+│   │       ├── modal.js            # Modal dialogs
+│   │       ├── tooltip.js          # Tooltips
+│   │       ├── popover.js          # Popovers
+│   │       ├── toast.js            # Toast notifications
+│   │       └── ... (more components)
+│   └── images/
+│       └── logos/                  # Retailer logos
+├── inc/
+│   ├── enqueue.php                 # Asset registration
+│   ├── theme-setup.php             # Theme supports, menus
+│   ├── template-functions.php      # Helper functions (icons, scores, specs)
+│   └── acf-options.php             # ACF options pages & user fields
+├── template-parts/
+│   ├── header.php                  # Site header with mega menu
+│   ├── footer.php                  # Site footer
+│   ├── svg-sprite.php              # Inlined SVG sprite
+│   ├── single-review.php           # Review post template
+│   └── components/
+│       ├── gallery.php             # Image gallery
+│       ├── byline.php              # Author & dates
+│       ├── quick-take.php          # Score + summary
+│       ├── pros-cons.php           # Pros/cons lists
+│       ├── price-intel.php         # Price intelligence
+│       ├── tested-performance.php  # Performance data
+│       ├── full-specs.php          # Specifications table
+│       ├── author-box.php          # Author bio with socials
+│       └── related-reviews.php     # Related reviews grid
 ├── functions.php
-└── style.css
+├── header.php
+├── footer.php
+├── single.php                      # Routes to single-review.php
+└── style.css                       # Theme header
 ```
 
 ---
@@ -480,6 +579,9 @@ erh-theme/
 | EU Region | Aggregate DE/FR/IT/ES/etc. | One region for EUR, HFT stores granular country data |
 | Geo Validation | Currency match required | EU = EUR only, prevents US fallback pollution |
 | JSON Generation | Static files in uploads | Fast frontend loading, CDN-friendly |
+| JS Loading | Dynamic imports | Components only load when DOM elements exist |
+| Author Socials | ACF user fields (PHP) | Registered alongside existing profile fields |
+| Score Badges | Square with rounded corners | Rating colors based on score tier |
 
 ---
 

@@ -83,10 +83,12 @@ function erh_enqueue_assets(): void {
 
     // Localize script with data the JS might need
     wp_localize_script( 'erh-app', 'erhData', array(
-        'ajaxUrl'  => admin_url( 'admin-ajax.php' ),
-        'restUrl'  => rest_url( 'erh/v1/' ),
-        'nonce'    => wp_create_nonce( 'erh_nonce' ),
-        'themeUrl' => ERH_THEME_URI,
+        'ajaxUrl'    => admin_url( 'admin-ajax.php' ),
+        'restUrl'    => rest_url( 'erh/v1/' ),
+        'hftRestUrl' => rest_url( 'housefresh-tools/v1/' ),
+        'nonce'      => wp_create_nonce( 'wp_rest' ), // REST API nonce
+        'ajaxNonce'  => wp_create_nonce( 'erh_nonce' ), // Legacy AJAX nonce
+        'themeUrl'   => ERH_THEME_URI,
         'isLoggedIn' => is_user_logged_in(),
     ) );
 

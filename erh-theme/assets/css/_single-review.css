@@ -166,11 +166,11 @@
 }
 
 /* Score color variants */
-.review-verdict-score[data-score="excellent"] { background: var(--color-success); }
-.review-verdict-score[data-score="great"] { background: #84cc16; }
-.review-verdict-score[data-score="good"] { background: #eab308; }
-.review-verdict-score[data-score="average"] { background: #f97316; }
-.review-verdict-score[data-score="poor"] { background: #ef4444; }
+.review-verdict-score[data-score="excellent"] { background: var(--color-rating-excellent); }
+.review-verdict-score[data-score="great"] { background: var(--color-rating-great); }
+.review-verdict-score[data-score="good"] { background: var(--color-rating-good); }
+.review-verdict-score[data-score="average"] { background: var(--color-rating-average); }
+.review-verdict-score[data-score="poor"] { background: var(--color-rating-poor); }
 
 /* Content */
 .review-verdict-text {

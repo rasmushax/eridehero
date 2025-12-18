@@ -453,8 +453,9 @@ class CacheRebuildJob implements CronJobInterface {
             return '';
         }
 
-        // Try custom size first, then standard thumbnail.
-        $image_url = wp_get_attachment_image_url($image_id, 'thumbnail-150');
+        // Try optimized size first (160px height for 80px display at 2x retina).
+        // Falls back to standard sizes if erh-product-md not available.
+        $image_url = wp_get_attachment_image_url($image_id, 'erh-product-md');
 
         if (!$image_url) {
             $image_url = wp_get_attachment_image_url($image_id, 'thumbnail');

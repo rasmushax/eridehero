@@ -30,6 +30,13 @@
     --color-error: #dc3545;
     --color-info: #fd7e14;
 
+    /* Rating Colors (for score badges) */
+    --color-rating-excellent: var(--color-success);
+    --color-rating-great: #2bb964;
+    --color-rating-good: #84cc16;
+    --color-rating-average: #eab308;
+    --color-rating-poor: var(--color-error);
+
     /* Overlays */
     --color-overlay-light: rgba(131, 150, 225, 0.05);
     --color-shadow: rgba(33, 39, 58, 0.15);

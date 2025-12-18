@@ -139,6 +139,8 @@ class PriceTracker {
      * @param float      $start_price  The starting/current price.
      * @param float|null $target_price The target price (null if using price_drop).
      * @param float|null $price_drop   The price drop amount (null if using target_price).
+     * @param string     $geo          The geo region (US, GB, EU, CA, AU).
+     * @param string     $currency     The currency code (USD, GBP, EUR, CAD, AUD).
      * @return int|false The new tracker ID or false on failure.
      */
     public function create(
@@ -146,9 +148,11 @@ class PriceTracker {
         int $product_id,
         float $start_price,
         ?float $target_price = null,
-        ?float $price_drop = null
+        ?float $price_drop = null,
+        string $geo = 'US',
+        string $currency = 'USD'
     ) {
-        // Check if tracker already exists.
+        // Check if tracker already exists for this user/product.
         $existing = $this->get_for_user_product($user_id, $product_id);
         if ($existing) {
             return false;
@@ -159,6 +163,8 @@ class PriceTracker {
             [
                 'user_id'       => $user_id,
                 'product_id'    => $product_id,
+                'geo'           => $geo,
+                'currency'      => $currency,
                 'start_price'   => $start_price,
                 'current_price' => $start_price,
                 'target_price'  => $target_price,
@@ -166,7 +172,7 @@ class PriceTracker {
                 'created_at'    => current_time('mysql'),
                 'updated_at'    => current_time('mysql'),
             ],
-            ['%d', '%d', '%f', '%f', '%f', '%f', '%s', '%s']
+            ['%d', '%d', '%s', '%s', '%f', '%f', '%f', '%f', '%s', '%s']
         );
 
         if ($result === false) {
@@ -239,6 +245,40 @@ class PriceTracker {
             ],
             ['id' => $tracker_id],
             ['%f', '%s', '%s'],
+            ['%d']
+        );
+
+        return $result !== false;
+    }
+
+    /**
+     * Generic update method for a tracker.
+     *
+     * @param int                  $tracker_id The tracker ID.
+     * @param array<string, mixed> $data       Data to update.
+     * @return bool True on success.
+     */
+    public function update(int $tracker_id, array $data): bool {
+        // Always update the updated_at timestamp.
+        $data['updated_at'] = current_time('mysql');
+
+        // Build format array based on data types.
+        $formats = [];
+        foreach ($data as $key => $value) {
+            if (is_int($value)) {
+                $formats[] = '%d';
+            } elseif (is_float($value)) {
+                $formats[] = '%f';
+            } else {
+                $formats[] = '%s';
+            }
+        }
+
+        $result = $this->wpdb->update(
+            $this->table_name,
+            $data,
+            ['id' => $tracker_id],
+            $formats,
             ['%d']
         );
 
@@ -366,6 +406,9 @@ class PriceTracker {
         $row['id'] = (int)$row['id'];
         $row['user_id'] = (int)$row['user_id'];
         $row['product_id'] = (int)$row['product_id'];
+        // Geo/currency fields (with fallback for older records).
+        $row['geo'] = $row['geo'] ?? 'US';
+        $row['currency'] = $row['currency'] ?? 'USD';
         $row['start_price'] = $row['start_price'] !== null ? (float)$row['start_price'] : null;
         $row['current_price'] = $row['current_price'] !== null ? (float)$row['current_price'] : null;
         $row['target_price'] = $row['target_price'] !== null ? (float)$row['target_price'] : null;

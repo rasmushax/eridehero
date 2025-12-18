@@ -442,6 +442,19 @@ function erh_register_acf_fields(): void {
                 'rows'         => 5,
                 'instructions' => __( 'One con per line.', 'erh' ),
             ),
+            array(
+                'key'           => 'field_review_gallery',
+                'label'         => __( 'Gallery Images', 'erh' ),
+                'name'          => 'review_gallery',
+                'type'          => 'gallery',
+                'return_format' => 'array',
+                'preview_size'  => 'medium',
+                'library'       => 'all',
+                'min'           => 0,
+                'max'           => 20,
+                'insert'        => 'append',
+                'instructions'  => __( 'Additional product photos. The Featured Image will be used as the main hero image; these become the thumbnail strip below it.', 'erh' ),
+            ),
         ),
         'location' => array(
             array(
@@ -587,6 +600,87 @@ function erh_register_acf_fields(): void {
             ),
         ),
         'menu_order' => 45,
+    ) );
+
+    // ===========================================
+    // USER PROFILE FIELDS
+    // ===========================================
+
+    // Author Profile Fields (for all users)
+    acf_add_local_field_group( array(
+        'key'      => 'group_user_profile',
+        'title'    => __( 'Author Profile', 'erh' ),
+        'fields'   => array(
+            array(
+                'key'           => 'field_user_profile_image',
+                'label'         => __( 'Profile Image', 'erh' ),
+                'name'          => 'profile_image',
+                'type'          => 'image',
+                'return_format' => 'array',
+                'preview_size'  => 'thumbnail',
+                'instructions'  => __( 'Headshot photo for author bylines and bio sections. Recommended: square, at least 200×200px.', 'erh' ),
+                'wrapper'       => array( 'width' => '100' ),
+            ),
+            array(
+                'key'           => 'field_user_title',
+                'label'         => __( 'Title / Role', 'erh' ),
+                'name'          => 'user_title',
+                'type'          => 'text',
+                'instructions'  => __( 'Your role at ERideHero (e.g., "Founder & Lead Reviewer", "Contributing Writer").', 'erh' ),
+                'placeholder'   => 'e.g., Founder & Lead Reviewer',
+                'wrapper'       => array( 'width' => '50' ),
+            ),
+            array(
+                'key'         => 'field_user_social_linkedin',
+                'label'       => __( 'LinkedIn', 'erh' ),
+                'name'        => 'social_linkedin',
+                'type'        => 'url',
+                'placeholder' => 'https://linkedin.com/in/username',
+                'wrapper'     => array( 'width' => '50' ),
+            ),
+            array(
+                'key'         => 'field_user_social_facebook',
+                'label'       => __( 'Facebook', 'erh' ),
+                'name'        => 'social_facebook',
+                'type'        => 'url',
+                'placeholder' => 'https://facebook.com/username',
+                'wrapper'     => array( 'width' => '50' ),
+            ),
+            array(
+                'key'         => 'field_user_social_instagram',
+                'label'       => __( 'Instagram', 'erh' ),
+                'name'        => 'social_instagram',
+                'type'        => 'url',
+                'placeholder' => 'https://instagram.com/username',
+                'wrapper'     => array( 'width' => '50' ),
+            ),
+            array(
+                'key'         => 'field_user_social_twitter',
+                'label'       => __( 'X (Twitter)', 'erh' ),
+                'name'        => 'social_twitter',
+                'type'        => 'url',
+                'placeholder' => 'https://x.com/username',
+                'wrapper'     => array( 'width' => '50' ),
+            ),
+            array(
+                'key'         => 'field_user_social_youtube',
+                'label'       => __( 'YouTube', 'erh' ),
+                'name'        => 'social_youtube',
+                'type'        => 'url',
+                'placeholder' => 'https://youtube.com/@channel',
+                'wrapper'     => array( 'width' => '50' ),
+            ),
+        ),
+        'location' => array(
+            array(
+                array(
+                    'param'    => 'user_form',
+                    'operator' => '==',
+                    'value'    => 'all',
+                ),
+            ),
+        ),
+        'menu_order' => 0,
     ) );
 
     // "About ERideHero" Sidebar (Homepage)

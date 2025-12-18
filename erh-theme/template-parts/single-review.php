@@ -70,22 +70,77 @@ $category_name = erh_get_product_type_short_name( $product_type );
                 <article class="review-main">
 
                     <?php
-                    // TODO: Gallery section
-                    // TODO: Byline section
-                    // TODO: Quick take + score
-                    // TODO: Pros & cons
-                    // TODO: Price intelligence
-                    // TODO: Tested performance
-                    // TODO: Review content (the_content)
-                    // TODO: Full specifications
-                    // TODO: Author box
-                    // TODO: Related reviews
+                    // Gallery section
+                    $review_gallery = get_field( 'review_gallery', $post_id );
+                    get_template_part( 'template-parts/components/gallery', null, array(
+                        'post_id'    => $post_id,
+                        'gallery'    => $review_gallery,
+                        'product_id' => $product_id,
+                    ) );
+
+                    // Byline section
+                    get_template_part( 'template-parts/components/byline', null, array(
+                        'post_id' => $post_id,
+                    ) );
                     ?>
 
-                    <!-- Placeholder: Review content -->
+                    <?php
+                    // Quick take section
+                    $quick_take = get_field( 'review_quick_take', $post_id );
+                    $score      = get_field( 'editor_rating', $product_id );
+
+                    get_template_part( 'template-parts/components/quick-take', null, array(
+                        'text'  => $quick_take,
+                        'score' => $score,
+                    ) );
+
+                    // Pros & cons section
+                    $pros = get_field( 'review_pros', $post_id );
+                    $cons = get_field( 'review_cons', $post_id );
+
+                    get_template_part( 'template-parts/components/pros-cons', null, array(
+                        'pros' => $pros,
+                        'cons' => $cons,
+                    ) );
+                    ?>
+
+                    <?php
+                    // Price intelligence section
+                    get_template_part( 'template-parts/components/price-intel', null, array(
+                        'product_id'   => $product_id,
+                        'product_name' => get_the_title( $product_id ),
+                    ) );
+
+                    // Tested performance section
+                    get_template_part( 'template-parts/components/tested-performance', null, array(
+                        'product_id' => $product_id,
+                    ) );
+                    ?>
+
+                    <!-- Review content -->
                     <div class="review-body">
                         <?php the_content(); ?>
                     </div>
+
+                    <?php
+                    // Full specifications section (after content)
+                    get_template_part( 'template-parts/components/full-specs', null, array(
+                        'product_id'   => $product_id,
+                        'product_type' => $product_type,
+                    ) );
+
+                    // Author box
+                    get_template_part( 'template-parts/components/author-box', null, array(
+                        'post_id' => $post_id,
+                    ) );
+
+                    // Related reviews section
+                    get_template_part( 'template-parts/components/related-reviews', null, array(
+                        'post_id'      => $post_id,
+                        'product_type' => $product_type,
+                        'count'        => 3,
+                    ) );
+                    ?>
 
                 </article>
 

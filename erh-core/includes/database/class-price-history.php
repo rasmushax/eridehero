@@ -113,8 +113,15 @@ class PriceHistory {
         }
 
         if ($geo !== null) {
-            $where_clauses[] = 'geo = %s';
-            $params[] = strtoupper($geo);
+            // Handle both exact match and empty/default values for US
+            $geo = strtoupper($geo);
+            if ($geo === 'US') {
+                // Match 'US', empty string, or NULL (for legacy data)
+                $where_clauses[] = "(geo = %s OR geo = '' OR geo IS NULL)";
+            } else {
+                $where_clauses[] = 'geo = %s';
+            }
+            $params[] = $geo;
         }
 
         if ($currency !== null) {

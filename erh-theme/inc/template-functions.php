@@ -407,7 +407,7 @@ function erh_get_score_label( float $score ): string {
         return 'Great';
     } elseif ( $score >= 7.0 ) {
         return 'Good';
-    } elseif ( $score >= 5.0 ) {
+    } elseif ( $score >= 6.0 ) {
         return 'Average';
     } else {
         return 'Poor';
@@ -429,9 +429,393 @@ function erh_get_score_attr( float $score ): string {
         return 'great';
     } elseif ( $score >= 7.0 ) {
         return 'good';
-    } elseif ( $score >= 5.0 ) {
+    } elseif ( $score >= 6.0 ) {
         return 'average';
     } else {
         return 'poor';
     }
+}
+
+/**
+ * Get specification groups for a product
+ *
+ * Returns organized spec groups with labels and formatted values.
+ * Adapts to different product types (e-scooter, e-bike, etc.)
+ *
+ * @param int    $product_id   The product ID.
+ * @param string $product_type The product type.
+ * @return array Array of spec groups with 'label' and 'specs' arrays.
+ */
+function erh_get_spec_groups( int $product_id, string $product_type ): array {
+    $groups = array();
+
+    // Normalize product type
+    $type_key = strtolower( str_replace( array( ' ', '-' ), '_', $product_type ) );
+
+    if ( $type_key === 'electric_scooter' ) {
+        $groups = erh_get_escooter_spec_groups( $product_id );
+    } elseif ( $type_key === 'electric_bike' ) {
+        $groups = erh_get_ebike_spec_groups( $product_id );
+    } else {
+        // Default fallback - try e-scooter structure
+        $groups = erh_get_escooter_spec_groups( $product_id );
+    }
+
+    // Filter out empty groups
+    return array_filter( $groups, function( $group ) {
+        return ! empty( $group['specs'] );
+    } );
+}
+
+/**
+ * Get e-scooter specification groups
+ *
+ * @param int $product_id The product ID.
+ * @return array Array of spec groups.
+ */
+function erh_get_escooter_spec_groups( int $product_id ): array {
+    // Get nested e-scooter data
+    $escooter = get_field( 'e-scooters', $product_id );
+
+    $groups = array();
+
+    // Claimed Performance (manufacturer specs - NOT tested data)
+    $groups['claimed'] = array(
+        'label' => 'Claimed performance',
+        'specs' => erh_filter_specs( array(
+            array( 'label' => 'Top speed', 'value' => get_field( 'manufacturer_top_speed', $product_id ), 'unit' => 'mph' ),
+            array( 'label' => 'Range', 'value' => get_field( 'manufacturer_range', $product_id ), 'unit' => 'mi' ),
+            array( 'label' => 'Max incline', 'value' => get_field( 'max_incline', $product_id ), 'unit' => '°' ),
+        ) ),
+    );
+
+    // Motor & Power
+    $motor = $escooter['motor'] ?? array();
+    $groups['motor'] = array(
+        'label' => 'Motor & power',
+        'specs' => erh_filter_specs( array(
+            array( 'label' => 'Motor position', 'value' => $motor['motor_position'] ?? '' ),
+            array( 'label' => 'Motor type', 'value' => $motor['motor_type'] ?? '' ),
+            array( 'label' => 'Voltage', 'value' => $motor['voltage'] ?? '', 'unit' => 'V' ),
+            array( 'label' => 'Nominal power', 'value' => $motor['power_nominal'] ?? '', 'unit' => 'W' ),
+            array( 'label' => 'Peak power', 'value' => $motor['power_peak'] ?? '', 'unit' => 'W' ),
+        ) ),
+    );
+
+    // Battery & Charging
+    $battery = $escooter['battery'] ?? array();
+    $groups['battery'] = array(
+        'label' => 'Battery & charging',
+        'specs' => erh_filter_specs( array(
+            array( 'label' => 'Capacity', 'value' => $battery['capacity'] ?? '', 'unit' => 'Wh' ),
+            array( 'label' => 'Voltage', 'value' => $battery['voltage'] ?? '', 'unit' => 'V' ),
+            array( 'label' => 'Amp hours', 'value' => $battery['amphours'] ?? '', 'unit' => 'Ah' ),
+            array( 'label' => 'Battery type', 'value' => $battery['battery_type'] ?? '' ),
+            array( 'label' => 'Battery brand', 'value' => $battery['brand'] ?? '' ),
+            array( 'label' => 'Charging time', 'value' => $battery['charging_time'] ?? '', 'unit' => 'hrs' ),
+        ) ),
+    );
+
+    // Brakes
+    $brakes = $escooter['brakes'] ?? array();
+    $groups['brakes'] = array(
+        'label' => 'Brakes',
+        'specs' => erh_filter_specs( array(
+            array( 'label' => 'Front brake', 'value' => $brakes['front'] ?? '' ),
+            array( 'label' => 'Rear brake', 'value' => $brakes['rear'] ?? '' ),
+            array( 'label' => 'Regenerative braking', 'value' => erh_format_boolean( $brakes['regenerative'] ?? false ) ),
+        ) ),
+    );
+
+    // Wheels & Tires
+    $wheels = $escooter['wheels'] ?? array();
+    $tire_size = erh_format_tire_sizes( $wheels['tire_size_front'] ?? '', $wheels['tire_size_rear'] ?? '' );
+    $groups['wheels'] = array(
+        'label' => 'Wheels & tires',
+        'specs' => erh_filter_specs( array(
+            array( 'label' => 'Tire size', 'value' => $tire_size ),
+            array( 'label' => 'Tire width', 'value' => $wheels['tire_width'] ?? '', 'unit' => '"' ),
+            array( 'label' => 'Tire type', 'value' => $wheels['tire_type'] ?? '' ),
+            array( 'label' => 'Pneumatic type', 'value' => $wheels['pneumatic_type'] ?? '' ),
+            array( 'label' => 'Self-healing tires', 'value' => erh_format_boolean( $wheels['self_healing'] ?? false ) ),
+        ) ),
+    );
+
+    // Suspension
+    $suspension = $escooter['suspension'] ?? array();
+    $suspension_type = $suspension['type'] ?? array();
+    $groups['suspension'] = array(
+        'label' => 'Suspension',
+        'specs' => erh_filter_specs( array(
+            array( 'label' => 'Suspension type', 'value' => is_array( $suspension_type ) ? implode( ', ', $suspension_type ) : $suspension_type ),
+            array( 'label' => 'Adjustable', 'value' => erh_format_boolean( $suspension['adjustable'] ?? false ) ),
+        ) ),
+    );
+
+    // Dimensions & Weight
+    $dims = $escooter['dimensions'] ?? array();
+    $handlebar_height = erh_format_range( $dims['handlebar_height_min'] ?? '', $dims['handlebar_height_max'] ?? '', '"' );
+    $groups['dimensions'] = array(
+        'label' => 'Dimensions & weight',
+        'specs' => erh_filter_specs( array(
+            array( 'label' => 'Weight', 'value' => $dims['weight'] ?? '', 'unit' => 'lbs' ),
+            array( 'label' => 'Max load', 'value' => $dims['max_load'] ?? '', 'unit' => 'lbs' ),
+            array( 'label' => 'Deck length', 'value' => $dims['deck_length'] ?? '', 'unit' => '"' ),
+            array( 'label' => 'Deck width', 'value' => $dims['deck_width'] ?? '', 'unit' => '"' ),
+            array( 'label' => 'Ground clearance', 'value' => $dims['ground_clearance'] ?? '', 'unit' => '"' ),
+            array( 'label' => 'Handlebar height', 'value' => $handlebar_height ),
+            array( 'label' => 'Handlebar width', 'value' => $dims['handlebar_width'] ?? '', 'unit' => '"' ),
+            array( 'label' => 'Unfolded (L×W×H)', 'value' => erh_format_dimensions( $dims['unfolded_length'] ?? '', $dims['unfolded_width'] ?? '', $dims['unfolded_height'] ?? '' ) ),
+            array( 'label' => 'Folded (L×W×H)', 'value' => erh_format_dimensions( $dims['folded_length'] ?? '', $dims['folded_width'] ?? '', $dims['folded_height'] ?? '' ) ),
+            array( 'label' => 'Foldable handlebars', 'value' => erh_format_boolean( $dims['foldable_handlebars'] ?? false ) ),
+        ) ),
+    );
+
+    // Lighting
+    $lighting = $escooter['lighting'] ?? array();
+    $lights = $lighting['lights'] ?? array();
+    $groups['lighting'] = array(
+        'label' => 'Lighting',
+        'specs' => erh_filter_specs( array(
+            array( 'label' => 'Lights', 'value' => is_array( $lights ) ? implode( ', ', $lights ) : $lights ),
+            array( 'label' => 'Turn signals', 'value' => erh_format_boolean( $lighting['turn_signals'] ?? false ) ),
+        ) ),
+    );
+
+    // Controls & Other
+    $other = $escooter['other'] ?? array();
+    $groups['other'] = array(
+        'label' => 'Controls & other',
+        'specs' => erh_filter_specs( array(
+            array( 'label' => 'Throttle type', 'value' => $other['throttle_type'] ?? '' ),
+            array( 'label' => 'Display type', 'value' => $other['display_type'] ?? '' ),
+            array( 'label' => 'Fold location', 'value' => $other['fold_location'] ?? '' ),
+            array( 'label' => 'Terrain', 'value' => $other['terrain'] ?? '' ),
+            array( 'label' => 'IP rating', 'value' => $other['ip_rating'] ?? '' ),
+            array( 'label' => 'Kickstand', 'value' => erh_format_boolean( $other['kickstand'] ?? false ) ),
+            array( 'label' => 'Footrest', 'value' => erh_format_boolean( $other['footrest'] ?? false ) ),
+        ) ),
+    );
+
+    // Features
+    $features = $escooter['features'] ?? array();
+    if ( ! empty( $features ) && is_array( $features ) ) {
+        $groups['features'] = array(
+            'label' => 'Features',
+            'specs' => array(
+                array( 'label' => 'Included features', 'value' => implode( ', ', $features ) ),
+            ),
+        );
+    }
+
+    return $groups;
+}
+
+/**
+ * Get e-bike specification groups
+ *
+ * @param int $product_id The product ID.
+ * @return array Array of spec groups.
+ */
+function erh_get_ebike_spec_groups( int $product_id ): array {
+    // Get nested e-bike data
+    $ebike = get_field( 'e-bikes', $product_id );
+
+    $groups = array();
+
+    // Claimed Performance (manufacturer specs)
+    $groups['claimed'] = array(
+        'label' => 'Claimed performance',
+        'specs' => erh_filter_specs( array(
+            array( 'label' => 'Top speed', 'value' => get_field( 'manufacturer_top_speed', $product_id ), 'unit' => 'mph' ),
+            array( 'label' => 'Range', 'value' => get_field( 'manufacturer_range', $product_id ), 'unit' => 'mi' ),
+        ) ),
+    );
+
+    // Motor
+    $motor = $ebike['motor'] ?? array();
+    $groups['motor'] = array(
+        'label' => 'Motor & power',
+        'specs' => erh_filter_specs( array(
+            array( 'label' => 'Motor type', 'value' => $motor['type'] ?? '' ),
+            array( 'label' => 'Motor position', 'value' => $motor['position'] ?? '' ),
+            array( 'label' => 'Nominal power', 'value' => $motor['power_nominal'] ?? '', 'unit' => 'W' ),
+            array( 'label' => 'Peak power', 'value' => $motor['power_peak'] ?? '', 'unit' => 'W' ),
+            array( 'label' => 'Torque', 'value' => $motor['torque'] ?? '', 'unit' => 'Nm' ),
+        ) ),
+    );
+
+    // Battery
+    $battery = $ebike['battery'] ?? array();
+    $groups['battery'] = array(
+        'label' => 'Battery & charging',
+        'specs' => erh_filter_specs( array(
+            array( 'label' => 'Capacity', 'value' => $battery['capacity'] ?? '', 'unit' => 'Wh' ),
+            array( 'label' => 'Voltage', 'value' => $battery['voltage'] ?? '', 'unit' => 'V' ),
+            array( 'label' => 'Range (claimed)', 'value' => $battery['range_claimed'] ?? '', 'unit' => 'mi' ),
+            array( 'label' => 'Charging time', 'value' => $battery['charging_time'] ?? '', 'unit' => 'hrs' ),
+            array( 'label' => 'Removable', 'value' => erh_format_boolean( $battery['removable'] ?? false ) ),
+        ) ),
+    );
+
+    // Add more e-bike groups as needed...
+
+    return $groups;
+}
+
+/**
+ * Filter out specs with empty values
+ *
+ * @param array $specs Array of specs with label, value, and optional unit.
+ * @return array Filtered specs with formatted values.
+ */
+function erh_filter_specs( array $specs ): array {
+    $filtered = array();
+
+    foreach ( $specs as $spec ) {
+        $value = $spec['value'] ?? '';
+
+        // Skip empty values
+        if ( $value === '' || $value === null || $value === 'Unknown' || $value === 'None' ) {
+            continue;
+        }
+
+        // Skip "No" for boolean fields (only show if "Yes")
+        if ( $value === 'No' ) {
+            continue;
+        }
+
+        // Format value with unit
+        $formatted_value = $value;
+        if ( isset( $spec['unit'] ) && is_numeric( $value ) ) {
+            $formatted_value = $value . ' ' . $spec['unit'];
+        } elseif ( isset( $spec['unit'] ) && $spec['unit'] === '"' && is_numeric( $value ) ) {
+            $formatted_value = $value . '"';
+        }
+
+        $filtered[] = array(
+            'label' => $spec['label'],
+            'value' => $formatted_value,
+        );
+    }
+
+    return $filtered;
+}
+
+/**
+ * Format boolean value for display
+ *
+ * @param mixed $value The boolean value.
+ * @return string 'Yes' or 'No'.
+ */
+function erh_format_boolean( $value ): string {
+    return $value ? 'Yes' : 'No';
+}
+
+/**
+ * Format tire sizes (front and rear)
+ *
+ * @param mixed $front Front tire size.
+ * @param mixed $rear  Rear tire size.
+ * @return string Formatted tire size string.
+ */
+function erh_format_tire_sizes( $front, $rear ): string {
+    if ( empty( $front ) && empty( $rear ) ) {
+        return '';
+    }
+
+    if ( $front && $rear && $front === $rear ) {
+        return $front . '"';
+    }
+
+    if ( $front && $rear ) {
+        return $front . '" / ' . $rear . '"';
+    }
+
+    return ( $front ?: $rear ) . '"';
+}
+
+/**
+ * Format dimension range (min to max)
+ *
+ * @param mixed  $min  Minimum value.
+ * @param mixed  $max  Maximum value.
+ * @param string $unit Unit suffix.
+ * @return string Formatted range string.
+ */
+function erh_format_range( $min, $max, string $unit = '' ): string {
+    if ( empty( $min ) && empty( $max ) ) {
+        return '';
+    }
+
+    if ( $min && $max && $min !== $max ) {
+        return $min . '–' . $max . $unit;
+    }
+
+    return ( $min ?: $max ) . $unit;
+}
+
+/**
+ * Format dimensions (L × W × H)
+ *
+ * @param mixed $length Length value.
+ * @param mixed $width  Width value.
+ * @param mixed $height Height value.
+ * @return string Formatted dimensions string.
+ */
+function erh_format_dimensions( $length, $width, $height ): string {
+    if ( empty( $length ) && empty( $width ) && empty( $height ) ) {
+        return '';
+    }
+
+    $parts = array_filter( array( $length, $width, $height ), function( $v ) {
+        return ! empty( $v );
+    } );
+
+    if ( count( $parts ) < 3 ) {
+        return '';
+    }
+
+    return $length . ' × ' . $width . ' × ' . $height . '"';
+}
+
+/**
+ * Extract YouTube video ID from URL
+ *
+ * Supports multiple YouTube URL formats:
+ * - https://www.youtube.com/watch?v=VIDEO_ID
+ * - https://youtu.be/VIDEO_ID
+ * - https://www.youtube.com/embed/VIDEO_ID
+ * - https://www.youtube.com/v/VIDEO_ID
+ * - Just the video ID
+ *
+ * @param string $url YouTube URL or video ID
+ * @return string|null Video ID or null if not found
+ */
+function erh_extract_youtube_id( string $url ): ?string {
+    if ( empty( $url ) ) {
+        return null;
+    }
+
+    // Already just the ID (11 alphanumeric characters)
+    if ( preg_match( '/^[a-zA-Z0-9_-]{11}$/', $url ) ) {
+        return $url;
+    }
+
+    // Standard YouTube URL patterns
+    $patterns = array(
+        '/youtube\.com\/watch\?v=([a-zA-Z0-9_-]{11})/',      // youtube.com/watch?v=
+        '/youtube\.com\/embed\/([a-zA-Z0-9_-]{11})/',        // youtube.com/embed/
+        '/youtube\.com\/v\/([a-zA-Z0-9_-]{11})/',            // youtube.com/v/
+        '/youtu\.be\/([a-zA-Z0-9_-]{11})/',                  // youtu.be/
+        '/youtube\.com\/shorts\/([a-zA-Z0-9_-]{11})/',       // youtube.com/shorts/
+    );
+
+    foreach ( $patterns as $pattern ) {
+        if ( preg_match( $pattern, $url, $matches ) ) {
+            return $matches[1];
+        }
+    }
+
+    return null;
 }

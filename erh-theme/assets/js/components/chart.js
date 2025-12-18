@@ -304,7 +304,11 @@ class ERideHeroChart {
         this._yMax = maxVal + padding;
 
         // X scale - line goes full edge-to-edge
+        // Handle single data point (avoid division by zero)
         const xScale = (index) => {
+            if (values.length <= 1) {
+                return chartArea.left + chartArea.width / 2; // Center single point
+            }
             return chartArea.left + (index / (values.length - 1)) * chartArea.width;
         };
 

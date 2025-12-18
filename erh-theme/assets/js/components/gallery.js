@@ -196,8 +196,8 @@ export class Gallery {
     this.arrowPrev = this.element.querySelector(SELECTORS.arrowPrev);
     this.arrowNext = this.element.querySelector(SELECTORS.arrowNext);
 
+    // Single image with no thumbnails is valid - just skip JS initialization
     if (!this.mainImage || !this.thumbs.length) {
-      console.warn('Gallery: Missing main image or thumbnails', this.element);
       return;
     }
 

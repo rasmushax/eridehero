@@ -40,7 +40,7 @@
     flex-shrink: 0;
     width: 18px;
     height: 18px;
-    color: #16a34a;
+    color: var(--color-success);
     margin-top: 1px;
 }
 
@@ -48,6 +48,6 @@
     flex-shrink: 0;
     width: 18px;
     height: 18px;
-    color: #dc2626;
+    color: var(--color-error);
     margin-top: 1px;
 }

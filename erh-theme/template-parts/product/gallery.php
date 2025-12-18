@@ -1,6 +1,9 @@
 <?php
 /**
- * Product Gallery
+ * Product Gallery (Wrapper)
+ *
+ * Wrapper for the gallery component when used on single product pages.
+ * Uses the product's featured image and gallery.
  *
  * @package ERideHero
  */
@@ -11,15 +14,13 @@ if ( ! defined( 'ABSPATH' ) ) {
 }
 
 $product_id = get_the_ID();
-$thumbnail  = get_the_post_thumbnail_url( $product_id, 'erh-gallery' );
-?>
-<div class="gallery">
-    <div class="gallery-main">
-        <?php if ( $thumbnail ) : ?>
-            <img src="<?php echo esc_url( $thumbnail ); ?>" alt="<?php the_title_attribute(); ?>" class="gallery-main-img">
-        <?php else : ?>
-            <div class="gallery-placeholder"><?php esc_html_e( 'No image', 'erh' ); ?></div>
-        <?php endif; ?>
-    </div>
-    <!-- Gallery thumbnails and lightbox will be enhanced with JS -->
-</div>
+
+// Get product gallery from ACF (if exists)
+$gallery = get_field( 'gallery', $product_id );
+
+// Use the reusable gallery component
+get_template_part( 'template-parts/components/gallery', null, array(
+    'post_id'    => $product_id,
+    'gallery'    => $gallery,
+    'product_id' => $product_id, // Same product for video lookup
+) );

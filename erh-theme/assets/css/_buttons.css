@@ -3,7 +3,7 @@
 
    Usage:
    - Base: .btn (required)
-   - Variants: .btn-primary, .btn-secondary, .btn-ghost, .btn-dark, .btn-outline, .btn-link
+   - Variants: .btn-primary, .btn-secondary, .btn-ghost, .btn-dark, .btn-outline, .btn-error, .btn-link
    - Sizes: .btn-xs, .btn-sm, (default md), .btn-lg, .btn-xl
    - Full width: .btn-block
    - Icon only: .btn-icon (standalone, no .btn needed)
@@ -19,6 +19,7 @@
 /* ===== BASE BUTTON ===== */
 
 .btn {
+    position: relative;
     display: inline-flex;
     align-items: center;
     justify-content: center;
@@ -121,6 +122,19 @@
 .btn-outline:focus {
     background: var(--color-primary);
     color: var(--color-white);
+}
+
+/* Error/Danger - red background for destructive actions */
+.btn-error {
+    background: var(--color-error);
+    color: var(--color-white);
+    border-color: var(--color-error);
+}
+
+.btn-error:hover,
+.btn-error:focus {
+    background: #c82333;
+    border-color: #bd2130;
 }
 
 /* Link - no padding, no background, just styled text */

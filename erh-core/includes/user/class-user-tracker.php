@@ -110,11 +110,23 @@ class UserTracker {
                 ],
                 'target_price' => [
                     'type'              => 'number',
-                    'sanitize_callback' => 'floatval',
+                    'sanitize_callback' => fn($value) => (float) $value,
                 ],
                 'price_drop'   => [
                     'type'              => 'number',
-                    'sanitize_callback' => 'floatval',
+                    'sanitize_callback' => fn($value) => (float) $value,
+                ],
+                'geo' => [
+                    'type'              => 'string',
+                    'default'           => 'US',
+                    'enum'              => ['US', 'GB', 'EU', 'CA', 'AU'],
+                    'sanitize_callback' => 'sanitize_text_field',
+                ],
+                'currency' => [
+                    'type'              => 'string',
+                    'default'           => 'USD',
+                    'enum'              => ['USD', 'GBP', 'EUR', 'CAD', 'AUD'],
+                    'sanitize_callback' => 'sanitize_text_field',
                 ],
                 'enable_emails' => [
                     'type'    => 'boolean',
@@ -154,11 +166,11 @@ class UserTracker {
                 ],
                 'target_price' => [
                     'type'              => 'number',
-                    'sanitize_callback' => 'floatval',
+                    'sanitize_callback' => fn($value) => (float) $value,
                 ],
                 'price_drop'   => [
                     'type'              => 'number',
-                    'sanitize_callback' => 'floatval',
+                    'sanitize_callback' => fn($value) => (float) $value,
                 ],
             ],
         ]);
@@ -201,6 +213,12 @@ class UserTracker {
                     'required'          => true,
                     'type'              => 'integer',
                     'sanitize_callback' => 'absint',
+                ],
+                'geo' => [
+                    'type'              => 'string',
+                    'default'           => 'US',
+                    'enum'              => ['US', 'GB', 'EU', 'CA', 'AU'],
+                    'sanitize_callback' => 'sanitize_text_field',
                 ],
             ],
         ]);
@@ -297,6 +315,8 @@ class UserTracker {
         $target_price = $request->get_param('target_price');
         $price_drop = $request->get_param('price_drop');
         $enable_emails = (bool) $request->get_param('enable_emails');
+        $geo = $request->get_param('geo') ?: 'US';
+        $currency = $request->get_param('currency') ?: 'USD';
 
         // Verify product exists.
         $product = get_post($product_id);
@@ -308,9 +328,9 @@ class UserTracker {
             );
         }
 
-        // Get current price.
+        // Get current price for the user's geo.
         $price_fetcher = $this->get_price_fetcher();
-        $best_price = $price_fetcher->get_best_price($product_id);
+        $best_price = $price_fetcher->get_best_price($product_id, $geo);
 
         if (!$best_price) {
             return new \WP_Error(
@@ -365,12 +385,14 @@ class UserTracker {
 
             $tracker_id = (int) $existing;
         } else {
-            // Create new tracker.
+            // Create new tracker with geo/currency.
             $result = $this->wpdb->insert(
                 $this->table_name,
                 [
                     'user_id'       => $user_id,
                     'product_id'    => $product_id,
+                    'geo'           => $geo,
+                    'currency'      => $currency,
                     'start_price'   => $current_price,
                     'current_price' => $current_price,
                     'target_price'  => $target_price,
@@ -434,9 +456,10 @@ class UserTracker {
             );
         }
 
-        // Get current price.
+        // Get current price for the tracker's geo.
+        $tracker_geo = $tracker['geo'] ?? 'US';
         $price_fetcher = $this->get_price_fetcher();
-        $best_price = $price_fetcher->get_best_price((int) $tracker['product_id']);
+        $best_price = $price_fetcher->get_best_price((int) $tracker['product_id'], $tracker_geo);
         $current_price = $best_price ? $best_price['price'] : (float) $tracker['current_price'];
 
         // Build update data.
@@ -569,15 +592,17 @@ class UserTracker {
      */
     public function check_price_data(\WP_REST_Request $request): \WP_REST_Response {
         $product_id = (int) $request->get_param('product_id');
+        $geo = $request->get_param('geo') ?: 'US';
 
         $price_fetcher = $this->get_price_fetcher();
-        $best_price = $price_fetcher->get_best_price($product_id);
+        $best_price = $price_fetcher->get_best_price($product_id, $geo);
 
         if (!$best_price) {
             return new \WP_REST_Response([
                 'success'        => true,
                 'has_price_data' => false,
                 'current_price'  => null,
+                'geo'            => $geo,
             ], 200);
         }
 
@@ -587,6 +612,7 @@ class UserTracker {
             'current_price'  => $best_price['price'],
             'currency'       => $best_price['currency'],
             'in_stock'       => $best_price['in_stock'],
+            'geo'            => $geo,
         ], 200);
     }
 
@@ -598,6 +624,8 @@ class UserTracker {
      */
     private function enrich_tracker(array $tracker): array {
         $product_id = (int) $tracker['product_id'];
+        $tracker_geo = $tracker['geo'] ?? 'US';
+        $tracker_currency = $tracker['currency'] ?? 'USD';
 
         // Get product data.
         $product = get_post($product_id);
@@ -605,13 +633,17 @@ class UserTracker {
         $tracker['product_url'] = $product ? get_permalink($product_id) : '';
         $tracker['product_thumbnail'] = get_the_post_thumbnail_url($product_id, 'thumbnail') ?: '';
 
-        // Get current price.
+        // Ensure geo/currency are set on the tracker.
+        $tracker['geo'] = $tracker_geo;
+        $tracker['currency'] = $tracker_currency;
+
+        // Get current price for the tracker's geo region.
         $price_fetcher = $this->get_price_fetcher();
-        $best_price = $price_fetcher->get_best_price($product_id);
+        $best_price = $price_fetcher->get_best_price($product_id, $tracker_geo);
 
         if ($best_price) {
             $tracker['live_price'] = $best_price['price'];
-            $tracker['currency'] = $best_price['currency'];
+            $tracker['live_currency'] = $best_price['currency'];
             $tracker['in_stock'] = $best_price['in_stock'];
             $tracker['retailer'] = $best_price['retailer'];
 
@@ -625,7 +657,7 @@ class UserTracker {
             }
         } else {
             $tracker['live_price'] = null;
-            $tracker['currency'] = 'USD';
+            $tracker['live_currency'] = $tracker_currency;
             $tracker['in_stock'] = false;
             $tracker['retailer'] = null;
             $tracker['target_met'] = false;

@@ -192,6 +192,8 @@ class NotificationJob implements CronJobInterface {
             $price_drop = $tracker['price_drop'];
             $last_notified_price = $tracker['last_notified_price'];
             $last_notification_time = $tracker['last_notification_time'];
+            $tracker_geo = $tracker['geo'] ?? 'US';
+            $tracker_currency = $tracker['currency'] ?? 'USD';
 
             // Check notification cooldown (24 hours).
             if ($last_notification_time) {
@@ -201,14 +203,15 @@ class NotificationJob implements CronJobInterface {
                 }
             }
 
-            // Get current price.
-            $prices = $this->price_fetcher->get_prices($product_id);
+            // Get current price for the tracker's geo region.
+            $prices = $this->price_fetcher->get_prices($product_id, $tracker_geo);
 
             if (empty($prices) || !isset($prices[0]['price'])) {
                 continue;
             }
 
             $current_price = (float) $prices[0]['price'];
+            $price_currency = $prices[0]['currency'] ?? $tracker_currency;
 
             // Skip invalid prices.
             if ($current_price <= 0) {
@@ -271,6 +274,8 @@ class NotificationJob implements CronJobInterface {
                     'url'               => get_permalink($product_id),
                     'tracking_users'    => $tracking_users,
                     'tracker_id'        => $tracker['id'],
+                    'geo'               => $tracker_geo,
+                    'currency'          => $price_currency,
                 ];
             }
         }

@@ -289,6 +289,8 @@ class EmailTemplate {
         $savings_percent = $deal['savings_percent'] ?? 0;
         $url = $deal['url'] ?? '#';
         $tracking_users = $deal['tracking_users'] ?? 0;
+        $currency = $deal['currency'] ?? 'USD';
+        $currency_symbol = $this->get_currency_symbol($currency);
 
         ob_start();
         ?>
@@ -302,11 +304,11 @@ class EmailTemplate {
                 <td width="70%" valign="top" style="padding-left: 20px;">
                     <?php echo $this->paragraph('<strong>' . esc_html($name) . '</strong>', ['margin' => '0 0 10px 0']); ?>
                     <?php echo $this->paragraph(
-                        sprintf('Price dropped from $%s to $%s', number_format($compare_price, 2), number_format($current_price, 2)),
+                        sprintf('Price dropped from %s%s to %s%s', $currency_symbol, number_format($compare_price, 2), $currency_symbol, number_format($current_price, 2)),
                         ['margin' => '0 0 8px 0']
                     ); ?>
                     <?php echo $this->paragraph(
-                        sprintf('You save: $%s (%d%% off!)', number_format($savings, 2), $savings_percent),
+                        sprintf('You save: %s%s (%d%% off!)', $currency_symbol, number_format($savings, 2), $savings_percent),
                         ['margin' => '0 0 16px 0', 'color' => self::COLOR_GREEN]
                     ); ?>
                     <?php echo $this->button($url, 'View Deal Now'); ?>
@@ -321,6 +323,24 @@ class EmailTemplate {
         </table>
         <?php
         return ob_get_clean();
+    }
+
+    /**
+     * Get currency symbol for a currency code.
+     *
+     * @param string $currency_code ISO currency code.
+     * @return string Currency symbol.
+     */
+    private function get_currency_symbol(string $currency_code): string {
+        $symbols = [
+            'USD' => '$',
+            'EUR' => '€',
+            'GBP' => '£',
+            'CAD' => 'CA$',
+            'AUD' => 'A$',
+        ];
+
+        return $symbols[strtoupper($currency_code)] ?? $currency_code . ' ';
     }
 
     /**

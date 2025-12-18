@@ -32,6 +32,13 @@ function erh_theme_setup(): void {
     add_image_size( 'erh-gallery', 800, 533, true );       // 3:2 ratio for gallery
     add_image_size( 'erh-thumbnail', 100, 100, true );     // Square thumbnails
 
+    // Optimized UI component sizes (2x for retina)
+    add_image_size( 'erh-avatar', 80, 80, true );           // 40px avatar (byline), hard crop 1:1
+    add_image_size( 'erh-product-xs', 9999, 64, false );    // 32px height (price intel)
+    add_image_size( 'erh-product-sm', 9999, 80, false );    // 40px height (homepage cards)
+    add_image_size( 'erh-product-md', 9999, 160, false );   // 80px height (best deals)
+    add_image_size( 'erh-logo-small', 9999, 48, false );    // 24px height (retailer logos)
+
     // Register navigation menus
     register_nav_menus( array(
         'primary'      => __( 'Primary Menu', 'erh' ),

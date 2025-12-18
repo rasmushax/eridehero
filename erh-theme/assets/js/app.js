@@ -1,100 +1,158 @@
 /**
  * ERideHero Main Application
  * Initializes all components and global event handlers
+ *
+ * Uses dynamic imports for page-specific components to reduce initial bundle size.
  */
 
+// Core components - loaded on every page
 import { initMobileMenu } from './components/mobile-menu.js';
 import { initSearch } from './components/search.js';
 import { initDropdowns } from './components/dropdown.js';
-import { initFinderTabs } from './components/finder-tabs.js';
-import { initDealsTabs } from './components/deals-tabs.js';
-import { initDeals } from './components/deals.js';
 import { initCustomSelects } from './components/custom-select.js';
 import { initHeaderScroll } from './components/header-scroll.js';
-import { initComparison } from './components/comparison.js';
-import chart from './components/chart.js';
-import stickyBuyBar from './components/sticky-buy-bar.js';
-import './components/gallery.js'; // Auto-initializes galleries
 import './components/popover.js'; // Auto-initializes popovers
 import './components/modal.js'; // Auto-initializes modals
 import './components/tooltip.js'; // Auto-initializes tooltips
-import './components/price-alert.js'; // Price alert modal interactions
-import './components/archive-filter.js'; // Auto-initializes archive filters
-import './components/archive-sort.js'; // Auto-initializes archive sorting
-import { initToc } from './components/toc.js';
-import { initContactForm } from './components/contact.js';
+import './components/toast.js'; // Toast notifications (auto-init container)
+
+// Lazy-loaded on demand (these create elements dynamically when needed)
+import './components/auth-modal.js';
+import './components/price-alert.js';
 
 (function() {
     'use strict';
 
-    // Initialize components
+    // Initialize core components (always needed)
     const mobileMenu = initMobileMenu();
     const search = initSearch();
     const dropdowns = initDropdowns();
-    const finderTabs = initFinderTabs();
     const customSelects = initCustomSelects();
-
-    // Homepage deals (dynamic loading with geo-aware pricing)
-    initDeals();
-
-    // Hub deals (filter by price range)
-    initDealsTabs({
-        tabsSelector: '.hub-deals-tabs',
-        gridSelector: '.hub-deals-grid',
-        carouselSelector: '.hub-deals-carousel',
-        filterType: 'price',
-        filterAttribute: 'price'
-    });
     const headerScroll = initHeaderScroll();
 
-    // Initialize async components
+    // ===========================================
+    // CONDITIONAL COMPONENT LOADING
+    // Only load JS for components that exist on the page
+    // ===========================================
 
-    // Homepage comparison (side-by-side layout)
-    initComparison({
-        containerId: 'comparison-container',
-        rightColumnId: 'comparison-right-column',
-        submitBtnId: 'comparison-submit',
-        categoryPillId: 'comparison-category-pill',
-        categoryTextId: 'comparison-category-text',
-        categoryClearId: 'comparison-category-clear',
-        announcerId: 'comparison-announcer',
-        wrapperClass: 'comparison-input-wrapper',
-        showCategoryInResults: true
-    });
+    // Gallery - only if there are thumbnails to interact with
+    if (document.querySelector('[data-gallery] .gallery-thumbs')) {
+        import('./components/gallery.js');
+    }
 
-    // Hub comparison (stacked layout, category-filtered)
-    initComparison({
-        containerId: 'hub-comparison-container',
-        inputsContainerId: 'hub-compare-inputs',
-        submitBtnId: 'hub-comparison-submit',
-        categoryFilter: 'escooter',
-        wrapperClass: 'comparison-input-wrapper comparison-light',
-        showCategoryInResults: false
-    });
+    // Price Intelligence - only on pages with the component
+    if (document.querySelector('[data-price-intel]')) {
+        import('./components/price-intel.js');
+    }
 
-    // Review page: Charts (auto-init based on data attributes)
-    chart.autoInit();
+    // Charts - only if chart containers exist
+    if (document.querySelector('[data-erh-chart]')) {
+        import('./components/chart.js').then(module => {
+            module.default.autoInit();
+        });
+    }
 
-    // Review page: Sticky buy bar
-    stickyBuyBar.init();
+    // Sticky buy bar - only on review pages
+    if (document.querySelector('.sticky-buy-bar')) {
+        import('./components/sticky-buy-bar.js').then(module => {
+            module.default.init();
+        });
+    }
 
-    // Review page: Table of Contents
-    initToc('.toc', {
-        offset: 100
-    });
+    // Table of Contents - only if TOC exists
+    if (document.querySelector('.toc')) {
+        import('./components/toc.js').then(module => {
+            module.initToc('.toc', { offset: 100 });
+        });
+    }
 
-    // Contact page: Form handling
-    initContactForm();
+    // Archive filters/sort - only on archive pages
+    if (document.querySelector('[data-archive-filters]')) {
+        import('./components/archive-filter.js');
+    }
+    if (document.querySelector('[data-archive-sort]')) {
+        import('./components/archive-sort.js');
+    }
 
-    // Review page: Sidebar comparison (with locked current product)
-    initComparison({
-        containerId: 'review-sidebar-compare',
-        inputsContainerId: 'review-sidebar-compare-inputs',
-        submitBtnId: 'review-sidebar-compare-btn',
-        wrapperClass: 'comparison-input-wrapper comparison-light',
-        categoryFilter: 'escooter',
-        showCategoryInResults: false
-    });
+    // Contact form - only on contact page
+    if (document.querySelector('[data-contact-form]')) {
+        import('./components/contact.js').then(module => {
+            module.initContactForm();
+        });
+    }
+
+    // Finder tabs - only on pages with finder
+    if (document.querySelector('.finder-tabs')) {
+        import('./components/finder-tabs.js').then(module => {
+            module.initFinderTabs();
+        });
+    }
+
+    // Homepage deals - only on homepage
+    if (document.querySelector('[data-deals-section]')) {
+        import('./components/deals.js').then(module => {
+            module.initDeals();
+        });
+    }
+
+    // Hub deals tabs - only on hub pages
+    if (document.querySelector('.hub-deals-tabs')) {
+        import('./components/deals-tabs.js').then(module => {
+            module.initDealsTabs({
+                tabsSelector: '.hub-deals-tabs',
+                gridSelector: '.hub-deals-grid',
+                carouselSelector: '.hub-deals-carousel',
+                filterType: 'price',
+                filterAttribute: 'price'
+            });
+        });
+    }
+
+    // Comparison tools - only if containers exist
+    if (document.getElementById('comparison-container')) {
+        import('./components/comparison.js').then(module => {
+            // Homepage comparison (side-by-side layout)
+            module.initComparison({
+                containerId: 'comparison-container',
+                rightColumnId: 'comparison-right-column',
+                submitBtnId: 'comparison-submit',
+                categoryPillId: 'comparison-category-pill',
+                categoryTextId: 'comparison-category-text',
+                categoryClearId: 'comparison-category-clear',
+                announcerId: 'comparison-announcer',
+                wrapperClass: 'comparison-input-wrapper',
+                showCategoryInResults: true
+            });
+        });
+    }
+
+    if (document.getElementById('hub-comparison-container')) {
+        import('./components/comparison.js').then(module => {
+            // Hub comparison (stacked layout, category-filtered)
+            module.initComparison({
+                containerId: 'hub-comparison-container',
+                inputsContainerId: 'hub-compare-inputs',
+                submitBtnId: 'hub-comparison-submit',
+                categoryFilter: 'escooter',
+                wrapperClass: 'comparison-input-wrapper comparison-light',
+                showCategoryInResults: false
+            });
+        });
+    }
+
+    if (document.getElementById('review-sidebar-compare')) {
+        import('./components/comparison.js').then(module => {
+            // Review page: Sidebar comparison (with locked current product)
+            module.initComparison({
+                containerId: 'review-sidebar-compare',
+                inputsContainerId: 'review-sidebar-compare-inputs',
+                submitBtnId: 'review-sidebar-compare-btn',
+                wrapperClass: 'comparison-input-wrapper comparison-light',
+                categoryFilter: 'escooter',
+                showCategoryInResults: false
+            });
+        });
+    }
 
     // Global keyboard handling
     document.addEventListener('keydown', (e) => {
