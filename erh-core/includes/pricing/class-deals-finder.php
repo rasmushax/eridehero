@@ -21,11 +21,12 @@ use ERH\Database\ProductCache;
  *     'US' => [
  *         'current_price' => 499.99,
  *         'currency' => 'USD',
- *         'avg_price_3m' => 549.99,
- *         'avg_price_6m' => 599.99,
- *         'avg_price_12m' => 579.99,
- *         'lowest_price' => 449.99,
- *         'highest_price' => 699.99,
+ *         'avg_3m' => 549.99,
+ *         'avg_6m' => 599.99,
+ *         'avg_12m' => 579.99,
+ *         'avg_all' => 560.00,
+ *         'low_all' => 449.99,
+ *         'high_all' => 699.99,
  *         'instock' => true,
  *         'retailer' => 'Amazon',
  *         'bestlink' => 'https://...',
@@ -81,7 +82,7 @@ class DealsFinder {
      * @param float       $price_difference_threshold Minimum percentage below average (negative value, e.g., -5 for 5% below).
      * @param int         $limit                     Maximum number of deals to return.
      * @param string      $geo                       Geo code (e.g., 'US', 'GB').
-     * @param string      $period                    Average period to compare against ('3m', '6m', '12m').
+     * @param string      $period                    Average period to compare against ('3m', '6m', '12m', 'all').
      * @return array<int, array<string, mixed>> Array of deal products with price analysis.
      */
     public function get_deals(
@@ -91,19 +92,13 @@ class DealsFinder {
         string $geo = self::DEFAULT_GEO,
         string $period = self::DEFAULT_PERIOD
     ): array {
-        // DEBUG: Log method call.
-        $type_label = $product_type ?? 'ALL';
-        error_log("[ERH DealsFinder] get_deals() called for type: {$type_label}, geo: {$geo}, period: {$period}, threshold: {$price_difference_threshold}");
-
         // Validate period.
         if (!in_array($period, self::PERIODS, true)) {
-            error_log("[ERH DealsFinder] Invalid period '{$period}', using default: " . self::DEFAULT_PERIOD);
             $period = self::DEFAULT_PERIOD;
         }
 
-        // Cache stores keys as avg_3m, avg_6m, avg_12m, avg_all (not avg_price_*).
+        // Cache stores keys as avg_3m, avg_6m, avg_12m, avg_all.
         $avg_key = 'avg_' . $period;
-        error_log("[ERH DealsFinder] Using avg_key: {$avg_key}");
 
         // Build filters.
         $filters = [];
@@ -120,63 +115,32 @@ class DealsFinder {
             0
         );
 
-        error_log("[ERH DealsFinder] Products from cache: " . count($products));
-
-        // DEBUG: Track filtering stats.
-        $stats = [
-            'total_products' => count($products),
-            'no_price_history' => 0,
-            'no_geo_data' => 0,
-            'out_of_stock' => 0,
-            'no_current_price' => 0,
-            'no_avg_price' => 0,
-            'above_threshold' => 0,
-            'is_deal' => 0,
-        ];
-
         $deals = [];
 
         foreach ($products as $product) {
-            $product_name = $product['name'] ?? 'Unknown';
-            $product_id = $product['product_id'] ?? 0;
-
             // Skip products without price_history.
             if (empty($product['price_history']) || !is_array($product['price_history'])) {
-                $stats['no_price_history']++;
                 continue;
             }
 
             // Get geo-specific data.
             $geo_data = $product['price_history'][$geo] ?? null;
             if (!$geo_data) {
-                $stats['no_geo_data']++;
-                // DEBUG: Log first few products without geo data.
-                if ($stats['no_geo_data'] <= 3) {
-                    $available_geos = array_keys($product['price_history']);
-                    error_log("[ERH DealsFinder] Product {$product_id} ({$product_name}): No data for geo '{$geo}'. Available geos: " . implode(', ', $available_geos));
-                }
                 continue;
             }
 
             // Skip if not in stock for this geo.
             if (empty($geo_data['instock'])) {
-                $stats['out_of_stock']++;
                 continue;
             }
 
             // Skip if no current price.
             if (empty($geo_data['current_price']) || $geo_data['current_price'] <= 0) {
-                $stats['no_current_price']++;
                 continue;
             }
 
             // Skip if no average for requested period.
             if (empty($geo_data[$avg_key]) || $geo_data[$avg_key] <= 0) {
-                $stats['no_avg_price']++;
-                // DEBUG: Log first few products without avg price.
-                if ($stats['no_avg_price'] <= 3) {
-                    error_log("[ERH DealsFinder] Product {$product_id} ({$product_name}): No {$avg_key}. Current price: {$geo_data['current_price']}. Available keys: " . implode(', ', array_keys($geo_data)));
-                }
                 continue;
             }
 
@@ -186,20 +150,17 @@ class DealsFinder {
             $discount = (($current_price - $avg_price) / $avg_price) * 100;
 
             if ($discount <= $price_difference_threshold) {
-                $stats['is_deal']++;
                 $product['deal_analysis'] = [
                     'current_price'    => $current_price,
                     'currency'         => $geo_data['currency'] ?? 'USD',
                     'avg_price'        => $avg_price,
                     'avg_period'       => $period,
-                    // Read from cache keys (avg_3m, avg_6m, etc.).
                     'avg_price_3m'     => $geo_data['avg_3m'] ?? null,
                     'avg_price_6m'     => $geo_data['avg_6m'] ?? null,
                     'avg_price_12m'    => $geo_data['avg_12m'] ?? null,
                     'avg_price_all'    => $geo_data['avg_all'] ?? null,
                     'discount_percent' => round($discount, 1),
                     'savings_amount'   => round($avg_price - $current_price, 2),
-                    // Low/high from cache.
                     'lowest_price'     => $geo_data['low_all'] ?? null,
                     'highest_price'    => $geo_data['high_all'] ?? null,
                     'retailer'         => $geo_data['retailer'] ?? null,
@@ -208,28 +169,8 @@ class DealsFinder {
                 ];
                 $product['geo'] = $geo;
                 $deals[] = $product;
-
-                // DEBUG: Log deals found.
-                error_log("[ERH DealsFinder] DEAL FOUND: {$product_name} (ID: {$product_id}) - Current: {$current_price}, Avg({$period}): {$avg_price}, Discount: " . round($discount, 1) . '%');
-            } else {
-                $stats['above_threshold']++;
-                // DEBUG: Log first few products above threshold.
-                if ($stats['above_threshold'] <= 3) {
-                    error_log("[ERH DealsFinder] Above threshold: {$product_name} - Current: {$current_price}, Avg({$period}): {$avg_price}, Discount: " . round($discount, 1) . '% (threshold: ' . $price_difference_threshold . '%)');
-                }
             }
         }
-
-        // DEBUG: Log filtering stats.
-        error_log("[ERH DealsFinder] === FILTERING STATS for {$type_label} (geo: {$geo}) ===");
-        error_log("[ERH DealsFinder] Total products from cache: {$stats['total_products']}");
-        error_log("[ERH DealsFinder] Skipped - no price_history: {$stats['no_price_history']}");
-        error_log("[ERH DealsFinder] Skipped - no geo data for '{$geo}': {$stats['no_geo_data']}");
-        error_log("[ERH DealsFinder] Skipped - out of stock: {$stats['out_of_stock']}");
-        error_log("[ERH DealsFinder] Skipped - no current price: {$stats['no_current_price']}");
-        error_log("[ERH DealsFinder] Skipped - no {$avg_key}: {$stats['no_avg_price']}");
-        error_log("[ERH DealsFinder] Skipped - above threshold ({$price_difference_threshold}%): {$stats['above_threshold']}");
-        error_log("[ERH DealsFinder] DEALS FOUND: {$stats['is_deal']}");
 
         // Sort by discount (best deals first - most negative).
         usort($deals, function ($a, $b) {
@@ -237,10 +178,7 @@ class DealsFinder {
         });
 
         // Limit results.
-        $result = array_slice($deals, 0, $limit);
-        error_log("[ERH DealsFinder] Returning " . count($result) . " deals (limit: {$limit})");
-
-        return $result;
+        return array_slice($deals, 0, $limit);
     }
 
     /**
@@ -249,7 +187,7 @@ class DealsFinder {
      * @param float  $price_difference_threshold Minimum percentage below average.
      * @param int    $limit                      Maximum deals per product type.
      * @param string $geo                        Geo code.
-     * @param string $period                     Average period ('3m', '6m', '12m').
+     * @param string $period                     Average period ('3m', '6m', '12m', 'all').
      * @return array<string, array<int, array<string, mixed>>> Deals grouped by product type.
      */
     public function get_all_deals(
@@ -283,7 +221,7 @@ class DealsFinder {
      *
      * @param float  $price_difference_threshold Minimum percentage below average.
      * @param string $geo                        Geo code.
-     * @param string $period                     Average period ('3m', '6m', '12m').
+     * @param string $period                     Average period ('3m', '6m', '12m', 'all').
      * @return array<string, array<string, mixed>|null> Best deal per product type.
      */
     public function get_top_deals(
@@ -307,7 +245,7 @@ class DealsFinder {
      * @param int    $product_id                 The product post ID.
      * @param float  $price_difference_threshold Minimum percentage below average.
      * @param string $geo                        Geo code.
-     * @param string $period                     Average period ('3m', '6m', '12m').
+     * @param string $period                     Average period ('3m', '6m', '12m', 'all').
      * @return array<string, mixed>|null Deal analysis or null if not a deal.
      */
     public function is_deal(
@@ -361,7 +299,6 @@ class DealsFinder {
             'currency'         => $geo_data['currency'] ?? 'USD',
             'avg_price'        => $avg_price,
             'avg_period'       => $period,
-            // Read from cache keys (avg_3m, avg_6m, etc.).
             'avg_price_3m'     => $geo_data['avg_3m'] ?? null,
             'avg_price_6m'     => $geo_data['avg_6m'] ?? null,
             'avg_price_12m'    => $geo_data['avg_12m'] ?? null,
@@ -381,7 +318,7 @@ class DealsFinder {
      *
      * @param float  $price_difference_threshold Minimum percentage below average.
      * @param string $geo                        Geo code.
-     * @param string $period                     Average period ('3m', '6m', '12m').
+     * @param string $period                     Average period ('3m', '6m', '12m', 'all').
      * @return array<string, int> Count of deals per product type.
      */
     public function get_deal_counts(
@@ -425,7 +362,6 @@ class DealsFinder {
         $current_price = (float)($geo_data['current_price'] ?? 0);
 
         // Calculate discount for each period.
-        // Cache stores keys as avg_3m, avg_6m, avg_12m, avg_all.
         $discounts = [];
         foreach (self::PERIODS as $period) {
             $avg_key = 'avg_' . $period;
@@ -440,7 +376,6 @@ class DealsFinder {
         return [
             'current_price'    => $current_price,
             'currency'         => $geo_data['currency'] ?? 'USD',
-            // Read from cache keys (avg_3m, avg_6m, etc.).
             'avg_price_3m'     => $geo_data['avg_3m'] ?? null,
             'avg_price_6m'     => $geo_data['avg_6m'] ?? null,
             'avg_price_12m'    => $geo_data['avg_12m'] ?? null,
