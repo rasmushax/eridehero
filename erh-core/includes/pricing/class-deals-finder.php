@@ -45,10 +45,11 @@ class DealsFinder {
 
     /**
      * Available average periods.
+     * Maps to cache keys: avg_3m, avg_6m, avg_12m, avg_all.
      *
      * @var array<string>
      */
-    public const PERIODS = ['3m', '6m', '12m'];
+    public const PERIODS = ['3m', '6m', '12m', 'all'];
 
     /**
      * Default average period for deal comparison.
@@ -100,7 +101,8 @@ class DealsFinder {
             $period = self::DEFAULT_PERIOD;
         }
 
-        $avg_key = 'avg_price_' . $period;
+        // Cache stores keys as avg_3m, avg_6m, avg_12m, avg_all (not avg_price_*).
+        $avg_key = 'avg_' . $period;
         error_log("[ERH DealsFinder] Using avg_key: {$avg_key}");
 
         // Build filters.
@@ -190,13 +192,16 @@ class DealsFinder {
                     'currency'         => $geo_data['currency'] ?? 'USD',
                     'avg_price'        => $avg_price,
                     'avg_period'       => $period,
-                    'avg_price_3m'     => $geo_data['avg_price_3m'] ?? null,
-                    'avg_price_6m'     => $geo_data['avg_price_6m'] ?? null,
-                    'avg_price_12m'    => $geo_data['avg_price_12m'] ?? null,
+                    // Read from cache keys (avg_3m, avg_6m, etc.).
+                    'avg_price_3m'     => $geo_data['avg_3m'] ?? null,
+                    'avg_price_6m'     => $geo_data['avg_6m'] ?? null,
+                    'avg_price_12m'    => $geo_data['avg_12m'] ?? null,
+                    'avg_price_all'    => $geo_data['avg_all'] ?? null,
                     'discount_percent' => round($discount, 1),
                     'savings_amount'   => round($avg_price - $current_price, 2),
-                    'lowest_price'     => $geo_data['lowest_price'] ?? null,
-                    'highest_price'    => $geo_data['highest_price'] ?? null,
+                    // Low/high from cache.
+                    'lowest_price'     => $geo_data['low_all'] ?? null,
+                    'highest_price'    => $geo_data['high_all'] ?? null,
                     'retailer'         => $geo_data['retailer'] ?? null,
                     'bestlink'         => $geo_data['bestlink'] ?? null,
                     'instock'          => true,
@@ -316,7 +321,8 @@ class DealsFinder {
             $period = self::DEFAULT_PERIOD;
         }
 
-        $avg_key = 'avg_price_' . $period;
+        // Cache stores keys as avg_3m, avg_6m, avg_12m, avg_all.
+        $avg_key = 'avg_' . $period;
 
         $product = $this->product_cache->get($product_id);
 
@@ -355,13 +361,15 @@ class DealsFinder {
             'currency'         => $geo_data['currency'] ?? 'USD',
             'avg_price'        => $avg_price,
             'avg_period'       => $period,
-            'avg_price_3m'     => $geo_data['avg_price_3m'] ?? null,
-            'avg_price_6m'     => $geo_data['avg_price_6m'] ?? null,
-            'avg_price_12m'    => $geo_data['avg_price_12m'] ?? null,
+            // Read from cache keys (avg_3m, avg_6m, etc.).
+            'avg_price_3m'     => $geo_data['avg_3m'] ?? null,
+            'avg_price_6m'     => $geo_data['avg_6m'] ?? null,
+            'avg_price_12m'    => $geo_data['avg_12m'] ?? null,
+            'avg_price_all'    => $geo_data['avg_all'] ?? null,
             'discount_percent' => round($discount, 1),
             'savings_amount'   => round($avg_price - $current_price, 2),
-            'lowest_price'     => $geo_data['lowest_price'] ?? null,
-            'highest_price'    => $geo_data['highest_price'] ?? null,
+            'lowest_price'     => $geo_data['low_all'] ?? null,
+            'highest_price'    => $geo_data['high_all'] ?? null,
             'retailer'         => $geo_data['retailer'] ?? null,
             'bestlink'         => $geo_data['bestlink'] ?? null,
             'instock'          => !empty($geo_data['instock']),
@@ -417,9 +425,10 @@ class DealsFinder {
         $current_price = (float)($geo_data['current_price'] ?? 0);
 
         // Calculate discount for each period.
+        // Cache stores keys as avg_3m, avg_6m, avg_12m, avg_all.
         $discounts = [];
         foreach (self::PERIODS as $period) {
-            $avg_key = 'avg_price_' . $period;
+            $avg_key = 'avg_' . $period;
             if (!empty($geo_data[$avg_key]) && $geo_data[$avg_key] > 0) {
                 $avg = (float)$geo_data[$avg_key];
                 $discounts[$period] = round((($current_price - $avg) / $avg) * 100, 1);
@@ -431,14 +440,16 @@ class DealsFinder {
         return [
             'current_price'    => $current_price,
             'currency'         => $geo_data['currency'] ?? 'USD',
-            'avg_price_3m'     => $geo_data['avg_price_3m'] ?? null,
-            'avg_price_6m'     => $geo_data['avg_price_6m'] ?? null,
-            'avg_price_12m'    => $geo_data['avg_price_12m'] ?? null,
+            // Read from cache keys (avg_3m, avg_6m, etc.).
+            'avg_price_3m'     => $geo_data['avg_3m'] ?? null,
+            'avg_price_6m'     => $geo_data['avg_6m'] ?? null,
+            'avg_price_12m'    => $geo_data['avg_12m'] ?? null,
+            'avg_price_all'    => $geo_data['avg_all'] ?? null,
             'discount_vs_3m'   => $discounts['3m'],
             'discount_vs_6m'   => $discounts['6m'],
             'discount_vs_12m'  => $discounts['12m'],
-            'lowest_price'     => $geo_data['lowest_price'] ?? null,
-            'highest_price'    => $geo_data['highest_price'] ?? null,
+            'lowest_price'     => $geo_data['low_all'] ?? null,
+            'highest_price'    => $geo_data['high_all'] ?? null,
             'retailer'         => $geo_data['retailer'] ?? null,
             'bestlink'         => $geo_data['bestlink'] ?? null,
             'instock'          => !empty($geo_data['instock']),
