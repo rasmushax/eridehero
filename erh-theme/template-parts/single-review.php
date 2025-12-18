@@ -14,17 +14,16 @@ if ( ! defined( 'ABSPATH' ) ) {
 
 $post_id = get_the_ID();
 
-// Get the related product via ACF relationship field
-$relationship = get_field( 'relationship', $post_id );
+// Get the related product via ACF post_object field
+$product = get_field( 'review_product', $post_id );
 
-// If no product linked, we can't show the review properly
-if ( empty( $relationship ) || ! isset( $relationship[0] ) ) {
+// If no product linked, fall back to standard post template
+if ( ! $product ) {
     get_template_part( 'template-parts/single', 'post' );
     return;
 }
 
-// Relationship field returns array - first element is the product (ID or object depending on ACF settings)
-$product      = $relationship[0];
+// post_object field returns the post object directly (or ID depending on settings)
 $product_id   = is_object( $product ) ? $product->ID : $product;
 $product_type = get_field( 'product_type', $product_id );
 
