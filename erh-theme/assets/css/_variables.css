@@ -28,6 +28,7 @@
     --color-success-light: rgba(0, 181, 114, 0.08);
     --color-warning: #ffd700;
     --color-error: #dc3545;
+    --color-error-light: rgba(220, 53, 69, 0.08);
     --color-info: #fd7e14;
 
     /* Rating Colors (for score badges) */

@@ -264,6 +264,29 @@ class Core {
 
         // Disable HFT's built-in hf_product CPT (we use our own 'products' CPT).
         add_filter('hft_register_product_cpt', '__return_false');
+
+        // Invalidate ERH price caches when HFT updates prices.
+        // This allows us to use longer cache TTLs (6 hours) with on-demand invalidation.
+        add_action('hft_price_updated', [$this, 'invalidate_price_caches'], 10, 2);
+    }
+
+    /**
+     * Invalidate ERH price caches when HFT updates a product's prices.
+     *
+     * Called via hft_price_updated action when scraper updates price data.
+     *
+     * @param int $tracked_link_id The tracked link ID that was updated.
+     * @param int $product_id      The product post ID.
+     * @return void
+     */
+    public function invalidate_price_caches(int $tracked_link_id, int $product_id): void {
+        // Supported geo regions.
+        $geos = ['US', 'GB', 'EU', 'CA', 'AU'];
+
+        foreach ($geos as $geo) {
+            delete_transient("erh_price_intel_{$product_id}_{$geo}");
+            delete_transient("erh_price_history_{$product_id}_{$geo}");
+        }
     }
 
     /**

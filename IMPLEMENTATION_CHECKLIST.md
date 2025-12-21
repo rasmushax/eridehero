@@ -276,6 +276,12 @@ Use this file alongside CLAUDE.md to track progress.
 - [x] Create `template-parts/components/full-specs.php` - Full specifications table
 - [x] Create `template-parts/components/author-box.php` - Author bio with socials
 - [x] Create `template-parts/components/related-reviews.php` - Related reviews grid
+- [x] Create `template-parts/components/sticky-buy-bar.php` - Sticky purchase CTA
+
+### Sidebar Components
+- [x] Create `template-parts/sidebar/tools.php` - Finder, Deals, Compare links with product counts
+- [x] Create `template-parts/sidebar/comparison.php` - Head-to-head comparison widget
+- [x] Create `template-parts/sidebar/toc.php` - Table of contents
 
 ### JavaScript Components
 - [x] Create `assets/js/app.js` - Main entry with dynamic imports
@@ -311,6 +317,67 @@ Use this file alongside CLAUDE.md to track progress.
 - [x] Dynamic imports for conditional component loading
 - [x] Components only load when their DOM elements exist
 - [x] Removed all debug logging from production code
+
+---
+
+## Phase 6A: Homepage - COMPLETE
+
+### Components
+- [x] Deals section with geo-aware pricing
+- [x] Head-to-head comparison widget
+- [x] Hero section
+
+### Fixes Applied
+- [x] Fixed deals selector mismatch (`data-deals-section` → `#deals-section`)
+- [x] Consolidated deals + counts into single API call
+- [x] Removed unnecessary static imports (auth-modal, price-alert on homepage)
+
+---
+
+## Performance Optimizations - COMPLETE
+
+### Server-Side Caching (REST API)
+- [x] Extended price cache from 1 hour to 6 hours (`class-rest-prices.php`)
+- [x] Added HFT invalidation hook (`hft_price_updated` → clears ERH transients)
+- [x] Added transient caching to deals endpoint with debug header (`X-ERH-Cache: HIT/MISS`)
+- [x] Consolidated deals + counts into single API response
+
+### Client-Side Caching (JavaScript)
+- [x] Extended JS in-memory cache from 5 minutes to 1 hour (`geo-price.js`)
+- [x] Added request deduplication (`pendingRequests` Map prevents duplicate concurrent fetches)
+- [x] Updated `price-intel.js` to use shared `getProductPrices()` function
+- [x] Updated `sticky-buy-bar.js` to use shared `getProductPrices()` function
+
+### Caching Architecture
+```
+Browser Request
+     │
+     ▼
+┌─────────────────────────────┐
+│ JS Request Deduplication    │  ← pendingRequests Map
+└─────────────────────────────┘
+     │
+     ▼
+┌─────────────────────────────┐
+│ JS In-Memory Cache (1 hr)   │  ← priceCache Map
+└─────────────────────────────┘
+     │ (cache miss)
+     ▼
+┌─────────────────────────────┐
+│ Server Transient (6 hrs)    │  ← wp_options / object cache
+│ Invalidated by HFT scraper  │
+└─────────────────────────────┘
+     │ (cache miss)
+     ▼
+┌─────────────────────────────┐
+│ Database Query              │
+└─────────────────────────────┘
+```
+
+### Result
+- Review page: 1 price API call instead of 2 (deduplicated)
+- Homepage: 1 deals API call instead of 2 (consolidated)
+- Second visits: ~10-20ms response (transient hit) vs ~150ms (cache miss)
 
 ---
 
@@ -541,16 +608,21 @@ erh-theme/
 │   ├── footer.php                  # Site footer
 │   ├── svg-sprite.php              # Inlined SVG sprite
 │   ├── single-review.php           # Review post template
-│   └── components/
-│       ├── gallery.php             # Image gallery
-│       ├── byline.php              # Author & dates
-│       ├── quick-take.php          # Score + summary
-│       ├── pros-cons.php           # Pros/cons lists
-│       ├── price-intel.php         # Price intelligence
-│       ├── tested-performance.php  # Performance data
-│       ├── full-specs.php          # Specifications table
-│       ├── author-box.php          # Author bio with socials
-│       └── related-reviews.php     # Related reviews grid
+│   ├── components/
+│   │   ├── gallery.php             # Image gallery
+│   │   ├── byline.php              # Author & dates
+│   │   ├── quick-take.php          # Score + summary
+│   │   ├── pros-cons.php           # Pros/cons lists
+│   │   ├── price-intel.php         # Price intelligence
+│   │   ├── tested-performance.php  # Performance data
+│   │   ├── full-specs.php          # Specifications table
+│   │   ├── author-box.php          # Author bio with socials
+│   │   ├── related-reviews.php     # Related reviews grid
+│   │   └── sticky-buy-bar.php      # Sticky purchase CTA bar
+│   └── sidebar/
+│       ├── tools.php               # Finder, Deals, Compare links
+│       ├── comparison.php          # H2H comparison widget
+│       └── toc.php                 # Table of contents
 ├── functions.php
 ├── header.php
 ├── footer.php
@@ -582,6 +654,9 @@ erh-theme/
 | JS Loading | Dynamic imports | Components only load when DOM elements exist |
 | Author Socials | ACF user fields (PHP) | Registered alongside existing profile fields |
 | Score Badges | Square with rounded corners | Rating colors based on score tier |
+| Price Cache TTL | 6 hours + HFT invalidation | Prices update 2x daily, invalidate on scrape |
+| JS Request Dedup | pendingRequests Map | Prevents duplicate concurrent API calls |
+| Deals API | Combined deals + counts | Single request instead of two |
 
 ---
 

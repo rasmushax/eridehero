@@ -1123,115 +1123,134 @@ class CacheRebuildJob implements CronJobInterface {
     /**
      * Add computed specs for e-scooters and other types.
      *
+     * Handles both flat (legacy) and nested (new ACF structure) field locations.
+     *
      * @param array $specs The product specs.
      * @param float $price The product price.
      * @return array The specs with computed values.
      */
     private function add_scooter_computed_specs(array $specs, float $price): array {
+        // Helper to get value from flat or nested e-scooters structure.
+        $get_value = function (string ...$paths) use ($specs): ?float {
+            foreach ($paths as $path) {
+                // Check flat key first.
+                if (isset($specs[$path]) && is_numeric($specs[$path])) {
+                    return (float) $specs[$path];
+                }
+
+                // Check nested path (e.g., 'e-scooters.dimensions.weight').
+                $parts = explode('.', $path);
+                $value = $specs;
+                foreach ($parts as $part) {
+                    if (!is_array($value) || !isset($value[$part])) {
+                        $value = null;
+                        break;
+                    }
+                    $value = $value[$part];
+                }
+                if ($value !== null && is_numeric($value)) {
+                    return (float) $value;
+                }
+            }
+            return null;
+        };
+
+        // Get values from various possible locations.
+        $weight = $get_value('weight', 'e-scooters.dimensions.weight');
+        $top_speed = $get_value('manufacturer_top_speed');
+        $range = $get_value('manufacturer_range');
+        $tested_range = $get_value('tested_range_regular');
+        $tested_speed = $get_value('tested_top_speed');
+        $battery = $get_value('battery_capacity', 'e-scooters.battery.capacity');
+        $motor_power = $get_value('nominal_motor_wattage', 'e-scooters.motor.power_nominal');
+        $max_load = $get_value('max_load', 'e-scooters.dimensions.max_load');
+        $brake_distance = $get_value('brake_distance');
+        $hill_climbing = $get_value('hill_climbing');
+        $max_weight_capacity = $get_value('max_weight_capacity');
+
         // Price vs Weight.
-        if (isset($specs['weight']) && is_numeric($specs['weight'])) {
-            $weight = (float) $specs['weight'];
-            $specs['price_per_lb'] = $weight > 0 ? round($price / $weight, 2) : null;
+        if ($weight !== null && $weight > 0) {
+            $specs['price_per_lb'] = round($price / $weight, 2);
 
             // Weight-based comparisons.
-            if (isset($specs['manufacturer_top_speed']) && is_numeric($specs['manufacturer_top_speed'])) {
-                $speed = (float) $specs['manufacturer_top_speed'];
-                $specs['speed_per_lb'] = $weight > 0 ? round($speed / $weight, 2) : null;
+            if ($top_speed !== null) {
+                $specs['speed_per_lb'] = round($top_speed / $weight, 2);
             }
-
-            if (isset($specs['manufacturer_range']) && is_numeric($specs['manufacturer_range'])) {
-                $range = (float) $specs['manufacturer_range'];
-                $specs['range_per_lb'] = $weight > 0 ? round($range / $weight, 2) : null;
+            if ($range !== null) {
+                $specs['range_per_lb'] = round($range / $weight, 2);
             }
-
-            if (isset($specs['tested_range_regular']) && is_numeric($specs['tested_range_regular'])) {
-                $range = (float) $specs['tested_range_regular'];
-                $specs['tested_range_per_lb'] = $weight > 0 ? round($range / $weight, 2) : null;
+            if ($tested_range !== null) {
+                $specs['tested_range_per_lb'] = round($tested_range / $weight, 2);
             }
         }
 
         // Price vs Speed.
-        if (isset($specs['manufacturer_top_speed']) && is_numeric($specs['manufacturer_top_speed'])) {
-            $speed = (float) $specs['manufacturer_top_speed'];
-            $specs['price_per_mph'] = $speed > 0 ? round($price / $speed, 2) : null;
+        if ($top_speed !== null && $top_speed > 0) {
+            $specs['price_per_mph'] = round($price / $top_speed, 2);
         }
 
         // Price vs Range.
-        if (isset($specs['manufacturer_range']) && is_numeric($specs['manufacturer_range'])) {
-            $range = (float) $specs['manufacturer_range'];
-            $specs['price_per_mile_range'] = $range > 0 ? round($price / $range, 2) : null;
+        if ($range !== null && $range > 0) {
+            $specs['price_per_mile_range'] = round($price / $range, 2);
         }
 
         // Price vs Battery.
-        if (isset($specs['battery_capacity']) && is_numeric($specs['battery_capacity'])) {
-            $capacity = (float) $specs['battery_capacity'];
-            $specs['price_per_wh'] = $capacity > 0 ? round($price / $capacity, 2) : null;
+        if ($battery !== null && $battery > 0) {
+            $specs['price_per_wh'] = round($price / $battery, 2);
         }
 
         // Price vs Motor Power.
-        if (isset($specs['nominal_motor_wattage']) && is_numeric($specs['nominal_motor_wattage'])) {
-            $power = (float) $specs['nominal_motor_wattage'];
-            $specs['price_per_watt'] = $power > 0 ? round($price / $power, 2) : null;
+        if ($motor_power !== null && $motor_power > 0) {
+            $specs['price_per_watt'] = round($price / $motor_power, 2);
         }
 
         // Price vs Payload Capacity.
-        if (isset($specs['max_load']) && is_numeric($specs['max_load'])) {
-            $max_load = (float) $specs['max_load'];
-            $specs['price_per_lb_capacity'] = $max_load > 0 ? round($price / $max_load, 2) : null;
+        if ($max_load !== null && $max_load > 0) {
+            $specs['price_per_lb_capacity'] = round($price / $max_load, 2);
         }
 
         // Price vs Tested Range.
-        if (isset($specs['tested_range_regular']) && is_numeric($specs['tested_range_regular'])) {
-            $range = (float) $specs['tested_range_regular'];
-            $specs['price_per_tested_mile'] = $range > 0 ? round($price / $range, 2) : null;
+        if ($tested_range !== null && $tested_range > 0) {
+            $specs['price_per_tested_mile'] = round($price / $tested_range, 2);
         }
 
         // Price vs Tested Top Speed.
-        if (isset($specs['tested_top_speed']) && is_numeric($specs['tested_top_speed'])) {
-            $speed = (float) $specs['tested_top_speed'];
-            $specs['price_per_tested_mph'] = $speed > 0 ? round($price / $speed, 2) : null;
+        if ($tested_speed !== null && $tested_speed > 0) {
+            $specs['price_per_tested_mph'] = round($price / $tested_speed, 2);
         }
 
         // Price vs Brake Distance.
-        if (isset($specs['brake_distance']) && is_numeric($specs['brake_distance'])) {
-            $brake = (float) $specs['brake_distance'];
-            $specs['price_per_brake_ft'] = $brake > 0 ? round($price / $brake, 2) : null;
+        if ($brake_distance !== null && $brake_distance > 0) {
+            $specs['price_per_brake_ft'] = round($price / $brake_distance, 2);
         }
 
         // Price vs Hill Climbing.
-        if (isset($specs['hill_climbing']) && is_numeric($specs['hill_climbing'])) {
-            $hill = (float) $specs['hill_climbing'];
-            $specs['price_per_hill_degree'] = $hill > 0 ? round($price / $hill, 2) : null;
+        if ($hill_climbing !== null && $hill_climbing > 0) {
+            $specs['price_per_hill_degree'] = round($price / $hill_climbing, 2);
         }
 
         // Price vs Acceleration.
         $acceleration_speeds = ['0-15', '0-20', '0-25', '0-30'];
         foreach ($acceleration_speeds as $speed) {
-            $field_key = "acceleration_{$speed}_mph";
-            if (isset($specs[$field_key]) && is_numeric($specs[$field_key])) {
-                $accel = (float) $specs[$field_key];
-                $specs["price_per_acc_{$speed}_mph"] = $accel > 0 ? round($price / $accel, 2) : null;
+            $accel = $get_value("acceleration_{$speed}_mph");
+            if ($accel !== null && $accel > 0) {
+                $specs["price_per_acc_{$speed}_mph"] = round($price / $accel, 2);
             }
         }
 
         // Acceleration 0-to-top.
-        if (isset($specs['acceleration_0-to-top']) && is_numeric($specs['acceleration_0-to-top'])) {
-            $accel = (float) $specs['acceleration_0-to-top'];
-            $specs['price_per_acc_0-to-top'] = $accel > 0 ? round($price / $accel, 2) : null;
+        $accel_top = $get_value('acceleration_0-to-top');
+        if ($accel_top !== null && $accel_top > 0) {
+            $specs['price_per_acc_0-to-top'] = round($price / $accel_top, 2);
         }
 
         // Max weight capacity comparisons.
-        if (isset($specs['max_weight_capacity']) && is_numeric($specs['max_weight_capacity'])) {
-            $capacity = (float) $specs['max_weight_capacity'];
-
-            if (isset($specs['manufacturer_top_speed']) && is_numeric($specs['manufacturer_top_speed'])) {
-                $speed = (float) $specs['manufacturer_top_speed'];
-                $specs['speed_per_lb_capacity'] = $capacity > 0 ? round($speed / $capacity, 2) : null;
+        if ($max_weight_capacity !== null && $max_weight_capacity > 0) {
+            if ($top_speed !== null) {
+                $specs['speed_per_lb_capacity'] = round($top_speed / $max_weight_capacity, 2);
             }
-
-            if (isset($specs['manufacturer_range']) && is_numeric($specs['manufacturer_range'])) {
-                $range = (float) $specs['manufacturer_range'];
-                $specs['range_per_lb_capacity'] = $capacity > 0 ? round($range / $capacity, 2) : null;
+            if ($range !== null) {
+                $specs['range_per_lb_capacity'] = round($range / $max_weight_capacity, 2);
             }
         }
 

@@ -151,8 +151,19 @@ class RestDeals extends WP_REST_Controller {
         $category = $request->get_param('category');
         $limit = (int) $request->get_param('limit');
         $threshold = (float) $request->get_param('threshold');
-        $geo = $request->get_param('geo');
+        $geo = strtoupper($request->get_param('geo'));
         $period = $request->get_param('period');
+
+        // Check transient cache (1 hour - deals only change when cron runs every 2 hours).
+        // Use integer threshold (multiply by 10) for clean cache key, matching DealsFinder pattern.
+        $threshold_int = (int) ($threshold * 10);
+        $cache_key = "erh_deals_api_{$category}_{$limit}_{$geo}_{$period}_{$threshold_int}";
+        $cached = get_transient($cache_key);
+        if ($cached !== false) {
+            $response = new WP_REST_Response($cached, 200);
+            $response->header('X-ERH-Cache', 'HIT');
+            return $response;
+        }
 
         $deals = [];
 
@@ -190,13 +201,30 @@ class RestDeals extends WP_REST_Controller {
         // Transform deals for frontend.
         $transformed = array_map([$this, 'transform_deal'], $deals);
 
-        return new WP_REST_Response([
+        // Include counts in response to avoid separate API call.
+        $counts = $this->deals_finder->get_deal_counts($threshold, $geo, $period);
+        $transformed_counts = [];
+        foreach ($counts as $type => $count) {
+            $slug = $this->get_category_slug($type);
+            $transformed_counts[$slug] = $count;
+        }
+        $transformed_counts['all'] = array_sum($counts);
+
+        $response_data = [
             'deals'    => $transformed,
             'category' => $category,
             'geo'      => $geo,
             'period'   => $period,
             'count'    => count($transformed),
-        ], 200);
+            'counts'   => $transformed_counts,
+        ];
+
+        // Cache for 1 hour (deals only change when cron runs every 2 hours).
+        set_transient($cache_key, $response_data, HOUR_IN_SECONDS);
+
+        $response = new WP_REST_Response($response_data, 200);
+        $response->header('X-ERH-Cache', 'MISS');
+        return $response;
     }
 
     /**

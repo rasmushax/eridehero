@@ -125,67 +125,56 @@
 .sticky-buy-bar-inner {
     display: flex;
     align-items: center;
-    gap: var(--space-6);
+    justify-content: space-between;
+    gap: var(--space-4);
     max-width: var(--container-max);
     margin: 0 auto;
     padding: var(--space-3) var(--space-6);
 }
 
-.sticky-buy-bar-product {
+/* Left side: thumbnail + product info + actions */
+.sticky-buy-bar-left {
     display: flex;
     align-items: center;
     gap: var(--space-3);
+    min-width: 0;
 }
 
 .sticky-buy-bar-img {
-    width: 40px;
-    height: 40px;
+    width: 48px;
+    height: 48px;
     border-radius: var(--radius-md);
     object-fit: contain;
     flex-shrink: 0;
 }
 
-.sticky-buy-bar-price {
+.sticky-buy-bar-info {
     display: flex;
-    align-items: center;
-    gap: var(--space-3);
+    flex-direction: column;
+    gap: 2px;
+    min-width: 0;
 }
 
-.sticky-buy-bar-amount {
-    font-size: var(--text-xl);
-    font-weight: var(--font-bold);
+.sticky-buy-bar-name {
+    font-size: var(--text-sm);
+    font-weight: var(--font-semibold);
     color: var(--color-dark);
+    white-space: nowrap;
+    overflow: hidden;
+    text-overflow: ellipsis;
 }
 
-.sticky-buy-bar-verdict {
-    display: inline-flex;
-    align-items: center;
-    gap: 4px;
-    font-size: var(--text-xs);
-    font-weight: var(--font-medium);
-    color: var(--color-success);
-    background: var(--color-success-light);
-    padding: 4px var(--space-2);
-    border-radius: var(--radius-sm);
-}
-
-.sticky-buy-bar-verdict .icon {
-    width: 12px;
-    height: 12px;
-}
-
-.sticky-buy-bar-secondary {
+.sticky-buy-bar-actions {
     display: flex;
     align-items: center;
-    gap: var(--space-4);
-    margin-left: auto;
+    gap: var(--space-5);
 }
 
 .sticky-buy-bar-link {
     display: inline-flex;
     align-items: center;
-    gap: var(--space-2);
-    font-size: var(--text-sm);
+    gap: 4px;
+    font-size: var(--text-xs);
     font-weight: var(--font-medium);
     color: var(--color-muted);
     text-decoration: none;
@@ -201,24 +190,85 @@
 }
 
 .sticky-buy-bar-link .icon {
-    width: 16px;
-    height: 16px;
+    width: 14px;
+    height: 14px;
 }
 
-.sticky-buy-bar-inner > .btn {
+/* Right side: verdict + price + CTA */
+.sticky-buy-bar-right {
+    display: flex;
+    align-items: center;
+    gap: var(--space-4);
+    flex-shrink: 0;
+}
+
+/* Verdict badge (arrow + percentage) */
+.sticky-buy-bar-verdict {
+    display: flex;
+    align-items: center;
+    gap: 4px;
+    font-size: var(--text-xs);
+    font-weight: var(--font-medium);
+    color: var(--color-error);
+    padding: 4px var(--space-2);
+    border-radius: var(--radius-sm);
+    background: var(--color-error-light);
+}
+
+.sticky-buy-bar-verdict[data-verdict-type="below"] {
+    color: var(--color-success);
+    background: var(--color-success-light);
+}
+
+.sticky-buy-bar-verdict-icon {
+    display: flex;
+    align-items: center;
+    justify-content: center;
+}
+
+.sticky-buy-bar-verdict-icon .icon {
+    width: 12px;
+    height: 12px;
+}
+
+/* Flip icon for below avg (price drop) */
+.sticky-buy-bar-verdict[data-verdict-type="below"] .sticky-buy-bar-verdict-icon .icon {
+    transform: rotate(180deg);
+}
+
+/* Price block */
+.sticky-buy-bar-price {
+    display: flex;
+    flex-direction: column;
+    align-items: flex-end;
+    gap: 0;
+}
+
+.sticky-buy-bar-price-label {
+    font-size: 10px;
+    font-weight: var(--font-medium);
+    color: var(--color-muted);
+    text-transform: uppercase;
+    letter-spacing: 0.5px;
+}
+
+.sticky-buy-bar-price-amount {
+    font-size: var(--text-lg);
+    font-weight: var(--font-bold);
+    color: var(--color-dark);
+    line-height: 1.1;
+}
+
+.sticky-buy-bar-right > .btn {
     flex-shrink: 0;
 }
 
 /* ===== RESPONSIVE ===== */
 
-@media (max-width: 700px) {
-    /* Hide secondary actions, keep CTA on right */
-    .sticky-buy-bar-secondary {
+@media (max-width: 768px) {
+    /* Hide verdict on smaller tablets */
+    .sticky-buy-bar-verdict {
         display: none;
-    }
-
-    .sticky-buy-bar-product {
-        flex: 1;
     }
 }
 
@@ -239,57 +289,50 @@
     }
 }
 
+@media (max-width: 570px) {
+    /* Hide thumbnail but keep showing action buttons */
+    .sticky-buy-bar-img {
+        display: none;
+    }
+}
+
 @media (max-width: 480px) {
-    /* Sticky buy bar - hide thumbnail, compact button */
+    /* Hide entire left section, show price on left + CTA on right */
     .sticky-buy-bar-inner {
         gap: var(--space-3);
         padding: var(--space-3) var(--space-4);
     }
 
-    .sticky-buy-bar-img {
+    .sticky-buy-bar-left {
         display: none;
     }
 
+    .sticky-buy-bar-right {
+        width: 100%;
+        justify-content: space-between;
+    }
+
     .sticky-buy-bar-price {
-        gap: var(--space-2);
+        align-items: flex-start;
     }
 
-    .sticky-buy-bar-amount {
-        font-size: var(--text-lg);
+    .sticky-buy-bar-price-amount {
+        font-size: var(--text-base);
     }
 
-    /* Slightly smaller than btn-sm: same padding, smaller font/icon */
-    .sticky-buy-bar-inner > .btn {
+    .sticky-buy-bar-right > .btn {
         font-size: var(--text-xs);
     }
 
-    .sticky-buy-bar-inner > .btn .icon {
+    .sticky-buy-bar-right > .btn .icon {
         width: 12px;
         height: 12px;
     }
-}
-
-/* Short CTA text hidden by default */
-.sticky-buy-bar-inner > .btn .cta-short {
-    display: none;
 }
 
 @media (max-width: 400px) {
     .inline-price-bar-img {
         width: 40px;
         height: 40px;
-    }
-
-    /* Swap to short CTA text, hide icon */
-    .sticky-buy-bar-inner > .btn .cta-full {
-        display: none;
-    }
-
-    .sticky-buy-bar-inner > .btn .cta-short {
-        display: inline;
-    }
-
-    .sticky-buy-bar-inner > .btn .icon {
-        display: none;
     }
 }

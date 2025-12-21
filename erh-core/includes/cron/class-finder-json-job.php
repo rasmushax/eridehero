@@ -216,7 +216,7 @@ class FinderJsonJob implements CronJobInterface {
 
     /**
      * Flatten and normalize specs for the JSON output.
-     * Handles the nested e-bikes structure and removes non-essential fields.
+     * Handles nested product type structures and removes non-essential fields.
      *
      * @param mixed  $specs The product specs.
      * @param string $category The product category slug.
@@ -241,45 +241,123 @@ class FinderJsonJob implements CronJobInterface {
             'variants',
         ];
 
-        // Handle e-bikes nested structure.
-        if ($category === 'ebike' && isset($specs['e-bikes']) && is_array($specs['e-bikes'])) {
-            $ebike_data = $specs['e-bikes'];
+        // Map category to nested field group key.
+        $nested_group_keys = [
+            'ebike'      => 'e-bikes',
+            'escooter'   => 'e-scooters',
+            'eskate'     => 'e-skateboards',
+            'euc'        => 'e-unicycles',
+            'hoverboard' => 'hoverboards',
+        ];
 
-            // Flatten nested groups.
-            foreach ($ebike_data as $group_key => $group_data) {
-                if (is_array($group_data)) {
-                    foreach ($group_data as $field_key => $value) {
-                        $flat_key = "{$group_key}_{$field_key}";
-                        $flattened[$flat_key] = $this->normalize_value($value);
+        $nested_key = $nested_group_keys[$category] ?? null;
+
+        // Handle nested product type structure.
+        if ($nested_key && isset($specs[$nested_key]) && is_array($specs[$nested_key])) {
+            $nested_data = $specs[$nested_key];
+
+            // Recursively flatten nested groups.
+            $this->flatten_nested_groups($nested_data, $flattened);
+
+            // Also include any top-level fields (basic info, etc.).
+            foreach ($specs as $key => $value) {
+                if ($key === $nested_key || in_array($key, $exclude_fields, true)) {
+                    continue;
+                }
+
+                // Recursively flatten any other nested groups (like 'review', 'obsolete').
+                if (is_array($value)) {
+                    if ($this->is_simple_array($value)) {
+                        $flattened[$key] = $this->normalize_value($value);
+                    } else {
+                        // Check if it's a group (associative array with scalar values).
+                        $this->flatten_nested_groups([$key => $value], $flattened);
                     }
                 } else {
-                    $flattened[$group_key] = $this->normalize_value($group_data);
-                }
-            }
-
-            // Also include any top-level fields.
-            foreach ($specs as $key => $value) {
-                if ($key !== 'e-bikes' && !in_array($key, $exclude_fields, true)) {
                     $flattened[$key] = $this->normalize_value($value);
                 }
             }
         } else {
-            // Flat structure for other product types.
+            // No nested structure found - flatten everything recursively.
             foreach ($specs as $key => $value) {
                 if (in_array($key, $exclude_fields, true)) {
                     continue;
                 }
 
-                // Skip nested arrays (like coupon repeater).
-                if (is_array($value) && !$this->is_simple_array($value)) {
-                    continue;
+                if (is_array($value)) {
+                    if ($this->is_simple_array($value)) {
+                        $flattened[$key] = $this->normalize_value($value);
+                    } else {
+                        // Flatten nested groups.
+                        $this->flatten_nested_groups([$key => $value], $flattened);
+                    }
+                } else {
+                    $flattened[$key] = $this->normalize_value($value);
                 }
-
-                $flattened[$key] = $this->normalize_value($value);
             }
         }
 
         return $flattened;
+    }
+
+    /**
+     * Recursively flatten nested ACF groups.
+     *
+     * @param array $data The nested data to flatten.
+     * @param array &$flattened Reference to the flattened output array.
+     * @param string $prefix Optional prefix for nested keys.
+     * @return void
+     */
+    private function flatten_nested_groups(array $data, array &$flattened, string $prefix = ''): void {
+        foreach ($data as $key => $value) {
+            $flat_key = $prefix ? "{$prefix}_{$key}" : $key;
+
+            if (is_array($value)) {
+                if ($this->is_simple_array($value)) {
+                    // Simple array (all scalar values) - keep as-is.
+                    $flattened[$flat_key] = $this->normalize_value($value);
+                } elseif ($this->is_leaf_group($value)) {
+                    // Leaf group (associative array with only scalar values) - keep as object.
+                    $normalized = [];
+                    foreach ($value as $k => $v) {
+                        $normalized[$k] = $this->normalize_value($v);
+                    }
+                    $flattened[$flat_key] = $normalized;
+                } else {
+                    // Nested group - recurse with prefix.
+                    $this->flatten_nested_groups($value, $flattened, $flat_key);
+                }
+            } else {
+                $flattened[$flat_key] = $this->normalize_value($value);
+            }
+        }
+    }
+
+    /**
+     * Check if an array is a "leaf" group (associative with only scalar values).
+     * These should be kept as objects in the JSON, not flattened further.
+     *
+     * @param array $arr The array to check.
+     * @return bool True if it's a leaf group.
+     */
+    private function is_leaf_group(array $arr): bool {
+        if (empty($arr)) {
+            return true;
+        }
+
+        // Must be associative (string keys).
+        if (array_keys($arr) === range(0, count($arr) - 1)) {
+            return false;
+        }
+
+        // All values must be scalar or null.
+        foreach ($arr as $value) {
+            if (is_array($value) || is_object($value)) {
+                return false;
+            }
+        }
+
+        return true;
     }
 
     /**

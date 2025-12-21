@@ -16,9 +16,8 @@ import './components/modal.js'; // Auto-initializes modals
 import './components/tooltip.js'; // Auto-initializes tooltips
 import './components/toast.js'; // Toast notifications (auto-init container)
 
-// Lazy-loaded on demand (these create elements dynamically when needed)
-import './components/auth-modal.js';
-import './components/price-alert.js';
+// Note: auth-modal.js and price-alert.js are imported by components that need them
+// (e.g., price-intel.js imports price-alert.js) - no need to import here
 
 (function() {
     'use strict';
@@ -81,15 +80,22 @@ import './components/price-alert.js';
         });
     }
 
-    // Finder tabs - only on pages with finder
+    // Finder tabs - only on pages with quick finder
     if (document.querySelector('.finder-tabs')) {
         import('./components/finder-tabs.js').then(module => {
             module.initFinderTabs();
         });
     }
 
+    // Product Finder page - full filtering and comparison
+    if (document.querySelector('[data-finder-page]')) {
+        import('./components/finder.js').then(module => {
+            module.initFinder();
+        });
+    }
+
     // Homepage deals - only on homepage
-    if (document.querySelector('[data-deals-section]')) {
+    if (document.getElementById('deals-section')) {
         import('./components/deals.js').then(module => {
             module.initDeals();
         });
@@ -140,16 +146,21 @@ import './components/price-alert.js';
         });
     }
 
-    if (document.getElementById('review-sidebar-compare')) {
+    // Sidebar comparison widget (review pages)
+    if (document.getElementById('sidebar-comparison')) {
         import('./components/comparison.js').then(module => {
-            // Review page: Sidebar comparison (with locked current product)
+            const container = document.getElementById('sidebar-comparison');
+            const categoryFilter = container?.dataset.lockedCategory || null;
+
             module.initComparison({
-                containerId: 'review-sidebar-compare',
-                inputsContainerId: 'review-sidebar-compare-inputs',
-                submitBtnId: 'review-sidebar-compare-btn',
-                wrapperClass: 'comparison-input-wrapper comparison-light',
-                categoryFilter: 'escooter',
-                showCategoryInResults: false
+                containerId: 'sidebar-comparison',
+                inputsContainerId: 'sidebar-comparison-inputs',
+                submitBtnId: 'sidebar-comparison-submit',
+                announcerId: 'sidebar-comparison-announcer',
+                wrapperClass: 'comparison-input-wrapper',
+                categoryFilter: categoryFilter,
+                showCategoryInResults: false,
+                allowDynamicInputs: true
             });
         });
     }

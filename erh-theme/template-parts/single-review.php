@@ -52,6 +52,17 @@ if ( empty( $product_type ) ) {
 // Get product category for breadcrumb
 $category_slug = erh_product_type_slug( $product_type );
 $category_name = erh_get_product_type_short_name( $product_type );
+
+// Check if product has price data and performance data (used for TOC + conditional rendering)
+$has_prices      = erh_product_has_prices( $product_id );
+$has_performance = erh_product_has_performance_data( $product_id );
+
+// Build TOC items for sidebar
+$toc_items = erh_get_toc_items( $product_id, array(
+    'has_prices'      => $has_prices,
+    'has_performance' => $has_performance,
+    'content_post_id' => $post_id, // Review post has the content, not the product
+) );
 ?>
 
 <main id="main-content" class="review-page">
@@ -105,11 +116,13 @@ $category_name = erh_get_product_type_short_name( $product_type );
                     ?>
 
                     <?php
-                    // Price intelligence section
-                    get_template_part( 'template-parts/components/price-intel', null, array(
-                        'product_id'   => $product_id,
-                        'product_name' => get_the_title( $product_id ),
-                    ) );
+                    // Price intelligence section - only show if product has price data
+                    if ( $has_prices ) {
+                        get_template_part( 'template-parts/components/price-intel', null, array(
+                            'product_id'   => $product_id,
+                            'product_name' => get_the_title( $product_id ),
+                        ) );
+                    }
 
                     // Tested performance section
                     get_template_part( 'template-parts/components/tested-performance', null, array(
@@ -118,7 +131,7 @@ $category_name = erh_get_product_type_short_name( $product_type );
                     ?>
 
                     <!-- Review content -->
-                    <div class="review-body">
+                    <div class="review-body" id="full-review">
                         <?php the_content(); ?>
                     </div>
 
@@ -147,10 +160,47 @@ $category_name = erh_get_product_type_short_name( $product_type );
                 <!-- Sidebar -->
                 <aside class="sidebar">
                     <?php
-                    // TODO: Sidebar components
+                    // Tools section (Finder, Deals, Compare)
+                    get_template_part( 'template-parts/sidebar/tools', null, array(
+                        'product_type'  => $product_type,
+                        'category_slug' => $category_slug,
+                        'category_name' => $category_name,
+                    ) );
+                    ?>
+
+                    <hr>
+
+                    <?php
+                    // Head-to-head comparison widget
+                    get_template_part( 'template-parts/sidebar/comparison', null, array(
+                        'product_id'    => $product_id,
+                        'product_name'  => get_the_title( $product_id ),
+                        'product_type'  => $product_type,
+                        'category_slug' => $category_slug,
+                    ) );
+                    ?>
+
+                    <hr>
+
+                    <?php
+                    // Table of contents
+                    get_template_part( 'template-parts/sidebar/toc', null, array(
+                        'items' => $toc_items,
+                    ) );
                     ?>
                 </aside>
             </div>
         </div>
     </div>
 </main>
+
+<?php
+// Sticky buy bar - only show if product has prices
+if ( $has_prices ) {
+    get_template_part( 'template-parts/components/sticky-buy-bar', null, array(
+        'product_id'   => $product_id,
+        'product_name' => get_the_title( $product_id ),
+        'compare_url'  => home_url( '/' . $category_slug . '/compare/' ),
+    ) );
+}
+?>

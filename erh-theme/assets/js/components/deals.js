@@ -65,7 +65,7 @@ export async function initDeals() {
         // Use defaults
     }
 
-    // Load deals
+    // Load deals (includes counts in response)
     const dealsUrl = `${getRestUrl()}deals?category=all&limit=${CONFIG.dealsLimit}&threshold=${CONFIG.discountThreshold}&geo=${userGeo.geo}`;
     try {
         const response = await fetch(dealsUrl);
@@ -74,14 +74,20 @@ export async function initDeals() {
 
         const data = await response.json();
         allDeals = data.deals || [];
+
+        // Extract counts from response
+        const counts = data.counts || {};
+        totalDealsCount = counts.all || 0;
+
+        // Update total count display
+        if (dealsCountEl && totalDealsCount > 0) {
+            dealsCountEl.textContent = `🔥 ${totalDealsCount} deals cooking`;
+        }
     } catch (error) {
         console.error('[Deals] Failed to load deals:', error);
         showEmptyState(true);
         return null;
     }
-
-    // Load deal counts
-    await loadDealCounts();
 
     // Render deals (prices already included from deals API - geo-specific)
     renderDeals(allDeals);
@@ -102,31 +108,6 @@ export async function initDeals() {
         grid.addEventListener('scroll', updateScrollState);
         window.addEventListener('resize', updateScrollState);
         updateScrollState();
-    }
-
-    /**
-     * Load deal counts for total display
-     */
-    async function loadDealCounts() {
-        const countsUrl = `${getRestUrl()}deals/counts?threshold=${CONFIG.discountThreshold}&geo=${userGeo.geo}`;
-        try {
-            const response = await fetch(countsUrl);
-            if (!response.ok) {
-                return;
-            }
-
-            const data = await response.json();
-            const counts = data.counts || {};
-
-            totalDealsCount = counts.all || 0;
-
-            // Update total count display
-            if (dealsCountEl && totalDealsCount > 0) {
-                dealsCountEl.textContent = `🔥 ${totalDealsCount} deals cooking`;
-            }
-        } catch (e) {
-            // Ignore count errors
-        }
     }
 
     /**

@@ -518,14 +518,28 @@ Triggered by `data-modal-trigger="price-alert-modal"`:
 
 ### Sticky Buy Bar
 
-Appears 50px after scrolling past the price section. Progressive responsive disclosure:
+Appears 50px after scrolling past the price section. Two-section layout:
 
-- **>700px**: Thumbnail + price + verdict | Track price + Compare links | CTA button
-- **≤700px**: Thumbnail + price + verdict | CTA button
-- **≤480px**: Price + verdict | CTA button (smaller font/icon)
-- **≤400px**: Price + verdict | Short CTA text ("Buy now"), no icon
+**Left side** (`.sticky-buy-bar-left`):
+- Thumbnail image
+- Product name (bold)
+- Action buttons: Track price, Compare
 
-Uses `.cta-full` and `.cta-short` spans for responsive text swap. No close button — hides automatically when scrolling back up.
+**Right side** (`.sticky-buy-bar-right`):
+- Verdict badge with arrow + percentage (red for above avg, green for below)
+- Price block ("Best price" label + amount)
+- CTA button
+
+**Responsive breakpoints**:
+- **768px**: Hide verdict badge
+- **570px**: Hide thumbnail, keep product name + action buttons
+- **480px**: Hide entire left side; price moves to left, CTA stays right
+
+**Verdict styling**:
+- Default: red (`--color-error`) for "above avg"
+- `data-verdict-type="below"`: green (`--color-success`) with rotated arrow icon
+
+No close button — hides automatically when scrolling back up.
 
 ## Homepage Structure (`index.html`)
 

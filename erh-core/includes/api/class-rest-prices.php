@@ -254,7 +254,7 @@ class RestPrices extends WP_REST_Controller {
         // Normalize geo for cache key.
         $geo_normalized = $geo ? strtoupper($geo) : 'US';
 
-        // Check transient cache (1 hour per product+geo).
+        // Check transient cache (6 hours per product+geo, invalidated by HFT on price update).
         $cache_key = "erh_price_intel_{$product_id}_{$geo_normalized}";
         $cached = get_transient($cache_key);
 
@@ -339,9 +339,10 @@ class RestPrices extends WP_REST_Controller {
             ],
         ];
 
-        // Cache for 1 hour (skip if currency conversion was requested).
+        // Cache for 6 hours (skip if currency conversion was requested).
+        // Cache is invalidated by HFT via hft_price_updated action.
         if (!$convert_to) {
-            set_transient($cache_key, $response_data, HOUR_IN_SECONDS);
+            set_transient($cache_key, $response_data, 6 * HOUR_IN_SECONDS);
         }
 
         return new WP_REST_Response($response_data, 200);
@@ -497,7 +498,7 @@ class RestPrices extends WP_REST_Controller {
             );
         }
 
-        // Check transient cache (1 hour per product+geo).
+        // Check transient cache (6 hours per product+geo, invalidated by HFT on price update).
         $cache_key = "erh_price_history_{$product_id}_{$geo}";
         $cached = get_transient($cache_key);
 
@@ -561,8 +562,8 @@ class RestPrices extends WP_REST_Controller {
             ] : null,
         ];
 
-        // Cache for 1 hour.
-        set_transient($cache_key, $response_data, HOUR_IN_SECONDS);
+        // Cache for 6 hours (invalidated by HFT via hft_price_updated action).
+        set_transient($cache_key, $response_data, 6 * HOUR_IN_SECONDS);
 
         return new WP_REST_Response($response_data, 200);
     }

@@ -433,6 +433,22 @@ GET/POST/DELETE /erh/v1/products/{id}/tracker - Tracker CRUD
 POST /erh/v1/webhooks/mailchimp - Mailchimp unsubscribe sync
 ```
 
+**Prices API** (`class-rest-prices.php`):
+```
+GET /erh/v1/prices/{id}?geo=US              - Product prices + history (6hr cache)
+GET /erh/v1/prices/{id}/history?geo=US      - Price history only (6hr cache)
+GET /erh/v1/prices/best?ids=1,2,3&geo=US    - Best prices for multiple products
+```
+
+**Deals API** (`class-rest-deals.php`):
+```
+GET /erh/v1/deals?category=all&limit=12&threshold=-5&geo=US  - Deals with counts (1hr cache)
+```
+
+**Caching**: Price and deals endpoints use transient caching (6hrs/1hr respectively).
+Cache is invalidated via `hft_price_updated` action when HFT scraper updates prices.
+Debug header `X-ERH-Cache: HIT/MISS` indicates cache status.
+
 **User Meta Keys** (defined in `UserRepository`):
 - `price_trackers_emails` - Boolean, receive price drop alerts
 - `sales_roundup_emails` - Boolean, receive deals digest

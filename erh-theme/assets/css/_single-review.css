@@ -280,6 +280,17 @@
     line-height: var(--leading-relaxed);
 }
 
+.review-body h2 {
+    font-size: var(--text-3xl);
+    font-weight: var(--font-bold);
+    color: var(--color-dark);
+    margin: var(--space-12) 0 var(--space-6);
+}
+
+.review-body h2:first-child {
+    margin-top: 0;
+}
+
 .review-body h3 {
     font-size: var(--text-xl);
     font-weight: var(--font-bold);

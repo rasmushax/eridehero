@@ -1862,11 +1862,60 @@ class ProductMigrator {
                 } elseif (!$this->dry_run) {
                     $summary['skipped']++;
                 }
+
+                // Clear memory after each product to prevent exhaustion.
+                $this->cleanup_memory();
             }
 
             $page++;
         } while ($page <= $result['total_pages']);
 
         return $summary;
+    }
+
+    /**
+     * Clean up memory after processing a product.
+     *
+     * Clears WordPress object cache, ACF cache, and triggers garbage collection
+     * to prevent memory exhaustion during large migrations.
+     *
+     * @return void
+     */
+    public function cleanup_memory(): void {
+        // Clear WordPress object cache.
+        wp_cache_flush();
+
+        // Clear ACF local cache if available.
+        if (function_exists('acf_reset_local')) {
+            acf_reset_local();
+        }
+
+        // Clear ACF stores.
+        if (function_exists('acf_get_store')) {
+            $stores = ['fields', 'field-groups', 'values'];
+            foreach ($stores as $store_name) {
+                $store = acf_get_store($store_name);
+                if ($store && method_exists($store, 'reset')) {
+                    $store->reset();
+                }
+            }
+        }
+
+        // Clear global $post to release memory.
+        global $post, $wp_object_cache;
+        $post = null;
+
+        // Force garbage collection.
+        if (function_exists('gc_collect_cycles')) {
+            gc_collect_cycles();
+        }
+
+        // Log memory usage periodically for debugging.
+        static $counter = 0;
+        $counter++;
+        if ($counter % 10 === 0) {
+            $memory_mb = round(memory_get_usage(true) / 1024 / 1024, 1);
+            $this->log('info', "Memory usage after {$counter} products: {$memory_mb}MB");
+        }
     }
 }

@@ -26,8 +26,8 @@ import {
     isValidRegion,
 } from './geo-config.js';
 
-// Cache duration (5 minutes for prices)
-const CACHE_DURATION = 5 * 60 * 1000;
+// Cache duration (1 hour for prices - prices update twice daily)
+const CACHE_DURATION = 60 * 60 * 1000;
 
 // Region detection cache keys (localStorage)
 const REGION_STORAGE_KEY = 'erh_user_region';
@@ -36,6 +36,9 @@ const REGION_OVERRIDE_KEY = 'erh_region_override'; // Manual override (no expiry
 
 // Price cache (in-memory)
 const priceCache = new Map();
+
+// In-flight request deduplication (prevents duplicate concurrent requests)
+const pendingRequests = new Map();
 
 /**
  * Get REST URL base from WordPress localized data
@@ -250,42 +253,57 @@ export { getAvailableRegions };
  * @returns {Promise<Object>} Prices keyed by product ID
  */
 export async function getBestPrices(productIds, geo, convertTo = null) {
-    // Check cache for all products
     const cacheKey = `best:${productIds.join(',')}:${geo}:${convertTo || 'native'}`;
+
+    // Check cache first
     const cached = priceCache.get(cacheKey);
     if (cached && Date.now() < cached.expiry) {
         return cached.data;
     }
 
-    try {
-        const params = new URLSearchParams({
-            ids: productIds.join(','),
-            geo: geo
-        });
-        if (convertTo) {
-            params.append('convert_to', convertTo);
-        }
-
-        const url = `${getRestUrl()}prices/best?${params}`;
-        const response = await fetch(url);
-
-        if (!response.ok) {
-            throw new Error(`HTTP ${response.status}`);
-        }
-
-        const result = await response.json();
-
-        // Cache the result
-        priceCache.set(cacheKey, {
-            data: result.prices,
-            expiry: Date.now() + CACHE_DURATION
-        });
-
-        return result.prices;
-    } catch (error) {
-        console.error('[GeoPriceService] Failed to fetch prices:', error);
-        return {};
+    // Check if request is already in flight (deduplication)
+    if (pendingRequests.has(cacheKey)) {
+        return pendingRequests.get(cacheKey);
     }
+
+    // Create the fetch promise
+    const fetchPromise = (async () => {
+        try {
+            const params = new URLSearchParams({
+                ids: productIds.join(','),
+                geo: geo
+            });
+            if (convertTo) {
+                params.append('convert_to', convertTo);
+            }
+
+            const url = `${getRestUrl()}prices/best?${params}`;
+            const response = await fetch(url);
+
+            if (!response.ok) {
+                throw new Error(`HTTP ${response.status}`);
+            }
+
+            const result = await response.json();
+
+            // Cache the result
+            priceCache.set(cacheKey, {
+                data: result.prices,
+                expiry: Date.now() + CACHE_DURATION
+            });
+
+            return result.prices;
+        } catch (error) {
+            console.error('[GeoPriceService] Failed to fetch prices:', error);
+            return {};
+        } finally {
+            pendingRequests.delete(cacheKey);
+        }
+    })();
+
+    pendingRequests.set(cacheKey, fetchPromise);
+
+    return fetchPromise;
 }
 
 /**
@@ -296,37 +314,54 @@ export async function getBestPrices(productIds, geo, convertTo = null) {
  * @returns {Promise<Object>} Product price data with all offers
  */
 export async function getProductPrices(productId, geo, convertTo = null) {
-    // Check cache
     const cacheKey = `product:${productId}:${geo}:${convertTo || 'native'}`;
+
+    // Check cache first
     const cached = priceCache.get(cacheKey);
     if (cached && Date.now() < cached.expiry) {
         return cached.data;
     }
 
-    try {
-        const params = new URLSearchParams({ geo: geo });
-        if (convertTo) {
-            params.append('convert_to', convertTo);
-        }
-
-        const response = await fetch(`${getRestUrl()}prices/${productId}?${params}`);
-        if (!response.ok) {
-            throw new Error(`HTTP ${response.status}`);
-        }
-
-        const result = await response.json();
-
-        // Cache the result
-        priceCache.set(cacheKey, {
-            data: result,
-            expiry: Date.now() + CACHE_DURATION
-        });
-
-        return result;
-    } catch (error) {
-        console.error('[GeoPriceService] Failed to fetch product prices:', error);
-        return null;
+    // Check if request is already in flight (deduplication)
+    if (pendingRequests.has(cacheKey)) {
+        return pendingRequests.get(cacheKey);
     }
+
+    // Create the fetch promise
+    const fetchPromise = (async () => {
+        try {
+            const params = new URLSearchParams({ geo: geo });
+            if (convertTo) {
+                params.append('convert_to', convertTo);
+            }
+
+            const response = await fetch(`${getRestUrl()}prices/${productId}?${params}`);
+            if (!response.ok) {
+                throw new Error(`HTTP ${response.status}`);
+            }
+
+            const result = await response.json();
+
+            // Cache the result
+            priceCache.set(cacheKey, {
+                data: result,
+                expiry: Date.now() + CACHE_DURATION
+            });
+
+            return result;
+        } catch (error) {
+            console.error('[GeoPriceService] Failed to fetch product prices:', error);
+            return null;
+        } finally {
+            // Remove from pending requests when done
+            pendingRequests.delete(cacheKey);
+        }
+    })();
+
+    // Store the pending promise
+    pendingRequests.set(cacheKey, fetchPromise);
+
+    return fetchPromise;
 }
 
 /**

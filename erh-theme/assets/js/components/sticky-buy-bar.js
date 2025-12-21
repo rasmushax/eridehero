@@ -3,13 +3,25 @@
  *
  * Shows a persistent buy CTA at the bottom of the viewport
  * after the user scrolls past the main pricing section.
+ * Fetches geo-aware price data from REST API.
  *
  * @module components/sticky-buy-bar
  */
 
+import { getUserGeo, formatPrice, getProductPrices } from '../services/geo-price.js';
+import { PriceAlertModal } from './price-alert.js';
+
 const SELECTORS = {
     bar: '#sticky-buy-bar',
-    priceSection: '#prices'
+    priceSection: '#prices',
+    // Dynamic content elements
+    price: '[data-sticky-price]',
+    verdict: '[data-sticky-verdict]',
+    verdictText: '[data-sticky-verdict-text]',
+    buyLink: '[data-sticky-buy-link]',
+    retailer: '[data-sticky-retailer]',
+    trackPriceBtn: '[data-modal-trigger="price-alert-modal"]',
+    compareLink: '.sticky-buy-bar-link[href*="compare"]'
 };
 
 const CLASSES = {
@@ -19,6 +31,15 @@ const CLASSES = {
 let stickyBar = null;
 let priceSection = null;
 let ticking = false;
+let priceDataLoaded = false;
+
+// Product info for price alert modal
+let productInfo = {
+    id: 0,
+    name: '',
+    image: '',
+    currentPrice: 0
+};
 
 /**
  * Update sticky bar visibility based on scroll position
@@ -31,7 +52,7 @@ function updateVisibility() {
     const offset = 50; // Show bar after scrolling this many px past the price section
     const shouldShow = priceSectionRect.bottom < -offset;
 
-    if (shouldShow) {
+    if (shouldShow && priceDataLoaded) {
         stickyBar.classList.add(CLASSES.visible);
         stickyBar.setAttribute('aria-hidden', 'false');
     } else {
@@ -50,6 +71,120 @@ function onScroll() {
             ticking = false;
         });
         ticking = true;
+    }
+}
+
+/**
+ * Fetch and populate price data
+ * Uses shared getProductPrices() which has in-memory caching (5 min)
+ * so if price-intel already fetched, this is instant.
+ */
+async function loadPriceData() {
+    if (!stickyBar) return;
+
+    const productId = stickyBar.dataset.productId;
+    if (!productId) return;
+
+    try {
+        // Get user's geo
+        const { geo, currency } = await getUserGeo();
+
+        // Fetch price data using shared cached function
+        const data = await getProductPrices(parseInt(productId, 10), geo);
+        if (!data || !data.offers || data.offers.length === 0) return;
+
+        // Filter offers to user's currency (same logic as price-intel)
+        const filteredOffers = data.offers.filter(offer => {
+            const offerCurrency = offer.currency || 'USD';
+            return offerCurrency === currency;
+        });
+
+        if (filteredOffers.length === 0) return;
+
+        // Best offer is first (already sorted by price, in-stock first)
+        const bestOffer = filteredOffers[0];
+
+        // Populate price
+        const priceEl = stickyBar.querySelector(SELECTORS.price);
+        if (priceEl) {
+            priceEl.textContent = formatPrice(bestOffer.price, bestOffer.currency || currency);
+        }
+
+        // Populate verdict if we have history statistics
+        const verdictEl = stickyBar.querySelector(SELECTORS.verdict);
+        const verdictTextEl = stickyBar.querySelector(SELECTORS.verdictText);
+        if (verdictEl && verdictTextEl && data.history?.statistics?.average) {
+            const avgPrice = data.history.statistics.average;
+            const pctDiff = ((bestOffer.price - avgPrice) / avgPrice) * 100;
+            if (pctDiff < -3) {
+                // Below average - good deal
+                verdictTextEl.textContent = `${Math.abs(Math.round(pctDiff))}% below avg`;
+                verdictEl.setAttribute('data-verdict-type', 'below');
+                verdictEl.style.display = '';
+            } else if (pctDiff > 5) {
+                // Above average - not great
+                verdictTextEl.textContent = `${Math.round(pctDiff)}% above avg`;
+                verdictEl.setAttribute('data-verdict-type', 'above');
+                verdictEl.style.display = '';
+            }
+        }
+
+        // Populate buy link
+        const buyLink = stickyBar.querySelector(SELECTORS.buyLink);
+        const retailerEl = stickyBar.querySelector(SELECTORS.retailer);
+        if (buyLink && bestOffer.url) {
+            buyLink.href = bestOffer.url;
+            if (retailerEl && bestOffer.retailer) {
+                retailerEl.textContent = `Buy at ${bestOffer.retailer}`;
+            }
+        }
+
+        // Store current price for price alert modal
+        productInfo.currentPrice = bestOffer.price;
+
+        priceDataLoaded = true;
+
+    } catch (error) {
+        console.error('Failed to load sticky bar price data:', error);
+    }
+}
+
+/**
+ * Set up button handlers for Track Price and Compare
+ */
+function setupButtons() {
+    if (!stickyBar) return;
+
+    // Store product info from data attributes
+    productInfo.id = parseInt(stickyBar.dataset.productId, 10) || 0;
+    productInfo.name = stickyBar.dataset.productName || '';
+
+    // Get product image from the bar itself
+    const img = stickyBar.querySelector('.sticky-buy-bar-img');
+    productInfo.image = img?.src || '';
+
+    // Track Price button - opens price alert modal
+    const trackPriceBtn = stickyBar.querySelector(SELECTORS.trackPriceBtn);
+    if (trackPriceBtn) {
+        trackPriceBtn.addEventListener('click', (e) => {
+            e.preventDefault();
+            e.stopPropagation();
+
+            PriceAlertModal.open({
+                productId: productInfo.id,
+                productName: productInfo.name,
+                productImage: productInfo.image,
+                currentPrice: productInfo.currentPrice
+            });
+        });
+    }
+
+    // Compare link - append product ID to URL
+    const compareLink = stickyBar.querySelector(SELECTORS.compareLink);
+    if (compareLink && productInfo.id) {
+        const currentHref = compareLink.href;
+        const separator = currentHref.includes('?') ? '&' : '?';
+        compareLink.href = `${currentHref}${separator}products=${productInfo.id}`;
     }
 }
 
@@ -74,6 +209,12 @@ export function init(options = {}) {
         return;
     }
 
+    // Set up button handlers
+    setupButtons();
+
+    // Load price data
+    loadPriceData();
+
     // Set up scroll listener
     window.addEventListener('scroll', onScroll, { passive: true });
 
@@ -88,13 +229,14 @@ export function destroy() {
     window.removeEventListener('scroll', onScroll);
     stickyBar = null;
     priceSection = null;
+    priceDataLoaded = false;
 }
 
 /**
  * Manually show the sticky bar
  */
 export function show() {
-    if (stickyBar) {
+    if (stickyBar && priceDataLoaded) {
         stickyBar.classList.add(CLASSES.visible);
         stickyBar.setAttribute('aria-hidden', 'false');
     }

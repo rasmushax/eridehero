@@ -120,6 +120,12 @@ class MigrationAdmin {
                 </div>
             <?php endif; ?>
 
+            <?php if (class_exists('QM_Plugin')): ?>
+                <div class="notice notice-warning">
+                    <p><strong>Query Monitor detected!</strong> Please <a href="<?php echo esc_url(admin_url('plugins.php')); ?>">deactivate Query Monitor</a> before running migrations. It collects backtraces on every database query which causes memory exhaustion with large ACF field updates.</p>
+                </div>
+            <?php endif; ?>
+
             <div class="card" style="max-width: 600px; padding: 20px;">
                 <h2>Import Products from Remote Site</h2>
                 <p>This tool will fetch products from the source site and import them with the new ACF structure.</p>
@@ -152,11 +158,11 @@ class MigrationAdmin {
                                 <input type="number"
                                        name="batch_size"
                                        id="batch_size"
-                                       value="50"
-                                       min="10"
-                                       max="100"
+                                       value="20"
+                                       min="5"
+                                       max="50"
                                        class="small-text">
-                                <p class="description">Products to process per request (10-100).</p>
+                                <p class="description">Products per request (5-50). Use lower values (10-20) for products with many ACF fields.</p>
                             </td>
                         </tr>
                         <tr>
@@ -398,8 +404,26 @@ class MigrationAdmin {
         $migrator = new ProductMigrator($source_url);
         $migrator->set_dry_run($dry_run);
 
-        // Increase time limit for large migrations.
+        // Increase limits for large migrations with deep ACF fields.
         set_time_limit(600);
+        ini_set('memory_limit', '1024M');
+
+        // Disable Query Monitor's backtrace collection during migration.
+        // QM collects backtraces on every DB query which causes memory exhaustion.
+        add_filter('qm/collect/db_queries', '__return_false');
+        add_filter('qm/collect/hooks', '__return_false');
+        add_filter('qm/collect/assets', '__return_false');
+
+        // Reset QM's stored data if the collector exists.
+        if (class_exists('QM_Collectors') && method_exists('QM_Collectors', 'get')) {
+            $collector = \QM_Collectors::get('db_queries');
+            if ($collector && property_exists($collector, 'data')) {
+                $collector->data = [];
+            }
+        }
+
+        // Clamp batch size to safe range.
+        $batch_size = max(5, min(50, $batch_size));
 
         $summary = $migrator->run_remote_migration($batch_size);
 

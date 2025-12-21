@@ -5,12 +5,9 @@
  * Hydrates server-rendered shell with dynamic data based on user's region.
  */
 
-import { getUserGeo, formatPrice, getCurrencySymbol } from '../services/geo-price.js';
+import { getUserGeo, formatPrice, getCurrencySymbol, getProductPrices } from '../services/geo-price.js';
 import { createChart } from './chart.js';
 import { PriceAlertModal } from './price-alert.js';
-
-// API endpoint
-const ERH_REST_URL = window.erhData?.restUrl || '/wp-json/erh/v1/';
 
 /**
  * Initialize all price intel components on the page
@@ -139,17 +136,16 @@ class PriceIntelComponent {
 
     /**
      * Fetch all price data (retailers + history) from the ERH REST API
+     * Uses shared getProductPrices() for caching and request deduplication.
      */
     async fetchPriceData() {
         try {
-            const url = `${ERH_REST_URL}prices/${this.productId}?geo=${this.userGeo.geo}`;
-            const response = await fetch(url);
+            const data = await getProductPrices(parseInt(this.productId, 10), this.userGeo.geo);
 
-            if (!response.ok) {
-                throw new Error(`HTTP ${response.status}`);
+            if (!data) {
+                throw new Error('No data returned');
             }
 
-            const data = await response.json();
             this.data = data;
 
             // Handle retailers - filter to only show geo-appropriate offers
