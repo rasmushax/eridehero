@@ -437,6 +437,70 @@ class CacheRebuildJob implements CronJobInterface {
             }
         }
 
+        // Consolidate tire type for product types with wheels data.
+        $specs = $this->consolidate_tire_type($specs, $product_type);
+
+        return $specs;
+    }
+
+    /**
+     * Consolidate tire_type and pneumatic_type into a single tire_type value.
+     *
+     * Maps to: Solid, Tubeless, Tubed, Mixed
+     * - Solid tires → "Solid"
+     * - Mixed (solid + pneumatic) → "Mixed"
+     * - Pneumatic + Tubeless → "Tubeless"
+     * - Pneumatic + Tubed (or default) → "Tubed"
+     *
+     * @param array  $specs        The product specs.
+     * @param string $product_type The product type.
+     * @return array The specs with consolidated tire_type.
+     */
+    private function consolidate_tire_type(array $specs, string $product_type): array {
+        // Map product type to nested group key.
+        $group_keys = [
+            'Electric Scooter'    => 'e-scooters',
+            'Electric Skateboard' => 'e-skateboards',
+            'Electric Unicycle'   => 'e-unicycles',
+            'Hoverboard'          => 'hoverboards',
+        ];
+
+        $group_key = $group_keys[$product_type] ?? null;
+        if ($group_key === null) {
+            return $specs;
+        }
+
+        // Check if wheels data exists.
+        if (!isset($specs[$group_key]['wheels']) || !is_array($specs[$group_key]['wheels'])) {
+            return $specs;
+        }
+
+        $wheels = &$specs[$group_key]['wheels'];
+        $tire_type = $wheels['tire_type'] ?? '';
+        $pneumatic_type = $wheels['pneumatic_type'] ?? '';
+
+        if ($tire_type === '' && $pneumatic_type === '') {
+            return $specs;
+        }
+
+        // Consolidate to single value.
+        $tire_lower = strtolower(trim($tire_type));
+        $pneumatic_lower = strtolower(trim($pneumatic_type));
+
+        if ($tire_lower === 'solid') {
+            $wheels['tire_type'] = 'Solid';
+        } elseif ($tire_lower === 'mixed') {
+            $wheels['tire_type'] = 'Mixed';
+        } elseif ($pneumatic_lower === 'tubeless') {
+            $wheels['tire_type'] = 'Tubeless';
+        } else {
+            // Default pneumatic to Tubed.
+            $wheels['tire_type'] = 'Tubed';
+        }
+
+        // Remove pneumatic_type as it's now consolidated.
+        unset($wheels['pneumatic_type']);
+
         return $specs;
     }
 
@@ -1024,14 +1088,19 @@ class CacheRebuildJob implements CronJobInterface {
     /**
      * Add computed price/spec comparisons to specs.
      *
+     * Calculates value metrics like price_per_lb, speed_per_lb, range_per_lb.
+     * Price-based metrics require a valid price, but weight-based metrics
+     * (speed_per_lb, range_per_lb) are calculated regardless of price availability.
+     *
      * @param array $specs The product specs.
-     * @param float|null $price The product price.
+     * @param float|null $price The product price (null if unavailable).
      * @param string $product_type The product type.
      * @return array The specs with computed values.
      */
     private function add_computed_specs(array $specs, ?float $price, string $product_type): array {
-        if ($price === null || $price <= 0) {
-            return $specs;
+        // Normalize price to null if invalid.
+        if ($price !== null && $price <= 0) {
+            $price = null;
         }
 
         if ($product_type === 'Electric Bike' && isset($specs['e-bikes'])) {
@@ -1045,76 +1114,105 @@ class CacheRebuildJob implements CronJobInterface {
      * Add computed specs for e-bikes.
      *
      * @param array $specs The product specs.
-     * @param float $price The product price.
+     * @param float|null $price The product price (null if unavailable).
      * @return array The specs with computed values.
      */
-    private function add_ebike_computed_specs(array $specs, float $price): array {
+    private function add_ebike_computed_specs(array $specs, ?float $price): array {
         $ebike_data = $specs['e-bikes'];
+        $has_price = $price !== null;
 
-        // Price vs Motor Power (Nominal).
-        if (isset($ebike_data['motor']['power_nominal']) && is_numeric($ebike_data['motor']['power_nominal'])) {
-            $power = (float) $ebike_data['motor']['power_nominal'];
-            $specs['price_per_watt_nominal'] = $power > 0 ? round($price / $power, 2) : null;
-        }
-
-        // Price vs Motor Power (Peak).
-        if (isset($ebike_data['motor']['power_peak']) && is_numeric($ebike_data['motor']['power_peak'])) {
-            $power = (float) $ebike_data['motor']['power_peak'];
-            $specs['price_per_watt_peak'] = $power > 0 ? round($price / $power, 2) : null;
-        }
-
-        // Price vs Torque.
-        if (isset($ebike_data['motor']['torque']) && is_numeric($ebike_data['motor']['torque'])) {
-            $torque = (float) $ebike_data['motor']['torque'];
-            $specs['price_per_nm_torque'] = $torque > 0 ? round($price / $torque, 2) : null;
-        }
-
-        // Price vs Battery Capacity.
-        if (isset($ebike_data['battery']['battery_capacity']) && is_numeric($ebike_data['battery']['battery_capacity'])) {
-            $capacity = (float) $ebike_data['battery']['battery_capacity'];
-            $specs['price_per_wh_battery'] = $capacity > 0 ? round($price / $capacity, 2) : null;
-        }
-
-        // Price vs Range.
-        if (isset($ebike_data['battery']['range']) && is_numeric($ebike_data['battery']['range'])) {
-            $range = (float) $ebike_data['battery']['range'];
-            $specs['price_per_mile_range'] = $range > 0 ? round($price / $range, 2) : null;
-        }
-
-        // Price vs Weight.
+        // Extract common values.
+        $weight = null;
         if (isset($ebike_data['weight_and_capacity']['weight']) && is_numeric($ebike_data['weight_and_capacity']['weight'])) {
             $weight = (float) $ebike_data['weight_and_capacity']['weight'];
-            $specs['price_per_lb'] = $weight > 0 ? round($price / $weight, 2) : null;
+        }
 
+        $range = null;
+        if (isset($ebike_data['battery']['range']) && is_numeric($ebike_data['battery']['range'])) {
+            $range = (float) $ebike_data['battery']['range'];
+        }
+
+        $capacity = null;
+        if (isset($ebike_data['battery']['battery_capacity']) && is_numeric($ebike_data['battery']['battery_capacity'])) {
+            $capacity = (float) $ebike_data['battery']['battery_capacity'];
+        }
+
+        $power_nominal = null;
+        if (isset($ebike_data['motor']['power_nominal']) && is_numeric($ebike_data['motor']['power_nominal'])) {
+            $power_nominal = (float) $ebike_data['motor']['power_nominal'];
+        }
+
+        // === Price-based metrics (require price) ===
+        if ($has_price) {
+            // Price vs Motor Power (Nominal).
+            if ($power_nominal !== null && $power_nominal > 0) {
+                $specs['price_per_watt_nominal'] = round($price / $power_nominal, 2);
+            }
+
+            // Price vs Motor Power (Peak).
+            if (isset($ebike_data['motor']['power_peak']) && is_numeric($ebike_data['motor']['power_peak'])) {
+                $power = (float) $ebike_data['motor']['power_peak'];
+                if ($power > 0) {
+                    $specs['price_per_watt_peak'] = round($price / $power, 2);
+                }
+            }
+
+            // Price vs Torque.
+            if (isset($ebike_data['motor']['torque']) && is_numeric($ebike_data['motor']['torque'])) {
+                $torque = (float) $ebike_data['motor']['torque'];
+                if ($torque > 0) {
+                    $specs['price_per_nm_torque'] = round($price / $torque, 2);
+                }
+            }
+
+            // Price vs Battery Capacity.
+            if ($capacity !== null && $capacity > 0) {
+                $specs['price_per_wh_battery'] = round($price / $capacity, 2);
+            }
+
+            // Price vs Range.
+            if ($range !== null && $range > 0) {
+                $specs['price_per_mile_range'] = round($price / $range, 2);
+            }
+
+            // Price vs Weight.
+            if ($weight !== null && $weight > 0) {
+                $specs['price_per_lb'] = round($price / $weight, 2);
+            }
+
+            // Price vs Weight Limit.
+            if (isset($ebike_data['weight_and_capacity']['weight_limit']) && is_numeric($ebike_data['weight_and_capacity']['weight_limit'])) {
+                $limit = (float) $ebike_data['weight_and_capacity']['weight_limit'];
+                if ($limit > 0) {
+                    $specs['price_per_lb_capacity'] = round($price / $limit, 2);
+                }
+            }
+
+            // Price vs Top Assist Speed.
+            if (isset($ebike_data['speed_and_class']['top_assist_speed']) && is_numeric($ebike_data['speed_and_class']['top_assist_speed'])) {
+                $speed = (float) $ebike_data['speed_and_class']['top_assist_speed'];
+                if ($speed > 0) {
+                    $specs['price_per_mph_assist'] = round($price / $speed, 2);
+                }
+            }
+        }
+
+        // === Non-price metrics (always calculated if data available) ===
+        if ($weight !== null && $weight > 0) {
             // Range per pound.
-            if (isset($ebike_data['battery']['range']) && is_numeric($ebike_data['battery']['range'])) {
-                $range = (float) $ebike_data['battery']['range'];
-                $specs['range_per_lb'] = $weight > 0 ? round($range / $weight, 2) : null;
+            if ($range !== null) {
+                $specs['range_per_lb'] = round($range / $weight, 2);
             }
 
             // Battery capacity per pound.
-            if (isset($ebike_data['battery']['battery_capacity']) && is_numeric($ebike_data['battery']['battery_capacity'])) {
-                $capacity = (float) $ebike_data['battery']['battery_capacity'];
-                $specs['wh_per_lb'] = $weight > 0 ? round($capacity / $weight, 2) : null;
+            if ($capacity !== null) {
+                $specs['wh_per_lb'] = round($capacity / $weight, 2);
             }
 
             // Power per pound.
-            if (isset($ebike_data['motor']['power_nominal']) && is_numeric($ebike_data['motor']['power_nominal'])) {
-                $power = (float) $ebike_data['motor']['power_nominal'];
-                $specs['watts_per_lb'] = $weight > 0 ? round($power / $weight, 2) : null;
+            if ($power_nominal !== null) {
+                $specs['watts_per_lb'] = round($power_nominal / $weight, 2);
             }
-        }
-
-        // Price vs Weight Limit.
-        if (isset($ebike_data['weight_and_capacity']['weight_limit']) && is_numeric($ebike_data['weight_and_capacity']['weight_limit'])) {
-            $limit = (float) $ebike_data['weight_and_capacity']['weight_limit'];
-            $specs['price_per_lb_capacity'] = $limit > 0 ? round($price / $limit, 2) : null;
-        }
-
-        // Price vs Top Assist Speed.
-        if (isset($ebike_data['speed_and_class']['top_assist_speed']) && is_numeric($ebike_data['speed_and_class']['top_assist_speed'])) {
-            $speed = (float) $ebike_data['speed_and_class']['top_assist_speed'];
-            $specs['price_per_mph_assist'] = $speed > 0 ? round($price / $speed, 2) : null;
         }
 
         return $specs;
@@ -1124,12 +1222,16 @@ class CacheRebuildJob implements CronJobInterface {
      * Add computed specs for e-scooters and other types.
      *
      * Handles both flat (legacy) and nested (new ACF structure) field locations.
+     * Price-based metrics require a valid price, but weight-based metrics
+     * (speed_per_lb, range_per_lb) are calculated regardless of price availability.
      *
      * @param array $specs The product specs.
-     * @param float $price The product price.
+     * @param float|null $price The product price (null if unavailable).
      * @return array The specs with computed values.
      */
-    private function add_scooter_computed_specs(array $specs, float $price): array {
+    private function add_scooter_computed_specs(array $specs, ?float $price): array {
+        $has_price = $price !== null;
+
         // Helper to get value from flat or nested e-scooters structure.
         $get_value = function (string ...$paths) use ($specs): ?float {
             foreach ($paths as $path) {
@@ -1168,20 +1270,40 @@ class CacheRebuildJob implements CronJobInterface {
         $hill_climbing = $get_value('hill_climbing');
         $max_weight_capacity = $get_value('max_weight_capacity');
 
-        // Price vs Weight.
+        // === Non-price metrics (always calculated if data available) ===
         if ($weight !== null && $weight > 0) {
-            $specs['price_per_lb'] = round($price / $weight, 2);
-
-            // Weight-based comparisons.
+            // Speed per lb.
             if ($top_speed !== null) {
                 $specs['speed_per_lb'] = round($top_speed / $weight, 2);
             }
+            // Range per lb.
             if ($range !== null) {
                 $specs['range_per_lb'] = round($range / $weight, 2);
             }
+            // Tested range per lb.
             if ($tested_range !== null) {
                 $specs['tested_range_per_lb'] = round($tested_range / $weight, 2);
             }
+        }
+
+        // Max weight capacity comparisons (non-price based).
+        if ($max_weight_capacity !== null && $max_weight_capacity > 0) {
+            if ($top_speed !== null) {
+                $specs['speed_per_lb_capacity'] = round($top_speed / $max_weight_capacity, 2);
+            }
+            if ($range !== null) {
+                $specs['range_per_lb_capacity'] = round($range / $max_weight_capacity, 2);
+            }
+        }
+
+        // === Price-based metrics (require price) ===
+        if (!$has_price) {
+            return $specs;
+        }
+
+        // Price vs Weight.
+        if ($weight !== null && $weight > 0) {
+            $specs['price_per_lb'] = round($price / $weight, 2);
         }
 
         // Price vs Speed.
@@ -1242,16 +1364,6 @@ class CacheRebuildJob implements CronJobInterface {
         $accel_top = $get_value('acceleration_0-to-top');
         if ($accel_top !== null && $accel_top > 0) {
             $specs['price_per_acc_0-to-top'] = round($price / $accel_top, 2);
-        }
-
-        // Max weight capacity comparisons.
-        if ($max_weight_capacity !== null && $max_weight_capacity > 0) {
-            if ($top_speed !== null) {
-                $specs['speed_per_lb_capacity'] = round($top_speed / $max_weight_capacity, 2);
-            }
-            if ($range !== null) {
-                $specs['range_per_lb_capacity'] = round($range / $max_weight_capacity, 2);
-            }
         }
 
         return $specs;

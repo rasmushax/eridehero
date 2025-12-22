@@ -141,21 +141,8 @@
     white-space: nowrap;
 }
 
-.finder-sort-select {
+.finder-sort .custom-select {
     min-width: 160px;
-    padding: var(--space-2) var(--space-3);
-    font-family: var(--font-family);
-    font-size: var(--text-sm);
-    color: var(--color-dark);
-    background: var(--color-white);
-    border: var(--border-width) solid var(--color-border);
-    border-radius: var(--radius-md);
-    cursor: pointer;
-}
-
-.finder-sort-select:focus {
-    outline: none;
-    border-color: var(--color-primary);
 }
 
 
@@ -344,6 +331,16 @@
     padding: var(--space-3) 0 0;
 }
 
+/* Quick filter group - contains collapsible filter-items without group heading */
+.filter-group--quick {
+    /* No main heading, just filter-items */
+}
+
+/* First primary group after quick filters */
+.filter-group--quick + .filter-group:not(.filter-group--quick) .filter-group-title {
+    padding-top: var(--space-4);
+}
+
 .filter-group-content {
     display: flex;
     flex-direction: column;
@@ -365,8 +362,8 @@
     padding: var(--space-2) 0;
     font-family: var(--font-family);
     font-size: var(--text-sm);
-    font-weight: var(--font-medium);
-    color: var(--color-body);
+    font-weight: var(--font-bold);
+    color: var(--color-dark);
     background: none;
     border: none;
     cursor: pointer;
@@ -412,8 +409,8 @@
     align-items: flex-end;
     gap: 2px;
     height: 32px;
-    padding: 0 9px; /* Match handle radius offset */
-    margin-bottom: var(--space-1);
+    padding: 0 9px;
+    margin-bottom: -18px;
 }
 
 .filter-range-bar {
@@ -425,8 +422,8 @@
     transition: background var(--transition-fast);
 }
 
-.filter-range-bar:hover {
-    background: var(--color-border-hover);
+.filter-range-bar.is-selected {
+    background: var(--color-primary-glow);
 }
 
 /* Dual-handle range slider */
@@ -541,6 +538,143 @@
     color: var(--color-muted);
 }
 
+/* Single input mode (for contains filters like rider height) */
+.filter-range-inputs--single {
+    justify-content: center;
+}
+
+.filter-range-inputs--single .filter-range-input-group {
+    flex: 0 1 auto;
+    min-width: 120px;
+}
+
+/* ===== FILTER PRESETS (Styled Radio Group) ===== */
+
+.filter-presets {
+    display: flex;
+    flex-direction: column;
+    gap: var(--space-2);
+}
+
+.filter-preset {
+    display: flex;
+    align-items: center;
+    gap: var(--space-3);
+    cursor: pointer;
+}
+
+.filter-preset input {
+    position: absolute;
+    opacity: 0;
+    width: 0;
+    height: 0;
+}
+
+.filter-preset-radio {
+    flex-shrink: 0;
+    width: 18px;
+    height: 18px;
+    background: var(--color-white);
+    border: 2px solid var(--color-border-hover);
+    border-radius: 50%;
+    transition: all var(--transition-fast);
+}
+
+.filter-preset:hover .filter-preset-radio {
+    border-color: var(--color-primary);
+}
+
+.filter-preset input:checked + .filter-preset-radio {
+    border-color: var(--color-primary);
+    background: var(--color-primary);
+    box-shadow: inset 0 0 0 3px var(--color-white);
+}
+
+.filter-preset input:focus-visible + .filter-preset-radio {
+    outline: 2px solid var(--color-primary);
+    outline-offset: 2px;
+}
+
+.filter-preset-label {
+    flex: 1;
+    font-size: var(--text-xs);
+    color: var(--color-body);
+    transition: color var(--transition-fast);
+}
+
+.filter-preset:hover .filter-preset-label {
+    color: var(--color-dark);
+}
+
+.filter-preset input:checked ~ .filter-preset-label {
+    color: var(--color-dark);
+    font-weight: var(--font-medium);
+}
+
+.filter-preset-count {
+    font-size: var(--text-xs);
+    color: var(--color-muted);
+    margin-left: auto;
+}
+
+
+/* ===== HEIGHT INPUT (Feet/Inches) ===== */
+
+.filter-height-input {
+    display: flex;
+    align-items: center;
+    gap: var(--space-3);
+}
+
+.filter-height-group {
+    display: flex;
+    align-items: center;
+    gap: var(--space-1);
+}
+
+.filter-height-feet,
+.filter-height-inches {
+    width: 56px;
+    padding: var(--space-2) var(--space-3);
+    font-size: var(--text-sm);
+    color: var(--color-dark);
+    background: var(--color-white);
+    border: 1px solid var(--color-border);
+    border-radius: var(--radius-md);
+    text-align: center;
+    transition: all var(--transition-fast);
+    -moz-appearance: textfield;
+}
+
+.filter-height-feet::-webkit-outer-spin-button,
+.filter-height-feet::-webkit-inner-spin-button,
+.filter-height-inches::-webkit-outer-spin-button,
+.filter-height-inches::-webkit-inner-spin-button {
+    -webkit-appearance: none;
+    margin: 0;
+}
+
+.filter-height-feet:focus,
+.filter-height-inches:focus {
+    border-color: var(--color-primary);
+    outline: none;
+    box-shadow: 0 0 0 3px var(--color-primary-subtle);
+}
+
+.filter-height-label {
+    font-size: var(--text-sm);
+    color: var(--color-muted);
+    font-weight: var(--font-medium);
+}
+
+
+/* ===== SINGLE-THUMB SLIDER ===== */
+
+.filter-range-slider--single .filter-range-fill {
+    left: 9px;
+    right: calc(9px + (1 - var(--pos)) * (100% - 18px));
+}
+
 
 /* ===== CHECKBOX FILTER ===== */
 
@@ -606,6 +740,57 @@
 }
 
 
+/* ===== TOGGLE SWITCH ===== */
+
+.filter-toggle {
+    display: flex;
+    align-items: center;
+    gap: var(--space-3);
+    cursor: pointer;
+}
+
+.filter-toggle input {
+    position: absolute;
+    opacity: 0;
+    width: 0;
+    height: 0;
+}
+
+.filter-toggle-track {
+    position: relative;
+    width: 36px;
+    height: 20px;
+    background: var(--color-border-hover);
+    border-radius: 10px;
+    transition: background var(--transition-fast);
+    flex-shrink: 0;
+}
+
+.filter-toggle-thumb {
+    position: absolute;
+    top: 2px;
+    left: 2px;
+    width: 16px;
+    height: 16px;
+    background: var(--color-white);
+    border-radius: 50%;
+    transition: transform var(--transition-fast);
+}
+
+.filter-toggle input:checked + .filter-toggle-track {
+    background: var(--color-primary);
+}
+
+.filter-toggle input:checked + .filter-toggle-track .filter-toggle-thumb {
+    transform: translateX(16px);
+}
+
+.filter-toggle-label {
+    font-size: var(--text-sm);
+    color: var(--color-body);
+}
+
+
 /* ===== SEARCHABLE FILTER LIST ===== */
 
 .filter-list-search {
@@ -646,34 +831,30 @@
     color: var(--color-muted);
 }
 
-.filter-list-search-clear {
+.filter-list-search-clear,
+.filter-search-clear {
     display: flex;
     align-items: center;
     justify-content: center;
-    width: 16px;
-    height: 16px;
     padding: 0;
-    background: var(--color-muted);
+    background: none;
     border: none;
-    border-radius: 50%;
     cursor: pointer;
     flex-shrink: 0;
     opacity: 0;
     visibility: hidden;
-    transition: all var(--transition-fast);
+    transition: opacity var(--transition-fast), visibility var(--transition-fast);
 }
 
-.filter-list-search-clear .icon {
-    width: 10px;
-    height: 10px;
-    color: var(--color-white);
+.filter-list-search-clear .icon,
+.filter-search-clear .icon {
+    width: 14px;
+    height: 14px;
+    color: var(--color-muted);
 }
 
-.filter-list-search-clear:hover {
-    background: var(--color-dark);
-}
-
-.filter-list-search.has-value .filter-list-search-clear {
+.filter-list-search.has-value .filter-list-search-clear,
+.finder-filters-search.has-value .filter-search-clear {
     opacity: 1;
     visibility: visible;
 }
@@ -739,6 +920,62 @@
     color: var(--color-muted);
     padding: var(--space-3) 0;
     text-align: center;
+}
+
+
+/* ===== TRISTATE FILTER ===== */
+
+.filter-tristate {
+    display: flex;
+    align-items: center;
+    justify-content: space-between;
+    gap: var(--space-3);
+    padding: var(--space-2) 0;
+}
+
+.filter-tristate-label {
+    font-size: var(--text-sm);
+    color: var(--color-body);
+}
+
+.filter-tristate-control {
+    display: flex;
+    background: var(--color-background);
+    border-radius: var(--radius-md);
+    padding: 4px;
+}
+
+.filter-tristate-btn {
+    padding: var(--space-1) var(--space-3);
+    font-family: var(--font-family);
+    font-size: var(--text-tiny);
+    font-weight: var(--font-medium);
+    color: var(--color-muted);
+    background: transparent;
+    border: none;
+    border-radius: var(--radius-sm);
+    cursor: pointer;
+    transition: all var(--transition-fast);
+}
+
+.filter-tristate-btn:hover {
+    color: var(--color-body);
+}
+
+.filter-tristate-btn.is-active {
+    background: var(--color-white);
+    color: var(--color-dark);
+}
+
+/* Tristate inside filter-item (if wrapped) */
+.filter-item-content .filter-tristate {
+    padding: 0;
+}
+
+.filter-item-content .filter-tristate:not(:first-child) {
+    margin-top: var(--space-2);
+    padding-top: var(--space-2);
+    border-top: 1px solid var(--color-border-light);
 }
 
 
@@ -880,8 +1117,8 @@
 }
 
 .product-card-image img {
-    width: 100%;
-    height: 100%;
+    width: 90%;
+    height: 90%;
     object-fit: contain;
     transition: transform var(--transition-fast);
 }
@@ -896,6 +1133,7 @@
     flex-direction: column;
     padding: var(--space-4) 0;
     flex: 1;
+    padding-bottom: var(--space-2);
 }
 
 .product-card-name {
@@ -912,24 +1150,25 @@
     color: var(--color-muted);
     line-height: var(--leading-relaxed);
     margin-top: var(--space-2);
-    /* 2-line truncation with ellipsis */
+    /* 3-line truncation with ellipsis */
     display: -webkit-box;
-    -webkit-line-clamp: 2;
+    -webkit-line-clamp: 3;
     -webkit-box-orient: vertical;
     overflow: hidden;
 }
 
-/* Footer with price */
-.product-card-footer {
-    display: flex;
-    align-items: center;
-    justify-content: space-between;
+.product-card-specs .specs-active {
+    color: var(--color-primary);
 }
 
 .product-card-price-row {
     display: flex;
     align-items: center;
     gap: var(--space-3);
+    position: absolute;
+    inset: auto 0 0 0;
+    justify-content: space-between;
+    padding: var(--space-3);
 }
 
 .product-card-price {
@@ -954,9 +1193,8 @@
     border-radius: var(--radius-sm);
 }
 
-.product-card-indicator .icon {
-    width: 12px;
-    height: 12px;
+.product-card-indicator-arrow {
+    font-weight: var(--font-bold);
 }
 
 .product-card-indicator--below {
@@ -1207,7 +1445,7 @@
         gap: var(--space-3);
     }
 
-    .finder-sort-select {
+    .finder-sort .custom-select {
         min-width: 140px;
     }
 }

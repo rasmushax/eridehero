@@ -215,19 +215,17 @@ class FinderJsonJob implements CronJobInterface {
     }
 
     /**
-     * Flatten and normalize specs for the JSON output.
-     * Handles nested product type structures and removes non-essential fields.
+     * Normalize specs for the JSON output.
+     * Preserves nested structure but removes non-essential fields and normalizes values.
      *
      * @param mixed  $specs The product specs.
      * @param string $category The product category slug.
-     * @return array The flattened specs.
+     * @return array The normalized specs with nested structure preserved.
      */
     private function flatten_specs($specs, string $category): array {
         if (!is_array($specs)) {
             return [];
         }
-
-        $flattened = [];
 
         // Fields to exclude from output (non-spec fields).
         $exclude_fields = [
@@ -251,113 +249,55 @@ class FinderJsonJob implements CronJobInterface {
         ];
 
         $nested_key = $nested_group_keys[$category] ?? null;
+        $output = [];
 
         // Handle nested product type structure.
         if ($nested_key && isset($specs[$nested_key]) && is_array($specs[$nested_key])) {
-            $nested_data = $specs[$nested_key];
-
-            // Recursively flatten nested groups.
-            $this->flatten_nested_groups($nested_data, $flattened);
+            // The product type group contains the main specs - preserve its nested structure.
+            $output = $this->normalize_nested_specs($specs[$nested_key]);
 
             // Also include any top-level fields (basic info, etc.).
             foreach ($specs as $key => $value) {
                 if ($key === $nested_key || in_array($key, $exclude_fields, true)) {
                     continue;
                 }
-
-                // Recursively flatten any other nested groups (like 'review', 'obsolete').
-                if (is_array($value)) {
-                    if ($this->is_simple_array($value)) {
-                        $flattened[$key] = $this->normalize_value($value);
-                    } else {
-                        // Check if it's a group (associative array with scalar values).
-                        $this->flatten_nested_groups([$key => $value], $flattened);
-                    }
-                } else {
-                    $flattened[$key] = $this->normalize_value($value);
-                }
+                $output[$key] = $this->normalize_nested_specs($value);
             }
         } else {
-            // No nested structure found - flatten everything recursively.
+            // No nested structure found - normalize everything.
             foreach ($specs as $key => $value) {
                 if (in_array($key, $exclude_fields, true)) {
                     continue;
                 }
-
-                if (is_array($value)) {
-                    if ($this->is_simple_array($value)) {
-                        $flattened[$key] = $this->normalize_value($value);
-                    } else {
-                        // Flatten nested groups.
-                        $this->flatten_nested_groups([$key => $value], $flattened);
-                    }
-                } else {
-                    $flattened[$key] = $this->normalize_value($value);
-                }
+                $output[$key] = $this->normalize_nested_specs($value);
             }
         }
 
-        return $flattened;
+        return $output;
     }
 
     /**
-     * Recursively flatten nested ACF groups.
+     * Recursively normalize nested specs while preserving structure.
      *
-     * @param array $data The nested data to flatten.
-     * @param array &$flattened Reference to the flattened output array.
-     * @param string $prefix Optional prefix for nested keys.
-     * @return void
+     * @param mixed $value The value to normalize.
+     * @return mixed The normalized value.
      */
-    private function flatten_nested_groups(array $data, array &$flattened, string $prefix = ''): void {
-        foreach ($data as $key => $value) {
-            $flat_key = $prefix ? "{$prefix}_{$key}" : $key;
-
-            if (is_array($value)) {
-                if ($this->is_simple_array($value)) {
-                    // Simple array (all scalar values) - keep as-is.
-                    $flattened[$flat_key] = $this->normalize_value($value);
-                } elseif ($this->is_leaf_group($value)) {
-                    // Leaf group (associative array with only scalar values) - keep as object.
-                    $normalized = [];
-                    foreach ($value as $k => $v) {
-                        $normalized[$k] = $this->normalize_value($v);
-                    }
-                    $flattened[$flat_key] = $normalized;
-                } else {
-                    // Nested group - recurse with prefix.
-                    $this->flatten_nested_groups($value, $flattened, $flat_key);
-                }
-            } else {
-                $flattened[$flat_key] = $this->normalize_value($value);
-            }
-        }
-    }
-
-    /**
-     * Check if an array is a "leaf" group (associative with only scalar values).
-     * These should be kept as objects in the JSON, not flattened further.
-     *
-     * @param array $arr The array to check.
-     * @return bool True if it's a leaf group.
-     */
-    private function is_leaf_group(array $arr): bool {
-        if (empty($arr)) {
-            return true;
+    private function normalize_nested_specs($value) {
+        if (!is_array($value)) {
+            return $this->normalize_value($value);
         }
 
-        // Must be associative (string keys).
-        if (array_keys($arr) === range(0, count($arr) - 1)) {
-            return false;
+        // Check if it's a simple indexed array (like ['Front', 'Rear']).
+        if ($this->is_simple_array($value)) {
+            return array_map([$this, 'normalize_value'], $value);
         }
 
-        // All values must be scalar or null.
-        foreach ($arr as $value) {
-            if (is_array($value) || is_object($value)) {
-                return false;
-            }
+        // Associative array - recurse into it.
+        $normalized = [];
+        foreach ($value as $k => $v) {
+            $normalized[$k] = $this->normalize_nested_specs($v);
         }
-
-        return true;
+        return $normalized;
     }
 
     /**
