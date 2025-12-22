@@ -47,6 +47,9 @@ class Finder {
         this.selectedProducts = new Set();
         this.maxCompare = 4;
 
+        // Search state
+        this.searchTerm = '';
+
         // Geo state (populated async before first render)
         this.userGeo = 'US';
         this.userCurrency = 'USD';
@@ -151,6 +154,7 @@ class Finder {
         this.bindFilterShowAll();
         this.bindViewToggle();
         this.bindLoadMore();
+        this.bindProductSearch();
 
         // Listen for manual region changes
         window.addEventListener('erh:region-changed', (e) => this.handleRegionChange(e));
@@ -980,6 +984,40 @@ class Finder {
     }
 
     /**
+     * Product name search in toolbar
+     */
+    bindProductSearch() {
+        const searchContainer = this.container.querySelector('[data-product-search]');
+        const searchInput = this.container.querySelector('[data-product-search-input]');
+        const clearBtn = this.container.querySelector('[data-product-search-clear]');
+        if (!searchInput) return;
+
+        const performSearch = () => {
+            this.searchTerm = searchInput.value.trim();
+            searchContainer?.classList.toggle('has-value', !!this.searchTerm);
+            this.debouncedApplyFilters();
+        };
+
+        searchInput.addEventListener('input', performSearch);
+
+        // Handle Enter key to prevent form submission
+        searchInput.addEventListener('keydown', (e) => {
+            if (e.key === 'Enter') {
+                e.preventDefault();
+                this.applyFilters();
+            }
+        });
+
+        clearBtn?.addEventListener('click', () => {
+            searchInput.value = '';
+            this.searchTerm = '';
+            searchContainer?.classList.remove('has-value');
+            this.applyFilters();
+            searchInput.focus();
+        });
+    }
+
+    /**
      * Search within a specific filter list (e.g., brands)
      */
     bindFilterListSearch() {
@@ -1110,6 +1148,16 @@ class Finder {
 
     productMatchesFilters(product) {
         const config = this.filterConfig;
+
+        // Check search term first (most selective filter)
+        if (this.searchTerm) {
+            const searchLower = this.searchTerm.toLowerCase();
+            const name = (product.name || '').toLowerCase();
+            const brand = (product.brand || '').toLowerCase();
+            if (!name.includes(searchLower) && !brand.includes(searchLower)) {
+                return false;
+            }
+        }
 
         // Check set filters (brands, motor_positions, battery_types, etc.)
         for (const [filterKey, cfg] of Object.entries(config.sets || {})) {
@@ -1404,6 +1452,11 @@ class Finder {
         const config = this.filterConfig;
         const pills = [];
 
+        // Search term pill (first for prominence)
+        if (this.searchTerm) {
+            pills.push(this.createFilterPill(`"${this.searchTerm}"`, 'search'));
+        }
+
         // Set filter pills
         Object.entries(config.sets || {}).forEach(([filterKey, cfg]) => {
             this.filters[filterKey].forEach(value => {
@@ -1575,8 +1628,16 @@ class Finder {
     removeFilter(type, value = null) {
         const config = this.filterConfig;
 
+        // Search filter
+        if (type === 'search') {
+            this.searchTerm = '';
+            const searchInput = this.container.querySelector('[data-product-search-input]');
+            const searchContainer = this.container.querySelector('[data-product-search]');
+            if (searchInput) searchInput.value = '';
+            searchContainer?.classList.remove('has-value');
+        }
         // Set filter
-        if (config.sets?.[type] && value) {
+        else if (config.sets?.[type] && value) {
             this.filters[type].delete(value);
             const cfg = config.sets[type];
             const checkbox = this.container.querySelector(`[data-filter="${cfg.selector}"][value="${value}"]`);
@@ -1662,6 +1723,13 @@ class Finder {
             this.filters[filterKey] = 'any';
             this.resetTristateUI(filterKey);
         });
+
+        // Clear search term
+        this.searchTerm = '';
+        const searchInput = this.container.querySelector('[data-product-search-input]');
+        const searchContainer = this.container.querySelector('[data-product-search]');
+        if (searchInput) searchInput.value = '';
+        searchContainer?.classList.remove('has-value');
 
         this.applyFilters();
     }

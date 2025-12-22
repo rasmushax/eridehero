@@ -195,6 +195,16 @@ $product_count = count( $products );
                                 <strong><?php echo esc_html( $product_count ); ?></strong> <?php echo esc_html( $page_info['short'] ); ?>s
                             </span>
                         </div>
+                        <div class="finder-toolbar-center">
+                            <!-- Product Search -->
+                            <div class="finder-product-search" data-product-search>
+                                <?php erh_the_icon( 'search' ); ?>
+                                <input type="text" class="finder-search-input" placeholder="Search <?php echo esc_attr( strtolower( $page_info['short'] ) ); ?>s..." data-product-search-input aria-label="Search products">
+                                <button type="button" class="finder-search-clear" data-product-search-clear aria-label="Clear search">
+                                    <?php erh_the_icon( 'x' ); ?>
+                                </button>
+                            </div>
+                        </div>
                         <div class="finder-toolbar-right">
                             <!-- Sort -->
                             <div class="finder-sort">

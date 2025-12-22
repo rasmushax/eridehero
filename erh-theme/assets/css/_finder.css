@@ -113,10 +113,84 @@
     gap: var(--space-4);
 }
 
+.finder-toolbar-center {
+    flex: 1;
+    max-width: 320px;
+    margin: 0 var(--space-4);
+}
+
 .finder-toolbar-right {
     display: flex;
     align-items: center;
     gap: var(--space-3);
+}
+
+/* Product Search */
+.finder-product-search {
+    display: flex;
+    align-items: center;
+    gap: var(--space-2);
+    padding: var(--space-2) var(--space-3);
+    background: var(--color-white);
+    border: var(--border-width) solid var(--color-border);
+    border-radius: var(--radius-md);
+    transition: border-color var(--transition-fast), box-shadow var(--transition-fast);
+}
+
+.finder-product-search:focus-within {
+    border-color: var(--color-primary);
+    box-shadow: 0 0 0 3px var(--color-primary-light);
+}
+
+.finder-product-search .icon {
+    width: 16px;
+    height: 16px;
+    color: var(--color-muted);
+    flex-shrink: 0;
+}
+
+.finder-search-input {
+    flex: 1;
+    min-width: 0;
+    border: none;
+    background: transparent;
+    font-family: var(--font-family);
+    font-size: var(--text-sm);
+    color: var(--color-dark);
+    outline: none;
+}
+
+.finder-search-input::placeholder {
+    color: var(--color-muted);
+}
+
+.finder-search-clear {
+    display: flex;
+    align-items: center;
+    justify-content: center;
+    padding: 0;
+    background: none;
+    border: none;
+    cursor: pointer;
+    flex-shrink: 0;
+    opacity: 0;
+    visibility: hidden;
+    transition: opacity var(--transition-fast), visibility var(--transition-fast);
+}
+
+.finder-search-clear .icon {
+    width: 14px;
+    height: 14px;
+    color: var(--color-muted);
+}
+
+.finder-search-clear:hover .icon {
+    color: var(--color-dark);
+}
+
+.finder-product-search.has-value .finder-search-clear {
+    opacity: 1;
+    visibility: visible;
 }
 
 .finder-results-count {
@@ -1443,6 +1517,13 @@
     .finder-toolbar {
         flex-wrap: wrap;
         gap: var(--space-3);
+    }
+
+    .finder-toolbar-center {
+        order: 3;
+        flex-basis: 100%;
+        max-width: none;
+        margin: 0;
     }
 
     .finder-sort .custom-select {
