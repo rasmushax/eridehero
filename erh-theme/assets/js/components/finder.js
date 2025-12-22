@@ -45,80 +45,50 @@ class Finder {
         this.selectedProducts = new Set();
         this.maxCompare = 4;
 
-        // Spec display config for smart product cards
-        // Maps filter keys to display formatting
-        // Priority: lower number = shown first when multiple filters active
-        this.specDisplayConfig = {
-            // Performance (claimed)
-            speed:          { key: 'top_speed',       format: v => `${Math.round(v)} MPH`,            priority: 1 },
-            range:          { key: 'range',           format: v => `${Math.round(v)} mi range`,       priority: 2 },
-            max_incline:    { key: 'max_incline',     format: v => `${Math.round(v)}° incline`,       priority: 10 },
+        // Spec display config from PHP (single source of truth)
+        this.specDisplayConfig = this.filterConfig.specDisplay || {};
+        this.defaultSpecKeys = this.filterConfig.defaultSpecKeys || [];
 
-            // Tested performance
-            tested_speed:   { key: 'tested_speed',    format: v => `${v.toFixed(1)} MPH tested`,      priority: 1 },
-            tested_range:   { key: 'tested_range',    format: v => `${v.toFixed(1)} mi tested`,       priority: 2 },
-            accel_0_15:     { key: 'accel_0_15',      format: v => `${v.toFixed(2)}s 0-15 mph`,       priority: 5 },
-            accel_0_20:     { key: 'accel_0_20',      format: v => `${v.toFixed(2)}s 0-20 mph`,       priority: 6 },
-            brake_distance: { key: 'brake_distance',  format: v => `${v.toFixed(1)} ft braking`,      priority: 7 },
-            hill_climb:     { key: 'hill_climb',      format: v => `${v.toFixed(1)}° hill climb`,     priority: 8 },
-
-            // Battery
-            battery:        { key: 'battery',         format: v => `${Math.round(v)} Wh battery`,     priority: 3 },
-            voltage:        { key: 'voltage',         format: v => `${Math.round(v)}V`,               priority: 12 },
-            amphours:       { key: 'amphours',        format: v => `${v.toFixed(1)} Ah`,              priority: 13 },
-            charging_time:  { key: 'charging_time',   format: v => `${v.toFixed(1)} hr charge`,       priority: 14 },
-
-            // Motor
-            motor_power:    { key: 'motor_power',     format: v => `${Math.round(v)}W motor`,         priority: 4 },
-            motor_peak:     { key: 'motor_peak',      format: v => `${Math.round(v)}W peak`,          priority: 11 },
-
-            // Portability
-            weight:         { key: 'weight',          format: v => `${Math.round(v)} lbs`,            priority: 5 },
-
-            // Rider fit
-            weight_limit:   { key: 'weight_limit',    format: v => `${Math.round(v)} lbs max load`,   priority: 9 },
-            deck_width:     { key: 'deck_width',      format: v => `${v.toFixed(1)}" deck width`,     priority: 15 },
-            deck_length:    { key: 'deck_length',     format: v => `${v.toFixed(1)}" deck length`,    priority: 16 },
-            handlebar_width:{ key: 'handlebar_width', format: v => `${v.toFixed(1)}" handlebar`,      priority: 17 },
-
-            // Tires
-            tire_size:      { key: 'tire_size',       format: v => `${v}" tires`,                     priority: 18 },
-            tire_width:     { key: 'tire_width',      format: v => `${v}" wide`,                      priority: 19 },
-            tires:          { key: 'tire_type',       format: v => v,                                 priority: 20 },
-
-            // Suspension
-            suspension:     { key: 'suspension_type', format: v => Array.isArray(v) ? v.join(', ') : v, priority: 21 },
-
-            // Brakes
-            brakes:         { key: 'brake_type',      format: v => v,                                 priority: 22 },
-
-            // Rider fit (additional)
-            ground_clearance: { key: 'ground_clearance', format: v => `${v.toFixed(1)}" clearance`,   priority: 23 },
-
-            // Terrain & Durability
-            terrain:        { key: 'terrain',         format: v => v,                                 priority: 24 },
-            ip_rating:      { key: 'ip_rating',       format: v => v,                                 priority: 25 },
-
-            // Controls
-            throttle_type:  { key: 'throttle_type',   format: v => `${v} throttle`,                   priority: 26 },
-
-            // Model info
-            release_year:   { key: 'release_year',    format: v => `${Math.round(v)} model`,          priority: 27 },
-
-            // Value metrics
-            price_per_lb:   { key: 'price_per_lb',    format: v => `$${v.toFixed(2)}/lb`,             priority: 30 },
-            price_per_mph:  { key: 'price_per_mph',   format: v => `$${v.toFixed(0)}/mph`,            priority: 31 },
-            price_per_mile: { key: 'price_per_mile',  format: v => `$${v.toFixed(0)}/mi`,             priority: 32 },
-            price_per_wh:   { key: 'price_per_wh',    format: v => `$${v.toFixed(2)}/Wh`,             priority: 33 },
-            speed_per_lb:   { key: 'speed_per_lb',    format: v => `${v.toFixed(2)} mph/lb`,          priority: 34 },
-            range_per_lb:   { key: 'range_per_lb',    format: v => `${v.toFixed(2)} mi/lb`,           priority: 35 },
-        };
-
-        // Default specs to show when no relevant filters are active
-        // Order: MPH, Wh, motor W, weight, max load, voltage, tire type, suspension, brakes
-        this.defaultSpecKeys = ['speed', 'battery', 'motor_power', 'weight', 'weight_limit', 'voltage', 'tires', 'suspension', 'brakes'];
+        // Create debounced version for rapid input events
+        this.debouncedApplyFilters = this.debounce(() => this.applyFilters(), 150);
 
         this.init();
+    }
+
+    /**
+     * Format a spec value using config from PHP
+     * Config can have: round (decimal places), prefix, suffix, raw (use value as-is), join (for arrays)
+     */
+    formatSpecValue(filterKey, value) {
+        const config = this.specDisplayConfig[filterKey];
+        if (!config || value == null) return null;
+
+        // Handle arrays (suspension types, etc.)
+        if (Array.isArray(value)) {
+            const joinStr = config.join || ', ';
+            return value.join(joinStr);
+        }
+
+        // Raw mode - just return the value (for strings like tire_type)
+        if (config.raw) {
+            return `${config.prefix || ''}${value}${config.suffix || ''}`;
+        }
+
+        // Numeric formatting
+        const num = parseFloat(value);
+        if (isNaN(num)) {
+            return `${config.prefix || ''}${value}${config.suffix || ''}`;
+        }
+
+        // Apply rounding
+        let formatted;
+        if (config.round !== undefined) {
+            formatted = config.round === 0 ? Math.round(num) : num.toFixed(config.round);
+        } else {
+            formatted = num;
+        }
+
+        return `${config.prefix || ''}${formatted}${config.suffix || ''}`;
     }
 
     /**
@@ -305,13 +275,6 @@ class Finder {
                 const maxHandle = slider?.querySelector('[data-handle="max"]');
                 const fill = slider?.querySelector('.filter-range-fill');
 
-                // Snap value to step with precision handling
-                const snapToStep = (value) => {
-                    const snapped = Math.round(value / rangeStep) * rangeStep;
-                    const decimals = rangeStep < 1 ? Math.ceil(-Math.log10(rangeStep)) : 0;
-                    return parseFloat(snapped.toFixed(decimals));
-                };
-
                 const updateFromInputs = () => {
                     let minVal = parseFloat(minInput.value);
                     let maxVal = parseFloat(maxInput.value);
@@ -321,8 +284,8 @@ class Finder {
                     if (isNaN(maxVal)) maxVal = rangeMax;
 
                     // Snap to step
-                    minVal = snapToStep(minVal);
-                    maxVal = snapToStep(maxVal);
+                    minVal = this.snapToStep(minVal, rangeStep);
+                    maxVal = this.snapToStep(maxVal, rangeStep);
 
                     // Clamp to allowed range
                     minVal = Math.max(rangeMin, Math.min(rangeMax, minVal));
@@ -367,13 +330,6 @@ class Finder {
         const heightInput = rangeContainer.querySelector('[data-height-input]');
         const singleHandle = slider?.querySelector('[data-handle="value"]');
         const fill = slider?.querySelector('.filter-range-fill');
-
-        // Snap value to step with precision handling
-        const snapToStep = (value) => {
-            const snapped = Math.round(value / rangeStep) * rangeStep;
-            const decimals = rangeStep < 1 ? Math.ceil(-Math.log10(rangeStep)) : 0;
-            return parseFloat(snapped.toFixed(decimals));
-        };
 
         presets.forEach(preset => {
             const label = preset.closest('.filter-preset');
@@ -465,13 +421,7 @@ class Finder {
      * Clear a range filter and reset UI to defaults
      */
     clearRangeFilter(rangeContainer, filterType, isContainsMode, rangeMin, rangeMax, rangeStep, slider, heightInput, singleHandle, fill) {
-        // Snap value to step with precision handling
-        const snapToStep = (value) => {
-            const step = rangeStep || 1;
-            const snapped = Math.round(value / step) * step;
-            const decimals = step < 1 ? Math.ceil(-Math.log10(step)) : 0;
-            return parseFloat(snapped.toFixed(decimals));
-        };
+        const step = rangeStep || 1;
 
         if (isContainsMode) {
             const valueInput = rangeContainer.querySelector('[data-range-value]');
@@ -495,8 +445,8 @@ class Finder {
             const minInput = rangeContainer.querySelector('[data-range-min]');
             const maxInput = rangeContainer.querySelector('[data-range-max]');
 
-            if (minInput) minInput.value = snapToStep(rangeMin);
-            if (maxInput) maxInput.value = snapToStep(rangeMax);
+            if (minInput) minInput.value = this.snapToStep(rangeMin, step);
+            if (maxInput) maxInput.value = this.snapToStep(rangeMax, step);
 
             this.filters[filterType] = { min: null, max: null };
             this.updateSliderVisuals(slider, rangeMin, rangeMax, rangeMin, rangeMax);
@@ -644,17 +594,9 @@ class Finder {
     initSliderDrag(slider, minHandle, maxHandle, fill, minInput, maxInput, rangeMin, rangeMax, rangeStep, filterType, rangeContainer) {
         let activeHandle = null;
 
-        // Snap value to step with precision handling
-        const snapToStep = (value) => {
-            const snapped = Math.round(value / rangeStep) * rangeStep;
-            // Fix floating point precision (e.g., 0.30000000000000004 -> 0.3)
-            const decimals = rangeStep < 1 ? Math.ceil(-Math.log10(rangeStep)) : 0;
-            return parseFloat(snapped.toFixed(decimals));
-        };
-
         const updateValue = (handle, pos) => {
             const rawValue = rangeMin + pos * (rangeMax - rangeMin);
-            const value = snapToStep(rawValue);
+            const value = this.snapToStep(rawValue, rangeStep);
             // Recalculate position from snapped value for visual consistency
             const snappedPos = (value - rangeMin) / (rangeMax - rangeMin);
 
@@ -782,6 +724,32 @@ class Finder {
      */
     feetInchesToInches(feet, inches) {
         return (feet * 12) + inches;
+    }
+
+    /**
+     * Snap a value to the nearest step with floating point precision handling
+     * @param {number} value - The value to snap
+     * @param {number} step - The step size (default 1)
+     * @returns {number} The snapped value
+     */
+    snapToStep(value, step = 1) {
+        const snapped = Math.round(value / step) * step;
+        const decimals = step < 1 ? Math.ceil(-Math.log10(step)) : 0;
+        return parseFloat(snapped.toFixed(decimals));
+    }
+
+    /**
+     * Create a debounced version of a function
+     * @param {Function} fn - The function to debounce
+     * @param {number} delay - Delay in milliseconds
+     * @returns {Function} Debounced function
+     */
+    debounce(fn, delay) {
+        let timeoutId;
+        return (...args) => {
+            clearTimeout(timeoutId);
+            timeoutId = setTimeout(() => fn.apply(this, args), delay);
+        };
     }
 
     bindFilterItemToggles() {
@@ -1089,7 +1057,6 @@ class Finder {
         }
 
         this.updateLoadMoreButton();
-        this.bindComparisonCheckboxes();
     }
 
     createProductCard(product) {
@@ -1189,12 +1156,8 @@ class Finder {
             const value = product[config.key];
             if (value == null || value === 0) return null;
 
-            try {
-                usedKeys.add(filterKey);
-                return config.format(value);
-            } catch (e) {
-                return null;
-            }
+            usedKeys.add(filterKey);
+            return this.formatSpecValue(filterKey, value);
         };
 
         // First: Add specs for active filters (sorted by priority)
@@ -1628,7 +1591,26 @@ class Finder {
     // =========================================
 
     bindComparisonEvents() {
-        this.bindComparisonCheckboxes();
+        // Use event delegation on the grid for comparison checkboxes
+        // This avoids re-binding on every render
+        this.grid.addEventListener('change', (e) => {
+            const checkbox = e.target.closest('[data-compare-select]');
+            if (!checkbox) return;
+
+            const productId = checkbox.value;
+
+            if (checkbox.checked) {
+                if (this.selectedProducts.size >= this.maxCompare) {
+                    checkbox.checked = false;
+                    return;
+                }
+                this.selectedProducts.add(productId);
+            } else {
+                this.selectedProducts.delete(productId);
+            }
+
+            this.updateComparisonBar();
+        });
 
         const clearBtn = this.container.querySelector('[data-comparison-clear]');
         clearBtn?.addEventListener('click', () => this.clearComparison());
@@ -1641,29 +1623,6 @@ class Finder {
             }
             const ids = Array.from(this.selectedProducts).join(',');
             compareLink.href = `/compare/?ids=${ids}`;
-        });
-    }
-
-    bindComparisonCheckboxes() {
-        this.grid.querySelectorAll('[data-compare-select]').forEach(checkbox => {
-            const newCheckbox = checkbox.cloneNode(true);
-            checkbox.parentNode.replaceChild(newCheckbox, checkbox);
-
-            newCheckbox.addEventListener('change', () => {
-                const productId = newCheckbox.value;
-
-                if (newCheckbox.checked) {
-                    if (this.selectedProducts.size >= this.maxCompare) {
-                        newCheckbox.checked = false;
-                        return;
-                    }
-                    this.selectedProducts.add(productId);
-                } else {
-                    this.selectedProducts.delete(productId);
-                }
-
-                this.updateComparisonBar();
-            });
         });
     }
 

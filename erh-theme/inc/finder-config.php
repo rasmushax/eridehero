@@ -1285,7 +1285,8 @@ function erh_get_js_filter_config(): array {
     $sets = [];
     foreach ( $checkbox_config as $key => $cfg ) {
         // Use plural key for JS (brand → brands, etc.).
-        $js_key = $key . 's';
+        // Don't add 's' if key already ends with 's' (e.g., features).
+        $js_key = str_ends_with( $key, 's' ) ? $key : $key . 's';
 
         $sets[ $js_key ] = [
             'selector'   => $cfg['field'],
@@ -1372,11 +1373,82 @@ function erh_get_js_filter_config(): array {
         ],
     ];
 
+    // Spec display config: maps filter keys to product keys with formatting.
+    // Used by product cards to show relevant specs based on active filters.
+    // Format: 'round' = decimal places (0 = Math.round), 'prefix', 'suffix'.
+    $spec_display = [
+        // Performance (claimed).
+        'speed'           => [ 'key' => 'top_speed',       'priority' => 1,  'round' => 0, 'suffix' => ' MPH' ],
+        'range'           => [ 'key' => 'range',           'priority' => 2,  'round' => 0, 'suffix' => ' mi range' ],
+        'max_incline'     => [ 'key' => 'max_incline',     'priority' => 10, 'round' => 0, 'suffix' => '° incline' ],
+
+        // Tested performance.
+        'tested_speed'    => [ 'key' => 'tested_speed',    'priority' => 1,  'round' => 1, 'suffix' => ' MPH tested' ],
+        'tested_range'    => [ 'key' => 'tested_range',    'priority' => 2,  'round' => 1, 'suffix' => ' mi tested' ],
+        'accel_0_15'      => [ 'key' => 'accel_0_15',      'priority' => 5,  'round' => 2, 'suffix' => 's 0-15 mph' ],
+        'accel_0_20'      => [ 'key' => 'accel_0_20',      'priority' => 6,  'round' => 2, 'suffix' => 's 0-20 mph' ],
+        'brake_distance'  => [ 'key' => 'brake_distance',  'priority' => 7,  'round' => 1, 'suffix' => ' ft braking' ],
+        'hill_climb'      => [ 'key' => 'hill_climb',      'priority' => 8,  'round' => 1, 'suffix' => '° hill climb' ],
+
+        // Battery.
+        'battery'         => [ 'key' => 'battery',         'priority' => 3,  'round' => 0, 'suffix' => ' Wh battery' ],
+        'voltage'         => [ 'key' => 'voltage',         'priority' => 12, 'round' => 0, 'suffix' => 'V' ],
+        'amphours'        => [ 'key' => 'amphours',        'priority' => 13, 'round' => 1, 'suffix' => ' Ah' ],
+        'charging_time'   => [ 'key' => 'charging_time',   'priority' => 14, 'round' => 1, 'suffix' => ' hr charge' ],
+
+        // Motor.
+        'motor_power'     => [ 'key' => 'motor_power',     'priority' => 4,  'round' => 0, 'suffix' => 'W motor' ],
+        'motor_peak'      => [ 'key' => 'motor_peak',      'priority' => 11, 'round' => 0, 'suffix' => 'W peak' ],
+
+        // Portability.
+        'weight'          => [ 'key' => 'weight',          'priority' => 5,  'round' => 0, 'suffix' => ' lbs' ],
+
+        // Rider fit.
+        'weight_limit'    => [ 'key' => 'weight_limit',    'priority' => 9,  'round' => 0, 'suffix' => ' lbs max load' ],
+        'deck_width'      => [ 'key' => 'deck_width',      'priority' => 15, 'round' => 1, 'suffix' => '" deck width' ],
+        'deck_length'     => [ 'key' => 'deck_length',     'priority' => 16, 'round' => 1, 'suffix' => '" deck length' ],
+        'handlebar_width' => [ 'key' => 'handlebar_width', 'priority' => 17, 'round' => 1, 'suffix' => '" handlebar' ],
+        'ground_clearance'=> [ 'key' => 'ground_clearance','priority' => 23, 'round' => 1, 'suffix' => '" clearance' ],
+
+        // Tires.
+        'tire_size'       => [ 'key' => 'tire_size',       'priority' => 18, 'suffix' => '" tires' ],
+        'tire_width'      => [ 'key' => 'tire_width',      'priority' => 19, 'suffix' => '" wide' ],
+        'tires'           => [ 'key' => 'tire_type',       'priority' => 20, 'raw' => true ],
+
+        // Suspension & Brakes.
+        'suspension'      => [ 'key' => 'suspension_type', 'priority' => 21, 'raw' => true, 'join' => ', ' ],
+        'brakes'          => [ 'key' => 'brake_type',      'priority' => 22, 'raw' => true ],
+
+        // Terrain & Durability.
+        'terrain'         => [ 'key' => 'terrain',         'priority' => 24, 'raw' => true ],
+        'ip_rating'       => [ 'key' => 'ip_rating',       'priority' => 25, 'raw' => true ],
+
+        // Controls.
+        'throttle_type'   => [ 'key' => 'throttle_type',   'priority' => 26, 'suffix' => ' throttle' ],
+
+        // Model info.
+        'release_year'    => [ 'key' => 'release_year',    'priority' => 27, 'round' => 0, 'suffix' => ' model' ],
+
+        // Value metrics.
+        'price_per_lb'    => [ 'key' => 'price_per_lb',    'priority' => 30, 'round' => 2, 'prefix' => '$', 'suffix' => '/lb' ],
+        'price_per_mph'   => [ 'key' => 'price_per_mph',   'priority' => 31, 'round' => 0, 'prefix' => '$', 'suffix' => '/mph' ],
+        'price_per_mile'  => [ 'key' => 'price_per_mile',  'priority' => 32, 'round' => 0, 'prefix' => '$', 'suffix' => '/mi' ],
+        'price_per_wh'    => [ 'key' => 'price_per_wh',    'priority' => 33, 'round' => 2, 'prefix' => '$', 'suffix' => '/Wh' ],
+        'speed_per_lb'    => [ 'key' => 'speed_per_lb',    'priority' => 34, 'round' => 2, 'suffix' => ' mph/lb' ],
+        'range_per_lb'    => [ 'key' => 'range_per_lb',    'priority' => 35, 'round' => 2, 'suffix' => ' mi/lb' ],
+    ];
+
+    // Default specs to show when no relevant filters are active.
+    // Order: MPH, Wh, motor W, weight, max load, voltage, tire type, suspension, brakes.
+    $default_spec_keys = [ 'speed', 'battery', 'motor_power', 'weight', 'weight_limit', 'voltage', 'tires', 'suspension', 'brakes' ];
+
     return [
-        'sets'      => $sets,
-        'ranges'    => $ranges,
-        'tristates' => $tristates,
-        'booleans'  => $booleans,
-        'sort'      => $sort,
+        'sets'            => $sets,
+        'ranges'          => $ranges,
+        'tristates'       => $tristates,
+        'booleans'        => $booleans,
+        'sort'            => $sort,
+        'specDisplay'     => $spec_display,
+        'defaultSpecKeys' => $default_spec_keys,
     ];
 }
