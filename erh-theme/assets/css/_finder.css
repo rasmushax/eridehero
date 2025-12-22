@@ -362,7 +362,7 @@
     padding: var(--space-2) 0;
     font-family: var(--font-family);
     font-size: var(--text-sm);
-    font-weight: var(--font-bold);
+    font-weight: var(--font-semibold);
     color: var(--color-dark);
     background: none;
     border: none;

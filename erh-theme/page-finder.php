@@ -43,8 +43,8 @@ if ( file_exists( $json_file ) ) {
     $products     = json_decode( $json_content, true ) ?: [];
 }
 
-// Get user's geo for pricing (default to US).
-// TODO: Integrate with geo detection service.
+// Default geo for server-side processing. JS handles geo-aware pricing client-side
+// via getUserGeo() which detects region from IPInfo and updates prices dynamically.
 $user_geo = 'US';
 
 // Process products and extract filter data.

@@ -7,6 +7,8 @@
  * This ensures a SINGLE SOURCE OF TRUTH - PHP generates all filter metadata
  */
 
+import { getUserGeo } from '../services/geo-price.js';
+
 class Finder {
     constructor() {
         this.container = document.querySelector('[data-finder-page]');
@@ -44,6 +46,11 @@ class Finder {
         // Comparison state
         this.selectedProducts = new Set();
         this.maxCompare = 4;
+
+        // Geo state (populated async before first render)
+        this.userGeo = 'US';
+        this.userCurrency = 'USD';
+        this.currencySymbol = '$';
 
         // Spec display config from PHP (single source of truth)
         this.specDisplayConfig = this.filterConfig.specDisplay || {};
@@ -126,7 +133,12 @@ class Finder {
         return state;
     }
 
-    init() {
+    async init() {
+        // Detect user geo first and process products for their region
+        await this.detectUserGeo();
+        this.processProductsForGeo();
+
+        // Bind all events
         this.bindFilterEvents();
         this.bindTristateEvents();
         this.bindSortEvents();
@@ -140,8 +152,153 @@ class Finder {
         this.bindViewToggle();
         this.bindLoadMore();
 
+        // Listen for manual region changes
+        window.addEventListener('erh:region-changed', (e) => this.handleRegionChange(e));
+
         // Initial render
         this.applyFilters();
+    }
+
+    /**
+     * Detect user's geo region via IPInfo
+     */
+    async detectUserGeo() {
+        try {
+            const geoData = await getUserGeo();
+            this.userGeo = geoData.geo;
+            this.userCurrency = geoData.currency;
+            this.currencySymbol = geoData.symbol;
+        } catch (e) {
+            // Default to US on error (already set in constructor)
+        }
+    }
+
+    /**
+     * Process products to extract pricing for user's geo region
+     * Called on init and when region changes
+     */
+    processProductsForGeo() {
+        // Get the raw products from PHP and extract geo-specific pricing
+        const rawProducts = window.ERideHero?.finderProducts || [];
+
+        this.products = rawProducts.map(product => {
+            const pricing = product.pricing || {};
+            // Get pricing for user's region ONLY - no fallback to US
+            // (Users from unmapped countries already default to US at geo-detection level)
+            const geoPricing = pricing[this.userGeo] || {};
+
+            return {
+                ...product,
+                price: geoPricing.current_price ?? null,
+                current_price: geoPricing.current_price ?? null,
+                in_stock: geoPricing.instock ?? false,
+                best_link: geoPricing.bestlink ?? null,
+                avg_3m: geoPricing.avg_3m ?? null,
+                price_indicator: this.calculatePriceIndicator(
+                    geoPricing.current_price,
+                    geoPricing.avg_3m
+                ),
+            };
+        });
+
+        // Reset filtered products
+        this.filteredProducts = [...this.products];
+
+        // Update price filter bounds and UI for new geo
+        this.updatePriceFilterBounds();
+        this.updatePriceFilterUI();
+    }
+
+    /**
+     * Calculate price indicator (% vs 3-month average)
+     */
+    calculatePriceIndicator(currentPrice, avg3m) {
+        if (!currentPrice || !avg3m || avg3m <= 0) return null;
+        return Math.round(((currentPrice - avg3m) / avg3m) * 100);
+    }
+
+    /**
+     * Update price filter bounds based on geo-specific prices
+     */
+    updatePriceFilterBounds() {
+        const prices = this.products
+            .map(p => p.price)
+            .filter(p => p !== null && p > 0);
+
+        const maxPrice = prices.length > 0
+            ? Math.ceil(Math.max(...prices) / 100) * 100
+            : 5000;
+
+        if (this.filterConfig.ranges?.price) {
+            this.filterConfig.ranges.price.max = maxPrice;
+        }
+
+        // Update DOM max inputs
+        const rangeContainer = this.container?.querySelector('[data-range-filter="price"]');
+        if (rangeContainer) {
+            const maxInput = rangeContainer.querySelector('[data-range-max]');
+            if (maxInput) {
+                maxInput.max = maxPrice;
+                // Only update value if it was at the old max
+                if (parseFloat(maxInput.value) >= maxPrice) {
+                    maxInput.value = maxPrice;
+                }
+            }
+        }
+    }
+
+    /**
+     * Update price filter UI (preset labels and input prefixes) for current geo
+     */
+    updatePriceFilterUI() {
+        if (!this.container) return;
+
+        const symbol = this.currencySymbol;
+
+        // Update preset labels
+        const pricePresets = this.container.querySelectorAll(
+            '[data-range-filter="price"] .filter-preset-label'
+        );
+        pricePresets.forEach(label => {
+            // Store original template on first run
+            if (!label.dataset.template) {
+                label.dataset.template = label.textContent;
+            }
+            // Replace $ with current currency symbol
+            label.textContent = label.dataset.template.replace(/\$/g, symbol);
+        });
+
+        // Update range input prefixes
+        const prefixes = this.container.querySelectorAll(
+            '[data-range-filter="price"] .filter-range-prefix'
+        );
+        prefixes.forEach(prefix => {
+            prefix.textContent = symbol;
+        });
+    }
+
+    /**
+     * Handle manual region change event
+     */
+    handleRegionChange(event) {
+        const { region, currency, symbol } = event.detail;
+        if (region && region !== this.userGeo) {
+            this.userGeo = region;
+            this.userCurrency = currency;
+            this.currencySymbol = symbol;
+
+            // Reprocess products with new geo and re-render
+            this.processProductsForGeo();
+            this.applyFilters();
+        }
+    }
+
+    /**
+     * Format price with current geo's currency symbol
+     */
+    formatProductPrice(product) {
+        if (!product.price) return '';
+        return `${this.currencySymbol}${Math.round(product.price).toLocaleString()}`;
     }
 
     // =========================================
@@ -1088,7 +1245,7 @@ class Finder {
                     <img src="${product.thumbnail || '/wp-content/themes/erh-theme/assets/images/placeholder.svg'}"
                          alt="${product.name}"
                          loading="lazy">${product.price ? `<div class="product-card-price-row">
-                        <span class="product-card-price">$${Math.round(product.price).toLocaleString()}</span>
+                        <span class="product-card-price">${this.formatProductPrice(product)}</span>
                         ${priceIndicator}
                     </div>` : ''}
                 </div>
@@ -1346,8 +1503,10 @@ class Finder {
         const prefix = cfg.prefix || '';
         const suffix = cfg.suffix || '';
 
-        if (prefix === '$') {
-            return `$${min} – $${max}`;
+        // Use dynamic currency symbol for price filter
+        if (prefix === '$' || cfg.field === 'current_price') {
+            const symbol = this.currencySymbol;
+            return `${symbol}${min.toLocaleString()} – ${symbol}${max.toLocaleString()}`;
         }
 
         return `${min}–${max}${suffix}`;

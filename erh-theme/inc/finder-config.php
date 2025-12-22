@@ -1237,6 +1237,8 @@ function erh_prepare_js_products( array $products ): array {
             'price_indicator' => $product['price_indicator'],
             'rating'          => $product['rating'] ?? null,
             'popularity'      => $product['popularity'] ?? 0,
+            // Include full pricing object for client-side geo-aware extraction.
+            'pricing'         => $product['pricing'] ?? [],
         ];
 
         // Add all range filter fields.
