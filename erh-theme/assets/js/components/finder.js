@@ -8,6 +8,7 @@
  */
 
 import { getUserGeo } from '../services/geo-price.js';
+import { FinderTable } from './finder-table.js';
 
 class Finder {
     constructor() {
@@ -49,6 +50,10 @@ class Finder {
 
         // Search state
         this.searchTerm = '';
+
+        // View state
+        this.currentView = 'grid'; // 'grid' or 'table'
+        this.tableView = null; // Lazy-loaded FinderTable instance
 
         // Geo state (populated async before first render)
         this.userGeo = 'US';
@@ -324,296 +329,327 @@ class Finder {
     // FILTER EVENTS (Config-Driven)
     // =========================================
 
+    /**
+     * Bind filter events using event delegation.
+     * This allows dynamically added filters (e.g., table view) to work automatically.
+     */
     bindFilterEvents() {
         const config = this.filterConfig;
 
-        // Set filters (checkboxes) - driven by config
-        Object.entries(config.sets || {}).forEach(([filterKey, cfg]) => {
-            this.container.querySelectorAll(`[data-filter="${cfg.selector}"]`).forEach(checkbox => {
-                checkbox.addEventListener('change', () => {
+        // Set filters (checkboxes) - delegated
+        // Matches [data-filter="brands"], [data-filter="motor_positions"], etc.
+        this.container.addEventListener('change', (e) => {
+            const checkbox = e.target.closest('[data-filter]');
+            if (!checkbox || checkbox.type !== 'checkbox') return;
+
+            const selector = checkbox.dataset.filter;
+
+            // Find which filter key this selector belongs to
+            for (const [filterKey, cfg] of Object.entries(config.sets || {})) {
+                if (cfg.selector === selector) {
                     if (checkbox.checked) {
                         this.filters[filterKey].add(checkbox.value);
                     } else {
                         this.filters[filterKey].delete(checkbox.value);
                     }
                     this.applyFilters();
-                });
-            });
-        });
-
-        // Boolean filters - driven by config
-        Object.entries(config.booleans || {}).forEach(([filterKey, cfg]) => {
-            const checkbox = this.container.querySelector(`[data-filter="${cfg.selector}"]`);
-            checkbox?.addEventListener('change', () => {
-                this.filters[filterKey] = checkbox.checked;
-                this.applyFilters();
-            });
-        });
-
-        // Clear all filters button
-        this.container.querySelectorAll('[data-clear-filters]').forEach(btn => {
-            btn.addEventListener('click', () => this.clearAllFilters());
-        });
-    }
-
-    bindTristateEvents() {
-        // Tristate filters (Any / Yes / No segmented controls)
-        this.container.querySelectorAll('[data-tristate-filter]').forEach(tristateContainer => {
-            const filterKey = tristateContainer.dataset.tristateFilter;
-            const buttons = tristateContainer.querySelectorAll('.filter-tristate-btn');
-            const hiddenInput = tristateContainer.querySelector('[data-tristate-input]');
-
-            buttons.forEach(btn => {
-                btn.addEventListener('click', () => {
-                    const value = btn.dataset.value;
-
-                    // Update UI
-                    buttons.forEach(b => {
-                        b.classList.remove('is-active');
-                        b.setAttribute('aria-checked', 'false');
-                    });
-                    btn.classList.add('is-active');
-                    btn.setAttribute('aria-checked', 'true');
-
-                    // Update hidden input
-                    if (hiddenInput) {
-                        hiddenInput.value = value;
-                    }
-
-                    // Update filter state
-                    this.filters[filterKey] = value;
-                    this.applyFilters();
-                });
-            });
-        });
-    }
-
-    bindRangeSliders() {
-        this.container.querySelectorAll('[data-range-filter]').forEach(rangeContainer => {
-            const filterType = rangeContainer.dataset.rangeFilter;
-            const isContainsMode = rangeContainer.dataset.filterMode === 'contains';
-            const rangeMin = parseFloat(rangeContainer.dataset.min) || 0;
-            const rangeMax = parseFloat(rangeContainer.dataset.max) || 100;
-            const rangeStep = parseFloat(rangeContainer.dataset.step) || 1;
-
-            // Initialize distribution bars (all selected by default)
-            this.updateDistributionBars(rangeContainer, 0, 1);
-
-            // Presets (both modes)
-            const presetsContainer = rangeContainer.querySelector('.filter-presets');
-            if (presetsContainer) {
-                this.bindRangePresets(rangeContainer, filterType, isContainsMode, rangeMin, rangeMax, rangeStep);
-            }
-
-            if (isContainsMode) {
-                // Contains mode: single value input
-                const valueInput = rangeContainer.querySelector('[data-range-value]');
-                if (valueInput) {
-                    valueInput.addEventListener('change', () => {
-                        let value = valueInput.value ? parseFloat(valueInput.value) : null;
-
-                        // Validate and clamp value
-                        if (value !== null) {
-                            if (isNaN(value) || value < rangeMin) {
-                                value = null;
-                                valueInput.value = '';
-                            } else if (value > rangeMax) {
-                                value = rangeMax;
-                                valueInput.value = rangeMax;
-                            }
-                        }
-
-                        this.filters[filterType] = { value };
-                        this.deselectPresets(rangeContainer);
-                        this.applyFilters();
-                    });
-                }
-            } else {
-                // Range mode: min/max inputs + slider
-                const minInput = rangeContainer.querySelector('[data-range-min]');
-                const maxInput = rangeContainer.querySelector('[data-range-max]');
-                const slider = rangeContainer.querySelector('[data-range-slider]');
-                const minHandle = slider?.querySelector('[data-handle="min"]');
-                const maxHandle = slider?.querySelector('[data-handle="max"]');
-                const fill = slider?.querySelector('.filter-range-fill');
-
-                const updateFromInputs = () => {
-                    let minVal = parseFloat(minInput.value);
-                    let maxVal = parseFloat(maxInput.value);
-
-                    // Handle invalid/empty inputs
-                    if (isNaN(minVal)) minVal = rangeMin;
-                    if (isNaN(maxVal)) maxVal = rangeMax;
-
-                    // Snap to step
-                    minVal = this.snapToStep(minVal, rangeStep);
-                    maxVal = this.snapToStep(maxVal, rangeStep);
-
-                    // Clamp to allowed range
-                    minVal = Math.max(rangeMin, Math.min(rangeMax, minVal));
-                    maxVal = Math.max(rangeMin, Math.min(rangeMax, maxVal));
-
-                    // Ensure min doesn't exceed max
-                    if (minVal > maxVal) {
-                        // Swap them
-                        [minVal, maxVal] = [maxVal, minVal];
-                    }
-
-                    // Update inputs with validated values
-                    minInput.value = minVal;
-                    maxInput.value = maxVal;
-
-                    this.filters[filterType] = {
-                        min: minVal > rangeMin ? minVal : null,
-                        max: maxVal < rangeMax ? maxVal : null
-                    };
-
-                    this.updateSliderVisuals(slider, minVal, maxVal, rangeMin, rangeMax);
-                    this.deselectPresets(rangeContainer);
-                    this.applyFilters();
-                };
-
-                minInput?.addEventListener('change', updateFromInputs);
-                maxInput?.addEventListener('change', updateFromInputs);
-
-                if (minHandle && maxHandle && slider) {
-                    this.initSliderDrag(slider, minHandle, maxHandle, fill, minInput, maxInput, rangeMin, rangeMax, rangeStep, filterType, rangeContainer);
+                    return;
                 }
             }
-        });
-    }
 
-    /**
-     * Bind preset radio buttons for range filters
-     */
-    bindRangePresets(rangeContainer, filterType, isContainsMode, rangeMin, rangeMax, rangeStep = 1) {
-        const presets = rangeContainer.querySelectorAll('[data-preset]');
-        const slider = rangeContainer.querySelector('[data-range-slider]');
-        const heightInput = rangeContainer.querySelector('[data-height-input]');
-        const singleHandle = slider?.querySelector('[data-handle="value"]');
-        const fill = slider?.querySelector('.filter-range-fill');
-
-        presets.forEach(preset => {
-            const label = preset.closest('.filter-preset');
-
-            // Capture state before click using pointerdown (fires before click)
-            const captureState = () => {
-                preset.dataset.wasChecked = preset.checked ? 'true' : 'false';
-            };
-
-            label?.addEventListener('pointerdown', captureState);
-            label?.addEventListener('mousedown', captureState); // Fallback
-
-            preset.addEventListener('click', (e) => {
-                // If this preset was already checked, toggle it off
-                if (preset.dataset.wasChecked === 'true') {
-                    delete preset.dataset.wasChecked;
-                    // Defer uncheck to run after browser's default radio behavior
-                    requestAnimationFrame(() => {
-                        preset.checked = false;
-                    });
-                    this.clearRangeFilter(rangeContainer, filterType, isContainsMode, rangeMin, rangeMax, rangeStep, slider, heightInput, singleHandle, fill);
+            // Check boolean filters
+            for (const [filterKey, cfg] of Object.entries(config.booleans || {})) {
+                if (cfg.selector === selector) {
+                    this.filters[filterKey] = checkbox.checked;
                     this.applyFilters();
                     return;
                 }
-                delete preset.dataset.wasChecked;
-            });
+            }
+        });
 
-            preset.addEventListener('change', () => {
-                if (!preset.checked) return;
-
-                if (isContainsMode) {
-                    // Contains mode: use data-preset-value
-                    const presetValue = preset.dataset.presetValue;
-                    const valueInput = rangeContainer.querySelector('[data-range-value]');
-
-                    if (presetValue !== undefined && presetValue !== '') {
-                        const value = parseFloat(presetValue);
-                        if (valueInput) valueInput.value = value;
-                        this.filters[filterType] = { value };
-
-                        // Update height inputs if present
-                        if (heightInput) {
-                            const feetInput = heightInput.querySelector('[data-height-feet]');
-                            const inchesInput = heightInput.querySelector('[data-height-inches]');
-                            const { feet, inches } = this.inchesToFeetInches(value);
-                            if (feetInput) feetInput.value = feet;
-                            if (inchesInput) inchesInput.value = inches;
-                        }
-
-                        // Update single-thumb slider if present
-                        if (singleHandle && fill) {
-                            const pos = (value - rangeMin) / (rangeMax - rangeMin);
-                            singleHandle.style.setProperty('--pos', Math.max(0, Math.min(1, pos)));
-                            fill.style.setProperty('--pos', Math.max(0, Math.min(1, pos)));
-                        }
-                    }
-                } else {
-                    // Range mode: use data-preset-min/max
-                    const presetMin = preset.dataset.presetMin;
-                    const presetMax = preset.dataset.presetMax;
-                    const minInput = rangeContainer.querySelector('[data-range-min]');
-                    const maxInput = rangeContainer.querySelector('[data-range-max]');
-
-                    const minVal = presetMin !== undefined && presetMin !== '' ? parseFloat(presetMin) : rangeMin;
-                    const maxVal = presetMax !== undefined && presetMax !== '' ? parseFloat(presetMax) : rangeMax;
-
-                    if (minInput) minInput.value = minVal;
-                    if (maxInput) maxInput.value = maxVal;
-
-                    this.filters[filterType] = {
-                        min: minVal > rangeMin ? minVal : null,
-                        max: maxVal < rangeMax ? maxVal : null
-                    };
-
-                    this.updateSliderVisuals(slider, minVal, maxVal, rangeMin, rangeMax);
-
-                    // Update distribution bars
-                    const minPos = (minVal - rangeMin) / (rangeMax - rangeMin);
-                    const maxPos = (maxVal - rangeMin) / (rangeMax - rangeMin);
-                    this.updateDistributionBars(rangeContainer, minPos, maxPos);
-                }
-
-                this.applyFilters();
-            });
+        // Clear all filters button - delegated
+        this.container.addEventListener('click', (e) => {
+            if (e.target.closest('[data-clear-filters]')) {
+                this.clearAllFilters();
+            }
         });
     }
 
     /**
-     * Clear a range filter and reset UI to defaults
+     * Bind tristate filter events using event delegation.
      */
-    clearRangeFilter(rangeContainer, filterType, isContainsMode, rangeMin, rangeMax, rangeStep, slider, heightInput, singleHandle, fill) {
-        const step = rangeStep || 1;
+    bindTristateEvents() {
+        this.container.addEventListener('click', (e) => {
+            const btn = e.target.closest('.filter-tristate-btn');
+            if (!btn) return;
+
+            const tristateContainer = btn.closest('[data-tristate-filter]');
+            if (!tristateContainer) return;
+
+            const filterKey = tristateContainer.dataset.tristateFilter;
+            const value = btn.dataset.value;
+            const buttons = tristateContainer.querySelectorAll('.filter-tristate-btn');
+            const hiddenInput = tristateContainer.querySelector('[data-tristate-input]');
+
+            // Update UI
+            buttons.forEach(b => {
+                b.classList.remove('is-active');
+                b.setAttribute('aria-checked', 'false');
+            });
+            btn.classList.add('is-active');
+            btn.setAttribute('aria-checked', 'true');
+
+            // Update hidden input
+            if (hiddenInput) {
+                hiddenInput.value = value;
+            }
+
+            // Update filter state
+            this.filters[filterKey] = value;
+            this.applyFilters();
+        });
+    }
+
+    /**
+     * Bind range filter events.
+     * Uses delegation for input changes, but slider drag needs per-element init.
+     */
+    bindRangeSliders() {
+        // Delegate range input changes (min/max inputs)
+        this.container.addEventListener('change', (e) => {
+            const input = e.target.closest('[data-range-min], [data-range-max], [data-range-value]');
+            if (!input) return;
+
+            const rangeContainer = input.closest('[data-range-filter]');
+            if (!rangeContainer) return;
+
+            this.handleRangeInputChange(rangeContainer);
+        });
+
+        // Delegate preset changes
+        this.container.addEventListener('change', (e) => {
+            const preset = e.target.closest('[data-preset]');
+            if (!preset || !preset.checked) return;
+
+            const rangeContainer = preset.closest('[data-range-filter]');
+            if (!rangeContainer) return;
+
+            this.handlePresetChange(rangeContainer, preset);
+        });
+
+        // Delegate preset click for toggle-off behavior
+        // Note: [data-preset] is on the input, but clicks may land on the label wrapper
+        this.container.addEventListener('pointerdown', (e) => {
+            // Find preset input - either directly clicked or within the label
+            const preset = e.target.closest('[data-preset]') ||
+                           e.target.closest('.filter-preset')?.querySelector('[data-preset]');
+            if (preset) {
+                preset.dataset.wasChecked = preset.checked ? 'true' : 'false';
+            }
+        });
+
+        this.container.addEventListener('click', (e) => {
+            // Find preset input - either directly clicked or within the label
+            const preset = e.target.closest('[data-preset]') ||
+                           e.target.closest('.filter-preset')?.querySelector('[data-preset]');
+            if (!preset) return;
+
+            if (preset.dataset.wasChecked === 'true') {
+                delete preset.dataset.wasChecked;
+                const rangeContainer = preset.closest('[data-range-filter]');
+                if (!rangeContainer) return;
+
+                requestAnimationFrame(() => {
+                    preset.checked = false;
+                });
+
+                const filterType = rangeContainer.dataset.rangeFilter;
+                const isContainsMode = rangeContainer.dataset.filterMode === 'contains';
+                const rangeMin = parseFloat(rangeContainer.dataset.min) || 0;
+                const rangeMax = parseFloat(rangeContainer.dataset.max) || 100;
+
+                // Reset filter to defaults
+                if (isContainsMode) {
+                    this.filters[filterType] = { value: null };
+                    const valueInput = rangeContainer.querySelector('[data-range-value]');
+                    if (valueInput) valueInput.value = '';
+                } else {
+                    this.filters[filterType] = { min: null, max: null };
+                    const minInput = rangeContainer.querySelector('[data-range-min]');
+                    const maxInput = rangeContainer.querySelector('[data-range-max]');
+                    if (minInput) minInput.value = rangeMin;
+                    if (maxInput) maxInput.value = rangeMax;
+                    this.updateSliderVisuals(rangeContainer.querySelector('[data-range-slider]'), rangeMin, rangeMax, rangeMin, rangeMax);
+                }
+                this.applyFilters();
+            } else {
+                delete preset.dataset.wasChecked;
+            }
+        });
+
+        // Initialize existing range sliders (for distribution bars and drag)
+        this.container.querySelectorAll('[data-range-filter]').forEach(rangeContainer => {
+            this.initRangeSlider(rangeContainer);
+        });
+    }
+
+    /**
+     * Initialize a single range filter's slider drag functionality.
+     * Call this for dynamically added range filters.
+     */
+    initRangeSlider(rangeContainer) {
+        if (!rangeContainer || rangeContainer.dataset.rangeInitialized) return;
+        rangeContainer.dataset.rangeInitialized = 'true';
+
+        const filterType = rangeContainer.dataset.rangeFilter;
+        const isContainsMode = rangeContainer.dataset.filterMode === 'contains';
+        const rangeMin = parseFloat(rangeContainer.dataset.min) || 0;
+        const rangeMax = parseFloat(rangeContainer.dataset.max) || 100;
+        const rangeStep = parseFloat(rangeContainer.dataset.step) || 1;
+
+        // Initialize distribution bars (all selected by default)
+        this.updateDistributionBars(rangeContainer, 0, 1);
+
+        if (isContainsMode) {
+            // Contains mode: single-thumb slider
+            const slider = rangeContainer.querySelector('[data-range-slider]');
+            const handle = slider?.querySelector('[data-handle="value"]');
+            if (slider && handle) {
+                this.initSingleSliderDrag(slider, handle, rangeMin, rangeMax, rangeStep, filterType, rangeContainer);
+            }
+        } else {
+            // Range mode: dual-thumb slider
+            const slider = rangeContainer.querySelector('[data-range-slider]');
+            const minHandle = slider?.querySelector('[data-handle="min"]');
+            const maxHandle = slider?.querySelector('[data-handle="max"]');
+            const minInput = rangeContainer.querySelector('[data-range-min]');
+            const maxInput = rangeContainer.querySelector('[data-range-max]');
+            const fill = slider?.querySelector('.filter-range-fill');
+
+            if (minHandle && maxHandle && slider && minInput && maxInput) {
+                this.initSliderDrag(slider, minHandle, maxHandle, fill, minInput, maxInput, rangeMin, rangeMax, rangeStep, filterType, rangeContainer);
+            }
+        }
+    }
+
+    /**
+     * Handle range input change (delegated handler)
+     */
+    handleRangeInputChange(rangeContainer) {
+        const filterType = rangeContainer.dataset.rangeFilter;
+        const isContainsMode = rangeContainer.dataset.filterMode === 'contains';
+        const rangeMin = parseFloat(rangeContainer.dataset.min) || 0;
+        const rangeMax = parseFloat(rangeContainer.dataset.max) || 100;
+        const rangeStep = parseFloat(rangeContainer.dataset.step) || 1;
 
         if (isContainsMode) {
             const valueInput = rangeContainer.querySelector('[data-range-value]');
-            if (valueInput) valueInput.value = '';
-            this.filters[filterType] = { value: null };
+            let value = valueInput?.value ? parseFloat(valueInput.value) : null;
 
-            // Clear height inputs
-            if (heightInput) {
-                const feetInput = heightInput.querySelector('[data-height-feet]');
-                const inchesInput = heightInput.querySelector('[data-height-inches]');
-                if (feetInput) feetInput.value = '';
-                if (inchesInput) inchesInput.value = '';
+            if (value !== null) {
+                if (isNaN(value) || value < rangeMin) {
+                    value = null;
+                    if (valueInput) valueInput.value = '';
+                } else if (value > rangeMax) {
+                    value = rangeMax;
+                    if (valueInput) valueInput.value = rangeMax;
+                }
             }
 
-            // Reset single-thumb slider to middle
-            if (singleHandle && fill) {
-                singleHandle.style.setProperty('--pos', 0.5);
-                fill.style.setProperty('--pos', 0.5);
-            }
+            this.filters[filterType] = { value };
         } else {
             const minInput = rangeContainer.querySelector('[data-range-min]');
             const maxInput = rangeContainer.querySelector('[data-range-max]');
+            const slider = rangeContainer.querySelector('[data-range-slider]');
 
-            if (minInput) minInput.value = this.snapToStep(rangeMin, step);
-            if (maxInput) maxInput.value = this.snapToStep(rangeMax, step);
+            let minVal = parseFloat(minInput?.value);
+            let maxVal = parseFloat(maxInput?.value);
 
-            this.filters[filterType] = { min: null, max: null };
-            this.updateSliderVisuals(slider, rangeMin, rangeMax, rangeMin, rangeMax);
-            this.updateDistributionBars(rangeContainer, 0, 1);
+            if (isNaN(minVal)) minVal = rangeMin;
+            if (isNaN(maxVal)) maxVal = rangeMax;
+
+            minVal = this.snapToStep(minVal, rangeStep);
+            maxVal = this.snapToStep(maxVal, rangeStep);
+            minVal = Math.max(rangeMin, Math.min(rangeMax, minVal));
+            maxVal = Math.max(rangeMin, Math.min(rangeMax, maxVal));
+
+            if (minVal > maxVal) {
+                [minVal, maxVal] = [maxVal, minVal];
+            }
+
+            if (minInput) minInput.value = minVal;
+            if (maxInput) maxInput.value = maxVal;
+
+            this.filters[filterType] = {
+                min: minVal > rangeMin ? minVal : null,
+                max: maxVal < rangeMax ? maxVal : null
+            };
+
+            this.updateSliderVisuals(slider, minVal, maxVal, rangeMin, rangeMax);
         }
+
+        this.deselectPresets(rangeContainer);
+        this.applyFilters();
+    }
+
+    /**
+     * Handle preset change (delegated handler)
+     */
+    handlePresetChange(rangeContainer, preset) {
+        const filterType = rangeContainer.dataset.rangeFilter;
+        const isContainsMode = rangeContainer.dataset.filterMode === 'contains';
+        const rangeMin = parseFloat(rangeContainer.dataset.min) || 0;
+        const rangeMax = parseFloat(rangeContainer.dataset.max) || 100;
+
+        if (isContainsMode) {
+            const presetValue = preset.dataset.presetValue;
+            const valueInput = rangeContainer.querySelector('[data-range-value]');
+            const slider = rangeContainer.querySelector('[data-range-slider]');
+            const singleHandle = slider?.querySelector('[data-handle="value"]');
+            const fill = slider?.querySelector('.filter-range-fill');
+            const heightInput = rangeContainer.querySelector('[data-height-input]');
+
+            if (presetValue !== undefined && presetValue !== '') {
+                const value = parseFloat(presetValue);
+                if (valueInput) valueInput.value = value;
+                this.filters[filterType] = { value };
+
+                if (heightInput) {
+                    const feetInput = heightInput.querySelector('[data-height-feet]');
+                    const inchesInput = heightInput.querySelector('[data-height-inches]');
+                    const { feet, inches } = this.inchesToFeetInches(value);
+                    if (feetInput) feetInput.value = feet;
+                    if (inchesInput) inchesInput.value = inches;
+                }
+
+                if (singleHandle && fill) {
+                    const pos = (value - rangeMin) / (rangeMax - rangeMin);
+                    singleHandle.style.setProperty('--pos', Math.max(0, Math.min(1, pos)));
+                    fill.style.setProperty('--pos', Math.max(0, Math.min(1, pos)));
+                }
+            }
+        } else {
+            const presetMin = preset.dataset.presetMin;
+            const presetMax = preset.dataset.presetMax;
+            const minInput = rangeContainer.querySelector('[data-range-min]');
+            const maxInput = rangeContainer.querySelector('[data-range-max]');
+            const slider = rangeContainer.querySelector('[data-range-slider]');
+
+            const minVal = presetMin !== undefined && presetMin !== '' ? parseFloat(presetMin) : rangeMin;
+            const maxVal = presetMax !== undefined && presetMax !== '' ? parseFloat(presetMax) : rangeMax;
+
+            if (minInput) minInput.value = minVal;
+            if (maxInput) maxInput.value = maxVal;
+
+            this.filters[filterType] = {
+                min: minVal > rangeMin ? minVal : null,
+                max: maxVal < rangeMax ? maxVal : null
+            };
+
+            this.updateSliderVisuals(slider, minVal, maxVal, rangeMin, rangeMax);
+        }
+
+        this.applyFilters();
     }
 
     /**
@@ -858,6 +894,41 @@ class Finder {
             const isSelected = barEnd > minPos && barStart < maxPos;
             bar.classList.toggle('is-selected', isSelected);
         });
+    }
+
+    /**
+     * Clear a range filter's UI elements to their default state
+     * Called when removing/clearing a filter
+     */
+    clearRangeFilter(rangeContainer, filterType, isContainsMode, rangeMin, rangeMax, rangeStep, slider, heightInput, singleHandle, fill) {
+        if (isContainsMode) {
+            // Contains mode: clear the value input
+            const valueInput = rangeContainer.querySelector('[data-range-value]');
+            if (valueInput) valueInput.value = '';
+
+            // Clear height inputs if present
+            if (heightInput) {
+                const feetInput = heightInput.querySelector('[data-height-feet]');
+                const inchesInput = heightInput.querySelector('[data-height-inches]');
+                if (feetInput) feetInput.value = '';
+                if (inchesInput) inchesInput.value = '';
+            }
+
+            // Reset single handle slider to starting position
+            if (singleHandle && fill) {
+                singleHandle.style.setProperty('--pos', 0);
+                fill.style.setProperty('--pos', 0);
+            }
+        } else {
+            // Range mode: reset to min/max
+            const minInput = rangeContainer.querySelector('[data-range-min]');
+            const maxInput = rangeContainer.querySelector('[data-range-max]');
+            if (minInput) minInput.value = rangeMin;
+            if (maxInput) maxInput.value = rangeMax;
+
+            // Reset slider visuals
+            this.updateSliderVisuals(slider, rangeMin, rangeMax, rangeMin, rangeMax);
+        }
     }
 
     /**
@@ -1142,10 +1213,13 @@ class Finder {
     }
 
     /**
-     * Show all / Show less toggle for filter lists
+     * Show all / Show less toggle for filter lists (delegated)
      */
     bindFilterShowAll() {
-        this.container.querySelectorAll('[data-filter-show-all]').forEach(btn => {
+        this.container.addEventListener('click', (e) => {
+            const btn = e.target.closest('[data-filter-show-all]');
+            if (!btn) return;
+
             const listName = btn.dataset.filterShowAll;
             const list = this.container.querySelector(`[data-filter-list="${listName}"]`);
             const showText = btn.querySelector('[data-show-text]');
@@ -1153,18 +1227,11 @@ class Finder {
 
             if (!list) return;
 
-            btn.addEventListener('click', () => {
-                const isExpanded = list.classList.toggle('is-expanded');
+            const isExpanded = list.classList.toggle('is-expanded');
 
-                // Toggle text visibility
-                if (showText) showText.hidden = isExpanded;
-                if (hideText) hideText.hidden = !isExpanded;
-
-                // Toggle checkbox visibility
-                list.querySelectorAll('.filter-checkbox.is-hidden-by-limit').forEach(checkbox => {
-                    // CSS handles visibility via .is-expanded on parent
-                });
-            });
+            // Toggle text visibility
+            if (showText) showText.hidden = isExpanded;
+            if (hideText) hideText.hidden = !isExpanded;
         });
     }
 
@@ -1179,6 +1246,11 @@ class Finder {
         this.renderProducts();
         this.updateResultsCount();
         this.updateActiveFiltersBar();
+
+        // Notify table view if it's active
+        if (this.tableView && this.currentView === 'table') {
+            this.tableView.updateData();
+        }
     }
 
     productMatchesFilters(product) {
@@ -1832,19 +1904,173 @@ class Finder {
     // =========================================
 
     bindViewToggle() {
-        const toggleBtns = this.container.querySelectorAll('[data-view]');
+        const toggleBtns = this.container.querySelectorAll('.view-toggle-btn[data-view]');
 
         toggleBtns.forEach(btn => {
             btn.addEventListener('click', () => {
                 const view = btn.dataset.view;
+                if (view === this.currentView) return;
 
+                // Update button states
                 toggleBtns.forEach(b => {
                     b.classList.toggle('is-active', b === btn);
                     b.setAttribute('aria-pressed', b === btn ? 'true' : 'false');
                 });
 
-                this.grid.dataset.view = view;
+                this.handleViewChange(view);
             });
+        });
+    }
+
+    /**
+     * Handle switching between grid and table views
+     */
+    handleViewChange(view) {
+        this.currentView = view;
+        this.container.dataset.view = view;
+
+        if (view === 'table') {
+            // Hide grid, show table
+            this.grid.hidden = true;
+            this.loadMoreContainer?.setAttribute('hidden', '');
+
+            // Lazy-load table view on first use
+            if (!this.tableView) {
+                this.tableView = new FinderTable(this);
+            }
+            this.tableView.show();
+
+        } else {
+            // Hide table, show grid
+            if (this.tableView) {
+                this.tableView.hide();
+                // Sync selection from table to grid
+                this.tableView.syncSelectionFromGrid();
+            }
+            this.grid.hidden = false;
+            // Sync sidebar filter controls to current state (may have changed in table view)
+            this.syncSidebarToFilters();
+            // Re-render grid to reflect any selection changes
+            this.renderProducts();
+        }
+    }
+
+    /**
+     * Sync sidebar filter controls to current filter state.
+     * Called when switching from table view to grid view.
+     */
+    syncSidebarToFilters() {
+        const config = this.filterConfig;
+
+        // Sync range filter inputs and sliders
+        for (const [filterKey, cfg] of Object.entries(config.ranges || {})) {
+            const filter = this.filters[filterKey];
+            const container = this.container.querySelector(`[data-range-filter="${filterKey}"]`);
+            if (!container) continue;
+
+            const rangeMin = parseFloat(container.dataset.min) || 0;
+            const rangeMax = parseFloat(container.dataset.max) || 100;
+
+            // Get current filter values (use range bounds if not set)
+            const currentMin = filter.min ?? rangeMin;
+            const currentMax = filter.max ?? rangeMax;
+            const currentVal = filter.value ?? null;
+
+            // Update input values
+            const minInput = container.querySelector('[data-range-min]');
+            const maxInput = container.querySelector('[data-range-max]');
+            const singleInput = container.querySelector('[data-range-value]');
+
+            if (minInput) minInput.value = currentMin;
+            if (maxInput) maxInput.value = currentMax;
+            if (singleInput) singleInput.value = currentVal ?? '';
+
+            // Update slider visuals
+            this.updateRangeSliderVisuals(container, currentMin, currentMax, rangeMin, rangeMax, currentVal);
+        }
+
+        // Sync checkbox filters
+        for (const [filterKey, cfg] of Object.entries(config.sets || {})) {
+            const filterSet = this.filters[filterKey];
+            const checkboxes = this.container.querySelectorAll(`[data-filter="${filterKey}"]`);
+
+            checkboxes.forEach(checkbox => {
+                checkbox.checked = filterSet.has(checkbox.value);
+            });
+        }
+
+        // Sync tristate filters
+        for (const [filterKey, cfg] of Object.entries(config.tristates || {})) {
+            const value = this.filters[filterKey] || 'any';
+            const container = this.container.querySelector(`[data-tristate-filter="${filterKey}"]`);
+            if (!container) continue;
+
+            const buttons = container.querySelectorAll('.filter-tristate-btn');
+            const hiddenInput = container.querySelector('[data-tristate-input]');
+
+            buttons.forEach(btn => {
+                const isActive = btn.dataset.value === value;
+                btn.classList.toggle('is-active', isActive);
+                btn.setAttribute('aria-checked', isActive);
+            });
+
+            if (hiddenInput) hiddenInput.value = value;
+        }
+
+        // Clear any preset selections that don't match current filter values
+        this.container.querySelectorAll('[data-preset]:checked').forEach(radio => {
+            radio.checked = false;
+        });
+    }
+
+    /**
+     * Update range slider visual elements (fill, handles) based on values
+     */
+    updateRangeSliderVisuals(container, currentMin, currentMax, rangeMin, rangeMax, currentVal = null) {
+        const range = rangeMax - rangeMin;
+        if (range <= 0) return;
+
+        const fill = container.querySelector('.filter-range-fill');
+        const minHandle = container.querySelector('[data-handle="min"]');
+        const maxHandle = container.querySelector('[data-handle="max"]');
+        const singleHandle = container.querySelector('[data-handle="value"]');
+
+        if (fill && minHandle && maxHandle) {
+            const minPos = (currentMin - rangeMin) / range;
+            const maxPos = (currentMax - rangeMin) / range;
+
+            fill.style.setProperty('--min', minPos);
+            fill.style.setProperty('--max', maxPos);
+            minHandle.style.setProperty('--pos', minPos);
+            maxHandle.style.setProperty('--pos', maxPos);
+        } else if (fill && singleHandle && currentVal !== null) {
+            const pos = (currentVal - rangeMin) / range;
+            fill.style.setProperty('--pos', pos);
+            singleHandle.style.setProperty('--pos', pos);
+        }
+
+        // Update distribution bar highlighting
+        this.updateDistributionHighlighting(container, currentMin, currentMax, rangeMin, rangeMax);
+    }
+
+    /**
+     * Update distribution bar highlighting based on selected range
+     */
+    updateDistributionHighlighting(container, currentMin, currentMax, rangeMin, rangeMax) {
+        const bars = container.querySelectorAll('.filter-range-bar');
+        if (bars.length === 0) return;
+
+        const range = rangeMax - rangeMin;
+        const numBuckets = bars.length;
+        const bucketSize = range / numBuckets;
+
+        bars.forEach((bar, index) => {
+            const bucketStart = rangeMin + index * bucketSize;
+            const bucketEnd = bucketStart + bucketSize;
+
+            // Bar is selected if it overlaps with current range
+            const isSelected = bucketEnd > currentMin && bucketStart < currentMax;
+            bar.classList.toggle('is-selected', isSelected);
         });
     }
 

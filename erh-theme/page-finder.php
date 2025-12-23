@@ -244,11 +244,39 @@ $product_count = count( $products );
                     <div class="finder-active-bar" data-active-filters hidden></div>
 
                     <!-- Product Grid (populated by JavaScript) -->
-                    <div class="finder-grid" data-finder-grid data-view="grid">
+                    <div class="finder-grid" data-finder-grid>
                         <!-- Products rendered via JS for progressive loading -->
                     </div>
 
-                    <!-- Load More Button -->
+                    <!-- Table View (hidden by default, shown when table view selected) -->
+                    <div class="finder-table-view" data-finder-table-view hidden>
+                        <!-- Filter Cards Row (Add Column button appears inline after cards) -->
+                        <div class="finder-table-filters" data-active-columns>
+                            <!-- Active filter cards populated by JS -->
+                            <!-- Add Column button (rendered by JS at end of cards) -->
+                        </div>
+
+                        <!-- Table Container -->
+                        <div class="finder-table-container">
+                            <table class="finder-table" data-finder-table>
+                                <thead data-table-head>
+                                    <!-- Headers populated by JS -->
+                                </thead>
+                                <tbody data-table-body>
+                                    <!-- Rows populated by JS -->
+                                </tbody>
+                            </table>
+                        </div>
+
+                        <!-- Table Load More -->
+                        <div class="finder-table-footer" data-table-footer>
+                            <button type="button" class="finder-load-more-btn" data-table-load-more hidden>
+                                Load more
+                            </button>
+                        </div>
+                    </div>
+
+                    <!-- Load More Button (Grid View) -->
                     <div class="finder-load-more" data-load-more hidden>
                         <button type="button" class="finder-load-more-btn" data-load-more-btn>
                             Load more
@@ -276,6 +304,27 @@ $product_count = count( $products );
                     <span class="comparison-bar-count"><span data-comparison-count>0</span> selected</span>
                     <button type="button" class="btn btn-secondary btn-sm" data-comparison-clear>Clear</button>
                     <a href="#" class="btn btn-primary btn-sm" data-comparison-link>Compare</a>
+                </div>
+            </div>
+        </div>
+    </div>
+
+    <!-- Column Selector Modal (Table View) - Uses standard modal system -->
+    <div class="modal" id="columns-modal" data-modal aria-hidden="true">
+        <div class="modal-content modal-content--md">
+            <button class="modal-close" data-modal-close aria-label="Close modal">
+                <?php erh_the_icon( 'x' ); ?>
+            </button>
+            <h2 class="modal-title">Add Columns</h2>
+            <div class="modal-body">
+                <!-- Column search -->
+                <div class="finder-columns-search">
+                    <?php erh_the_icon( 'search' ); ?>
+                    <input type="text" placeholder="Search specs..." data-columns-search autofocus>
+                </div>
+                <!-- Column groups -->
+                <div class="finder-columns-groups" data-columns-groups>
+                    <!-- Populated by JS from filterConfig.columnGroups -->
                 </div>
             </div>
         </div>

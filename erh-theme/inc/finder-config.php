@@ -1444,13 +1444,152 @@ function erh_get_js_filter_config(): array {
     // Order: MPH, Wh, motor W, weight, max load, voltage, tire type, suspension, brakes.
     $default_spec_keys = [ 'speed', 'battery', 'motor_power', 'weight', 'weight_limit', 'voltage', 'tires', 'suspension', 'brakes' ];
 
+    // Column groups for table view modal.
+    // Organized by category for easy browsing.
+    $column_groups = [
+        'core' => [
+            'label'   => 'Core Info',
+            'columns' => [ 'price', 'rating', 'brand', 'release_year' ],
+        ],
+        'performance' => [
+            'label'   => 'Performance (Claimed)',
+            'columns' => [ 'top_speed', 'range', 'max_incline' ],
+        ],
+        'tested' => [
+            'label'   => 'Tested Performance',
+            'columns' => [ 'tested_speed', 'tested_range', 'accel_0_15', 'accel_0_20', 'brake_distance', 'hill_climb' ],
+        ],
+        'motor' => [
+            'label'   => 'Motor & Power',
+            'columns' => [ 'motor_power', 'motor_peak', 'motor_position' ],
+        ],
+        'battery' => [
+            'label'   => 'Battery',
+            'columns' => [ 'battery', 'voltage', 'amphours', 'charging_time' ],
+        ],
+        'portability' => [
+            'label'   => 'Portability',
+            'columns' => [ 'weight', 'foldable_handlebars' ],
+        ],
+        'rider_fit' => [
+            'label'   => 'Rider Fit',
+            'columns' => [ 'weight_limit', 'deck_width', 'deck_length', 'handlebar_width', 'ground_clearance' ],
+        ],
+        'wheels' => [
+            'label'   => 'Wheels & Tires',
+            'columns' => [ 'tire_size', 'tire_width', 'tire_type', 'self_healing_tires' ],
+        ],
+        'brakes' => [
+            'label'   => 'Brakes',
+            'columns' => [ 'brake_type', 'regenerative_braking' ],
+        ],
+        'suspension' => [
+            'label'   => 'Suspension',
+            'columns' => [ 'suspension_type', 'suspension_adjustable' ],
+        ],
+        'durability' => [
+            'label'   => 'Durability',
+            'columns' => [ 'terrain', 'ip_rating' ],
+        ],
+        'features' => [
+            'label'   => 'Features',
+            'columns' => [ 'throttle_type', 'has_lights', 'turn_signals' ],
+        ],
+        'value' => [
+            'label'   => 'Value Metrics',
+            'columns' => [ 'price_per_lb', 'price_per_mph', 'price_per_mile', 'price_per_wh', 'speed_per_lb', 'range_per_lb' ],
+        ],
+    ];
+
+    // Column configuration for table view.
+    // Maps column keys to display properties.
+    $column_config = [
+        // Core.
+        'price'           => [ 'label' => 'Price',         'type' => 'currency', 'sortable' => true, 'key' => 'price' ],
+        'rating'          => [ 'label' => 'Rating',        'type' => 'rating',   'sortable' => true, 'key' => 'rating' ],
+        'brand'           => [ 'label' => 'Brand',         'type' => 'text',     'sortable' => true, 'key' => 'brand' ],
+        'release_year'    => [ 'label' => 'Year',          'type' => 'number',   'sortable' => true, 'key' => 'release_year' ],
+
+        // Performance (claimed).
+        'top_speed'       => [ 'label' => 'Top Speed',     'suffix' => 'mph',    'sortable' => true, 'key' => 'top_speed' ],
+        'range'           => [ 'label' => 'Range',         'suffix' => 'mi',     'sortable' => true, 'key' => 'range' ],
+        'max_incline'     => [ 'label' => 'Max Incline',   'suffix' => '°',      'sortable' => true, 'key' => 'max_incline' ],
+
+        // Tested performance.
+        'tested_speed'    => [ 'label' => 'Tested Speed',  'suffix' => 'mph',    'sortable' => true, 'key' => 'tested_speed', 'round' => 1 ],
+        'tested_range'    => [ 'label' => 'Tested Range',  'suffix' => 'mi',     'sortable' => true, 'key' => 'tested_range', 'round' => 1 ],
+        'accel_0_15'      => [ 'label' => '0-15 mph',      'suffix' => 's',      'sortable' => true, 'key' => 'accel_0_15', 'round' => 2, 'sort_dir' => 'asc' ],
+        'accel_0_20'      => [ 'label' => '0-20 mph',      'suffix' => 's',      'sortable' => true, 'key' => 'accel_0_20', 'round' => 2, 'sort_dir' => 'asc' ],
+        'brake_distance'  => [ 'label' => 'Braking',       'suffix' => 'ft',     'sortable' => true, 'key' => 'brake_distance', 'round' => 1, 'sort_dir' => 'asc' ],
+        'hill_climb'      => [ 'label' => 'Hill Climb',    'suffix' => '°',      'sortable' => true, 'key' => 'hill_climb', 'round' => 1 ],
+
+        // Motor.
+        'motor_power'     => [ 'label' => 'Motor',         'suffix' => 'W',      'sortable' => true, 'key' => 'motor_power' ],
+        'motor_peak'      => [ 'label' => 'Peak Power',    'suffix' => 'W',      'sortable' => true, 'key' => 'motor_peak' ],
+        'motor_position'  => [ 'label' => 'Motor Pos.',    'type' => 'text',     'sortable' => true, 'key' => 'motor_position' ],
+
+        // Battery.
+        'battery'         => [ 'label' => 'Battery',       'suffix' => 'Wh',     'sortable' => true, 'key' => 'battery' ],
+        'voltage'         => [ 'label' => 'Voltage',       'suffix' => 'V',      'sortable' => true, 'key' => 'voltage' ],
+        'amphours'        => [ 'label' => 'Amp Hours',     'suffix' => 'Ah',     'sortable' => true, 'key' => 'amphours', 'round' => 1 ],
+        'charging_time'   => [ 'label' => 'Charge Time',   'suffix' => 'hrs',    'sortable' => true, 'key' => 'charging_time', 'round' => 1, 'sort_dir' => 'asc' ],
+
+        // Portability.
+        'weight'          => [ 'label' => 'Weight',        'suffix' => 'lbs',    'sortable' => true, 'key' => 'weight', 'sort_dir' => 'asc' ],
+        'foldable_handlebars' => [ 'label' => 'Foldable',  'type' => 'boolean',  'sortable' => true, 'key' => 'foldable_handlebars' ],
+
+        // Rider fit.
+        'weight_limit'    => [ 'label' => 'Max Load',      'suffix' => 'lbs',    'sortable' => true, 'key' => 'weight_limit' ],
+        'deck_width'      => [ 'label' => 'Deck Width',    'suffix' => '"',      'sortable' => true, 'key' => 'deck_width', 'round' => 1 ],
+        'deck_length'     => [ 'label' => 'Deck Length',   'suffix' => '"',      'sortable' => true, 'key' => 'deck_length', 'round' => 1 ],
+        'handlebar_width' => [ 'label' => 'Bar Width',     'suffix' => '"',      'sortable' => true, 'key' => 'handlebar_width', 'round' => 1 ],
+        'ground_clearance'=> [ 'label' => 'Clearance',     'suffix' => '"',      'sortable' => true, 'key' => 'ground_clearance', 'round' => 1 ],
+
+        // Wheels & Tires.
+        'tire_size'       => [ 'label' => 'Tire Size',     'suffix' => '"',      'sortable' => true, 'key' => 'tire_size' ],
+        'tire_width'      => [ 'label' => 'Tire Width',    'suffix' => '"',      'sortable' => true, 'key' => 'tire_width', 'round' => 1 ],
+        'tire_type'       => [ 'label' => 'Tire Type',     'type' => 'text',     'sortable' => true, 'key' => 'tire_type' ],
+        'self_healing_tires' => [ 'label' => 'Self-Healing', 'type' => 'boolean', 'sortable' => true, 'key' => 'self_healing_tires' ],
+
+        // Brakes.
+        'brake_type'      => [ 'label' => 'Brake Type',    'type' => 'text',     'sortable' => true, 'key' => 'brake_type' ],
+        'regenerative_braking' => [ 'label' => 'Regen',    'type' => 'boolean',  'sortable' => true, 'key' => 'regenerative_braking' ],
+
+        // Suspension.
+        'suspension_type' => [ 'label' => 'Suspension',    'type' => 'array',    'sortable' => false, 'key' => 'suspension_type' ],
+        'suspension_adjustable' => [ 'label' => 'Adjustable', 'type' => 'boolean', 'sortable' => true, 'key' => 'suspension_adjustable' ],
+
+        // Durability.
+        'terrain'         => [ 'label' => 'Terrain',       'type' => 'text',     'sortable' => true, 'key' => 'terrain' ],
+        'ip_rating'       => [ 'label' => 'IP Rating',     'type' => 'text',     'sortable' => true, 'key' => 'ip_rating' ],
+
+        // Features.
+        'throttle_type'   => [ 'label' => 'Throttle',      'type' => 'text',     'sortable' => true, 'key' => 'throttle_type' ],
+        'has_lights'      => [ 'label' => 'Lights',        'type' => 'boolean',  'sortable' => true, 'key' => 'has_lights' ],
+        'turn_signals'    => [ 'label' => 'Turn Signals',  'type' => 'boolean',  'sortable' => true, 'key' => 'turn_signals' ],
+
+        // Value metrics.
+        'price_per_lb'    => [ 'label' => '$/lb',          'prefix' => '$', 'suffix' => '/lb',  'sortable' => true, 'key' => 'price_per_lb', 'round' => 2, 'sort_dir' => 'asc' ],
+        'price_per_mph'   => [ 'label' => '$/mph',         'prefix' => '$', 'suffix' => '/mph', 'sortable' => true, 'key' => 'price_per_mph', 'round' => 0, 'sort_dir' => 'asc' ],
+        'price_per_mile'  => [ 'label' => '$/mi',          'prefix' => '$', 'suffix' => '/mi',  'sortable' => true, 'key' => 'price_per_mile', 'round' => 0, 'sort_dir' => 'asc' ],
+        'price_per_wh'    => [ 'label' => '$/Wh',          'prefix' => '$', 'suffix' => '/Wh',  'sortable' => true, 'key' => 'price_per_wh', 'round' => 2, 'sort_dir' => 'asc' ],
+        'speed_per_lb'    => [ 'label' => 'mph/lb',        'suffix' => 'mph/lb', 'sortable' => true, 'key' => 'speed_per_lb', 'round' => 2 ],
+        'range_per_lb'    => [ 'label' => 'mi/lb',         'suffix' => 'mi/lb',  'sortable' => true, 'key' => 'range_per_lb', 'round' => 2 ],
+    ];
+
+    // Default columns to show in table view (price first, then specs).
+    $default_table_columns = [ 'price', 'top_speed', 'motor_power', 'battery', 'weight', 'weight_limit' ];
+
     return [
-        'sets'            => $sets,
-        'ranges'          => $ranges,
-        'tristates'       => $tristates,
-        'booleans'        => $booleans,
-        'sort'            => $sort,
-        'specDisplay'     => $spec_display,
-        'defaultSpecKeys' => $default_spec_keys,
+        'sets'                => $sets,
+        'ranges'              => $ranges,
+        'tristates'           => $tristates,
+        'booleans'            => $booleans,
+        'sort'                => $sort,
+        'specDisplay'         => $spec_display,
+        'defaultSpecKeys'     => $default_spec_keys,
+        'columnGroups'        => $column_groups,
+        'columnConfig'        => $column_config,
+        'defaultTableColumns' => $default_table_columns,
     ];
 }
