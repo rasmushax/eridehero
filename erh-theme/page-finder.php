@@ -79,6 +79,9 @@ $product_count = count( $products );
     <!-- Finder Content -->
     <section class="finder-section">
         <div class="container">
+            <!-- Filter Overlay (mobile) -->
+            <div class="finder-filter-overlay" data-filter-overlay></div>
+
             <div class="finder-layout">
 
                 <!-- Sidebar Filters -->
@@ -87,6 +90,9 @@ $product_count = count( $products );
                     <div class="finder-sidebar-header">
                         <div class="finder-filters-header">
                             <h2 class="finder-filters-title">Filters</h2>
+                            <button type="button" class="finder-sidebar-close" data-filter-close aria-label="Close filters">
+                                <?php erh_the_icon( 'x' ); ?>
+                            </button>
                         </div>
 
                         <!-- Filter Search -->
@@ -191,6 +197,10 @@ $product_count = count( $products );
                     <!-- Toolbar -->
                     <div class="finder-toolbar">
                         <div class="finder-toolbar-left">
+                            <button type="button" class="finder-filter-toggle" data-filter-toggle>
+                                <?php erh_the_icon( 'sliders' ); ?>
+                                Filters
+                            </button>
                             <span class="finder-results-count" data-results-count>
                                 <strong><?php echo esc_html( $product_count ); ?></strong> <?php echo esc_html( $page_info['short'] ); ?>s
                             </span>

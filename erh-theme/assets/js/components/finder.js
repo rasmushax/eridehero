@@ -155,6 +155,7 @@ class Finder {
         this.bindViewToggle();
         this.bindLoadMore();
         this.bindProductSearch();
+        this.bindMobileFilter();
 
         // Listen for manual region changes
         window.addEventListener('erh:region-changed', (e) => this.handleRegionChange(e));
@@ -1014,6 +1015,40 @@ class Finder {
             searchContainer?.classList.remove('has-value');
             this.applyFilters();
             searchInput.focus();
+        });
+    }
+
+    /**
+     * Mobile filter drawer toggle
+     */
+    bindMobileFilter() {
+        const toggleBtn = this.container.querySelector('[data-filter-toggle]');
+        const closeBtn = this.container.querySelector('[data-filter-close]');
+        const overlay = this.container.querySelector('[data-filter-overlay]');
+
+        if (!toggleBtn || !this.sidebar) return;
+
+        const openDrawer = () => {
+            this.sidebar.classList.add('is-open');
+            overlay?.classList.add('is-visible');
+            document.body.style.overflow = 'hidden';
+        };
+
+        const closeDrawer = () => {
+            this.sidebar.classList.remove('is-open');
+            overlay?.classList.remove('is-visible');
+            document.body.style.overflow = '';
+        };
+
+        toggleBtn.addEventListener('click', openDrawer);
+        closeBtn?.addEventListener('click', closeDrawer);
+        overlay?.addEventListener('click', closeDrawer);
+
+        // Close on Escape key
+        document.addEventListener('keydown', (e) => {
+            if (e.key === 'Escape' && this.sidebar.classList.contains('is-open')) {
+                closeDrawer();
+            }
         });
     }
 

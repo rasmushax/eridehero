@@ -166,9 +166,9 @@
 
     --z-dropdown: 100;
     --z-header: 1000;
-    --z-mobile-menu: 999;
-    --z-modal-backdrop: 999;
-    --z-modal: 1001;
+    --z-mobile-menu: 1010;
+    --z-modal-backdrop: 1020;
+    --z-modal: 1021;
     --z-search-dropdown: 1002;
     --z-skip-link: 10000;
 }

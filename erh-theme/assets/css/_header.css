@@ -669,7 +669,6 @@
     border-radius: var(--radius-lg);
     cursor: pointer;
     position: relative;
-    z-index: var(--z-modal);
     transition: background var(--transition-fast);
 }
 
