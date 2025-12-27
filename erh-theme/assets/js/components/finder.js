@@ -141,7 +141,251 @@ class Finder {
         return state;
     }
 
+    // =========================================
+    // URL STATE MANAGEMENT
+    // Single source of truth for all URL params
+    // =========================================
+
+    /**
+     * Initialize state from URL parameters
+     */
+    initFromURL() {
+        const params = new URLSearchParams(window.location.search);
+        const config = this.filterConfig;
+
+        // View mode
+        this.initialView = params.get('view') || 'grid';
+
+        // Sort
+        const sort = params.get('sort');
+        if (sort && this.sortSelect) {
+            this.sortSelect.value = sort;
+            this.currentSort = sort;
+        }
+
+        // Search
+        const search = params.get('q');
+        if (search) {
+            this.searchTerm = search;
+            const searchInput = this.container.querySelector('[data-product-search-input]');
+            if (searchInput) searchInput.value = search;
+        }
+
+        // Range filters
+        for (const [key, cfg] of Object.entries(config.ranges || {})) {
+            const param = params.get(key);
+            if (!param) continue;
+
+            const rangeData = this.pageConfig.ranges?.[key];
+            if (!rangeData) continue;
+
+            if (cfg.filterMode === 'contains') {
+                // Contains mode - single value (clamp to bounds)
+                let value = parseFloat(param);
+                if (!isNaN(value)) {
+                    value = Math.max(rangeData.min, Math.min(rangeData.max, value));
+                    this.filters[key] = { value };
+                }
+            } else if (param.includes('-')) {
+                // Range mode - min-max (clamp to actual bounds)
+                let [min, max] = param.split('-').map(Number);
+                if (!isNaN(min) && !isNaN(max)) {
+                    min = Math.max(rangeData.min, Math.min(rangeData.max, min));
+                    max = Math.max(rangeData.min, Math.min(rangeData.max, max));
+                    if (min > max) min = max;
+                    // Only store if different from bounds
+                    this.filters[key] = {
+                        min: min > rangeData.min ? min : null,
+                        max: max < rangeData.max ? max : null
+                    };
+                }
+            }
+        }
+
+        // Set filters (checkbox lists)
+        for (const [key, cfg] of Object.entries(config.sets || {})) {
+            const param = params.get(key);
+            if (!param) continue;
+
+            const values = param.split(',').filter(Boolean);
+            if (values.length > 0) {
+                this.filters[key] = new Set(values);
+            }
+        }
+
+        // Tristate filters
+        for (const [key, cfg] of Object.entries(config.tristates || {})) {
+            const param = params.get(key);
+            if (param && ['yes', 'no'].includes(param)) {
+                this.filters[key] = param;
+            }
+        }
+    }
+
+    /**
+     * Sync UI controls to match current filter state (after loading from URL)
+     */
+    syncUIToFilters() {
+        const config = this.filterConfig;
+
+        // Sync range filters
+        for (const [key, cfg] of Object.entries(config.ranges || {})) {
+            const filter = this.filters[key];
+            const container = this.container.querySelector(`[data-range-filter="${key}"]`);
+            if (!container || !filter) continue;
+
+            const rangeData = this.pageConfig.ranges?.[key];
+            if (!rangeData) continue;
+
+            if (cfg.filterMode === 'contains' && filter.value != null) {
+                // Clamp value to actual data bounds
+                const value = Math.max(rangeData.min, Math.min(rangeData.max, filter.value));
+                const valueInput = container.querySelector('[data-range-value]');
+                if (valueInput) valueInput.value = value;
+                // Update single slider visual
+                const slider = container.querySelector('[data-range-slider]');
+                const handle = slider?.querySelector('.filter-range-handle');
+                const fill = slider?.querySelector('.filter-range-fill');
+                if (handle && fill) {
+                    const pos = Math.max(0, Math.min(1, (value - rangeData.min) / (rangeData.max - rangeData.min)));
+                    handle.style.setProperty('--pos', pos);
+                    fill.style.setProperty('--pos', pos);
+                }
+            } else if (filter.min != null || filter.max != null) {
+                const minInput = container.querySelector('[data-range-min]');
+                const maxInput = container.querySelector('[data-range-max]');
+                // Clamp values to actual data bounds
+                let minVal = filter.min ?? rangeData.min;
+                let maxVal = filter.max ?? rangeData.max;
+                minVal = Math.max(rangeData.min, Math.min(rangeData.max, minVal));
+                maxVal = Math.max(rangeData.min, Math.min(rangeData.max, maxVal));
+                if (minVal > maxVal) minVal = maxVal;
+
+                if (minInput) minInput.value = minVal;
+                if (maxInput) maxInput.value = maxVal;
+                // Update slider visuals
+                this.updateSliderVisuals(
+                    container.querySelector('[data-range-slider]'),
+                    minVal,
+                    maxVal,
+                    rangeData.min,
+                    rangeData.max
+                );
+            }
+        }
+
+        // Sync set filters (checkboxes)
+        for (const [key, cfg] of Object.entries(config.sets || {})) {
+            const filterSet = this.filters[key];
+            if (!filterSet || filterSet.size === 0) continue;
+
+            const selector = cfg.selector || key;
+            this.container.querySelectorAll(`[data-filter="${selector}"]`).forEach(cb => {
+                cb.checked = filterSet.has(cb.value);
+            });
+        }
+
+        // Sync tristate filters
+        for (const [key, cfg] of Object.entries(config.tristates || {})) {
+            const value = this.filters[key];
+            if (!value || value === 'any') continue;
+
+            const container = this.container.querySelector(`[data-tristate-filter="${key}"]`);
+            if (!container) continue;
+
+            container.querySelectorAll('.filter-tristate-btn').forEach(btn => {
+                const isActive = btn.dataset.value === value;
+                btn.classList.toggle('is-active', isActive);
+                btn.setAttribute('aria-checked', isActive);
+            });
+
+            const hiddenInput = container.querySelector('[data-tristate-input]');
+            if (hiddenInput) hiddenInput.value = value;
+        }
+    }
+
+    /**
+     * Update URL to reflect current state
+     * Called after filter changes, view changes, sort changes
+     */
+    updateURL() {
+        const params = new URLSearchParams();
+        const config = this.filterConfig;
+
+        // View (only if not default)
+        if (this.currentView !== 'grid') {
+            params.set('view', this.currentView);
+        }
+
+        // Columns (table view only, if not default)
+        if (this.currentView === 'table' && this.tableView) {
+            const cols = Array.from(this.tableView.visibleColumns).join(',');
+            const defaultCols = this.tableView.defaultColumns.join(',');
+            if (cols !== defaultCols) {
+                params.set('cols', cols);
+            }
+        }
+
+        // Sort (only if not default)
+        if (this.currentSort && this.currentSort !== 'popularity') {
+            params.set('sort', this.currentSort);
+        }
+
+        // Search
+        if (this.searchTerm) {
+            params.set('q', this.searchTerm);
+        }
+
+        // Range filters (only if modified from defaults)
+        for (const [key, cfg] of Object.entries(config.ranges || {})) {
+            const filter = this.filters[key];
+            if (!filter) continue;
+
+            const rangeData = this.pageConfig.ranges?.[key];
+            if (!rangeData) continue;
+
+            if (cfg.filterMode === 'contains') {
+                if (filter.value != null) {
+                    params.set(key, filter.value);
+                }
+            } else if (filter.min != null || filter.max != null) {
+                const min = filter.min ?? rangeData.min;
+                const max = filter.max ?? rangeData.max;
+                const isDefault = min === rangeData.min && max === rangeData.max;
+                if (!isDefault) {
+                    params.set(key, `${min}-${max}`);
+                }
+            }
+        }
+
+        // Set filters
+        for (const [key, cfg] of Object.entries(config.sets || {})) {
+            const filterSet = this.filters[key];
+            if (filterSet?.size > 0) {
+                params.set(key, Array.from(filterSet).join(','));
+            }
+        }
+
+        // Tristate filters (only if not 'any')
+        for (const [key, cfg] of Object.entries(config.tristates || {})) {
+            const value = this.filters[key];
+            if (value && value !== 'any') {
+                params.set(key, value);
+            }
+        }
+
+        // Update URL without page reload
+        const newURL = params.toString()
+            ? `${window.location.pathname}?${params}`
+            : window.location.pathname;
+
+        history.replaceState(null, '', newURL);
+    }
+
     async init() {
+        // Restore state from URL first
+        this.initFromURL();
+
         // Detect user geo first and process products for their region
         await this.detectUserGeo();
         this.processProductsForGeo();
@@ -165,8 +409,17 @@ class Finder {
         // Listen for manual region changes
         window.addEventListener('erh:region-changed', (e) => this.handleRegionChange(e));
 
+        // Sync UI to filter state (loaded from URL)
+        this.syncUIToFilters();
+
         // Initial render
         this.applyFilters();
+
+        // Switch to table view if URL specified
+        if (this.initialView === 'table') {
+            const tableBtn = this.container.querySelector('.view-toggle-btn[data-view="table"]');
+            if (tableBtn) tableBtn.click();
+        }
     }
 
     /**
@@ -635,8 +888,16 @@ class Finder {
             const maxInput = rangeContainer.querySelector('[data-range-max]');
             const slider = rangeContainer.querySelector('[data-range-slider]');
 
-            const minVal = presetMin !== undefined && presetMin !== '' ? parseFloat(presetMin) : rangeMin;
-            const maxVal = presetMax !== undefined && presetMax !== '' ? parseFloat(presetMax) : rangeMax;
+            // Clamp preset values to actual data bounds
+            // (presets like "$500-1000" should cap at actual max if products only go to $800)
+            let minVal = presetMin !== undefined && presetMin !== '' ? parseFloat(presetMin) : rangeMin;
+            let maxVal = presetMax !== undefined && presetMax !== '' ? parseFloat(presetMax) : rangeMax;
+            minVal = Math.max(rangeMin, Math.min(rangeMax, minVal));
+            maxVal = Math.max(rangeMin, Math.min(rangeMax, maxVal));
+
+            // Ensure min doesn't exceed max after clamping
+            // (e.g., preset "$900-1000" when max is $800 → both clamp to $800)
+            if (minVal > maxVal) minVal = maxVal;
 
             if (minInput) minInput.value = minVal;
             if (maxInput) maxInput.value = maxVal;
@@ -859,8 +1120,9 @@ class Finder {
     updateSliderVisuals(slider, minVal, maxVal, rangeMin, rangeMax) {
         if (!slider) return;
 
-        const minPos = (minVal - rangeMin) / (rangeMax - rangeMin);
-        const maxPos = (maxVal - rangeMin) / (rangeMax - rangeMin);
+        // Clamp positions to 0-1 range (handles preset values outside actual data bounds)
+        const minPos = Math.max(0, Math.min(1, (minVal - rangeMin) / (rangeMax - rangeMin)));
+        const maxPos = Math.max(0, Math.min(1, (maxVal - rangeMin) / (rangeMax - rangeMin)));
 
         const minHandle = slider.querySelector('[data-handle="min"]');
         const maxHandle = slider.querySelector('[data-handle="max"]');
@@ -1251,6 +1513,9 @@ class Finder {
         if (this.tableView && this.currentView === 'table') {
             this.tableView.updateData();
         }
+
+        // Sync URL state
+        this.updateURL();
     }
 
     productMatchesFilters(product) {
@@ -1361,14 +1626,17 @@ class Finder {
             this.grid.appendChild(this.createProductCard(product));
         });
 
-        if (this.emptyState) {
-            this.emptyState.hidden = this.filteredProducts.length > 0;
+        // Only update grid visibility when in grid view (table view handles its own empty state)
+        if (this.currentView === 'grid') {
+            const hasProducts = this.filteredProducts.length > 0;
+            if (this.emptyState) {
+                this.emptyState.hidden = hasProducts;
+            }
+            if (this.grid) {
+                this.grid.style.display = hasProducts ? '' : 'none';
+            }
+            this.updateLoadMoreButton();
         }
-        if (this.grid) {
-            this.grid.style.display = this.filteredProducts.length > 0 ? '' : 'none';
-        }
-
-        this.updateLoadMoreButton();
     }
 
     createProductCard(product) {
@@ -1930,9 +2198,11 @@ class Finder {
         this.container.dataset.view = view;
 
         if (view === 'table') {
-            // Hide grid, show table
+            // Hide grid elements - CSS also hides them, but this ensures clean state
             this.grid.hidden = true;
+            this.grid.style.display = '';  // Reset inline style
             this.loadMoreContainer?.setAttribute('hidden', '');
+            if (this.emptyState) this.emptyState.hidden = true;
 
             // Lazy-load table view on first use
             if (!this.tableView) {
@@ -1950,9 +2220,12 @@ class Finder {
             this.grid.hidden = false;
             // Sync sidebar filter controls to current state (may have changed in table view)
             this.syncSidebarToFilters();
-            // Re-render grid to reflect any selection changes
+            // Re-render grid to reflect any selection changes (also updates empty state)
             this.renderProducts();
         }
+
+        // Update URL to reflect view change
+        this.updateURL();
     }
 
     /**

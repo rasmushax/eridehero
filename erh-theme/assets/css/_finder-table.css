@@ -5,6 +5,12 @@
 
 /* ===== TABLE VIEW LAYOUT ===== */
 
+/* Full-width container for table view */
+[data-finder-page][data-view="table"] .finder-section > .container {
+    max-width: none;
+    padding: 0 var(--space-6);
+}
+
 /* When in table view, hide sidebar and make content full-width */
 [data-finder-page][data-view="table"] .finder-sidebar {
     display: none;
@@ -19,6 +25,11 @@
 }
 
 [data-finder-page][data-view="table"] .finder-load-more {
+    display: none;
+}
+
+/* Hide grid empty state in table view - table has its own empty message */
+[data-finder-page][data-view="table"] .finder-empty {
     display: none;
 }
 
@@ -149,6 +160,71 @@
     font-style: italic;
 }
 
+/* Filter card search input */
+.filter-card-search {
+    display: flex;
+    align-items: center;
+    gap: var(--space-2);
+    padding: var(--space-2);
+    margin-bottom: var(--space-2);
+    background: var(--color-background);
+    border: var(--border-width) solid var(--color-border);
+    border-radius: var(--radius-sm);
+    transition: all var(--transition-fast);
+}
+
+.filter-card-search:focus-within {
+    border-color: var(--color-primary);
+    background: var(--color-white);
+}
+
+.filter-card-search .icon {
+    width: 14px;
+    height: 14px;
+    color: var(--color-muted);
+    flex-shrink: 0;
+}
+
+.filter-card-search input {
+    flex: 1;
+    min-width: 0;
+    border: none;
+    background: transparent;
+    font-family: var(--font-family);
+    font-size: var(--text-xs);
+    color: var(--color-dark);
+    outline: none;
+}
+
+.filter-card-search input::placeholder {
+    color: var(--color-muted);
+}
+
+.filter-card-search-clear {
+    display: none;
+    align-items: center;
+    justify-content: center;
+    padding: 0;
+    background: transparent;
+    border: none;
+    cursor: pointer;
+    opacity: 0.5;
+    transition: opacity var(--transition-fast);
+}
+
+.filter-card-search:has(input:not(:placeholder-shown)) .filter-card-search-clear {
+    display: flex;
+}
+
+.filter-card-search-clear:hover {
+    opacity: 1;
+}
+
+.filter-card-search-clear .icon {
+    width: 12px;
+    height: 12px;
+}
+
 
 /* ===== FILTER COMPONENTS INSIDE CARDS ===== */
 /* Compact overrides for standard filter styles when inside filter cards */
@@ -261,6 +337,28 @@
 /* Hide presets in table filter cards - keep it simple */
 .filter-card-body .filter-presets {
     display: none;
+}
+
+
+/* ===== PORTALED ELEMENTS ===== */
+/* Sidebar elements moved to filter cards via portal system */
+
+/* Reset sidebar-specific wrapper styles when portaled */
+.filter-item-content.is-portaled {
+    padding: 0;
+    margin: 0;
+    border: none;
+    background: transparent;
+}
+
+/* Range filters portaled from sidebar */
+.filter-range.is-portaled {
+    /* Already styled by .filter-card-body .filter-range */
+}
+
+/* Tristate filters portaled from sidebar */
+.filter-tristate.is-portaled {
+    /* Already styled by .filter-card-body .filter-tristate */
 }
 
 
@@ -729,12 +827,12 @@
     gap: var(--space-2);
 }
 
-/* Individual column option */
+/* Individual column option - styled checkbox */
 .finder-columns-option {
     display: flex;
     align-items: center;
     gap: var(--space-3);
-    padding: var(--space-3);
+    padding: var(--space-2) var(--space-3);
     border-radius: var(--radius-md);
     cursor: pointer;
     transition: background var(--transition-fast);
@@ -749,19 +847,54 @@
 }
 
 .finder-columns-option input {
-    width: 18px;
-    height: 18px;
-    cursor: pointer;
-    accent-color: var(--color-primary);
-    flex-shrink: 0;
+    position: absolute;
+    opacity: 0;
+    width: 0;
+    height: 0;
 }
 
-.finder-columns-option span {
+.finder-columns-option-box {
+    display: flex;
+    align-items: center;
+    justify-content: center;
+    width: 20px;
+    height: 20px;
+    background: var(--color-white);
+    border: var(--border-width) solid var(--color-border-hover);
+    border-radius: var(--radius-sm);
+    flex-shrink: 0;
+    transition: all var(--transition-fast);
+}
+
+.finder-columns-option-box .icon {
+    width: 12px;
+    height: 12px;
+    color: var(--color-white);
+    opacity: 0;
+    transform: scale(0.5);
+    transition: all var(--transition-fast);
+}
+
+.finder-columns-option:hover .finder-columns-option-box {
+    border-color: var(--color-primary);
+}
+
+.finder-columns-option input:checked + .finder-columns-option-box {
+    background: var(--color-primary);
+    border-color: var(--color-primary);
+}
+
+.finder-columns-option input:checked + .finder-columns-option-box .icon {
+    opacity: 1;
+    transform: scale(1);
+}
+
+.finder-columns-option-label {
     font-size: var(--text-sm);
     color: var(--color-body);
 }
 
-.finder-columns-option input:checked + span {
+.finder-columns-option input:checked ~ .finder-columns-option-label {
     color: var(--color-dark);
     font-weight: var(--font-medium);
 }

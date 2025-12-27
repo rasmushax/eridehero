@@ -1295,6 +1295,7 @@ function erh_get_js_filter_config(): array {
             'productKey' => $cfg['field'],
             'label'      => $cfg['label'],
             'isArray'    => $cfg['is_array'] ?? false,
+            'searchable' => $cfg['searchable'] ?? false,
         ];
     }
 

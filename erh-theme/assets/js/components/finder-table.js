@@ -51,6 +51,10 @@ export class FinderTable {
         this.currentLimit = this.displayLimit;
         this.initialized = false;
 
+        // Portal system: track filters moved from sidebar to cards
+        // Maps colKey -> { source: parentElement, children: array of moved elements }
+        this.portaledFilters = new Map();
+
         // Initialize visible columns from URL or defaults
         this.initColumnsFromURL();
     }
@@ -65,6 +69,102 @@ export class FinderTable {
         this.buildColumnModal();
         this.buildTable();
         this.initialized = true;
+    }
+
+    // =========================================
+    // PORTAL SYSTEM
+    // Moves actual filter elements from sidebar to cards
+    // Single source of truth - no duplicate rendering
+    // =========================================
+
+    /**
+     * Find the sidebar filter element for a column key
+     * Returns the inner control element (not the wrapper)
+     */
+    getSidebarFilterElement(colKey) {
+        const filterType = this.getFilterType(colKey);
+        if (!filterType) return null;
+
+        const sidebar = this.finder.sidebar;
+        if (!sidebar) return null;
+
+        switch (filterType) {
+            case 'range': {
+                // Range filters: use the actual range filter key (may differ from column key)
+                const rangeKey = this.getRangeFilterKey(colKey);
+                return sidebar.querySelector(`[data-range-filter="${rangeKey}"]`);
+            }
+            case 'set': {
+                // Set filters: find the checkbox list container
+                const setKey = FinderTable.SET_MAPPINGS[colKey];
+                // The list and related elements are inside a filter-item-content
+                const filterItem = sidebar.querySelector(`[data-filter-list="${setKey}"]`)?.closest('[data-filter-item]');
+                // Return the content container so we get the list + show all button + search
+                return filterItem?.querySelector('.filter-item-content');
+            }
+            case 'tristate': {
+                // Tristate filters: find the tristate container
+                return sidebar.querySelector(`[data-tristate-filter="${colKey}"]`);
+            }
+            default:
+                return null;
+        }
+    }
+
+    /**
+     * Portal a filter from sidebar to a filter card
+     * Stores original parent for restoration
+     */
+    portalFilterToCard(colKey, cardBodyEl) {
+        const filterEl = this.getSidebarFilterElement(colKey);
+        if (!filterEl) return false;
+
+        // Store original parent and next sibling for restoration
+        this.portaledFilters.set(colKey, {
+            element: filterEl,
+            originalParent: filterEl.parentNode,
+            nextSibling: filterEl.nextSibling
+        });
+
+        // Move the element to the card body
+        cardBodyEl.appendChild(filterEl);
+
+        // Add a class to indicate it's portaled (for styling adjustments)
+        filterEl.classList.add('is-portaled');
+
+        return true;
+    }
+
+    /**
+     * Return a portaled filter back to its original sidebar location
+     */
+    returnFilterToSidebar(colKey) {
+        const portalData = this.portaledFilters.get(colKey);
+        if (!portalData) return;
+
+        const { element, originalParent, nextSibling } = portalData;
+
+        // Remove portaled class
+        element.classList.remove('is-portaled');
+
+        // Return to original position
+        if (nextSibling) {
+            originalParent.insertBefore(element, nextSibling);
+        } else {
+            originalParent.appendChild(element);
+        }
+
+        this.portaledFilters.delete(colKey);
+    }
+
+    /**
+     * Return all portaled filters to sidebar
+     * Called when hiding table view
+     */
+    returnAllFiltersToSidebar() {
+        for (const colKey of this.portaledFilters.keys()) {
+            this.returnFilterToSidebar(colKey);
+        }
     }
 
     /**
@@ -107,6 +207,9 @@ export class FinderTable {
                 this.openColumnModal();
             }
         });
+
+        // Note: Filter search/show-all events are handled by finder.js delegation
+        // since we portal actual sidebar elements (which have their event handlers attached)
     }
 
     /**
@@ -120,12 +223,15 @@ export class FinderTable {
     }
 
     // =========================================
-    // FILTER CARDS - Renders same HTML as PHP templates
-    // Uses finder.js event delegation, no separate binding needed
+    // FILTER CARDS - Portal system
+    // Moves actual filter elements from sidebar to cards
+    // Uses finder.js event delegation (no duplicate binding needed)
     // =========================================
 
     /**
-     * Column key to set filter key mapping
+     * Column key → JS filter config key mapping.
+     * PHP pluralizes checkbox filter keys for JS (brand → brands),
+     * so we need this mapping to find the right config.
      */
     static SET_MAPPINGS = {
         'brand': 'brands',
@@ -135,7 +241,8 @@ export class FinderTable {
         'suspension_type': 'suspension_types',
         'terrain': 'terrains',
         'ip_rating': 'ip_ratings',
-        'throttle_type': 'throttle_types'
+        'throttle_type': 'throttle_types',
+        'features': 'features'  // Already plural
     };
 
     /**
@@ -169,84 +276,83 @@ export class FinderTable {
 
     /**
      * Build filter cards for each visible column
-     * Renders HTML matching PHP templates so finder.js delegation works
+     * Uses portal system to move actual filter elements from sidebar
      */
     buildFilterCards() {
         if (!this.filterCardsEl) return;
 
-        let html = '';
+        // First, return any previously portaled filters
+        this.returnAllFiltersToSidebar();
 
+        // Clear existing cards
+        this.filterCardsEl.innerHTML = '';
+
+        // Build cards for each visible column
         this.visibleColumns.forEach(colKey => {
-            const card = this.renderFilterCard(colKey);
+            const card = this.createFilterCard(colKey);
             if (card) {
-                html += card;
+                this.filterCardsEl.appendChild(card);
             }
         });
 
-        // Add the "Add Column" button at the end (inline with filter cards)
-        html += `
-            <button type="button" class="finder-add-column-btn" data-add-column>
-                <svg class="icon"><use href="#icon-plus"></use></svg>
-                Add Column
-            </button>
+        // Add the "Add Column" button at the end
+        const addBtn = document.createElement('button');
+        addBtn.type = 'button';
+        addBtn.className = 'finder-add-column-btn';
+        addBtn.setAttribute('data-add-column', '');
+        addBtn.innerHTML = `
+            <svg class="icon"><use href="#icon-plus"></use></svg>
+            Add Column
         `;
-
-        this.filterCardsEl.innerHTML = html;
-
-        // Bind remove button events (these aren't part of finder.js delegation)
-        this.filterCardsEl.querySelectorAll('[data-remove-column]').forEach(btn => {
-            btn.addEventListener('click', () => {
-                const colKey = btn.dataset.removeColumn;
-                this.toggleColumn(colKey, false);
-            });
-        });
-
-        // Initialize range sliders (for drag functionality)
-        this.filterCardsEl.querySelectorAll('[data-range-filter]').forEach(container => {
-            this.finder.initRangeSlider(container);
-        });
+        this.filterCardsEl.appendChild(addBtn);
     }
 
     /**
-     * Render a single filter card based on the column type
+     * Create a single filter card and portal the filter into it
      */
-    renderFilterCard(colKey) {
+    createFilterCard(colKey) {
         const colConfig = this.columnConfig[colKey];
-        if (!colConfig) return '';
+        if (!colConfig) return null;
 
         const label = colConfig.label || colKey;
         const filterType = this.getFilterType(colKey);
 
-        let controlHtml = '';
+        // Create card wrapper
+        const card = document.createElement('div');
+        card.className = 'filter-card';
+        card.dataset.filterCard = colKey;
 
-        switch (filterType) {
-            case 'range':
-                controlHtml = this.renderRangeFilter(colKey);
-                break;
-            case 'set':
-                controlHtml = this.renderSetFilter(colKey);
-                break;
-            case 'tristate':
-                controlHtml = this.renderTristateFilter(colKey);
-                break;
-            default:
-                // Display-only column with no filter control
-                controlHtml = '<span class="filter-card-display-only">Display only</span>';
+        // Create header
+        const header = document.createElement('div');
+        header.className = 'filter-card-header';
+        header.innerHTML = `
+            <span class="filter-card-label">${this.escapeHtml(label)}</span>
+            <button type="button" class="filter-card-remove" data-remove-column="${colKey}" aria-label="Remove ${this.escapeHtml(label)}">
+                <svg class="icon"><use href="#icon-x"></use></svg>
+            </button>
+        `;
+
+        // Bind remove button
+        header.querySelector('[data-remove-column]').addEventListener('click', () => {
+            this.toggleColumn(colKey, false);
+        });
+
+        // Create body
+        const body = document.createElement('div');
+        body.className = 'filter-card-body';
+
+        // Try to portal the filter from sidebar
+        if (filterType && this.portalFilterToCard(colKey, body)) {
+            // Successfully portaled - filter is now in the card body
+        } else {
+            // No filter available - display-only column
+            body.innerHTML = '<span class="filter-card-display-only">Display only</span>';
         }
 
-        return `
-            <div class="filter-card" data-filter-card="${colKey}">
-                <div class="filter-card-header">
-                    <span class="filter-card-label">${this.escapeHtml(label)}</span>
-                    <button type="button" class="filter-card-remove" data-remove-column="${colKey}" aria-label="Remove ${this.escapeHtml(label)}">
-                        <svg class="icon"><use href="#icon-x"></use></svg>
-                    </button>
-                </div>
-                <div class="filter-card-body">
-                    ${controlHtml}
-                </div>
-            </div>
-        `;
+        card.appendChild(header);
+        card.appendChild(body);
+
+        return card;
     }
 
     /**
@@ -285,273 +391,6 @@ export class FinderTable {
         }
 
         return null;
-    }
-
-    /**
-     * Compute distribution histogram for a range filter
-     * Matches PHP erh_calc_distribution() logic
-     */
-    computeDistribution(productKey, min, max, numBuckets = 10) {
-        const distribution = new Array(numBuckets).fill(0);
-        const range = max - min;
-        if (range <= 0) return distribution.map(() => 0);
-
-        this.finder.products.forEach(product => {
-            const value = product[productKey];
-            if (value == null) return;
-
-            const bucketIndex = Math.min(
-                numBuckets - 1,
-                Math.floor(((value - min) / range) * numBuckets)
-            );
-            distribution[bucketIndex]++;
-        });
-
-        // Normalize to 0-100
-        const maxCount = Math.max(...distribution) || 1;
-        return distribution.map(count => Math.round((count / maxCount) * 100));
-    }
-
-    /**
-     * Compute preset counts for a range filter
-     */
-    computePresetCounts(productKey, presets, min, max) {
-        return presets.map(preset => {
-            const presetMin = preset.min ?? min;
-            const presetMax = preset.max ?? max;
-
-            return this.finder.products.filter(product => {
-                const value = product[productKey];
-                if (value == null) return false;
-                return value >= presetMin && value <= presetMax;
-            }).length;
-        });
-    }
-
-    /**
-     * Render range filter matching PHP range-filter.php structure
-     */
-    renderRangeFilter(colKey) {
-        // Get the actual filter key (may differ from column key)
-        const filterKey = this.getRangeFilterKey(colKey);
-        if (!filterKey) {
-            return '<span class="filter-card-no-data">No filter config</span>';
-        }
-
-        // Use filter key for config and data lookups
-        const rangeData = this.rangesData[filterKey];
-        const rangeCfg = this.rangeConfig[filterKey] || {};
-
-        if (!rangeData) {
-            return '<span class="filter-card-no-data">No data available</span>';
-        }
-
-        const min = rangeData.min || 0;
-        const max = rangeData.max || 100;
-        const prefix = rangeCfg.prefix || '';
-        const suffix = rangeCfg.suffix || '';
-        const step = rangeCfg.round_factor || 1;
-        const presets = rangeCfg.presets || [];
-        const productKey = rangeCfg.productKey || filterKey;
-
-        // Get current filter values (use filter key for state)
-        const currentFilter = this.finder.filters[filterKey] || {};
-        const currentMin = currentFilter.min ?? min;
-        const currentMax = currentFilter.max ?? max;
-
-        // Compute distribution and preset counts
-        const distribution = this.computeDistribution(productKey, min, max);
-        const presetCounts = presets.length > 0 ? this.computePresetCounts(productKey, presets, min, max) : [];
-
-        // Calculate slider positions
-        const minPos = (currentMin - min) / (max - min);
-        const maxPos = (currentMax - min) / (max - min);
-
-        // Build distribution bars HTML
-        const barsHtml = distribution.map(height =>
-            `<div class="filter-range-bar is-selected" style="--height: ${height}"></div>`
-        ).join('');
-
-        // Build presets HTML
-        let presetsHtml = '';
-        if (presets.length > 0) {
-            const presetItems = presets.map((preset, index) => {
-                const presetValue = `${preset.min ?? ''}-${preset.max ?? ''}`;
-                const count = presetCounts[index] ?? 0;
-                return `
-                    <label class="filter-preset">
-                        <input type="radio" name="${filterKey}_preset" value="${presetValue}" data-preset
-                            ${preset.min != null ? `data-preset-min="${preset.min}"` : ''}
-                            ${preset.max != null ? `data-preset-max="${preset.max}"` : ''}>
-                        <span class="filter-preset-radio"></span>
-                        <span class="filter-preset-label">${this.escapeHtml(preset.label)}</span>
-                        <span class="filter-preset-count">${count}</span>
-                    </label>
-                `;
-            }).join('');
-
-            presetsHtml = `
-                <div class="filter-presets" role="radiogroup" aria-label="${this.escapeHtml(rangeCfg.label || filterKey)} presets">
-                    ${presetItems}
-                </div>
-            `;
-        }
-
-        return `
-            <div class="filter-range" data-range-filter="${filterKey}" data-min="${min}" data-max="${max}" data-step="${step}">
-                <div class="filter-range-inputs">
-                    <div class="filter-range-input-group">
-                        ${prefix ? `<span class="filter-range-prefix">${prefix}</span>` : ''}
-                        <input type="number" class="filter-range-input" data-range-min
-                               value="${currentMin}" min="${min}" max="${max}" step="${step}">
-                        ${suffix ? `<span class="filter-range-suffix">${suffix}</span>` : ''}
-                    </div>
-                    <span class="filter-range-separator">–</span>
-                    <div class="filter-range-input-group">
-                        ${prefix ? `<span class="filter-range-prefix">${prefix}</span>` : ''}
-                        <input type="number" class="filter-range-input" data-range-max
-                               value="${currentMax}" min="${min}" max="${max}" step="${step}">
-                        ${suffix ? `<span class="filter-range-suffix">${suffix}</span>` : ''}
-                    </div>
-                </div>
-                <div class="filter-range-distribution" aria-hidden="true">
-                    ${barsHtml}
-                </div>
-                <div class="filter-range-slider" data-range-slider>
-                    <div class="filter-range-track"></div>
-                    <div class="filter-range-fill" style="--min: ${minPos}; --max: ${maxPos};"></div>
-                    <div class="filter-range-handle" data-handle="min" style="--pos: ${minPos};"></div>
-                    <div class="filter-range-handle" data-handle="max" style="--pos: ${maxPos};"></div>
-                </div>
-                ${presetsHtml}
-            </div>
-        `;
-    }
-
-    /**
-     * Render set filter matching PHP checkbox-filter.php structure
-     */
-    renderSetFilter(colKey) {
-        const setKey = FinderTable.SET_MAPPINGS[colKey];
-        if (!setKey) return '';
-
-        const setCfg = this.setConfig[setKey] || {};
-        const productKey = setCfg.productKey || colKey;
-        const selector = setCfg.selector || setKey; // Use selector for data-filter to match sidebar
-
-        // Get current selections
-        const currentSet = this.finder.filters[setKey] || new Set();
-
-        // Get available options with counts
-        const options = this.getSetOptions(productKey);
-        if (options.length === 0) {
-            return '<span class="filter-card-no-data">No options available</span>';
-        }
-
-        const visibleLimit = 6;
-        const hasOverflow = options.length > visibleLimit;
-
-        // Build checkbox list HTML
-        const checkboxItems = options.map((opt, index) => {
-            const isChecked = currentSet.has(opt.value);
-            const isHidden = hasOverflow && index >= visibleLimit;
-
-            return `
-                <label class="filter-checkbox${isHidden ? ' is-hidden-by-limit' : ''}">
-                    <input type="checkbox" name="${selector}" value="${this.escapeHtml(opt.value)}"
-                           data-filter="${selector}" ${isChecked ? 'checked' : ''}>
-                    <span class="filter-checkbox-box">
-                        <svg class="icon"><use href="#icon-check"></use></svg>
-                    </span>
-                    <span class="filter-checkbox-label">${this.escapeHtml(opt.value)}</span>
-                    <span class="filter-checkbox-count">${opt.count}</span>
-                </label>
-            `;
-        }).join('');
-
-        // Show all button if overflow
-        const showAllHtml = hasOverflow ? `
-            <button type="button" class="filter-show-all" data-filter-show-all="${setKey}">
-                <span data-show-text>Show all ${options.length}</span>
-                <span data-hide-text hidden>Show less</span>
-                <svg class="icon"><use href="#icon-chevron-down"></use></svg>
-            </button>
-        ` : '';
-
-        return `
-            <div class="filter-checkbox-list" data-filter-list="${setKey}" data-limit="${visibleLimit}">
-                ${checkboxItems}
-            </div>
-            ${showAllHtml}
-        `;
-    }
-
-    /**
-     * Render tristate filter matching PHP tristate-filter.php structure
-     */
-    renderTristateFilter(colKey) {
-        const tristateCfg = this.tristateConfig[colKey] || {};
-        const productKey = tristateCfg.productKey || colKey;
-
-        // Get current value
-        const currentValue = this.finder.filters[colKey] || 'any';
-
-        // Compute yes/no counts
-        let yesCount = 0;
-        let noCount = 0;
-        this.finder.products.forEach(product => {
-            const value = product[productKey];
-            if (value === true || value === 'Yes' || value === 'yes' || value === 1) {
-                yesCount++;
-            } else if (value === false || value === 'No' || value === 'no' || value === 0) {
-                noCount++;
-            }
-        });
-
-        return `
-            <div class="filter-tristate" data-tristate-filter="${colKey}">
-                <div class="filter-tristate-control" role="radiogroup" aria-label="${this.escapeHtml(tristateCfg.label || colKey)}">
-                    <button type="button" class="filter-tristate-btn ${currentValue === 'any' ? 'is-active' : ''}"
-                            data-value="any" role="radio" aria-checked="${currentValue === 'any'}">
-                        Any
-                    </button>
-                    <button type="button" class="filter-tristate-btn ${currentValue === 'yes' ? 'is-active' : ''}"
-                            data-value="yes" role="radio" aria-checked="${currentValue === 'yes'}" title="${yesCount} products">
-                        Yes
-                    </button>
-                    <button type="button" class="filter-tristate-btn ${currentValue === 'no' ? 'is-active' : ''}"
-                            data-value="no" role="radio" aria-checked="${currentValue === 'no'}" title="${noCount} products">
-                        No
-                    </button>
-                </div>
-                <input type="hidden" name="${colKey}" value="${currentValue}" data-tristate-input>
-            </div>
-        `;
-    }
-
-    /**
-     * Get set options with counts from products
-     */
-    getSetOptions(productKey) {
-        const counts = {};
-
-        this.finder.products.forEach(product => {
-            const value = product[productKey];
-            if (value) {
-                if (Array.isArray(value)) {
-                    value.forEach(v => {
-                        counts[v] = (counts[v] || 0) + 1;
-                    });
-                } else {
-                    counts[value] = (counts[value] || 0) + 1;
-                }
-            }
-        });
-
-        // Sort by count descending
-        return Object.entries(counts)
-            .map(([value, count]) => ({ value, count }))
-            .sort((a, b) => b.count - a.count);
     }
 
     // =========================================
@@ -928,16 +767,9 @@ export class FinderTable {
     }
 
     updateURL() {
-        const url = new URL(window.location.href);
-        const cols = Array.from(this.visibleColumns).join(',');
-
-        if (cols === this.defaultColumns.join(',')) {
-            url.searchParams.delete('cols');
-        } else {
-            url.searchParams.set('cols', cols);
-        }
-
-        window.history.replaceState({}, '', url);
+        // Delegate to finder.js which handles all URL state
+        // This ensures a single source of truth for URL management
+        this.finder.updateURL();
     }
 
     // =========================================
@@ -960,7 +792,10 @@ export class FinderTable {
                             return `
                                 <label class="finder-columns-option" data-column-option="${colKey}">
                                     <input type="checkbox" value="${colKey}" data-column-toggle ${checked}>
-                                    <span>${config.label || colKey}</span>
+                                    <span class="finder-columns-option-box">
+                                        <svg class="icon"><use href="#icon-check"></use></svg>
+                                    </span>
+                                    <span class="finder-columns-option-label">${config.label || colKey}</span>
                                 </label>
                             `;
                         }).join('')}
@@ -1045,10 +880,18 @@ export class FinderTable {
     }
 
     updateLoadMoreButton() {
-        if (!this.loadMoreBtn) return;
+        const totalProducts = this.finder.filteredProducts.length;
+        const hasMore = this.currentLimit < totalProducts;
 
-        const hasMore = this.currentLimit < this.finder.filteredProducts.length;
-        this.loadMoreBtn.hidden = !hasMore;
+        // Hide button when no more products
+        if (this.loadMoreBtn) {
+            this.loadMoreBtn.hidden = !hasMore;
+        }
+
+        // Hide entire footer when no products or all shown
+        if (this.tableFooter) {
+            this.tableFooter.hidden = totalProducts === 0 || !hasMore;
+        }
     }
 
     updateData() {
@@ -1078,6 +921,9 @@ export class FinderTable {
     }
 
     hide() {
+        // Return all portaled filters back to sidebar
+        this.returnAllFiltersToSidebar();
+
         this.tableView.hidden = true;
         this.closeColumnModal();
     }
