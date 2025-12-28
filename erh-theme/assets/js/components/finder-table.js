@@ -79,32 +79,45 @@ export class FinderTable {
 
     /**
      * Find the sidebar filter element for a column key
+     * Uses filterKey and filterType from column config (single source of truth from PHP)
      * Returns the inner control element (not the wrapper)
      */
     getSidebarFilterElement(colKey) {
-        const filterType = this.getFilterType(colKey);
-        if (!filterType) return null;
+        const colConfig = this.columnConfig[colKey];
+        if (!colConfig?.filterKey || !colConfig?.filterType) return null;
 
+        const { filterKey, filterType } = colConfig;
         const sidebar = this.finder.sidebar;
         if (!sidebar) return null;
 
         switch (filterType) {
             case 'range': {
-                // Range filters: use the actual range filter key (may differ from column key)
-                const rangeKey = this.getRangeFilterKey(colKey);
-                return sidebar.querySelector(`[data-range-filter="${rangeKey}"]`);
+                // Range filters: use filterKey from config
+                return sidebar.querySelector(`[data-range-filter="${filterKey}"]`);
             }
             case 'set': {
-                // Set filters: find the checkbox list container
-                const setKey = FinderTable.SET_MAPPINGS[colKey];
-                // The list and related elements are inside a filter-item-content
-                const filterItem = sidebar.querySelector(`[data-filter-list="${setKey}"]`)?.closest('[data-filter-item]');
-                // Return the content container so we get the list + show all button + search
-                return filterItem?.querySelector('.filter-item-content');
+                // Set filters: find the checkbox list by filterKey
+                const checkboxList = sidebar.querySelector(`[data-filter-list="${filterKey}"]`);
+                if (!checkboxList) return null;
+
+                // Check if nested in filter-item (collapsible) or standalone
+                const filterItem = checkboxList.closest('[data-filter-item]');
+                if (filterItem) {
+                    // Nested: return the content container
+                    return filterItem.querySelector('.filter-item-content');
+                }
+
+                // Standalone (like Brand): return the filter-group-content wrapper
+                const filterGroup = checkboxList.closest('[data-filter-group]');
+                if (filterGroup) {
+                    return filterGroup.querySelector('.filter-group-content');
+                }
+
+                return null;
             }
             case 'tristate': {
-                // Tristate filters: find the tristate container
-                return sidebar.querySelector(`[data-tristate-filter="${colKey}"]`);
+                // Tristate filters: use filterKey from config
+                return sidebar.querySelector(`[data-tristate-filter="${filterKey}"]`);
             }
             default:
                 return null;
@@ -119,10 +132,12 @@ export class FinderTable {
         const filterEl = this.getSidebarFilterElement(colKey);
         if (!filterEl) return false;
 
+        const originalParent = filterEl.parentNode;
+
         // Store original parent and next sibling for restoration
         this.portaledFilters.set(colKey, {
             element: filterEl,
-            originalParent: filterEl.parentNode,
+            originalParent: originalParent,
             nextSibling: filterEl.nextSibling
         });
 
@@ -131,6 +146,12 @@ export class FinderTable {
 
         // Add a class to indicate it's portaled (for styling adjustments)
         filterEl.classList.add('is-portaled');
+
+        // Mark parent filter-group as having portaled content (hides empty shell)
+        const filterGroup = originalParent.closest('[data-filter-group]');
+        if (filterGroup) {
+            filterGroup.classList.add('has-portaled-content');
+        }
 
         return true;
     }
@@ -152,6 +173,12 @@ export class FinderTable {
             originalParent.insertBefore(element, nextSibling);
         } else {
             originalParent.appendChild(element);
+        }
+
+        // Remove portaled marker from parent filter-group
+        const filterGroup = originalParent.closest('[data-filter-group]');
+        if (filterGroup) {
+            filterGroup.classList.remove('has-portaled-content');
         }
 
         this.portaledFilters.delete(colKey);
@@ -208,6 +235,25 @@ export class FinderTable {
             }
         });
 
+        // Handle resize across mobile breakpoint
+        // Mobile: return filters to sidebar (table is CSS-hidden, sidebar drawer needs filters)
+        // Desktop: re-portal filters if table view is active
+        const mobileQuery = window.matchMedia('(max-width: 900px)');
+        mobileQuery.addEventListener('change', (e) => {
+            if (e.matches) {
+                // Crossed into mobile - return filters to sidebar
+                if (this.portaledFilters.size > 0) {
+                    this.returnAllFiltersToSidebar();
+                }
+            } else {
+                // Crossed into desktop - rebuild filter cards if in table view
+                const isTableView = this.container.dataset.view === 'table';
+                if (isTableView && this.initialized) {
+                    this.buildFilterCards();
+                }
+            }
+        });
+
         // Note: Filter search/show-all events are handled by finder.js delegation
         // since we portal actual sidebar elements (which have their event handlers attached)
     }
@@ -228,51 +274,6 @@ export class FinderTable {
     // Uses finder.js event delegation (no duplicate binding needed)
     // =========================================
 
-    /**
-     * Column key → JS filter config key mapping.
-     * PHP pluralizes checkbox filter keys for JS (brand → brands),
-     * so we need this mapping to find the right config.
-     */
-    static SET_MAPPINGS = {
-        'brand': 'brands',
-        'motor_position': 'motor_positions',
-        'brake_type': 'brake_types',
-        'tire_type': 'tire_types',
-        'suspension_type': 'suspension_types',
-        'terrain': 'terrains',
-        'ip_rating': 'ip_ratings',
-        'throttle_type': 'throttle_types',
-        'features': 'features'  // Already plural
-    };
-
-    /**
-     * Column key to range filter key mapping
-     * Maps table column keys to the actual range filter config keys
-     */
-    static RANGE_MAPPINGS = {
-        'top_speed': 'speed',
-        'tested_speed': 'tested_speed',
-        'range': 'range',
-        'tested_range': 'tested_range',
-        'battery': 'battery',
-        'motor_power': 'motor_power',
-        'weight': 'weight',
-        'weight_limit': 'weight_limit',
-        'price': 'price',
-        'max_incline': 'max_incline',
-        'accel_0_15': 'accel_0_15',
-        'accel_0_20': 'accel_0_20',
-        'brake_distance': 'brake_distance',
-        'hill_climb': 'hill_climb',
-        'charge_time': 'charge_time',
-        'voltage': 'voltage',
-        'price_per_lb': 'price_per_lb',
-        'price_per_mph': 'price_per_mph',
-        'price_per_mile': 'price_per_mile',
-        'price_per_wh': 'price_per_wh',
-        'speed_per_lb': 'speed_per_lb',
-        'range_per_lb': 'range_per_lb'
-    };
 
     /**
      * Build filter cards for each visible column
@@ -309,13 +310,17 @@ export class FinderTable {
 
     /**
      * Create a single filter card and portal the filter into it
+     * Only creates cards for columns that have actual filters (not display-only)
      */
     createFilterCard(colKey) {
         const colConfig = this.columnConfig[colKey];
         if (!colConfig) return null;
 
-        const label = colConfig.label || colKey;
+        // Only create cards for columns with filters
         const filterType = this.getFilterType(colKey);
+        if (!filterType) return null;
+
+        const label = colConfig.label || colKey;
 
         // Create card wrapper
         const card = document.createElement('div');
@@ -341,12 +346,10 @@ export class FinderTable {
         const body = document.createElement('div');
         body.className = 'filter-card-body';
 
-        // Try to portal the filter from sidebar
-        if (filterType && this.portalFilterToCard(colKey, body)) {
-            // Successfully portaled - filter is now in the card body
-        } else {
-            // No filter available - display-only column
-            body.innerHTML = '<span class="filter-card-display-only">Display only</span>';
+        // Portal the filter from sidebar
+        if (!this.portalFilterToCard(colKey, body)) {
+            // Portal failed - filter element not found in sidebar
+            return null;
         }
 
         card.appendChild(header);
@@ -356,41 +359,21 @@ export class FinderTable {
     }
 
     /**
-     * Get the range filter key for a column (using mapping or direct match)
+     * Get filter info from column config (single source of truth)
+     * Returns { filterKey, filterType } or null if column has no filter
      */
-    getRangeFilterKey(colKey) {
-        // Check mapping first
-        const mappedKey = FinderTable.RANGE_MAPPINGS[colKey];
-        if (mappedKey && this.rangeConfig[mappedKey]) {
-            return mappedKey;
-        }
-        // Direct match
-        if (this.rangeConfig[colKey]) {
-            return colKey;
-        }
-        return null;
+    getFilterInfo(colKey) {
+        const colConfig = this.columnConfig[colKey];
+        if (!colConfig?.filterKey || !colConfig?.filterType) return null;
+        return { filterKey: colConfig.filterKey, filterType: colConfig.filterType };
     }
 
     /**
      * Determine the filter type for a column
+     * Uses filterType from column config
      */
     getFilterType(colKey) {
-        // Range filters (check mapping)
-        if (this.getRangeFilterKey(colKey)) {
-            return 'range';
-        }
-
-        // Set filters
-        if (FinderTable.SET_MAPPINGS[colKey] && this.setConfig[FinderTable.SET_MAPPINGS[colKey]]) {
-            return 'set';
-        }
-
-        // Tristate filters
-        if (this.tristateConfig[colKey]) {
-            return 'tristate';
-        }
-
-        return null;
+        return this.columnConfig[colKey]?.filterType || null;
     }
 
     // =========================================
@@ -738,28 +721,39 @@ export class FinderTable {
 
     /**
      * Clear the filter state for a column when it's removed
+     * Uses filterKey and filterType from column config
      */
     clearFilterForColumn(colKey) {
-        // Range filters (use mapping)
-        const rangeFilterKey = this.getRangeFilterKey(colKey);
-        if (rangeFilterKey && this.finder.filters[rangeFilterKey]) {
-            const rangeCfg = this.rangeConfig[rangeFilterKey] || {};
-            if (rangeCfg.filterMode === 'contains') {
-                this.finder.filters[rangeFilterKey] = { value: null };
-            } else {
-                this.finder.filters[rangeFilterKey] = { min: null, max: null };
+        const filterInfo = this.getFilterInfo(colKey);
+        if (!filterInfo) return;
+
+        const { filterKey, filterType } = filterInfo;
+
+        switch (filterType) {
+            case 'range': {
+                const rangeCfg = this.rangeConfig[filterKey] || {};
+                if (rangeCfg.filterMode === 'contains') {
+                    this.finder.filters[filterKey] = { value: null };
+                } else {
+                    this.finder.filters[filterKey] = { min: null, max: null };
+                }
+                break;
             }
-        }
-
-        // Tristate filters
-        if (this.tristateConfig[colKey]) {
-            this.finder.filters[colKey] = 'any';
-        }
-
-        // Set filters - use static mapping
-        const setKey = FinderTable.SET_MAPPINGS[colKey];
-        if (setKey && this.finder.filters[setKey]) {
-            this.finder.filters[setKey].clear();
+            case 'tristate': {
+                this.finder.filters[filterKey] = 'any';
+                break;
+            }
+            case 'set': {
+                // Set filters use pluralized key in JS (brand → brands)
+                // Look up the actual filter key from set config
+                const setKey = Object.keys(this.setConfig).find(k =>
+                    this.setConfig[k].selector === filterKey || k === filterKey + 's' || k === filterKey
+                );
+                if (setKey && this.finder.filters[setKey]) {
+                    this.finder.filters[setKey].clear();
+                }
+                break;
+            }
         }
 
         // Apply the filter change
@@ -782,11 +776,20 @@ export class FinderTable {
         let html = '';
 
         Object.entries(this.columnGroups).forEach(([groupKey, group]) => {
+            // Only include columns that have actual filters (filterKey defined)
+            const filterableColumns = group.columns.filter(colKey => {
+                const config = this.columnConfig[colKey];
+                return config?.filterKey;
+            });
+
+            // Skip empty groups
+            if (filterableColumns.length === 0) return;
+
             html += `
                 <div class="finder-columns-group" data-column-group="${groupKey}">
                     <h4>${group.label}</h4>
                     <div class="finder-columns-options">
-                        ${group.columns.map(colKey => {
+                        ${filterableColumns.map(colKey => {
                             const config = this.columnConfig[colKey] || {};
                             const checked = this.visibleColumns.has(colKey) ? 'checked' : '';
                             return `

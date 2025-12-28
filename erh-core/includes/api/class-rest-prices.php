@@ -303,8 +303,8 @@ class RestPrices extends WP_REST_Controller {
             ];
         }
 
-        // Get statistics.
-        $stats = $this->price_history->get_statistics($product_id, 0, $history_geo, $history_currency);
+        // Get statistics (180 days = 6 months - matches deal detection).
+        $stats = $this->price_history->get_statistics($product_id, 180, $history_geo, $history_currency);
 
         // Get available geos.
         $available_geos = $this->price_history->get_available_geos($product_id);
@@ -523,8 +523,8 @@ class RestPrices extends WP_REST_Controller {
             }
         }
 
-        // Get statistics (days=0 for all time).
-        $stats = $this->price_history->get_statistics($product_id, 0, $geo, $currency);
+        // Get statistics (180 days = 6 months - matches deal detection).
+        $stats = $this->price_history->get_statistics($product_id, 180, $geo, $currency);
 
         // Get available geos for this product.
         $available_geos = $this->price_history->get_available_geos($product_id);

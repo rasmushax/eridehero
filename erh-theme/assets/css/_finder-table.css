@@ -33,10 +33,28 @@
     display: none;
 }
 
-/* Hide table view toggle on mobile - tables don't work well on small screens */
+/* Hide entire view toggle on mobile - tables don't work on small screens,
+   so showing a single-option toggle is pointless */
 @media (max-width: 900px) {
-    .view-toggle-btn[data-view="table"] {
+    .finder-toolbar .view-toggle {
         display: none;
+    }
+
+    /* Force grid view on mobile, even if table was selected on desktop */
+    [data-finder-page][data-view="table"] .finder-sidebar {
+        display: block;
+    }
+
+    [data-finder-page][data-view="table"] .finder-grid {
+        display: grid;
+    }
+
+    [data-finder-page][data-view="table"] .finder-table-view {
+        display: none !important;
+    }
+
+    [data-finder-page][data-view="table"] .finder-load-more {
+        display: flex;
     }
 }
 
@@ -344,21 +362,18 @@
 /* Sidebar elements moved to filter cards via portal system */
 
 /* Reset sidebar-specific wrapper styles when portaled */
-.filter-item-content.is-portaled {
+.filter-item-content.is-portaled,
+.filter-group-content.is-portaled {
+    display: block !important; /* Override collapsed state from sidebar */
     padding: 0;
     margin: 0;
     border: none;
     background: transparent;
 }
 
-/* Range filters portaled from sidebar */
-.filter-range.is-portaled {
-    /* Already styled by .filter-card-body .filter-range */
-}
-
-/* Tristate filters portaled from sidebar */
-.filter-tristate.is-portaled {
-    /* Already styled by .filter-card-body .filter-tristate */
+/* Hide the empty group shell in sidebar when content is portaled to table */
+[data-filter-group].has-portaled-content {
+    display: none;
 }
 
 

@@ -457,9 +457,10 @@ class Finder {
                 in_stock: geoPricing.instock ?? false,
                 best_link: geoPricing.bestlink ?? null,
                 avg_3m: geoPricing.avg_3m ?? null,
+                avg_6m: geoPricing.avg_6m ?? null,
                 price_indicator: this.calculatePriceIndicator(
                     geoPricing.current_price,
-                    geoPricing.avg_3m
+                    geoPricing.avg_6m  // Use 6-month average for better deal detection
                 ),
             };
         });

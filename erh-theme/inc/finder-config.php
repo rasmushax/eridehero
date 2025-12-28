@@ -1446,27 +1446,31 @@ function erh_get_js_filter_config(): array {
     $default_spec_keys = [ 'speed', 'battery', 'motor_power', 'weight', 'weight_limit', 'voltage', 'tires', 'suspension', 'brakes' ];
 
     // Column groups for table view modal.
-    // Organized by category for easy browsing.
+    // MUST match filter groups in erh_get_filter_group_config() exactly.
     $column_groups = [
-        'core' => [
-            'label'   => 'Core Info',
-            'columns' => [ 'price', 'rating', 'brand', 'release_year' ],
+        'price' => [
+            'label'   => 'Price',
+            'columns' => [ 'price' ],
         ],
-        'performance' => [
-            'label'   => 'Performance (Claimed)',
-            'columns' => [ 'top_speed', 'range', 'max_incline' ],
-        ],
-        'tested' => [
-            'label'   => 'Tested Performance',
-            'columns' => [ 'tested_speed', 'tested_range', 'accel_0_15', 'accel_0_20', 'brake_distance', 'hill_climb' ],
+        'brands' => [
+            'label'   => 'Brands',
+            'columns' => [ 'brand' ],
         ],
         'motor' => [
-            'label'   => 'Motor & Power',
+            'label'   => 'Motor',
             'columns' => [ 'motor_power', 'motor_peak', 'motor_position' ],
         ],
         'battery' => [
             'label'   => 'Battery',
             'columns' => [ 'battery', 'voltage', 'amphours', 'charging_time' ],
+        ],
+        'claimed_specs' => [
+            'label'   => 'Claimed Specs',
+            'columns' => [ 'top_speed', 'range', 'max_incline' ],
+        ],
+        'tested' => [
+            'label'   => 'Tested Performance',
+            'columns' => [ 'tested_speed', 'tested_range', 'accel_0_15', 'accel_0_20', 'brake_distance', 'hill_climb' ],
         ],
         'portability' => [
             'label'   => 'Portability',
@@ -1474,27 +1478,35 @@ function erh_get_js_filter_config(): array {
         ],
         'rider_fit' => [
             'label'   => 'Rider Fit',
-            'columns' => [ 'weight_limit', 'deck_width', 'deck_length', 'handlebar_width', 'ground_clearance' ],
-        ],
-        'wheels' => [
-            'label'   => 'Wheels & Tires',
-            'columns' => [ 'tire_size', 'tire_width', 'tire_type', 'self_healing_tires' ],
+            'columns' => [ 'rider_height', 'weight_limit', 'deck_width', 'handlebar_width', 'ground_clearance' ],
         ],
         'brakes' => [
             'label'   => 'Brakes',
             'columns' => [ 'brake_type', 'regenerative_braking' ],
+        ],
+        'tires' => [
+            'label'   => 'Tires',
+            'columns' => [ 'tire_size', 'tire_width', 'tire_type', 'self_healing_tires' ],
         ],
         'suspension' => [
             'label'   => 'Suspension',
             'columns' => [ 'suspension_type', 'suspension_adjustable' ],
         ],
         'durability' => [
-            'label'   => 'Durability',
+            'label'   => 'Terrain & Durability',
             'columns' => [ 'terrain', 'ip_rating' ],
         ],
-        'features' => [
-            'label'   => 'Features',
-            'columns' => [ 'throttle_type', 'has_lights', 'turn_signals' ],
+        'controls' => [
+            'label'   => 'Controls & Features',
+            'columns' => [ 'throttle_type', 'features' ],
+        ],
+        'lighting' => [
+            'label'   => 'Lighting',
+            'columns' => [ 'has_lights', 'turn_signals' ],
+        ],
+        'model_info' => [
+            'label'   => 'Model Info',
+            'columns' => [ 'release_year' ],
         ],
         'value' => [
             'label'   => 'Value Metrics',
@@ -1504,78 +1516,82 @@ function erh_get_js_filter_config(): array {
 
     // Column configuration for table view.
     // Maps column keys to display properties.
+    // filterKey: the key used to find the filter in sidebar (data-range-filter, data-filter-list, data-tristate-filter)
+    // filterType: 'range', 'set', or 'tristate'
     $column_config = [
         // Core.
-        'price'           => [ 'label' => 'Price',         'type' => 'currency', 'sortable' => true, 'key' => 'price' ],
+        'price'           => [ 'label' => 'Price',         'type' => 'currency', 'sortable' => true, 'key' => 'price',      'filterKey' => 'price',      'filterType' => 'range' ],
         'rating'          => [ 'label' => 'Rating',        'type' => 'rating',   'sortable' => true, 'key' => 'rating' ],
-        'brand'           => [ 'label' => 'Brand',         'type' => 'text',     'sortable' => true, 'key' => 'brand' ],
-        'release_year'    => [ 'label' => 'Year',          'type' => 'number',   'sortable' => true, 'key' => 'release_year' ],
+        'brand'           => [ 'label' => 'Brand',         'type' => 'text',     'sortable' => true, 'key' => 'brand',      'filterKey' => 'brand',      'filterType' => 'set' ],
+        'release_year'    => [ 'label' => 'Year',          'type' => 'number',   'sortable' => true, 'key' => 'release_year', 'filterKey' => 'release_year', 'filterType' => 'range' ],
 
         // Performance (claimed).
-        'top_speed'       => [ 'label' => 'Top Speed',     'suffix' => 'mph',    'sortable' => true, 'key' => 'top_speed' ],
-        'range'           => [ 'label' => 'Range',         'suffix' => 'mi',     'sortable' => true, 'key' => 'range' ],
-        'max_incline'     => [ 'label' => 'Max Incline',   'suffix' => '°',      'sortable' => true, 'key' => 'max_incline' ],
+        'top_speed'       => [ 'label' => 'Top Speed',     'suffix' => 'mph',    'sortable' => true, 'key' => 'top_speed',  'filterKey' => 'speed',      'filterType' => 'range' ],
+        'range'           => [ 'label' => 'Range',         'suffix' => 'mi',     'sortable' => true, 'key' => 'range',      'filterKey' => 'range',      'filterType' => 'range' ],
+        'max_incline'     => [ 'label' => 'Max Incline',   'suffix' => '°',      'sortable' => true, 'key' => 'max_incline','filterKey' => 'max_incline','filterType' => 'range' ],
 
         // Tested performance.
-        'tested_speed'    => [ 'label' => 'Tested Speed',  'suffix' => 'mph',    'sortable' => true, 'key' => 'tested_speed', 'round' => 1 ],
-        'tested_range'    => [ 'label' => 'Tested Range',  'suffix' => 'mi',     'sortable' => true, 'key' => 'tested_range', 'round' => 1 ],
-        'accel_0_15'      => [ 'label' => '0-15 mph',      'suffix' => 's',      'sortable' => true, 'key' => 'accel_0_15', 'round' => 2, 'sort_dir' => 'asc' ],
-        'accel_0_20'      => [ 'label' => '0-20 mph',      'suffix' => 's',      'sortable' => true, 'key' => 'accel_0_20', 'round' => 2, 'sort_dir' => 'asc' ],
-        'brake_distance'  => [ 'label' => 'Braking',       'suffix' => 'ft',     'sortable' => true, 'key' => 'brake_distance', 'round' => 1, 'sort_dir' => 'asc' ],
-        'hill_climb'      => [ 'label' => 'Hill Climb',    'suffix' => '°',      'sortable' => true, 'key' => 'hill_climb', 'round' => 1 ],
+        'tested_speed'    => [ 'label' => 'Tested Speed',  'suffix' => 'mph',    'sortable' => true, 'key' => 'tested_speed',   'filterKey' => 'tested_speed',   'filterType' => 'range', 'round' => 1 ],
+        'tested_range'    => [ 'label' => 'Tested Range',  'suffix' => 'mi',     'sortable' => true, 'key' => 'tested_range',   'filterKey' => 'tested_range',   'filterType' => 'range', 'round' => 1 ],
+        'accel_0_15'      => [ 'label' => '0-15 mph',      'suffix' => 's',      'sortable' => true, 'key' => 'accel_0_15',     'filterKey' => 'accel_0_15',     'filterType' => 'range', 'round' => 2, 'sort_dir' => 'asc' ],
+        'accel_0_20'      => [ 'label' => '0-20 mph',      'suffix' => 's',      'sortable' => true, 'key' => 'accel_0_20',     'filterKey' => 'accel_0_20',     'filterType' => 'range', 'round' => 2, 'sort_dir' => 'asc' ],
+        'brake_distance'  => [ 'label' => 'Braking',       'suffix' => 'ft',     'sortable' => true, 'key' => 'brake_distance', 'filterKey' => 'brake_distance', 'filterType' => 'range', 'round' => 1, 'sort_dir' => 'asc' ],
+        'hill_climb'      => [ 'label' => 'Hill Climb',    'suffix' => '°',      'sortable' => true, 'key' => 'hill_climb',     'filterKey' => 'hill_climb',     'filterType' => 'range', 'round' => 1 ],
 
         // Motor.
-        'motor_power'     => [ 'label' => 'Motor',         'suffix' => 'W',      'sortable' => true, 'key' => 'motor_power' ],
-        'motor_peak'      => [ 'label' => 'Peak Power',    'suffix' => 'W',      'sortable' => true, 'key' => 'motor_peak' ],
-        'motor_position'  => [ 'label' => 'Motor Pos.',    'type' => 'text',     'sortable' => true, 'key' => 'motor_position' ],
+        'motor_power'     => [ 'label' => 'Motor',         'suffix' => 'W',      'sortable' => true, 'key' => 'motor_power',    'filterKey' => 'motor_power',    'filterType' => 'range' ],
+        'motor_peak'      => [ 'label' => 'Peak Power',    'suffix' => 'W',      'sortable' => true, 'key' => 'motor_peak',     'filterKey' => 'motor_peak',     'filterType' => 'range' ],
+        'motor_position'  => [ 'label' => 'Motor Pos.',    'type' => 'text',     'sortable' => true, 'key' => 'motor_position', 'filterKey' => 'motor_position', 'filterType' => 'set' ],
 
         // Battery.
-        'battery'         => [ 'label' => 'Battery',       'suffix' => 'Wh',     'sortable' => true, 'key' => 'battery' ],
-        'voltage'         => [ 'label' => 'Voltage',       'suffix' => 'V',      'sortable' => true, 'key' => 'voltage' ],
-        'amphours'        => [ 'label' => 'Amp Hours',     'suffix' => 'Ah',     'sortable' => true, 'key' => 'amphours', 'round' => 1 ],
-        'charging_time'   => [ 'label' => 'Charge Time',   'suffix' => 'hrs',    'sortable' => true, 'key' => 'charging_time', 'round' => 1, 'sort_dir' => 'asc' ],
+        'battery'         => [ 'label' => 'Battery',       'suffix' => 'Wh',     'sortable' => true, 'key' => 'battery',       'filterKey' => 'battery',       'filterType' => 'range' ],
+        'voltage'         => [ 'label' => 'Voltage',       'suffix' => 'V',      'sortable' => true, 'key' => 'voltage',       'filterKey' => 'voltage',       'filterType' => 'range' ],
+        'amphours'        => [ 'label' => 'Amp Hours',     'suffix' => 'Ah',     'sortable' => true, 'key' => 'amphours',      'filterKey' => 'amphours',      'filterType' => 'range', 'round' => 1 ],
+        'charging_time'   => [ 'label' => 'Charge Time',   'suffix' => 'hrs',    'sortable' => true, 'key' => 'charging_time', 'filterKey' => 'charging_time', 'filterType' => 'range', 'round' => 1, 'sort_dir' => 'asc' ],
 
         // Portability.
-        'weight'          => [ 'label' => 'Weight',        'suffix' => 'lbs',    'sortable' => true, 'key' => 'weight', 'sort_dir' => 'asc' ],
-        'foldable_handlebars' => [ 'label' => 'Foldable',  'type' => 'boolean',  'sortable' => true, 'key' => 'foldable_handlebars' ],
+        'weight'          => [ 'label' => 'Weight',        'suffix' => 'lbs',    'sortable' => true, 'key' => 'weight',             'filterKey' => 'weight',             'filterType' => 'range', 'sort_dir' => 'asc' ],
+        'foldable_handlebars' => [ 'label' => 'Foldable',  'type' => 'boolean',  'sortable' => true, 'key' => 'foldable_handlebars','filterKey' => 'foldable_handlebars','filterType' => 'tristate' ],
 
         // Rider fit.
-        'weight_limit'    => [ 'label' => 'Max Load',      'suffix' => 'lbs',    'sortable' => true, 'key' => 'weight_limit' ],
-        'deck_width'      => [ 'label' => 'Deck Width',    'suffix' => '"',      'sortable' => true, 'key' => 'deck_width', 'round' => 1 ],
+        'weight_limit'    => [ 'label' => 'Max Load',      'suffix' => 'lbs',    'sortable' => true, 'key' => 'weight_limit',    'filterKey' => 'weight_limit',    'filterType' => 'range' ],
+        'rider_height'    => [ 'label' => 'Rider Height',  'suffix' => '"',      'sortable' => true, 'key' => 'rider_height',    'filterKey' => 'rider_height',    'filterType' => 'range' ],
+        'deck_width'      => [ 'label' => 'Deck Width',    'suffix' => '"',      'sortable' => true, 'key' => 'deck_width',      'filterKey' => 'deck_width',      'filterType' => 'range', 'round' => 1 ],
         'deck_length'     => [ 'label' => 'Deck Length',   'suffix' => '"',      'sortable' => true, 'key' => 'deck_length', 'round' => 1 ],
-        'handlebar_width' => [ 'label' => 'Bar Width',     'suffix' => '"',      'sortable' => true, 'key' => 'handlebar_width', 'round' => 1 ],
-        'ground_clearance'=> [ 'label' => 'Clearance',     'suffix' => '"',      'sortable' => true, 'key' => 'ground_clearance', 'round' => 1 ],
+        'handlebar_width' => [ 'label' => 'Bar Width',     'suffix' => '"',      'sortable' => true, 'key' => 'handlebar_width', 'filterKey' => 'handlebar_width', 'filterType' => 'range', 'round' => 1 ],
+        'ground_clearance'=> [ 'label' => 'Clearance',     'suffix' => '"',      'sortable' => true, 'key' => 'ground_clearance','filterKey' => 'ground_clearance','filterType' => 'range', 'round' => 1 ],
 
         // Wheels & Tires.
-        'tire_size'       => [ 'label' => 'Tire Size',     'suffix' => '"',      'sortable' => true, 'key' => 'tire_size' ],
-        'tire_width'      => [ 'label' => 'Tire Width',    'suffix' => '"',      'sortable' => true, 'key' => 'tire_width', 'round' => 1 ],
-        'tire_type'       => [ 'label' => 'Tire Type',     'type' => 'text',     'sortable' => true, 'key' => 'tire_type' ],
-        'self_healing_tires' => [ 'label' => 'Self-Healing', 'type' => 'boolean', 'sortable' => true, 'key' => 'self_healing_tires' ],
+        'tire_size'       => [ 'label' => 'Tire Size',     'suffix' => '"',      'sortable' => true, 'key' => 'tire_size',        'filterKey' => 'tire_size',        'filterType' => 'range' ],
+        'tire_width'      => [ 'label' => 'Tire Width',    'suffix' => '"',      'sortable' => true, 'key' => 'tire_width',       'filterKey' => 'tire_width',       'filterType' => 'range', 'round' => 1 ],
+        'tire_type'       => [ 'label' => 'Tire Type',     'type' => 'text',     'sortable' => true, 'key' => 'tire_type',        'filterKey' => 'tire_type',        'filterType' => 'set' ],
+        'self_healing_tires' => [ 'label' => 'Self-Healing', 'type' => 'boolean', 'sortable' => true, 'key' => 'self_healing_tires','filterKey' => 'self_healing_tires','filterType' => 'tristate' ],
 
         // Brakes.
-        'brake_type'      => [ 'label' => 'Brake Type',    'type' => 'text',     'sortable' => true, 'key' => 'brake_type' ],
-        'regenerative_braking' => [ 'label' => 'Regen',    'type' => 'boolean',  'sortable' => true, 'key' => 'regenerative_braking' ],
+        'brake_type'      => [ 'label' => 'Brake Type',    'type' => 'text',     'sortable' => true, 'key' => 'brake_type',         'filterKey' => 'brake_type',         'filterType' => 'set' ],
+        'regenerative_braking' => [ 'label' => 'Regen',    'type' => 'boolean',  'sortable' => true, 'key' => 'regenerative_braking','filterKey' => 'regenerative_braking','filterType' => 'tristate' ],
 
         // Suspension.
-        'suspension_type' => [ 'label' => 'Suspension',    'type' => 'array',    'sortable' => false, 'key' => 'suspension_type' ],
-        'suspension_adjustable' => [ 'label' => 'Adjustable', 'type' => 'boolean', 'sortable' => true, 'key' => 'suspension_adjustable' ],
+        'suspension_type' => [ 'label' => 'Suspension',    'type' => 'array',    'sortable' => false, 'key' => 'suspension_type',      'filterKey' => 'suspension_type',      'filterType' => 'set' ],
+        'suspension_adjustable' => [ 'label' => 'Adjustable', 'type' => 'boolean', 'sortable' => true, 'key' => 'suspension_adjustable','filterKey' => 'suspension_adjustable','filterType' => 'tristate' ],
 
         // Durability.
-        'terrain'         => [ 'label' => 'Terrain',       'type' => 'text',     'sortable' => true, 'key' => 'terrain' ],
-        'ip_rating'       => [ 'label' => 'IP Rating',     'type' => 'text',     'sortable' => true, 'key' => 'ip_rating' ],
+        'terrain'         => [ 'label' => 'Terrain',       'type' => 'text',     'sortable' => true, 'key' => 'terrain',   'filterKey' => 'terrain',   'filterType' => 'set' ],
+        'ip_rating'       => [ 'label' => 'IP Rating',     'type' => 'text',     'sortable' => true, 'key' => 'ip_rating', 'filterKey' => 'ip_rating', 'filterType' => 'set' ],
 
         // Features.
-        'throttle_type'   => [ 'label' => 'Throttle',      'type' => 'text',     'sortable' => true, 'key' => 'throttle_type' ],
-        'has_lights'      => [ 'label' => 'Lights',        'type' => 'boolean',  'sortable' => true, 'key' => 'has_lights' ],
-        'turn_signals'    => [ 'label' => 'Turn Signals',  'type' => 'boolean',  'sortable' => true, 'key' => 'turn_signals' ],
+        'throttle_type'   => [ 'label' => 'Throttle',      'type' => 'text',     'sortable' => true, 'key' => 'throttle_type', 'filterKey' => 'throttle_type', 'filterType' => 'set' ],
+        'features'        => [ 'label' => 'Features',      'type' => 'array',    'sortable' => false,'key' => 'features',      'filterKey' => 'features',      'filterType' => 'set' ],
+        'has_lights'      => [ 'label' => 'Lights',        'type' => 'boolean',  'sortable' => true, 'key' => 'has_lights',    'filterKey' => 'has_lights',    'filterType' => 'tristate' ],
+        'turn_signals'    => [ 'label' => 'Turn Signals',  'type' => 'boolean',  'sortable' => true, 'key' => 'turn_signals',  'filterKey' => 'turn_signals',  'filterType' => 'tristate' ],
 
         // Value metrics.
-        'price_per_lb'    => [ 'label' => '$/lb',          'prefix' => '$', 'suffix' => '/lb',  'sortable' => true, 'key' => 'price_per_lb', 'round' => 2, 'sort_dir' => 'asc' ],
-        'price_per_mph'   => [ 'label' => '$/mph',         'prefix' => '$', 'suffix' => '/mph', 'sortable' => true, 'key' => 'price_per_mph', 'round' => 0, 'sort_dir' => 'asc' ],
-        'price_per_mile'  => [ 'label' => '$/mi',          'prefix' => '$', 'suffix' => '/mi',  'sortable' => true, 'key' => 'price_per_mile', 'round' => 0, 'sort_dir' => 'asc' ],
-        'price_per_wh'    => [ 'label' => '$/Wh',          'prefix' => '$', 'suffix' => '/Wh',  'sortable' => true, 'key' => 'price_per_wh', 'round' => 2, 'sort_dir' => 'asc' ],
-        'speed_per_lb'    => [ 'label' => 'mph/lb',        'suffix' => 'mph/lb', 'sortable' => true, 'key' => 'speed_per_lb', 'round' => 2 ],
-        'range_per_lb'    => [ 'label' => 'mi/lb',         'suffix' => 'mi/lb',  'sortable' => true, 'key' => 'range_per_lb', 'round' => 2 ],
+        'price_per_lb'    => [ 'label' => '$/lb',          'prefix' => '$', 'suffix' => '/lb',  'sortable' => true, 'key' => 'price_per_lb',  'filterKey' => 'price_per_lb',  'filterType' => 'range', 'round' => 2, 'sort_dir' => 'asc' ],
+        'price_per_mph'   => [ 'label' => '$/mph',         'prefix' => '$', 'suffix' => '/mph', 'sortable' => true, 'key' => 'price_per_mph', 'filterKey' => 'price_per_mph', 'filterType' => 'range', 'round' => 0, 'sort_dir' => 'asc' ],
+        'price_per_mile'  => [ 'label' => '$/mi',          'prefix' => '$', 'suffix' => '/mi',  'sortable' => true, 'key' => 'price_per_mile','filterKey' => 'price_per_mile','filterType' => 'range', 'round' => 0, 'sort_dir' => 'asc' ],
+        'price_per_wh'    => [ 'label' => '$/Wh',          'prefix' => '$', 'suffix' => '/Wh',  'sortable' => true, 'key' => 'price_per_wh',  'filterKey' => 'price_per_wh',  'filterType' => 'range', 'round' => 2, 'sort_dir' => 'asc' ],
+        'speed_per_lb'    => [ 'label' => 'mph/lb',        'suffix' => 'mph/lb', 'sortable' => true, 'key' => 'speed_per_lb',  'filterKey' => 'speed_per_lb',  'filterType' => 'range', 'round' => 2 ],
+        'range_per_lb'    => [ 'label' => 'mi/lb',         'suffix' => 'mi/lb',  'sortable' => true, 'key' => 'range_per_lb',  'filterKey' => 'range_per_lb',  'filterType' => 'range', 'round' => 2 ],
     ];
 
     // Default columns to show in table view (price first, then specs).
