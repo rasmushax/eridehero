@@ -157,6 +157,38 @@ class PriceFetcher {
     }
 
     /**
+     * Get the best price for a product filtered by currency.
+     *
+     * This is used by the tracker system to ensure validation uses the same
+     * currency that the frontend displayed to the user.
+     *
+     * @param int    $product_id The product post ID.
+     * @param string $geo        Geo target filter (e.g., 'US', 'EU', 'GB').
+     * @param string $currency   Currency code to filter by (e.g., 'USD', 'EUR', 'GBP').
+     * @return array<string, mixed>|null Best price data or null if none found.
+     */
+    public function get_best_price_for_currency(int $product_id, string $geo, string $currency): ?array {
+        $prices = $this->get_prices($product_id, $geo);
+
+        if (empty($prices)) {
+            return null;
+        }
+
+        // Filter to only prices matching the requested currency.
+        $filtered = array_filter(
+            $prices,
+            fn($price) => ($price['currency'] ?? 'USD') === $currency
+        );
+
+        if (empty($filtered)) {
+            return null;
+        }
+
+        // Return the best (first after filtering - already sorted by in-stock, then price).
+        return reset($filtered);
+    }
+
+    /**
      * Get prices for multiple products at once.
      *
      * @param array<int>  $product_ids Array of product post IDs.

@@ -38,7 +38,8 @@ let productInfo = {
     id: 0,
     name: '',
     image: '',
-    currentPrice: 0
+    currentPrice: 0,
+    currentCurrency: 'USD'
 };
 
 /**
@@ -139,8 +140,9 @@ async function loadPriceData() {
             }
         }
 
-        // Store current price for price alert modal
+        // Store current price and currency for price alert modal
         productInfo.currentPrice = bestOffer.price;
+        productInfo.currentCurrency = bestOffer.currency || currency;
 
         priceDataLoaded = true;
 
@@ -174,7 +176,8 @@ function setupButtons() {
                 productId: productInfo.id,
                 productName: productInfo.name,
                 productImage: productInfo.image,
-                currentPrice: productInfo.currentPrice
+                currentPrice: productInfo.currentPrice,
+                currency: productInfo.currentCurrency
             });
         });
     }

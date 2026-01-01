@@ -312,11 +312,79 @@ class UserTracker {
 
         $product_id = (int) $request->get_param('product_id');
         $tracker_type = $request->get_param('tracker_type');
-        $target_price = $request->get_param('target_price');
-        $price_drop = $request->get_param('price_drop');
+        $target_price_raw = $request->get_param('target_price');
+        $price_drop_raw = $request->get_param('price_drop');
         $enable_emails = (bool) $request->get_param('enable_emails');
         $geo = $request->get_param('geo') ?: 'US';
         $currency = $request->get_param('currency') ?: 'USD';
+
+        // Validate tracker_type.
+        $allowed_types = ['target_price', 'price_drop'];
+        if (!in_array($tracker_type, $allowed_types, true)) {
+            return new \WP_Error(
+                'invalid_tracker_type',
+                'Invalid tracker type. Must be "target_price" or "price_drop".',
+                ['status' => 400]
+            );
+        }
+
+        // Validate geo.
+        $allowed_geos = ['US', 'GB', 'EU', 'CA', 'AU'];
+        if (!in_array($geo, $allowed_geos, true)) {
+            return new \WP_Error(
+                'invalid_geo',
+                'Invalid region.',
+                ['status' => 400]
+            );
+        }
+
+        // Validate currency.
+        $allowed_currencies = ['USD', 'GBP', 'EUR', 'CAD', 'AUD'];
+        if (!in_array($currency, $allowed_currencies, true)) {
+            return new \WP_Error(
+                'invalid_currency',
+                'Invalid currency.',
+                ['status' => 400]
+            );
+        }
+
+        // Parse and validate price values.
+        $target_price = null;
+        $price_drop = null;
+
+        if ($tracker_type === 'target_price') {
+            if ($target_price_raw === null || $target_price_raw === '' || !is_numeric($target_price_raw)) {
+                return new \WP_Error(
+                    'invalid_target',
+                    'Target price must be a valid number.',
+                    ['status' => 400]
+                );
+            }
+            $target_price = (float) $target_price_raw;
+            if ($target_price <= 0) {
+                return new \WP_Error(
+                    'invalid_target',
+                    'Target price must be greater than zero.',
+                    ['status' => 400]
+                );
+            }
+        } else {
+            if ($price_drop_raw === null || $price_drop_raw === '' || !is_numeric($price_drop_raw)) {
+                return new \WP_Error(
+                    'invalid_drop',
+                    'Price drop must be a valid number.',
+                    ['status' => 400]
+                );
+            }
+            $price_drop = (float) $price_drop_raw;
+            if ($price_drop <= 0) {
+                return new \WP_Error(
+                    'invalid_drop',
+                    'Price drop must be greater than zero.',
+                    ['status' => 400]
+                );
+            }
+        }
 
         // Verify product exists.
         $product = get_post($product_id);
@@ -328,39 +396,45 @@ class UserTracker {
             );
         }
 
-        // Get current price for the user's geo.
+        // Get current price for the user's geo and currency.
+        // This ensures validation uses the same price the frontend displayed.
         $price_fetcher = $this->get_price_fetcher();
-        $best_price = $price_fetcher->get_best_price($product_id, $geo);
+        $best_price = $price_fetcher->get_best_price_for_currency($product_id, $geo, $currency);
 
         if (!$best_price) {
-            return new \WP_Error(
-                'no_price_data',
-                'This product has no price data available.',
-                ['status' => 400]
-            );
+            // Fall back to any price for validation, but this shouldn't happen
+            // if the frontend correctly passed the displayed price/currency.
+            $best_price = $price_fetcher->get_best_price($product_id, $geo);
+
+            if (!$best_price) {
+                return new \WP_Error(
+                    'no_price_data',
+                    'This product has no price data available for your region.',
+                    ['status' => 400]
+                );
+            }
         }
 
-        $current_price = $best_price['price'];
+        $current_price = (float) $best_price['price'];
 
-        // Validate target/drop values.
+        // Validate target/drop values against current price.
+        // (Basic format validation already done above.)
         if ($tracker_type === 'target_price') {
-            if (!$target_price || $target_price >= $current_price) {
+            if ($target_price >= $current_price) {
                 return new \WP_Error(
                     'invalid_target',
                     'Target price must be lower than the current price.',
                     ['status' => 400]
                 );
             }
-            $price_drop = null;
         } else {
-            if (!$price_drop || $price_drop >= $current_price) {
+            if ($price_drop >= $current_price) {
                 return new \WP_Error(
                     'invalid_drop',
                     'Price drop value must be lower than the current price.',
                     ['status' => 400]
                 );
             }
-            $target_price = null;
         }
 
         // Check if tracker already exists.
@@ -456,20 +530,59 @@ class UserTracker {
             );
         }
 
-        // Get current price for the tracker's geo.
+        // Get current price for the tracker's geo and currency.
         $tracker_geo = $tracker['geo'] ?? 'US';
+        $tracker_currency = $tracker['currency'] ?? 'USD';
         $price_fetcher = $this->get_price_fetcher();
-        $best_price = $price_fetcher->get_best_price((int) $tracker['product_id'], $tracker_geo);
+        $best_price = $price_fetcher->get_best_price_for_currency(
+            (int) $tracker['product_id'],
+            $tracker_geo,
+            $tracker_currency
+        );
+
+        // Fall back to any price if currency-specific not found.
+        if (!$best_price) {
+            $best_price = $price_fetcher->get_best_price((int) $tracker['product_id'], $tracker_geo);
+        }
+
         $current_price = $best_price ? $best_price['price'] : (float) $tracker['current_price'];
 
         // Build update data.
         $update_data = ['updated_at' => current_time('mysql', true)];
 
         $tracker_type = $request->get_param('tracker_type');
-        $target_price = $request->get_param('target_price');
-        $price_drop = $request->get_param('price_drop');
+        $target_price_raw = $request->get_param('target_price');
+        $price_drop_raw = $request->get_param('price_drop');
 
-        if ($tracker_type === 'target_price' && $target_price !== null) {
+        // Validate tracker_type if provided.
+        if ($tracker_type !== null) {
+            $allowed_types = ['target_price', 'price_drop'];
+            if (!in_array($tracker_type, $allowed_types, true)) {
+                return new \WP_Error(
+                    'invalid_tracker_type',
+                    'Invalid tracker type.',
+                    ['status' => 400]
+                );
+            }
+        }
+
+        if ($tracker_type === 'target_price' && $target_price_raw !== null) {
+            // Validate target_price is a valid positive number.
+            if ($target_price_raw === '' || !is_numeric($target_price_raw)) {
+                return new \WP_Error(
+                    'invalid_target',
+                    'Target price must be a valid number.',
+                    ['status' => 400]
+                );
+            }
+            $target_price = (float) $target_price_raw;
+            if ($target_price <= 0) {
+                return new \WP_Error(
+                    'invalid_target',
+                    'Target price must be greater than zero.',
+                    ['status' => 400]
+                );
+            }
             if ($target_price >= $current_price) {
                 return new \WP_Error(
                     'invalid_target',
@@ -479,7 +592,23 @@ class UserTracker {
             }
             $update_data['target_price'] = $target_price;
             $update_data['price_drop'] = null;
-        } elseif ($tracker_type === 'price_drop' && $price_drop !== null) {
+        } elseif ($tracker_type === 'price_drop' && $price_drop_raw !== null) {
+            // Validate price_drop is a valid positive number.
+            if ($price_drop_raw === '' || !is_numeric($price_drop_raw)) {
+                return new \WP_Error(
+                    'invalid_drop',
+                    'Price drop must be a valid number.',
+                    ['status' => 400]
+                );
+            }
+            $price_drop = (float) $price_drop_raw;
+            if ($price_drop <= 0) {
+                return new \WP_Error(
+                    'invalid_drop',
+                    'Price drop must be greater than zero.',
+                    ['status' => 400]
+                );
+            }
             if ($price_drop >= $current_price) {
                 return new \WP_Error(
                     'invalid_drop',

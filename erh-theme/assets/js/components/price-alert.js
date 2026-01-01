@@ -420,12 +420,29 @@ class PriceAlertModalManager {
         const errorEl = form.querySelector('[data-error]');
 
         // Get value based on alert type
-        const value = this.alertType === 'target'
+        const rawValue = this.alertType === 'target'
             ? formData.get('target_price')
             : formData.get('price_drop');
 
-        if (!value || parseFloat(value) <= 0) {
-            errorEl.textContent = 'Please enter a valid amount';
+        // Validate input: must be a positive number
+        const value = parseFloat(rawValue);
+        if (!rawValue || rawValue.trim() === '' || isNaN(value) || value <= 0) {
+            errorEl.textContent = 'Please enter a valid amount greater than zero.';
+            errorEl.hidden = false;
+            return;
+        }
+
+        // For target price: must be lower than current price
+        const currentPrice = this.productData.currentPrice;
+        if (this.alertType === 'target' && currentPrice && value >= currentPrice) {
+            errorEl.textContent = `Target price must be lower than ${this.productData.symbol}${Math.floor(currentPrice)}.`;
+            errorEl.hidden = false;
+            return;
+        }
+
+        // For price drop: must be lower than current price (can't drop more than 100%)
+        if (this.alertType === 'drop' && currentPrice && value >= currentPrice) {
+            errorEl.textContent = `Drop amount must be less than the current price.`;
             errorEl.hidden = false;
             return;
         }
@@ -447,8 +464,8 @@ class PriceAlertModalManager {
                 geo: this.userGeo?.geo || 'US',
                 currency: this.productData.currency || this.userGeo?.currency || 'USD',
                 ...(this.alertType === 'target'
-                    ? { target_price: parseFloat(value) }
-                    : { price_drop: parseFloat(value) }
+                    ? { target_price: value }
+                    : { price_drop: value }
                 )
             };
 

@@ -10,6 +10,7 @@
  */
 
 import { getUserGeo } from '../services/geo-price.js';
+import { PriceAlertModal } from './price-alert.js';
 
 // Configuration
 const CONFIG = {
@@ -101,6 +102,29 @@ export async function initDeals() {
         });
     });
 
+    // Price tracker button handler (event delegation)
+    grid.addEventListener('click', (e) => {
+        const trackBtn = e.target.closest('[data-track-price]');
+        if (!trackBtn) return;
+
+        e.preventDefault();
+        e.stopPropagation();
+
+        const productId = parseInt(trackBtn.dataset.trackPrice, 10);
+        const productName = trackBtn.dataset.productName || '';
+        const productImage = trackBtn.dataset.productImage || '';
+        const currentPrice = parseFloat(trackBtn.dataset.currentPrice) || 0;
+        const currency = trackBtn.dataset.currency || userGeo.currency;
+
+        PriceAlertModal.open({
+            productId,
+            productName,
+            productImage,
+            currentPrice,
+            currency
+        });
+    });
+
     // Carousel navigation
     if (leftArrow && rightArrow) {
         leftArrow.addEventListener('click', () => scrollCarousel(-1));
@@ -149,6 +173,7 @@ export async function initDeals() {
     function createDealCard(deal) {
         const clone = template.content.cloneNode(true);
         const card = clone.querySelector('.deal-card');
+        const trackBtn = clone.querySelector('[data-track-price]');
         const thumbnail = clone.querySelector('.deal-thumbnail');
         const priceContainer = clone.querySelector('[data-geo-price]');
         const priceValue = clone.querySelector('.deal-price-value');
@@ -159,6 +184,15 @@ export async function initDeals() {
         // Set data attributes
         card.dataset.category = deal.category;
         card.href = deal.url || '#';
+
+        // Set tracker button data
+        if (trackBtn) {
+            trackBtn.dataset.trackPrice = deal.id;
+            trackBtn.dataset.productName = deal.name;
+            trackBtn.dataset.productImage = deal.thumbnail || '';
+            trackBtn.dataset.currentPrice = deal.current_price || '';
+            trackBtn.dataset.currency = deal.currency || 'USD';
+        }
 
         if (priceContainer) {
             priceContainer.dataset.productId = deal.id;

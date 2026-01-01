@@ -61,6 +61,7 @@ class PriceIntelComponent {
         this.productName = '';
         this.productImage = '';
         this.currentPrice = 0;
+        this.currentCurrency = 'USD';
 
         this.init();
     }
@@ -129,7 +130,8 @@ class PriceIntelComponent {
                 productId: parseInt(this.productId, 10),
                 productName: this.productName,
                 productImage: this.productImage,
-                currentPrice: this.currentPrice
+                currentPrice: this.currentPrice,
+                currency: this.currentCurrency
             });
         });
     }
@@ -197,8 +199,9 @@ class PriceIntelComponent {
         const currency = best.currency || 'USD';
         const symbol = getCurrencySymbol(currency);
 
-        // Store current price for price alert modal
+        // Store current price and currency for price alert modal
         this.currentPrice = best.price || 0;
+        this.currentCurrency = currency;
 
         // Update best price header
         if (this.bestPriceEl) {

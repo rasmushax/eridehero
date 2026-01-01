@@ -9,6 +9,7 @@
 
 import { getUserGeo } from '../services/geo-price.js';
 import { FinderTable } from './finder-table.js';
+import { PriceAlertModal } from './price-alert.js';
 
 class Finder {
     constructor() {
@@ -395,6 +396,7 @@ class Finder {
         this.bindTristateEvents();
         this.bindSortEvents();
         this.bindComparisonEvents();
+        this.bindPriceAlertEvents();
         this.bindRangeSliders();
         this.bindHeightInputs();
         this.bindFilterItemToggles();
@@ -2345,6 +2347,47 @@ class Finder {
             // Bar is selected if it overlaps with current range
             const isSelected = bucketEnd > currentMin && bucketStart < currentMax;
             bar.classList.toggle('is-selected', isSelected);
+        });
+    }
+
+    // =========================================
+    // PRICE ALERTS
+    // =========================================
+
+    /**
+     * Bind price alert button events using event delegation.
+     * Opens the PriceAlertModal when user clicks the tracker button.
+     */
+    bindPriceAlertEvents() {
+        this.grid.addEventListener('click', (e) => {
+            const trackBtn = e.target.closest('[data-track-price]');
+            if (!trackBtn) return;
+
+            e.preventDefault();
+            e.stopPropagation();
+
+            const productId = parseInt(trackBtn.dataset.trackPrice, 10);
+            this.openPriceAlert(productId);
+        });
+    }
+
+    /**
+     * Open price alert modal for a product.
+     * @param {number} productId - Product ID
+     */
+    openPriceAlert(productId) {
+        const product = this.products.find(p => p.id === productId);
+        if (!product) {
+            console.warn('[Finder] Product not found for price alert:', productId);
+            return;
+        }
+
+        PriceAlertModal.open({
+            productId: product.id,
+            productName: product.name,
+            productImage: product.thumbnail,
+            currentPrice: product.price,
+            currency: this.userCurrency
         });
     }
 

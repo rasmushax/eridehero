@@ -90,6 +90,9 @@ $categories = [
 <!-- Deal Card Template (used by JavaScript) -->
 <template id="deal-card-template">
     <a href="" class="deal-card" data-category="">
+        <button type="button" class="deal-card-track" data-track-price aria-label="<?php esc_attr_e( 'Track price', 'erh' ); ?>">
+            <?php erh_the_icon( 'bell' ); ?>
+        </button>
         <div class="deal-card-img">
             <img src="" alt="" class="deal-thumbnail" loading="lazy">
             <div class="deal-price" data-geo-price data-product-id="">
