@@ -165,6 +165,13 @@ import './components/toast.js'; // Toast notifications (auto-init container)
         });
     }
 
+    // Compare Results page (H2H comparison)
+    if (document.querySelector('[data-compare-page]')) {
+        import('./components/compare-results.js').then(module => {
+            module.init();
+        });
+    }
+
     // Global keyboard handling
     document.addEventListener('keydown', (e) => {
         // Escape key closes menu/search

@@ -22,3 +22,4 @@ require_once ERH_THEME_DIR . '/inc/theme-setup.php';
 require_once ERH_THEME_DIR . '/inc/enqueue.php';
 require_once ERH_THEME_DIR . '/inc/template-functions.php';
 require_once ERH_THEME_DIR . '/inc/acf-options.php';
+require_once ERH_THEME_DIR . '/inc/compare-routes.php';

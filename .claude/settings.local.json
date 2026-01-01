@@ -5,7 +5,10 @@
       "Bash(find:*)",
       "Bash(ls:*)",
       "Bash(grep:*)",
-      "Bash(node --check:*)"
+      "Bash(node --check:*)",
+      "Bash(xargs basename:*)",
+      "WebFetch(domain:versus.com)",
+      "Bash(node --input-type=module -e:*)"
     ]
   }
 }

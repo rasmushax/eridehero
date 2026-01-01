@@ -62,6 +62,8 @@
 @import '_archive.css';
 @import '_finder.css';
 @import '_finder-table.css';
+@import '_compare-results.css';
+@import '_radar-chart.css';
 @import '_auth.css';
 @import '_contact.css';
 @import '_single-review.css';
