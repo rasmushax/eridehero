@@ -23,6 +23,7 @@ import {
     formatSpecValue,
     compareValues,
     calculatePercentDiff,
+    calculateAbsoluteCategoryScore,
 } from '../config/compare-config.js';
 
 // =============================================================================
@@ -662,99 +663,12 @@ function calculateProductScore(product) {
 }
 
 /**
- * Calculate category score.
+ * Calculate category score using absolute scoring.
+ * Returns fixed scores based on thresholds, not relative comparison.
  */
-function calculateCategoryScore(product, groupName) {
-    const group = SPEC_GROUPS[category]?.[groupName];
-    if (!group) return 0;
-
-    let score = 0, maxScore = 0;
-
-    for (const spec of group.specs || []) {
-        const weight = spec.scoreWeight || 0;
-        if (!weight) continue;
-
-        maxScore += weight * 100;
-        const val = getSpec(product, spec.key);
-        if (val == null || val === '') continue;
-
-        const allVals = products.map(p => getSpec(p, spec.key)).filter(v => v != null && v !== '');
-        if (!allVals.length) continue;
-
-        // Handle array formats (suspensionArray, featureArray, array)
-        if (spec.format === 'suspensionArray' || spec.format === 'featureArray' || spec.format === 'array') {
-            const count = Array.isArray(val) ? val.filter(v => v && v !== 'None').length : 0;
-            const allCounts = allVals.map(v => Array.isArray(v) ? v.filter(x => x && x !== 'None').length : 0);
-            const min = Math.min(...allCounts), max = Math.max(...allCounts);
-
-            if (max === min || max === 0) {
-                score += weight * 50;
-            } else {
-                const pos = (count - min) / (max - min);
-                score += pos * weight * 100;
-            }
-            continue;
-        }
-
-        // Handle ranked string formats
-        const rankingMap = {
-            'brakeType': ['None', 'Foot', 'Drum', 'Disc (Mechanical)', 'Disc (Hydraulic)'],
-            'displayType': ['None', 'Unknown', 'LED', 'LCD', 'OLED', 'TFT'],
-            'tire': ['Solid', 'Honeycomb', 'Semi-pneumatic', 'Pneumatic', 'Tubeless pneumatic'],
-            'ip': ['None', 'IPX4', 'IPX5', 'IP54', 'IP55', 'IP56', 'IP65', 'IP66', 'IP67', 'IP68'],
-        };
-
-        if (rankingMap[spec.format]) {
-            const rankings = rankingMap[spec.format];
-            const getIndex = (v) => {
-                const str = String(v).toLowerCase();
-                return rankings.findIndex(r => str.includes(r.toLowerCase()));
-            };
-
-            const idx = getIndex(val);
-            const allIdxs = allVals.map(getIndex).filter(i => i >= 0);
-
-            if (idx < 0 || allIdxs.length === 0) {
-                score += weight * 50;
-            } else {
-                const min = Math.min(...allIdxs), max = Math.max(...allIdxs);
-                if (max === min) {
-                    score += weight * 50;
-                } else {
-                    const pos = (idx - min) / (max - min);
-                    score += pos * weight * 100;
-                }
-            }
-            continue;
-        }
-
-        // Handle boolean format
-        if (spec.format === 'boolean') {
-            const boolVal = val === true || val === 'Yes' || val === 'yes' || val === 1;
-            score += boolVal ? weight * 100 : weight * 0;
-            continue;
-        }
-
-        // Numeric comparison
-        const num = parseFloat(val);
-        if (isNaN(num)) {
-            score += weight * 50;
-            continue;
-        }
-
-        const nums = allVals.map(v => parseFloat(v)).filter(n => !isNaN(n));
-        const min = Math.min(...nums), max = Math.max(...nums);
-
-        if (max === min) {
-            score += weight * 50;
-        } else {
-            let pos = (num - min) / (max - min);
-            if (spec.higherBetter === false) pos = 1 - pos;
-            score += pos * weight * 100;
-        }
-    }
-
-    return maxScore > 0 ? Math.round((score / maxScore) * 100) : 0;
+function calculateCategoryScore(product, categoryName) {
+    const specs = product.specs || product;
+    return calculateAbsoluteCategoryScore(specs, categoryName, category);
 }
 
 // =============================================================================
@@ -907,8 +821,8 @@ function removeProduct(id) {
  * Update URL with current products.
  */
 function updateUrl() {
-    const ids = products.map(p => p.id).join(',');
-    const url = `${window.location.pathname}?products=${ids}`;
+    const ids = products.map(p => p.id);
+    const url = buildCompareUrl(ids);
     window.history.replaceState({}, '', url);
 }
 

@@ -763,7 +763,8 @@ export async function initComparison(options = {}) {
         submitBtn.addEventListener('click', () => {
             if (selectedProducts.size >= 2) {
                 const ids = Array.from(selectedProducts.values()).map(d => d.id);
-                const url = `/compare?products=${ids.join(',')}`;
+                const base = window.ERideHero?.siteUrl || '';
+                const url = `${base}/compare/?products=${ids.join(',')}`;
                 window.location.href = url;
             }
         });

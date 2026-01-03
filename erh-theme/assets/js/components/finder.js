@@ -2427,7 +2427,8 @@ class Finder {
                 return;
             }
             const ids = Array.from(this.selectedProducts).join(',');
-            compareLink.href = `/compare/?ids=${ids}`;
+            const base = window.ERideHero?.siteUrl || '';
+            compareLink.href = `${base}/compare/?products=${ids}`;
         });
     }
 

@@ -255,16 +255,25 @@ export const SPEC_GROUPS = {
 /**
  * Category weights for overall scoring.
  * Each category's contribution to the total product score.
+ *
+ * E-scooter uses new consumer-friendly categories with absolute scoring:
+ * - Motor Performance: "How fast/powerful is it?"
+ * - Range & Battery: "How far can I go?"
+ * - Ride Quality: "Is it comfortable?"
+ * - Portability: "Can I carry it?" (not yet implemented)
+ * - Safety: "Is it safe?" (not yet implemented)
+ * - Features: "What extras does it have?" (not yet implemented)
+ * - Maintenance: "Is it hassle-free?" (not yet implemented)
  */
 export const CATEGORY_WEIGHTS = {
     escooter: {
-        'Performance': 0.25,
-        'Range & Battery': 0.25,
-        'Build & Portability': 0.20,
-        'Dimensions': 0.05,
-        'Wheels & Tires': 0.10,
-        'Brakes': 0.05,
+        'Motor Performance': 0.20,
+        'Range & Battery': 0.20,
+        'Ride Quality': 0.20,
+        'Portability': 0.15,
+        'Safety': 0.10,
         'Features': 0.10,
+        'Maintenance': 0.05,
     },
     ebike: {
         'Motor & Power': 0.25,
@@ -622,6 +631,555 @@ export function calculatePercentDiff(valueA, valueB, higherBetter = true) {
     return higherBetter ? diff : -diff;
 }
 
+// =============================================================================
+// Absolute Scoring System
+// =============================================================================
+//
+// Fixed/absolute scoring that doesn't change based on what's being compared.
+// Each category scores 0-100 based on fixed thresholds with logarithmic scaling.
+// Missing specs redistribute weight to available specs (no guessing).
+//
+// Each scoring function returns: { score: number|null, maxPossible: number }
+// - score: null means spec is missing/invalid, don't count it
+// - maxPossible: 0 means this factor is skipped entirely
+// =============================================================================
+
+/**
+ * Score motor power (nominal + peak average).
+ * Log scale: 400W floor, 8000W ceiling.
+ * @param {number|null} nominal - Nominal power in watts
+ * @param {number|null} peak - Peak power in watts
+ * @returns {{ score: number|null, maxPossible: number }}
+ */
+export function scorePower(nominal, peak) {
+    const values = [nominal, peak].filter(v => v != null && v > 0);
+    if (values.length === 0) return { score: null, maxPossible: 0 };
+
+    const avgPower = values.reduce((a, b) => a + b, 0) / values.length;
+
+    // Log scale: 45 * log2(watts/400) / log2(20)
+    // 400W → 0 pts, 8000W → 45 pts
+    const raw = 45 * Math.log2(avgPower / 400) / Math.log2(20);
+    const score = Math.max(0, Math.min(45, raw));
+
+    return { score, maxPossible: 45 };
+}
+
+/**
+ * Score motor voltage.
+ * Log scale: 18V floor, 84V ceiling.
+ * @param {number|null} voltage - Voltage in V
+ * @returns {{ score: number|null, maxPossible: number }}
+ */
+export function scoreMotorVoltage(voltage) {
+    if (voltage == null || voltage <= 0) return { score: null, maxPossible: 0 };
+
+    // Log scale: 20 * log2(voltage/18) / log2(4.67)
+    // 18V → 0 pts, 84V → 20 pts
+    const raw = 20 * Math.log2(voltage / 18) / Math.log2(4.67);
+    const score = Math.max(0, Math.min(20, raw));
+
+    return { score, maxPossible: 20 };
+}
+
+/**
+ * Score top speed.
+ * Log scale: 8 mph floor, 60 mph ceiling.
+ * @param {number|null} speedMph - Top speed in mph
+ * @returns {{ score: number|null, maxPossible: number }}
+ */
+export function scoreTopSpeed(speedMph) {
+    if (speedMph == null || speedMph <= 0) return { score: null, maxPossible: 0 };
+
+    // Log scale: 25 * log2(speed/8) / log2(7.5)
+    // 8 mph → 0 pts, 60 mph → 25 pts
+    const raw = 25 * Math.log2(speedMph / 8) / Math.log2(7.5);
+    const score = Math.max(0, Math.min(25, raw));
+
+    return { score, maxPossible: 25 };
+}
+
+/**
+ * Score dual motor bonus.
+ * @param {string|null} motorPosition - 'Dual', 'Front', 'Rear', etc.
+ * @returns {{ score: number|null, maxPossible: number }}
+ */
+export function scoreDualMotor(motorPosition) {
+    if (!motorPosition) return { score: null, maxPossible: 0 };
+
+    const pos = String(motorPosition).toLowerCase();
+    if (pos.includes('dual')) return { score: 10, maxPossible: 10 };
+    if (pos.includes('front') || pos.includes('rear')) return { score: 0, maxPossible: 10 };
+
+    return { score: null, maxPossible: 0 }; // Unknown position
+}
+
+/**
+ * Calculate Motor Performance category score (0-100).
+ * Factors: Power 45pts, Voltage 20pts, Top Speed 25pts, Dual Motor 10pts
+ * @param {Object} specs - Product specs object
+ * @returns {number|null} Score 0-100 or null if no data
+ */
+export function calculateMotorPerformance(specs) {
+    const factors = [
+        scorePower(
+            getNestedValue(specs, 'motor.power_nominal'),
+            getNestedValue(specs, 'motor.power_peak')
+        ),
+        scoreMotorVoltage(getNestedValue(specs, 'motor.voltage')),
+        scoreTopSpeed(specs.manufacturer_top_speed),
+        scoreDualMotor(getNestedValue(specs, 'motor.motor_position')),
+    ];
+
+    const available = factors.filter(f => f.score !== null);
+    if (available.length === 0) return null;
+
+    const totalScore = available.reduce((sum, f) => sum + f.score, 0);
+    const totalMaxPossible = available.reduce((sum, f) => sum + f.maxPossible, 0);
+
+    return Math.round((totalScore / totalMaxPossible) * 100);
+}
+
+// -----------------------------------------------------------------------------
+// Range & Battery Scoring
+// -----------------------------------------------------------------------------
+
+/**
+ * Score battery capacity.
+ * Log scale: 150Wh floor, 3000Wh ceiling.
+ * @param {number|null} wh - Battery capacity in Wh
+ * @returns {{ score: number|null, maxPossible: number }}
+ */
+export function scoreBatteryCapacity(wh) {
+    if (wh == null || wh <= 0) return { score: null, maxPossible: 0 };
+
+    // Log scale: 70 * log2(wh/150) / log2(20)
+    // 150Wh → 0 pts, 3000Wh → 70 pts
+    const raw = 70 * Math.log2(wh / 150) / Math.log2(20);
+    const score = Math.max(0, Math.min(70, raw));
+
+    return { score, maxPossible: 70 };
+}
+
+/**
+ * Score battery voltage.
+ * Log scale: 18V floor, 84V ceiling (same as motor voltage).
+ * @param {number|null} voltage - Battery voltage in V
+ * @returns {{ score: number|null, maxPossible: number }}
+ */
+export function scoreBatteryVoltage(voltage) {
+    if (voltage == null || voltage <= 0) return { score: null, maxPossible: 0 };
+
+    // Log scale: 20 * log2(voltage/18) / log2(4.67)
+    const raw = 20 * Math.log2(voltage / 18) / Math.log2(4.67);
+    const score = Math.max(0, Math.min(20, raw));
+
+    return { score, maxPossible: 20 };
+}
+
+/**
+ * Score charge time (lower is better).
+ * Inverse log scale: 2h excellent, 12h+ poor.
+ * @param {number|null} hours - Charge time in hours
+ * @returns {{ score: number|null, maxPossible: number }}
+ */
+export function scoreChargeTime(hours) {
+    if (hours == null || hours <= 0) return { score: null, maxPossible: 0 };
+
+    // Inverse log scale: 10 * (1 - log2(hours/1.5) / log2(10))
+    // 2h → 9 pts, 6h → 4 pts, 15h+ → 0 pts
+    const raw = 10 * (1 - Math.log2(hours / 1.5) / Math.log2(10));
+    const score = Math.max(0, Math.min(10, raw));
+
+    return { score, maxPossible: 10 };
+}
+
+/**
+ * Calculate Range & Battery category score (0-100).
+ * Factors: Battery Capacity 70pts, Voltage 20pts, Charge Time 10pts
+ * @param {Object} specs - Product specs object
+ * @returns {number|null} Score 0-100 or null if no data
+ */
+export function calculateRangeBattery(specs) {
+    const factors = [
+        scoreBatteryCapacity(getNestedValue(specs, 'battery.capacity')),
+        scoreBatteryVoltage(getNestedValue(specs, 'battery.voltage')),
+        scoreChargeTime(getNestedValue(specs, 'battery.charging_time')),
+    ];
+
+    const available = factors.filter(f => f.score !== null);
+    if (available.length === 0) return null;
+
+    const totalScore = available.reduce((sum, f) => sum + f.score, 0);
+    const totalMaxPossible = available.reduce((sum, f) => sum + f.maxPossible, 0);
+
+    return Math.round((totalScore / totalMaxPossible) * 100);
+}
+
+// -----------------------------------------------------------------------------
+// Ride Quality Scoring
+// -----------------------------------------------------------------------------
+
+/**
+ * Score suspension quality.
+ * Front/Rear: Hydraulic +15, Spring/Fork +10, Rubber +7
+ * Adjustable bonus: +10
+ * @param {Array|null} suspensionType - Array like ["Front spring", "Rear hydraulic"]
+ * @param {boolean|null} adjustable - Whether suspension is adjustable
+ * @returns {{ score: number, maxPossible: number }}
+ */
+export function scoreSuspension(suspensionType, adjustable) {
+    // Suspension is always scored, even if None (0 points)
+    if (!suspensionType || !Array.isArray(suspensionType) || suspensionType.length === 0) {
+        return { score: 0, maxPossible: 40 };
+    }
+
+    let score = 0;
+    const types = suspensionType.map(s => String(s).toLowerCase());
+
+    // Check for "None" only
+    if (types.every(t => t === 'none' || t === '')) {
+        return { score: 0, maxPossible: 40 };
+    }
+
+    // Front suspension scoring
+    const frontHydraulic = types.some(t => t.includes('front') && t.includes('hydraulic'));
+    const frontSpring = types.some(t => t.includes('front') && (t.includes('spring') || t.includes('fork')));
+    const frontRubber = types.some(t => t.includes('front') && t.includes('rubber'));
+
+    if (frontHydraulic) score += 15;
+    else if (frontSpring) score += 10;
+    else if (frontRubber) score += 7;
+
+    // Rear suspension scoring
+    const rearHydraulic = types.some(t => t.includes('rear') && t.includes('hydraulic'));
+    const rearSpring = types.some(t => t.includes('rear') && (t.includes('spring') || t.includes('fork')));
+    const rearRubber = types.some(t => t.includes('rear') && t.includes('rubber'));
+
+    if (rearHydraulic) score += 15;
+    else if (rearSpring) score += 10;
+    else if (rearRubber) score += 7;
+
+    // Handle "Dual" entries (affects both front and rear)
+    const dualHydraulic = types.some(t => t.includes('dual') && t.includes('hydraulic'));
+    const dualSpring = types.some(t => t.includes('dual') && (t.includes('spring') || t.includes('fork')));
+    const dualRubber = types.some(t => t.includes('dual') && t.includes('rubber'));
+
+    if (dualHydraulic) score = Math.max(score, 30);
+    else if (dualSpring) score = Math.max(score, 20);
+    else if (dualRubber) score = Math.max(score, 14);
+
+    // Adjustable bonus
+    if (adjustable === true) score += 10;
+
+    return { score: Math.min(40, score), maxPossible: 40 };
+}
+
+/**
+ * Score tire type for comfort.
+ * Pneumatic: 20pts, Mixed/Semi: 10pts, Solid/Honeycomb: 0pts
+ * Tubeless bonus: +5pts (only if pneumatic)
+ * @param {string|null} tireType - 'Pneumatic', 'Solid', etc.
+ * @param {string|null} pneumaticType - 'Tubeless', 'Tube', etc.
+ * @returns {{ score: number, maxPossible: number }}
+ */
+export function scoreTireType(tireType, pneumaticType) {
+    let score = 0;
+
+    const type = String(tireType || '').toLowerCase();
+
+    if (type.includes('pneumatic') && !type.includes('semi')) {
+        score = 20; // Full pneumatic
+    } else if (type.includes('mixed') || type.includes('semi')) {
+        score = 10; // Mixed or semi-pneumatic
+    } else if (type.includes('solid') || type.includes('honeycomb')) {
+        score = 0; // Solid/honeycomb = no comfort
+    }
+
+    // Tubeless bonus (only if pneumatic)
+    if (score >= 20) {
+        const pType = String(pneumaticType || '').toLowerCase();
+        if (pType.includes('tubeless')) {
+            score += 5;
+        }
+    }
+
+    return { score: Math.min(25, score), maxPossible: 25 };
+}
+
+/**
+ * Score tire size for comfort.
+ * 6" → 0pts, 8" → 6pts, 10" → 10pts, 12"+ → 15pts
+ * @param {number|null} frontSize - Front tire size in inches
+ * @param {number|null} rearSize - Rear tire size in inches
+ * @returns {{ score: number|null, maxPossible: number }}
+ */
+export function scoreTireSize(frontSize, rearSize) {
+    const sizes = [frontSize, rearSize].filter(s => s != null && s > 0);
+    if (sizes.length === 0) return { score: null, maxPossible: 0 };
+
+    const avgSize = sizes.reduce((a, b) => a + b, 0) / sizes.length;
+
+    let score;
+    if (avgSize <= 6) {
+        score = 0;
+    } else if (avgSize <= 8) {
+        score = 3 + (avgSize - 6) * 1.5; // 6-8" = 3-6 pts
+    } else if (avgSize <= 10) {
+        score = 6 + (avgSize - 8) * 2; // 8-10" = 6-10 pts
+    } else {
+        score = 10 + (avgSize - 10) * 2.5; // 10"+ = 10-15 pts
+    }
+
+    return { score: Math.min(15, Math.max(0, score)), maxPossible: 15 };
+}
+
+/**
+ * Score deck and handlebar dimensions.
+ * Deck length: 15-22" scale
+ * Deck width: 5-8" scale
+ * Handlebar width: 18-24" scale
+ * @param {number|null} deckLength - Deck length in inches
+ * @param {number|null} deckWidth - Deck width in inches
+ * @param {number|null} handlebarWidth - Handlebar width in inches
+ * @returns {{ score: number|null, maxPossible: number }}
+ */
+export function scoreDeckAndHandlebar(deckLength, deckWidth, handlebarWidth) {
+    const factors = [];
+
+    // Deck length: 15" = 0pts, 22"+ = 4pts
+    if (deckLength != null && deckLength > 0) {
+        const deckLengthScore = Math.min(4, Math.max(0, (deckLength - 14) / 2));
+        factors.push({ score: deckLengthScore, max: 4 });
+    }
+
+    // Deck width: 5" = 0pts, 8"+ = 3pts
+    if (deckWidth != null && deckWidth > 0) {
+        const deckWidthScore = Math.min(3, Math.max(0, (deckWidth - 4) / 1.5));
+        factors.push({ score: deckWidthScore, max: 3 });
+    }
+
+    // Handlebar width: 18" = 0pts, 24"+ = 3pts
+    if (handlebarWidth != null && handlebarWidth > 0) {
+        const hbScore = Math.min(3, Math.max(0, (handlebarWidth - 16) / 3));
+        factors.push({ score: hbScore, max: 3 });
+    }
+
+    if (factors.length === 0) return { score: null, maxPossible: 0 };
+
+    const totalScore = factors.reduce((sum, f) => sum + f.score, 0);
+    const totalMax = factors.reduce((sum, f) => sum + f.max, 0);
+
+    // Scale to 10 pts max
+    return { score: (totalScore / totalMax) * 10, maxPossible: 10 };
+}
+
+/**
+ * Score comfort extras.
+ * Steering damper: +5pts, Footrest: +5pts
+ * @param {Array|null} features - Features array
+ * @param {boolean|null} footrest - Whether has footrest
+ * @returns {{ score: number, maxPossible: number }}
+ */
+export function scoreComfortExtras(features, footrest) {
+    let score = 0;
+
+    // Steering damper (in features array)
+    if (Array.isArray(features)) {
+        const hasSteeringDamper = features.some(f =>
+            String(f).toLowerCase().includes('steering damper')
+        );
+        if (hasSteeringDamper) score += 5;
+    }
+
+    // Footrest
+    if (footrest === true) score += 5;
+
+    return { score, maxPossible: 10 };
+}
+
+/**
+ * Calculate Ride Quality category score (0-100).
+ * Factors: Suspension 40pts, Tire Type 25pts, Tire Size 15pts, Deck/Handlebar 10pts, Extras 10pts
+ * @param {Object} specs - Product specs object
+ * @returns {number|null} Score 0-100 or null if no data
+ */
+export function calculateRideQuality(specs) {
+    const factors = [
+        scoreSuspension(
+            getNestedValue(specs, 'suspension.type'),
+            getNestedValue(specs, 'suspension.adjustable')
+        ),
+        scoreTireType(
+            getNestedValue(specs, 'wheels.tire_type'),
+            getNestedValue(specs, 'wheels.pneumatic_type')
+        ),
+        scoreTireSize(
+            getNestedValue(specs, 'wheels.tire_size_front'),
+            getNestedValue(specs, 'wheels.tire_size_rear')
+        ),
+        scoreDeckAndHandlebar(
+            getNestedValue(specs, 'dimensions.deck_length'),
+            getNestedValue(specs, 'dimensions.deck_width'),
+            getNestedValue(specs, 'dimensions.handlebar_width')
+        ),
+        scoreComfortExtras(
+            specs.features,
+            getNestedValue(specs, 'other.footrest')
+        ),
+    ];
+
+    // Only filter out factors that returned null score
+    // Suspension, tire type, and comfort extras always return a score (even 0)
+    const available = factors.filter(f => f.score !== null && f.maxPossible > 0);
+    if (available.length === 0) return null;
+
+    const totalScore = available.reduce((sum, f) => sum + f.score, 0);
+    const totalMaxPossible = available.reduce((sum, f) => sum + f.maxPossible, 0);
+
+    return Math.round((totalScore / totalMaxPossible) * 100);
+}
+
+// -----------------------------------------------------------------------------
+// Portability Scoring
+// -----------------------------------------------------------------------------
+
+/**
+ * Score weight for portability (lighter is better).
+ * Log scale: 25 lbs floor (ultralight), 140 lbs ceiling (beast).
+ * @param {number|null} weight - Weight in lbs
+ * @returns {{ score: number|null, maxPossible: number }}
+ */
+export function scoreWeight(weight) {
+    if (weight == null || weight <= 0) return { score: null, maxPossible: 0 };
+
+    // Cap at floor/ceiling
+    if (weight <= 25) return { score: 60, maxPossible: 60 };
+    if (weight >= 140) return { score: 0, maxPossible: 60 };
+
+    // Log scale: 60 * (1 - log2(weight/25) / log2(5.6))
+    // 25 lbs → 60 pts, 140 lbs → 0 pts
+    const raw = 60 * (1 - Math.log2(weight / 25) / Math.log2(5.6));
+    const score = Math.max(0, Math.min(60, raw));
+
+    return { score, maxPossible: 60 };
+}
+
+/**
+ * Score folded volume (smaller is better).
+ * Log scale: 5000 cu in floor (super compact), 35000 cu in ceiling (huge).
+ * @param {number|null} length - Folded length in inches
+ * @param {number|null} width - Folded width in inches
+ * @param {number|null} height - Folded height in inches
+ * @returns {{ score: number, maxPossible: number }}
+ */
+export function scoreFoldedVolume(length, width, height) {
+    // All three dimensions required
+    if (length == null || width == null || height == null) {
+        // No folded dimensions = doesn't fold or missing data = 0 pts
+        return { score: 0, maxPossible: 35 };
+    }
+    if (length <= 0 || width <= 0 || height <= 0) {
+        return { score: 0, maxPossible: 35 };
+    }
+
+    const volume = length * width * height;
+
+    // Cap at floor/ceiling
+    if (volume <= 5000) return { score: 35, maxPossible: 35 };
+    if (volume >= 35000) return { score: 0, maxPossible: 35 };
+
+    // Log scale: 35 * (1 - log2(volume/5000) / log2(7))
+    // 5000 cu in → 35 pts, 35000 cu in → 0 pts
+    const raw = 35 * (1 - Math.log2(volume / 5000) / Math.log2(7));
+    const score = Math.max(0, Math.min(35, raw));
+
+    return { score, maxPossible: 35 };
+}
+
+/**
+ * Score quick-swap/removable battery bonus.
+ * @param {Array|null} features - Features array
+ * @returns {{ score: number, maxPossible: number }}
+ */
+export function scoreSwappableBattery(features) {
+    if (!Array.isArray(features)) return { score: 0, maxPossible: 5 };
+
+    const hasSwappable = features.some(f => {
+        const lower = String(f).toLowerCase();
+        return lower.includes('swap') ||
+               lower.includes('removable battery') ||
+               lower.includes('detachable battery');
+    });
+
+    return { score: hasSwappable ? 5 : 0, maxPossible: 5 };
+}
+
+/**
+ * Calculate Portability category score (0-100).
+ * Factors: Weight 60pts, Folded Volume 35pts, Swappable Battery 5pts
+ * @param {Object} specs - Product specs object
+ * @returns {number|null} Score 0-100 or null if no data
+ */
+export function calculatePortability(specs) {
+    const factors = [
+        scoreWeight(getNestedValue(specs, 'dimensions.weight')),
+        scoreFoldedVolume(
+            getNestedValue(specs, 'dimensions.folded_length'),
+            getNestedValue(specs, 'dimensions.folded_width'),
+            getNestedValue(specs, 'dimensions.folded_height')
+        ),
+        scoreSwappableBattery(specs.features),
+    ];
+
+    // Weight is required for portability score
+    const weightFactor = factors[0];
+    if (weightFactor.score === null) return null;
+
+    const totalScore = factors.reduce((sum, f) => sum + (f.score ?? 0), 0);
+    const totalMaxPossible = factors.reduce((sum, f) => sum + f.maxPossible, 0);
+
+    return Math.round((totalScore / totalMaxPossible) * 100);
+}
+
+// -----------------------------------------------------------------------------
+// Master Category Calculator
+// -----------------------------------------------------------------------------
+
+/**
+ * Calculate absolute score for a category.
+ * Uses fixed thresholds, not relative comparison.
+ * @param {Object} specs - Product specs object
+ * @param {string} categoryName - Category name from CATEGORY_WEIGHTS
+ * @param {string} productCategory - 'escooter', 'ebike', etc.
+ * @returns {number} Score 0-100 (returns 0 for unimplemented categories)
+ */
+export function calculateAbsoluteCategoryScore(specs, categoryName, productCategory = 'escooter') {
+    // Only escooter has absolute scoring implemented
+    if (productCategory === 'escooter') {
+        switch (categoryName) {
+            case 'Motor Performance':
+                return calculateMotorPerformance(specs) ?? 0;
+            case 'Range & Battery':
+                return calculateRangeBattery(specs) ?? 0;
+            case 'Ride Quality':
+                return calculateRideQuality(specs) ?? 0;
+            case 'Portability':
+                return calculatePortability(specs) ?? 0;
+            // Unimplemented categories return 0 for now
+            case 'Safety':
+            case 'Features':
+            case 'Maintenance':
+                return 0;
+            default:
+                return 0;
+        }
+    }
+
+    // Other product categories not yet implemented
+    return 0;
+}
+
 export default {
     SPEC_GROUPS,
     CATEGORY_WEIGHTS,
@@ -637,4 +1195,25 @@ export default {
     formatSpecValue,
     compareValues,
     calculatePercentDiff,
+    // Absolute scoring exports
+    scorePower,
+    scoreMotorVoltage,
+    scoreTopSpeed,
+    scoreDualMotor,
+    calculateMotorPerformance,
+    scoreBatteryCapacity,
+    scoreBatteryVoltage,
+    scoreChargeTime,
+    calculateRangeBattery,
+    scoreSuspension,
+    scoreTireType,
+    scoreTireSize,
+    scoreDeckAndHandlebar,
+    scoreComfortExtras,
+    calculateRideQuality,
+    scoreWeight,
+    scoreFoldedVolume,
+    scoreSwappableBattery,
+    calculatePortability,
+    calculateAbsoluteCategoryScore,
 };
