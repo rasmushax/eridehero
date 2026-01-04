@@ -166,14 +166,14 @@ export function initPeriodToggles(container, periodData) {
 /**
  * Auto-initialize all price charts on page
  * Looks for elements with [data-price-chart] attribute
- * Expects data to be in window.ERideHero.priceChartData[chartId]
+ * Expects data to be in window.erhData.priceChartData[chartId]
  */
 export function autoInit() {
     const charts = document.querySelectorAll('[data-price-chart]');
 
     charts.forEach(el => {
         const chartId = el.dataset.priceChart || 'default';
-        const chartData = window.ERideHero?.priceChartData?.[chartId];
+        const chartData = window.erhData?.priceChartData?.[chartId];
 
         if (chartData) {
             const chart = initPriceChart(el, chartData.current || chartData);

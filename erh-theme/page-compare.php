@@ -150,18 +150,22 @@ $page_title    = $has_products
     </div>
 </div>
 
+<?php
+get_footer();
+
+// Page-specific data must come AFTER get_footer() so it runs after wp_localize_script output.
+?>
 <script>
-window.ERideHero = window.ERideHero || {};
-window.ERideHero.siteUrl = <?php echo wp_json_encode( untrailingslashit( home_url() ) ); ?>;
-window.ERideHero.compareConfig = {
+// Extend erhData with page-specific config (erhData set by wp_localize_script in footer)
+window.erhData = window.erhData || {};
+window.erhData.compareConfig = {
     productIds: <?php echo wp_json_encode( array_map( 'intval', $product_ids ) ); ?>,
     category: <?php echo wp_json_encode( $category ); ?>,
     categoryName: <?php echo wp_json_encode( $category_name ); ?>,
     categorySlug: <?php echo wp_json_encode( $category_slug ); ?>
 };
 </script>
-
-<?php get_footer();
+<?php
 
 /**
  * Get product IDs from URL (SEO slugs or query string).

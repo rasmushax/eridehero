@@ -347,18 +347,20 @@ foreach ( $range_config as $key => $cfg ) {
 
 // Get unified filter config (single source of truth).
 $js_filter_config = erh_get_js_filter_config();
+
+get_footer();
+
+// Page-specific data must come AFTER get_footer() so it runs after wp_localize_script output.
 ?>
 <script>
-window.ERideHero = window.ERideHero || {};
-window.ERideHero.finderProducts = <?php echo wp_json_encode( $js_products ); ?>;
-window.ERideHero.finderConfig = {
+// Extend erhData with finder-specific config (erhData set by wp_localize_script in footer)
+window.erhData = window.erhData || {};
+window.erhData.finderProducts = <?php echo wp_json_encode( $js_products ); ?>;
+window.erhData.finderConfig = {
     productType: <?php echo wp_json_encode( $page_info['product_type'] ); ?>,
     shortName: <?php echo wp_json_encode( $page_info['short'] ); ?>,
     userGeo: <?php echo wp_json_encode( $user_geo ); ?>,
     ranges: <?php echo wp_json_encode( $js_ranges ); ?>
 };
-window.ERideHero.filterConfig = <?php echo wp_json_encode( $js_filter_config ); ?>;
+window.erhData.filterConfig = <?php echo wp_json_encode( $js_filter_config ); ?>;
 </script>
-
-<?php
-get_footer();

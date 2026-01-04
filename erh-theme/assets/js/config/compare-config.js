@@ -1143,6 +1143,555 @@ export function calculatePortability(specs) {
 }
 
 // -----------------------------------------------------------------------------
+// Maintenance Scoring
+// -----------------------------------------------------------------------------
+
+/**
+ * Score tire type for maintenance (less flats = better).
+ * Note: This is inverse of ride quality - solid tires score HIGH here.
+ * @param {string|null} tireType - 'Solid', 'Tubeless', 'Tubed', etc.
+ * @returns {{ score: number, maxPossible: number }}
+ */
+export function scoreMaintenanceTireType(tireType) {
+    const type = String(tireType || '').toLowerCase();
+
+    let score = 15; // Default to tubed (most common, worst maintenance)
+
+    if (type.includes('solid') || type.includes('honeycomb')) {
+        score = 45; // Zero flats ever
+    } else if (type.includes('mixed') || type.includes('semi')) {
+        score = 30; // Semi-pneumatic
+    } else if (type.includes('tubeless')) {
+        score = 25; // Rare flats, easy plug fix
+    } else if (type.includes('tubed') || type.includes('pneumatic')) {
+        score = 15; // Most flats, hardest to fix
+    }
+
+    return { score, maxPossible: 45 };
+}
+
+/**
+ * Score self-healing tires bonus.
+ * @param {boolean|null} selfHealing - Whether tires are self-healing
+ * @returns {{ score: number, maxPossible: number }}
+ */
+export function scoreSelfHealing(selfHealing) {
+    return { score: selfHealing === true ? 5 : 0, maxPossible: 5 };
+}
+
+/**
+ * Score brake type for maintenance.
+ * @param {string|null} brakeType - 'Drum', 'Disc (Hydraulic)', etc.
+ * @returns {number} Score 0-25
+ */
+function scoreSingleBrake(brakeType) {
+    const type = String(brakeType || '').toLowerCase();
+
+    if (type.includes('drum')) {
+        return 25; // Sealed, set and forget
+    } else if (type.includes('hydraulic') || type.includes('mechanical') || type.includes('disc')) {
+        return 15; // Both disc types need maintenance
+    } else if (type.includes('foot') || type === 'none' || type === '') {
+        return 10; // Minimal maintenance
+    }
+
+    return 10; // Unknown defaults to low
+}
+
+/**
+ * Score brake type for maintenance (average of front + rear).
+ * @param {string|null} frontBrake - Front brake type
+ * @param {string|null} rearBrake - Rear brake type
+ * @returns {{ score: number, maxPossible: number }}
+ */
+export function scoreMaintenanceBrakes(frontBrake, rearBrake) {
+    const frontScore = scoreSingleBrake(frontBrake);
+    const rearScore = scoreSingleBrake(rearBrake);
+
+    // Average front and rear
+    const avgScore = (frontScore + rearScore) / 2;
+
+    return { score: avgScore, maxPossible: 25 };
+}
+
+/**
+ * Score regenerative braking bonus.
+ * Reduces brake pad wear.
+ * @param {boolean|null} regenerative - Whether has regen braking
+ * @returns {{ score: number, maxPossible: number }}
+ */
+export function scoreRegenBraking(regenerative) {
+    return { score: regenerative === true ? 5 : 0, maxPossible: 5 };
+}
+
+/**
+ * Score IP rating for maintenance (water resistance).
+ * Water rating (second digit) matters most for e-scooters.
+ * @param {string|null} ipRating - IP rating like 'IP55', 'IPX5', etc.
+ * @returns {{ score: number, maxPossible: number }}
+ */
+export function scoreMaintenanceIP(ipRating) {
+    const rating = String(ipRating || '').toUpperCase();
+
+    // Extract water rating (second digit or digit after X)
+    // IP55 → 5, IPX5 → 5, IP67 → 7
+    let waterRating = 0;
+
+    if (rating.includes('7') || rating.includes('67')) {
+        waterRating = 7;
+    } else if (rating.includes('6') || rating.includes('66') || rating.includes('65')) {
+        waterRating = 6;
+    } else if (rating.includes('55') || rating === 'IPX5') {
+        waterRating = 5;
+    } else if (rating.includes('54') || rating === 'IPX4') {
+        waterRating = 4;
+    }
+
+    // Score based on water rating
+    let score;
+    switch (waterRating) {
+        case 7: score = 20; break;  // Immersion - bulletproof
+        case 6: score = 16; break;  // Powerful jets
+        case 5: score = 12; break;  // Water jets
+        case 4: score = 8; break;   // Splashing
+        default: score = 0;         // None/Unknown
+    }
+
+    return { score, maxPossible: 20 };
+}
+
+/**
+ * Calculate Maintenance category score (0-100).
+ * Factors: Tire Type 45pts, Self-Healing 5pts, Brakes 25pts, Regen 5pts, IP 20pts
+ * @param {Object} specs - Product specs object
+ * @returns {number|null} Score 0-100 or null if no data
+ */
+export function calculateMaintenance(specs) {
+    const factors = [
+        scoreMaintenanceTireType(getNestedValue(specs, 'wheels.tire_type')),
+        scoreSelfHealing(getNestedValue(specs, 'wheels.self_healing')),
+        scoreMaintenanceBrakes(
+            getNestedValue(specs, 'brakes.front'),
+            getNestedValue(specs, 'brakes.rear')
+        ),
+        scoreRegenBraking(getNestedValue(specs, 'brakes.regenerative')),
+        scoreMaintenanceIP(getNestedValue(specs, 'other.ip_rating')),
+    ];
+
+    const totalScore = factors.reduce((sum, f) => sum + f.score, 0);
+    const totalMaxPossible = factors.reduce((sum, f) => sum + f.maxPossible, 0);
+
+    if (totalMaxPossible === 0) return null;
+
+    return Math.round((totalScore / totalMaxPossible) * 100);
+}
+
+// -----------------------------------------------------------------------------
+// Safety Scoring
+// -----------------------------------------------------------------------------
+
+/**
+ * Determine brake type from string.
+ * @param {string|null} brakeStr - Brake type string
+ * @returns {string} 'hydraulic', 'mechanical', 'drum', 'foot', 'regen', or 'none'
+ */
+function parseBrakeType(brakeStr) {
+    const type = String(brakeStr || '').toLowerCase();
+
+    if (type.includes('hydraulic')) return 'hydraulic';
+    if (type.includes('mechanical') || (type.includes('disc') && !type.includes('hydraulic'))) return 'mechanical';
+    if (type.includes('drum')) return 'drum';
+    if (type.includes('foot')) return 'foot';
+    if (type.includes('regen')) return 'regen';
+    if (type === '' || type === 'none') return 'none';
+
+    return 'none';
+}
+
+/**
+ * Calculate the "safe speed" a brake configuration can handle.
+ * This is the speed at which the brakes are adequate for safe stopping.
+ *
+ * Key principles:
+ * - Must have a front physical brake (rear-only is dangerous)
+ * - Regen/foot alone is not sufficient
+ * - Dual motor regen gets a bonus (+3 mph)
+ *
+ * Safe speed ratings:
+ * - Dual hydraulic disc + regen: 90 mph (+ dual motor: 93 mph) - best possible, always safe
+ * - Dual hydraulic disc: 80 mph
+ * - Dual mechanical disc + regen: 40 mph
+ * - Front hydraulic + rear drum/mech + regen: 38 mph
+ * - Dual mechanical disc: 35 mph
+ * - Dual drum + regen: 28 mph
+ * - Front disc + rear regen only: 25 mph
+ * - Dual drum: 22 mph
+ * - Front drum + rear regen: 20 mph
+ * - Single front disc + regen: 18 mph
+ * - Single front drum + regen: 15 mph
+ * - Rear only / regen only / foot only: 0 mph (unsafe)
+ *
+ * @param {string|null} frontBrake - Front brake type
+ * @param {string|null} rearBrake - Rear brake type
+ * @param {boolean} hasRegen - Whether has regenerative braking
+ * @param {boolean} isDualMotor - Whether has dual motors (affects regen effectiveness)
+ * @returns {number} Safe speed in mph
+ */
+export function calculateBrakeSafeSpeed(frontBrake, rearBrake, hasRegen, isDualMotor) {
+    const front = parseBrakeType(frontBrake);
+    const rear = parseBrakeType(rearBrake);
+
+    // No front physical brake = unsafe
+    if (front === 'none' || front === 'foot' || front === 'regen') {
+        return 0;
+    }
+
+    let safeSpeed = 0;
+
+    // Dual hydraulic disc - best possible, safe at any speed
+    if (front === 'hydraulic' && rear === 'hydraulic') {
+        safeSpeed = hasRegen ? 90 : 80;
+    }
+    // Dual mechanical disc
+    else if (front === 'mechanical' && rear === 'mechanical') {
+        safeSpeed = hasRegen ? 40 : 35;
+    }
+    // Front hydraulic + rear drum/mechanical
+    else if (front === 'hydraulic' && (rear === 'drum' || rear === 'mechanical')) {
+        safeSpeed = hasRegen ? 38 : 32;
+    }
+    // Front mechanical + rear drum
+    else if (front === 'mechanical' && rear === 'drum') {
+        safeSpeed = hasRegen ? 35 : 28;
+    }
+    // Dual drum
+    else if (front === 'drum' && rear === 'drum') {
+        safeSpeed = hasRegen ? 28 : 22;
+    }
+    // Front hydraulic + rear regen/foot/none
+    else if (front === 'hydraulic' && (rear === 'regen' || rear === 'foot' || rear === 'none')) {
+        safeSpeed = hasRegen ? 28 : 22;
+    }
+    // Front mechanical + rear regen/foot/none
+    else if (front === 'mechanical' && (rear === 'regen' || rear === 'foot' || rear === 'none')) {
+        safeSpeed = hasRegen ? 25 : 20;
+    }
+    // Front drum + rear regen/foot/none
+    else if (front === 'drum' && (rear === 'regen' || rear === 'foot' || rear === 'none')) {
+        safeSpeed = hasRegen ? 20 : 15;
+    }
+    // Front drum + rear mechanical/hydraulic (odd config but handle it)
+    else if (front === 'drum' && (rear === 'mechanical' || rear === 'hydraulic')) {
+        safeSpeed = hasRegen ? 30 : 25;
+    }
+    // Fallback for any other front brake config
+    else {
+        safeSpeed = hasRegen ? 15 : 10;
+    }
+
+    // Dual motor regen bonus (+3 mph) - more effective braking with both wheels
+    if (hasRegen && isDualMotor) {
+        safeSpeed += 3;
+    }
+
+    return safeSpeed;
+}
+
+/**
+ * Score brake adequacy (50 pts max).
+ * Based on brake safe speed relative to scooter's top speed.
+ *
+ * Ratio scoring (brake safe speed / actual top speed):
+ * - ratio >= 1.3: 50 pts (overkill)
+ * - ratio >= 1.0: 45 pts (appropriate)
+ * - ratio >= 0.8: 30 pts (marginal)
+ * - ratio >= 0.6: 15 pts (inadequate)
+ * - ratio < 0.6:  5 pts (dangerous)
+ *
+ * @param {Object} specs - Product specs object
+ * @returns {{ score: number, maxPossible: number }}
+ */
+export function scoreBrakeAdequacy(specs) {
+    const topSpeed = specs.manufacturer_top_speed;
+    if (topSpeed == null || topSpeed <= 0) return { score: 0, maxPossible: 50 };
+
+    const frontBrake = getNestedValue(specs, 'brakes.front');
+    const rearBrake = getNestedValue(specs, 'brakes.rear');
+    const hasRegen = getNestedValue(specs, 'brakes.regenerative') === true;
+
+    const motorPosition = getNestedValue(specs, 'motor.motor_position');
+    const isDualMotor = motorPosition && String(motorPosition).toLowerCase().includes('dual');
+
+    const brakeSafeSpeed = calculateBrakeSafeSpeed(frontBrake, rearBrake, hasRegen, isDualMotor);
+
+    if (brakeSafeSpeed === 0) {
+        return { score: 5, maxPossible: 50 };
+    }
+
+    const ratio = brakeSafeSpeed / topSpeed;
+
+    let score;
+    if (ratio >= 1.3) score = 50;
+    else if (ratio >= 1.0) score = 45;
+    else if (ratio >= 0.8) score = 30;
+    else if (ratio >= 0.6) score = 15;
+    else score = 5;
+
+    return { score, maxPossible: 50 };
+}
+
+/**
+ * Score visibility/lights (25 pts max).
+ * - Front + Rear lights: 20 pts
+ * - Rear only: 10 pts (more critical for cars seeing you)
+ * - Front only: 8 pts
+ * - Neither: 0 pts
+ * - Turn signals bonus: +5 pts
+ *
+ * @param {Object} specs - Product specs object
+ * @returns {{ score: number, maxPossible: number }}
+ */
+export function scoreVisibility(specs) {
+    let score = 0;
+
+    // Check lights array
+    const lights = getNestedValue(specs, 'lighting.lights');
+    let hasFront = false;
+    let hasRear = false;
+
+    if (Array.isArray(lights)) {
+        const lightsLower = lights.map(l => String(l).toLowerCase());
+        hasFront = lightsLower.some(l => l.includes('front') || l.includes('headlight'));
+        hasRear = lightsLower.some(l => l.includes('rear') || l.includes('tail') || l.includes('brake'));
+    }
+
+    // Score based on light configuration
+    if (hasFront && hasRear) {
+        score = 20; // Full visibility
+    } else if (hasRear) {
+        score = 10; // Rear more critical (cars behind you)
+    } else if (hasFront) {
+        score = 8;  // Front only
+    } else {
+        score = 0;  // No lights = dangerous at night
+    }
+
+    // Turn signals bonus
+    const hasTurnSignals = getNestedValue(specs, 'lighting.turn_signals') === true;
+    if (hasTurnSignals) {
+        score += 5;
+    }
+
+    return { score: Math.min(25, score), maxPossible: 25 };
+}
+
+/**
+ * Score tire safety (15 pts max).
+ * Considers tire type and size relative to speed.
+ *
+ * Tire Type vs Speed (10 pts):
+ * - Pneumatic at any speed: 10 pts
+ * - Solid/honeycomb at ≤15 mph: 8 pts (acceptable for slow scooters)
+ * - Solid/honeycomb at 15-25 mph: 5 pts (marginal)
+ * - Solid/honeycomb at 25+ mph: 2 pts (dangerous - no grip/shock absorption)
+ *
+ * Tire Size Adequacy (5 pts):
+ * - Based on size relative to speed
+ * - Small tires at high speed = dangerous
+ *
+ * @param {Object} specs - Product specs object
+ * @returns {{ score: number, maxPossible: number }}
+ */
+export function scoreTireSafety(specs) {
+    const topSpeed = specs.manufacturer_top_speed || 20; // Default to moderate
+    const tireType = String(getNestedValue(specs, 'wheels.tire_type') || '').toLowerCase();
+    const frontSize = getNestedValue(specs, 'wheels.tire_size_front');
+    const rearSize = getNestedValue(specs, 'wheels.tire_size_rear');
+
+    let score = 0;
+
+    // Tire type scoring (10 pts max)
+    const isSolid = tireType.includes('solid') || tireType.includes('honeycomb');
+    const isPneumatic = tireType.includes('pneumatic') && !tireType.includes('semi');
+    const isSemiPneumatic = tireType.includes('semi') || tireType.includes('mixed');
+
+    if (isPneumatic) {
+        score += 10; // Pneumatic always safe
+    } else if (isSemiPneumatic) {
+        // Semi-pneumatic: okay up to ~30 mph
+        if (topSpeed <= 20) score += 8;
+        else if (topSpeed <= 30) score += 6;
+        else score += 4;
+    } else if (isSolid) {
+        // Solid tires: only acceptable at low speeds
+        if (topSpeed <= 15) score += 8;
+        else if (topSpeed <= 25) score += 5;
+        else score += 2; // Dangerous at high speed
+    } else {
+        // Unknown tire type - assume moderate
+        score += 5;
+    }
+
+    // Tire size adequacy (5 pts max)
+    const sizes = [frontSize, rearSize].filter(s => s != null && s > 0);
+    if (sizes.length > 0) {
+        const avgSize = sizes.reduce((a, b) => a + b, 0) / sizes.length;
+
+        // Size/speed ratio: want at least 0.4" per mph for stability
+        // 10" tires / 25 mph = 0.4 (good)
+        // 8" tires / 30 mph = 0.27 (marginal)
+        // 11" tires / 50 mph = 0.22 (marginal for speed)
+        const sizeRatio = avgSize / topSpeed;
+
+        if (sizeRatio >= 0.5) {
+            score += 5; // Excellent - big tires for speed
+        } else if (sizeRatio >= 0.35) {
+            score += 4; // Good
+        } else if (sizeRatio >= 0.25) {
+            score += 3; // Adequate
+        } else if (sizeRatio >= 0.18) {
+            score += 2; // Marginal
+        } else {
+            score += 1; // Small tires for speed
+        }
+    }
+
+    return { score: Math.min(15, score), maxPossible: 15 };
+}
+
+/**
+ * Score stability from dimensions (10 pts max).
+ * - Handlebar width: 5 pts (wider = more control)
+ * - Deck width: 3 pts (wider = more stable stance)
+ * - Deck length: 2 pts (longer = more stable)
+ *
+ * @param {Object} specs - Product specs object
+ * @returns {{ score: number, maxPossible: number }}
+ */
+export function scoreStability(specs) {
+    let score = 0;
+
+    // Handlebar width (5 pts max)
+    // 24"+ = 5 pts, 20-24" = 3 pts, <20" = 1 pt
+    const handlebarWidth = getNestedValue(specs, 'dimensions.handlebar_width');
+    if (handlebarWidth != null && handlebarWidth > 0) {
+        if (handlebarWidth >= 24) score += 5;
+        else if (handlebarWidth >= 21) score += 4;
+        else if (handlebarWidth >= 18) score += 3;
+        else if (handlebarWidth >= 15) score += 2;
+        else score += 1;
+    }
+
+    // Deck width (3 pts max)
+    // 7"+ = 3 pts, 5-7" = 2 pts, <5" = 1 pt
+    const deckWidth = getNestedValue(specs, 'dimensions.deck_width');
+    if (deckWidth != null && deckWidth > 0) {
+        if (deckWidth >= 7) score += 3;
+        else if (deckWidth >= 5.5) score += 2;
+        else score += 1;
+    }
+
+    // Deck length (2 pts max)
+    // 20"+ = 2 pts, 16-20" = 1 pt
+    const deckLength = getNestedValue(specs, 'dimensions.deck_length');
+    if (deckLength != null && deckLength > 0) {
+        if (deckLength >= 20) score += 2;
+        else if (deckLength >= 16) score += 1;
+    }
+
+    return { score: Math.min(10, score), maxPossible: 10 };
+}
+
+/**
+ * Calculate Safety category score (0-100).
+ * Combines brake adequacy, visibility, tire safety, and stability.
+ *
+ * Breakdown:
+ * - Brake Adequacy: 50 pts (relative to speed)
+ * - Visibility: 25 pts (lights + turn signals)
+ * - Tire Safety: 15 pts (type + size vs speed)
+ * - Stability: 10 pts (handlebar/deck dimensions)
+ *
+ * @param {Object} specs - Product specs object
+ * @returns {number|null} Score 0-100 or null if missing required data
+ */
+export function calculateSafety(specs) {
+    // Top speed is required for meaningful safety scoring
+    const topSpeed = specs.manufacturer_top_speed;
+    if (topSpeed == null || topSpeed <= 0) return null;
+
+    const factors = [
+        scoreBrakeAdequacy(specs),
+        scoreVisibility(specs),
+        scoreTireSafety(specs),
+        scoreStability(specs),
+    ];
+
+    const totalScore = factors.reduce((sum, f) => sum + f.score, 0);
+    const totalMaxPossible = factors.reduce((sum, f) => sum + f.maxPossible, 0);
+
+    return Math.round((totalScore / totalMaxPossible) * 100);
+}
+
+// -----------------------------------------------------------------------------
+// Features Scoring
+// -----------------------------------------------------------------------------
+
+/**
+ * Calculate Features category score (0-100).
+ * Counts features from the features array plus separate boolean fields.
+ * @param {Object} specs - Product specs object
+ * @returns {number} Score 0-100
+ */
+export function calculateFeatures(specs) {
+    let featureCount = 0;
+
+    // Count items in features array
+    const featuresArray = specs.features;
+    if (Array.isArray(featuresArray)) {
+        featureCount += featuresArray.length;
+    }
+
+    // Add separate boolean features (not typically in features array)
+    // Regenerative braking
+    if (getNestedValue(specs, 'brakes.regenerative') === true) {
+        featureCount += 1;
+    }
+
+    // Lights (front/rear/both)
+    const lights = getNestedValue(specs, 'lighting.lights');
+    if (Array.isArray(lights) && lights.length > 0) {
+        featureCount += 1;
+    }
+
+    // Kickstand
+    if (getNestedValue(specs, 'other.kickstand') === true) {
+        featureCount += 1;
+    }
+
+    // Footrest
+    if (getNestedValue(specs, 'other.footrest') === true) {
+        featureCount += 1;
+    }
+
+    // Adjustable suspension
+    if (getNestedValue(specs, 'suspension.adjustable') === true) {
+        featureCount += 1;
+    }
+
+    // Foldable handlebars
+    if (getNestedValue(specs, 'dimensions.foldable_handlebars') === true) {
+        featureCount += 1;
+    }
+
+    // Scale to 0-100 (17 features = 100 pts)
+    // Most well-equipped scooters have 12-18 features
+    const score = Math.min(100, Math.round((featureCount / 17) * 100));
+
+    return score;
+}
+
+// -----------------------------------------------------------------------------
 // Master Category Calculator
 // -----------------------------------------------------------------------------
 
@@ -1166,11 +1715,12 @@ export function calculateAbsoluteCategoryScore(specs, categoryName, productCateg
                 return calculateRideQuality(specs) ?? 0;
             case 'Portability':
                 return calculatePortability(specs) ?? 0;
-            // Unimplemented categories return 0 for now
-            case 'Safety':
-            case 'Features':
             case 'Maintenance':
-                return 0;
+                return calculateMaintenance(specs) ?? 0;
+            case 'Features':
+                return calculateFeatures(specs) ?? 0;
+            case 'Safety':
+                return calculateSafety(specs) ?? 0;
             default:
                 return 0;
         }
@@ -1215,5 +1765,18 @@ export default {
     scoreFoldedVolume,
     scoreSwappableBattery,
     calculatePortability,
+    scoreMaintenanceTireType,
+    scoreSelfHealing,
+    scoreMaintenanceBrakes,
+    scoreRegenBraking,
+    scoreMaintenanceIP,
+    calculateMaintenance,
+    calculateFeatures,
+    calculateBrakeSafeSpeed,
+    scoreBrakeAdequacy,
+    scoreVisibility,
+    scoreTireSafety,
+    scoreStability,
+    calculateSafety,
     calculateAbsoluteCategoryScore,
 };

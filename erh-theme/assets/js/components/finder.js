@@ -3,7 +3,7 @@
  * Handles product filtering, sorting, and comparison selection
  * Uses progressive loading to keep DOM light
  *
- * Architecture: Config is passed from PHP via window.ERideHero.filterConfig
+ * Architecture: Config is passed from PHP via window.erhData.filterConfig
  * This ensures a SINGLE SOURCE OF TRUTH - PHP generates all filter metadata
  */
 
@@ -27,9 +27,9 @@ class Finder {
         this.loadMoreBtn = this.container.querySelector('[data-load-more-btn]');
 
         // Get data from PHP (single source of truth)
-        this.products = window.ERideHero?.finderProducts || [];
-        this.pageConfig = window.ERideHero?.finderConfig || {};
-        this.filterConfig = window.ERideHero?.filterConfig || {};
+        this.products = window.erhData?.finderProducts || [];
+        this.pageConfig = window.erhData?.finderConfig || {};
+        this.filterConfig = window.erhData?.filterConfig || {};
 
         // Progressive loading settings
         this.displayLimit = 48;
@@ -444,7 +444,7 @@ class Finder {
      */
     processProductsForGeo() {
         // Get the raw products from PHP and extract geo-specific pricing
-        const rawProducts = window.ERideHero?.finderProducts || [];
+        const rawProducts = window.erhData?.finderProducts || [];
 
         this.products = rawProducts.map(product => {
             const pricing = product.pricing || {};
@@ -2427,7 +2427,7 @@ class Finder {
                 return;
             }
             const ids = Array.from(this.selectedProducts).join(',');
-            const base = window.ERideHero?.siteUrl || '';
+            const base = window.erhData?.siteUrl || '';
             compareLink.href = `${base}/compare/?products=${ids}`;
         });
     }

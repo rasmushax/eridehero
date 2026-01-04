@@ -852,6 +852,41 @@ module.exports = {
 - Event delegation where possible
 - Async/await for AJAX calls
 
+### JavaScript Data Injection (`erhData`)
+
+All PHP-to-JS data passes through `window.erhData`:
+
+**Base config** (set in `inc/enqueue.php` via `wp_localize_script`):
+```php
+wp_localize_script( 'erh-app', 'erhData', array(
+    'siteUrl'    => home_url(),
+    'ajaxUrl'    => admin_url( 'admin-ajax.php' ),
+    'restUrl'    => rest_url( 'erh/v1/' ),
+    'hftRestUrl' => rest_url( 'housefresh-tools/v1/' ),
+    'nonce'      => wp_create_nonce( 'wp_rest' ),
+    'themeUrl'   => ERH_THEME_URI,
+    'isLoggedIn' => is_user_logged_in(),
+) );
+```
+
+**Page-specific data** (extended AFTER `get_footer()` - critical ordering):
+```php
+get_footer();
+?>
+<script>
+window.erhData.finderProducts = <?php echo wp_json_encode( $products ); ?>;
+window.erhData.finderConfig = { productType: '...', ... };
+</script>
+```
+
+**Why after `get_footer()`?** `wp_localize_script` outputs `var erhData = {...}` during `wp_footer()`. Any script setting `erhData` properties BEFORE this gets overwritten. Page-specific scripts must run AFTER footer.
+
+**JS access pattern**:
+```javascript
+const siteUrl = window.erhData?.siteUrl || '';
+const products = window.erhData?.finderProducts || [];
+```
+
 ### CSS/Tailwind
 - Utility-first, custom CSS only when necessary
 - Custom CSS in `@layer components` or `@layer utilities`

@@ -83,6 +83,7 @@ function erh_enqueue_assets(): void {
 
     // Localize script with data the JS might need
     wp_localize_script( 'erh-app', 'erhData', array(
+        'siteUrl'    => home_url(),
         'ajaxUrl'    => admin_url( 'admin-ajax.php' ),
         'restUrl'    => rest_url( 'erh/v1/' ),
         'hftRestUrl' => rest_url( 'housefresh-tools/v1/' ),

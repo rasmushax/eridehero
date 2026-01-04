@@ -72,7 +72,7 @@ export async function init() {
     const page = document.querySelector(SELECTORS.page);
     if (!page) return;
 
-    const config = window.ERideHero?.compareConfig;
+    const config = window.erhData?.compareConfig;
     category = config?.category || page.dataset.category || 'escooter';
 
     // Empty state
@@ -237,7 +237,7 @@ async function loadProducts(ids) {
 async function loadAllProducts() {
     if (allProducts.length) return;
 
-    const baseUrl = window.ERideHero?.siteUrl || '';
+    const baseUrl = window.erhData?.siteUrl || '';
     const url = `${baseUrl}/wp-content/uploads/finder_${category}.json`;
 
     const res = await fetch(url);
@@ -858,7 +858,7 @@ function findWinners(values, spec) {
  * Build compare URL.
  */
 function buildCompareUrl(ids) {
-    const base = window.ERideHero?.siteUrl || '';
+    const base = window.erhData?.siteUrl || '';
     if (ids.length <= 4) {
         const slugs = ids.map(id => {
             const p = allProducts.find(x => x.id === id);

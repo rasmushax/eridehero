@@ -866,7 +866,7 @@ function initChartContainer(container) {
     if (container._erhChart) return;
 
     const chartId = container.dataset.erhChart || 'default';
-    const chartConfig = window.ERideHero?.chartData?.[chartId];
+    const chartConfig = window.erhData?.chartData?.[chartId];
 
     if (chartConfig) {
         const chart = createChart(container, chartConfig.options || {});
