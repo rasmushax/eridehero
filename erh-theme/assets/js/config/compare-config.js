@@ -20,88 +20,135 @@
  */
 export const SPEC_GROUPS = {
     escooter: {
-        'Performance': {
+        // =====================================================================
+        // Categories organized to match scoring system (7 categories + Value)
+        // Each category answers a consumer question and shows its score
+        // =====================================================================
+
+        'Motor Performance': {
             icon: 'zap',
+            question: 'How fast and powerful is it?',
+            showScore: true,
+            valueMetric: { key: 'price_per_tested_mph', fallback: 'price_per_mph', label: '$/mph', lowerBetter: true },
             specs: [
-                { key: 'manufacturer_top_speed', label: 'Top Speed (claimed)', unit: 'mph', higherBetter: true, scoreWeight: 0.3 },
-                { key: 'tested_top_speed', label: 'Tested Top Speed', unit: 'mph', higherBetter: true, scoreWeight: 0.2, tooltip: 'Our real-world test result' },
-                { key: 'acceleration_0_15_mph', label: '0-15 mph', unit: 's', higherBetter: false, scoreWeight: 0.2, tooltip: 'Time to reach 15 mph from standstill' },
-                { key: 'acceleration_0_20_mph', label: '0-20 mph', unit: 's', higherBetter: false, scoreWeight: 0.15 },
-                { key: 'motor.power_nominal', label: 'Motor Power', unit: 'W', higherBetter: true, scoreWeight: 0.1 },
-                { key: 'motor.power_peak', label: 'Peak Power', unit: 'W', higherBetter: true, scoreWeight: 0.05 },
-                { key: 'max_incline', label: 'Hill Grade', unit: '°', higherBetter: true },
+                { key: 'tested_top_speed', label: 'Tested Top Speed', unit: 'mph', higherBetter: true, tooltip: 'Our real-world test result' },
+                { key: 'manufacturer_top_speed', label: 'Claimed Top Speed', unit: 'mph', higherBetter: true },
+                { key: 'motor.power_nominal', label: 'Motor Power', unit: 'W', higherBetter: true },
+                { key: 'motor.power_peak', label: 'Peak Power', unit: 'W', higherBetter: true },
+                { key: 'motor.voltage', label: 'Voltage', unit: 'V', higherBetter: true },
+                { key: 'motor.motor_position', label: 'Motor Config', tooltip: 'Single rear, dual, etc.' },
+                { key: 'motor.motor_type', label: 'Motor Type' },
+                { key: 'hill_climbing', label: 'Tested Hill Climb', unit: '°', higherBetter: true, tooltip: 'Degrees achieved in our test' },
+                { key: 'max_incline', label: 'Claimed Hill Grade', unit: '°', higherBetter: true },
+                { key: 'fastest_0_15', label: '0-15 mph (tested)', unit: 's', higherBetter: false, tooltip: 'Best run from our tests' },
+                { key: 'acceleration_0_15_mph', label: '0-15 mph (claimed)', unit: 's', higherBetter: false },
+                { key: 'fastest_0_20', label: '0-20 mph (tested)', unit: 's', higherBetter: false },
+                { key: 'acceleration_0_20_mph', label: '0-20 mph (claimed)', unit: 's', higherBetter: false },
             ]
         },
+
         'Range & Battery': {
             icon: 'battery',
+            question: 'How far can I go?',
+            showScore: true,
+            valueMetric: { key: 'price_per_tested_mile', fallback: 'price_per_mile_range', label: '$/mile', lowerBetter: true },
             specs: [
-                { key: 'manufacturer_range', label: 'Claimed Range', unit: 'mi', higherBetter: true, scoreWeight: 0.2 },
-                { key: 'tested_range_regular', label: 'Tested Range', unit: 'mi', higherBetter: true, scoreWeight: 0.35, tooltip: 'Our real-world test at 165lb rider, flat terrain' },
-                { key: 'tested_range_fast', label: 'Tested Range (fast)', unit: 'mi', higherBetter: true, scoreWeight: 0.15, tooltip: 'Range at max speed setting' },
-                { key: 'battery.capacity', label: 'Battery', unit: 'Wh', higherBetter: true, scoreWeight: 0.2 },
-                { key: 'battery.voltage', label: 'Voltage', unit: 'V', higherBetter: true, scoreWeight: 0.05 },
-                { key: 'battery.charging_time', label: 'Charge Time', unit: 'h', higherBetter: false, scoreWeight: 0.05 },
+                { key: 'tested_range_regular', label: 'Tested Range', unit: 'mi', higherBetter: true, tooltip: 'Our real-world test at 165lb rider' },
+                { key: 'tested_range_fast', label: 'Tested Range (fast)', unit: 'mi', higherBetter: true, tooltip: 'Range at max speed setting' },
+                { key: 'tested_range_slow', label: 'Tested Range (eco)', unit: 'mi', higherBetter: true, tooltip: 'Range at eco/slow mode' },
+                { key: 'manufacturer_range', label: 'Claimed Range', unit: 'mi', higherBetter: true },
+                { key: 'battery.capacity', label: 'Battery', unit: 'Wh', higherBetter: true },
+                { key: 'battery.voltage', label: 'Battery Voltage', unit: 'V', higherBetter: true },
+                { key: 'battery.charging_time', label: 'Charge Time', unit: 'h', higherBetter: false },
+                { key: 'battery.battery_type', label: 'Battery Type' },
             ]
         },
-        'Build & Portability': {
+
+        'Ride Quality': {
+            icon: 'smile',
+            question: 'Is it comfortable?',
+            showScore: true,
+            specs: [
+                { key: 'suspension.type', label: 'Suspension', higherBetter: true, format: 'suspensionArray' },
+                { key: 'suspension.adjustable', label: 'Adjustable Suspension', format: 'boolean', higherBetter: true },
+                { key: 'wheels.tire_type', label: 'Tire Type', format: 'tire' },
+                { key: 'wheels.tire_size_front', label: 'Front Tire Size', unit: '"', higherBetter: true },
+                { key: 'wheels.tire_size_rear', label: 'Rear Tire Size', unit: '"', higherBetter: true },
+                { key: 'wheels.tire_width', label: 'Tire Width', unit: '"', higherBetter: true },
+                { key: 'dimensions.deck_length', label: 'Deck Length', unit: '"', higherBetter: true },
+                { key: 'dimensions.deck_width', label: 'Deck Width', unit: '"', higherBetter: true },
+                { key: 'dimensions.ground_clearance', label: 'Ground Clearance', unit: '"', higherBetter: true },
+                { key: 'dimensions.handlebar_height_min', label: 'Handlebar Height (min)', unit: '"' },
+                { key: 'dimensions.handlebar_height_max', label: 'Handlebar Height (max)', unit: '"' },
+                { key: 'dimensions.handlebar_width', label: 'Handlebar Width', unit: '"', higherBetter: true },
+                { key: 'other.footrest', label: 'Footrest', format: 'boolean', higherBetter: true },
+                { key: 'other.terrain', label: 'Terrain Type' },
+            ]
+        },
+
+        'Portability & Fit': {
             icon: 'box',
+            question: 'Does this scooter fit my life and body?',
+            showScore: true,
             specs: [
-                { key: 'dimensions.weight', label: 'Weight', unit: 'lbs', higherBetter: false, scoreWeight: 0.25 },
-                { key: 'dimensions.max_load', label: 'Max Load', unit: 'lbs', higherBetter: true, scoreWeight: 0.2 },
-                { key: 'other.ip_rating', label: 'IP Rating', higherBetter: true, scoreWeight: 0.15, format: 'ip' },
-                { key: 'suspension.type', label: 'Suspension', higherBetter: true, scoreWeight: 0.2, format: 'suspensionArray' },
-                { key: 'other.terrain', label: 'Terrain', scoreWeight: 0.1 },
-                { key: 'other.fold_location', label: 'Fold Location', scoreWeight: 0.05 },
-                { key: 'dimensions.folded_length', label: 'Folded Length', unit: '"', higherBetter: false, scoreWeight: 0.05 },
+                { key: 'dimensions.weight', label: 'Weight', unit: 'lbs', higherBetter: false },
+                { key: 'dimensions.max_load', label: 'Max Rider Weight', unit: 'lbs', higherBetter: true },
+                { key: 'dimensions.folded_length', label: 'Folded Length', unit: '"', higherBetter: false },
+                { key: 'dimensions.folded_width', label: 'Folded Width', unit: '"', higherBetter: false },
+                { key: 'dimensions.folded_height', label: 'Folded Height', unit: '"', higherBetter: false },
+                { key: 'dimensions.foldable_handlebars', label: 'Foldable Bars', format: 'boolean', higherBetter: true },
+                { key: 'other.fold_location', label: 'Fold Mechanism' },
             ]
         },
-        'Dimensions': {
-            icon: 'ruler',
-            collapsed: true,
+
+        'Safety': {
+            icon: 'shield',
+            question: 'Is it safe to ride?',
+            showScore: true,
             specs: [
-                { key: 'dimensions.deck_length', label: 'Deck Length', unit: '"', higherBetter: true, scoreWeight: 0.3 },
-                { key: 'dimensions.deck_width', label: 'Deck Width', unit: '"', higherBetter: true, scoreWeight: 0.3 },
-                { key: 'dimensions.ground_clearance', label: 'Ground Clearance', unit: '"', higherBetter: true, scoreWeight: 0.2 },
-                { key: 'dimensions.unfolded_length', label: 'Length', unit: '"' },
-                { key: 'dimensions.unfolded_width', label: 'Width', unit: '"' },
-                { key: 'dimensions.unfolded_height', label: 'Height', unit: '"' },
-                { key: 'dimensions.handlebar_height_min', label: 'Handlebar Height (min)', unit: '"', scoreWeight: 0.1 },
-                { key: 'dimensions.handlebar_height_max', label: 'Handlebar Height (max)', unit: '"', scoreWeight: 0.1 },
-                { key: 'dimensions.handlebar_width', label: 'Handlebar Width', unit: '"' },
+                { key: 'brakes.front', label: 'Front Brake', format: 'brakeType' },
+                { key: 'brakes.rear', label: 'Rear Brake', format: 'brakeType' },
+                { key: 'brakes.regenerative', label: 'Regen Braking', format: 'boolean', higherBetter: true },
+                { key: 'brake_distance', label: 'Tested Brake Distance', unit: 'ft', higherBetter: false, tooltip: 'Distance to stop from 15 mph' },
+                { key: 'lighting.lights', label: 'Lights', format: 'array' },
+                { key: 'lighting.turn_signals', label: 'Turn Signals', format: 'boolean', higherBetter: true },
             ]
         },
-        'Wheels & Tires': {
-            icon: 'circle',
-            collapsed: true,
-            specs: [
-                { key: 'wheels.tire_size_front', label: 'Front Tire Size', unit: '"', higherBetter: true, scoreWeight: 0.25 },
-                { key: 'wheels.tire_size_rear', label: 'Rear Tire Size', unit: '"', higherBetter: true, scoreWeight: 0.25 },
-                { key: 'wheels.tire_type', label: 'Tire Type', format: 'tire', scoreWeight: 0.2 },
-                { key: 'wheels.tire_width', label: 'Tire Width', unit: '"', higherBetter: true, scoreWeight: 0.15 },
-                { key: 'wheels.pneumatic_type', label: 'Pneumatic Type' },
-                { key: 'wheels.self_healing', label: 'Self-Healing Tires', format: 'boolean', higherBetter: true, scoreWeight: 0.15 },
-            ]
-        },
-        'Brakes': {
-            icon: 'octagon',
-            collapsed: true,
-            specs: [
-                { key: 'brakes.front', label: 'Front Brake', scoreWeight: 0.4, format: 'brakeType' },
-                { key: 'brakes.rear', label: 'Rear Brake', scoreWeight: 0.4, format: 'brakeType' },
-                { key: 'brakes.regenerative', label: 'Regenerative Braking', format: 'boolean', higherBetter: true, scoreWeight: 0.2 },
-            ]
-        },
+
         'Features': {
             icon: 'settings',
-            collapsed: true,
+            question: 'What extras does it have?',
+            showScore: true,
             specs: [
-                { key: 'other.display_type', label: 'Display', scoreWeight: 0.15, format: 'displayType' },
-                { key: 'features', label: 'Features', format: 'featureArray', scoreWeight: 0.35 },
-                { key: 'lighting.turn_signals', label: 'Turn Signals', format: 'boolean', higherBetter: true, scoreWeight: 0.15 },
-                { key: 'lighting.lights', label: 'Lights', format: 'array', scoreWeight: 0.1 },
-                { key: 'other.kickstand', label: 'Kickstand', format: 'boolean', higherBetter: true, scoreWeight: 0.1 },
-                { key: 'other.footrest', label: 'Footrest', format: 'boolean', higherBetter: true, scoreWeight: 0.05 },
-                { key: 'other.throttle_type', label: 'Throttle Type', scoreWeight: 0.1 },
+                { key: 'features', label: 'Features', format: 'featureArray' },
+                { key: 'other.display_type', label: 'Display', format: 'displayType' },
+                { key: 'other.throttle_type', label: 'Throttle' },
+                { key: 'other.kickstand', label: 'Kickstand', format: 'boolean', higherBetter: true },
+            ]
+        },
+
+        'Maintenance': {
+            icon: 'tool',
+            question: 'Is it hassle-free?',
+            showScore: true,
+            contextNote: 'Score also factors in brake type (see Safety)',
+            specs: [
+                { key: 'wheels.tire_type', label: 'Tire Type', format: 'tire', tooltip: 'Solid = no flats, Pneumatic = more comfort' },
+                { key: 'wheels.self_healing', label: 'Self-Healing Tires', format: 'boolean', higherBetter: true },
+                { key: 'other.ip_rating', label: 'IP Rating', format: 'ip', higherBetter: true, tooltip: 'Water/dust resistance' },
+            ]
+        },
+
+        'Value Analysis': {
+            icon: 'dollar-sign',
+            question: 'Am I getting good value?',
+            showScore: false,
+            isValueSection: true,
+            specs: [
+                { key: 'price_per_tested_mile', label: '$/Mile (tested)', lowerBetter: true, format: 'currency', tooltip: 'Cost per mile of tested range' },
+                { key: 'price_per_mile_range', label: '$/Mile (claimed)', lowerBetter: true, format: 'currency' },
+                { key: 'price_per_tested_mph', label: '$/MPH (tested)', lowerBetter: true, format: 'currency' },
+                { key: 'price_per_wh', label: '$/Wh', lowerBetter: true, format: 'currency', tooltip: 'Battery value' },
             ]
         },
     },
@@ -260,17 +307,17 @@ export const SPEC_GROUPS = {
  * - Motor Performance: "How fast/powerful is it?"
  * - Range & Battery: "How far can I go?"
  * - Ride Quality: "Is it comfortable?"
- * - Portability: "Can I carry it?" (not yet implemented)
- * - Safety: "Is it safe?" (not yet implemented)
- * - Features: "What extras does it have?" (not yet implemented)
- * - Maintenance: "Is it hassle-free?" (not yet implemented)
+ * - Portability & Fit: "Does it fit my life and body?"
+ * - Safety: "Is it safe?"
+ * - Features: "What extras does it have?"
+ * - Maintenance: "Is it hassle-free?"
  */
 export const CATEGORY_WEIGHTS = {
     escooter: {
         'Motor Performance': 0.20,
         'Range & Battery': 0.20,
         'Ride Quality': 0.20,
-        'Portability': 0.15,
+        'Portability & Fit': 0.15,
         'Safety': 0.10,
         'Features': 0.10,
         'Maintenance': 0.05,
@@ -1713,7 +1760,7 @@ export function calculateAbsoluteCategoryScore(specs, categoryName, productCateg
                 return calculateRangeBattery(specs) ?? 0;
             case 'Ride Quality':
                 return calculateRideQuality(specs) ?? 0;
-            case 'Portability':
+            case 'Portability & Fit':
                 return calculatePortability(specs) ?? 0;
             case 'Maintenance':
                 return calculateMaintenance(specs) ?? 0;

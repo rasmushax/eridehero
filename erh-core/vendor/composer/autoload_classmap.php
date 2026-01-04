@@ -41,6 +41,7 @@ return array(
     'ERH\\Pricing\\RetailerLogos' => $baseDir . '/includes/pricing/class-retailer-logos.php',
     'ERH\\Reviews\\ReviewHandler' => $baseDir . '/includes/reviews/class-review-handler.php',
     'ERH\\Reviews\\ReviewQuery' => $baseDir . '/includes/reviews/class-review-query.php',
+    'ERH\\Scoring\\ProductScorer' => $baseDir . '/includes/scoring/class-product-scorer.php',
     'ERH\\User\\AuthHandler' => $baseDir . '/includes/user/class-auth-handler.php',
     'ERH\\User\\OAuthFacebook' => $baseDir . '/includes/user/class-oauth-facebook.php',
     'ERH\\User\\OAuthGoogle' => $baseDir . '/includes/user/class-oauth-google.php',

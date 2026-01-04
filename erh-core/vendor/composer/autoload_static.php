@@ -42,6 +42,7 @@ class ComposerStaticInitb5e889746c5280811e87a72c161db6db
         'ERH\\Pricing\\RetailerLogos' => __DIR__ . '/../..' . '/includes/pricing/class-retailer-logos.php',
         'ERH\\Reviews\\ReviewHandler' => __DIR__ . '/../..' . '/includes/reviews/class-review-handler.php',
         'ERH\\Reviews\\ReviewQuery' => __DIR__ . '/../..' . '/includes/reviews/class-review-query.php',
+        'ERH\\Scoring\\ProductScorer' => __DIR__ . '/../..' . '/includes/scoring/class-product-scorer.php',
         'ERH\\User\\AuthHandler' => __DIR__ . '/../..' . '/includes/user/class-auth-handler.php',
         'ERH\\User\\OAuthFacebook' => __DIR__ . '/../..' . '/includes/user/class-oauth-facebook.php',
         'ERH\\User\\OAuthGoogle' => __DIR__ . '/../..' . '/includes/user/class-oauth-google.php',

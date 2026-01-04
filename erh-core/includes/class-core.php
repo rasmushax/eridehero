@@ -38,6 +38,7 @@ use ERH\Cron\ComparisonJsonJob;
 use ERH\Cron\FinderJsonJob;
 use ERH\Cron\NotificationJob;
 use ERH\Cron\YouTubeSyncJob;
+use ERH\Scoring\ProductScorer;
 use ERH\Admin\SettingsPage;
 use ERH\Migration\MigrationAdmin;
 use ERH\Api\RestPrices;
@@ -497,7 +498,8 @@ class Core {
                 $price_tracker_db,
                 $view_tracker,
                 $this->review_query,
-                $this->cron_manager
+                $this->cron_manager,
+                new ProductScorer()
             )
         );
 

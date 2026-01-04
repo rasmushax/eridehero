@@ -802,3 +802,174 @@
         flex-direction: column;
     }
 }
+
+/* ==========================================================================
+   Category Score Bars (Specs Section)
+   ========================================================================== */
+
+/* Header with icon, title, and question */
+.compare-spec-group-header-text {
+    display: flex;
+    align-items: center;
+    gap: var(--space-3);
+    flex: 1;
+    min-width: 0;
+}
+
+.compare-spec-group-icon {
+    flex-shrink: 0;
+    color: var(--color-primary);
+}
+
+.compare-spec-group-title {
+    font-size: var(--text-base);
+    font-weight: var(--font-semibold);
+    color: var(--color-dark);
+}
+
+.compare-spec-group-question {
+    font-size: var(--text-sm);
+    font-weight: var(--font-normal);
+    color: var(--color-muted);
+    margin-left: var(--space-2);
+}
+
+.compare-spec-group-chevron {
+    flex-shrink: 0;
+    color: var(--color-muted);
+    transition: transform var(--transition-fast);
+}
+
+.compare-spec-group.is-collapsed .compare-spec-group-chevron {
+    transform: rotate(-90deg);
+}
+
+/* Category Score Bars */
+.compare-category-scores {
+    display: flex;
+    flex-direction: column;
+    gap: var(--space-3);
+    padding: var(--space-5);
+    background: var(--color-background);
+    border-bottom: 1px solid var(--color-border);
+}
+
+.compare-category-score {
+    display: flex;
+    align-items: center;
+    gap: var(--space-4);
+}
+
+.compare-category-score-name {
+    flex: 0 0 140px;
+    font-size: var(--text-sm);
+    font-weight: var(--font-medium);
+    color: var(--color-dark);
+    white-space: nowrap;
+    overflow: hidden;
+    text-overflow: ellipsis;
+}
+
+.compare-category-score-bar {
+    flex: 1;
+    height: 8px;
+    background: var(--color-border);
+    border-radius: var(--radius-full);
+    overflow: hidden;
+}
+
+.compare-category-score-fill {
+    height: 100%;
+    background: var(--color-muted);
+    border-radius: var(--radius-full);
+    transition: width var(--transition-base);
+}
+
+.compare-category-score.is-winner .compare-category-score-fill {
+    background: var(--color-primary);
+}
+
+.compare-category-score-value {
+    flex: 0 0 36px;
+    font-size: var(--text-sm);
+    font-weight: var(--font-semibold);
+    color: var(--color-muted);
+    text-align: right;
+}
+
+.compare-category-score.is-winner .compare-category-score-value {
+    color: var(--color-primary);
+}
+
+/* Context Note (for categories like Maintenance) */
+.compare-category-note {
+    display: flex;
+    align-items: center;
+    gap: var(--space-2);
+    padding: var(--space-3) var(--space-5);
+    margin: 0;
+    font-size: var(--text-xs);
+    color: var(--color-muted);
+    background: var(--color-background);
+    border-bottom: 1px solid var(--color-border);
+}
+
+.compare-category-note .icon {
+    flex-shrink: 0;
+    color: var(--color-primary);
+}
+
+/* Value Metric Row */
+.compare-spec-value-metric {
+    background: var(--color-primary-light);
+}
+
+.compare-spec-value-metric td:first-child {
+    font-weight: var(--font-semibold);
+    color: var(--color-dark);
+}
+
+/* Value Section Modifier */
+.compare-spec-group--value {
+    border-color: var(--color-primary);
+}
+
+.compare-spec-group--value .compare-spec-group-header {
+    background: var(--color-primary-light);
+}
+
+.compare-spec-group--value .compare-spec-group-icon {
+    color: var(--color-primary);
+}
+
+/* Responsive adjustments for score bars */
+@media (max-width: 890px) {
+    .compare-spec-group-question {
+        display: none;
+    }
+
+    .compare-category-score-name {
+        flex: 0 0 100px;
+        font-size: var(--text-xs);
+    }
+
+    .compare-category-score-value {
+        flex: 0 0 28px;
+        font-size: var(--text-xs);
+    }
+}
+
+@media (max-width: 600px) {
+    .compare-category-scores {
+        padding: var(--space-4);
+        gap: var(--space-2);
+    }
+
+    .compare-category-score {
+        gap: var(--space-2);
+    }
+
+    .compare-category-score-name {
+        flex: 0 0 80px;
+    }
+}

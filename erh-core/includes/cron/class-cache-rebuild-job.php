@@ -15,6 +15,7 @@ use ERH\Database\PriceHistory;
 use ERH\Database\PriceTracker;
 use ERH\Database\ViewTracker;
 use ERH\Reviews\ReviewQuery;
+use ERH\Scoring\ProductScorer;
 
 /**
  * Rebuilds the product_data cache table with fresh data.
@@ -126,15 +127,23 @@ class CacheRebuildJob implements CronJobInterface {
     private CronManager $cron_manager;
 
     /**
+     * Product scorer instance.
+     *
+     * @var ProductScorer
+     */
+    private ProductScorer $product_scorer;
+
+    /**
      * Constructor.
      *
-     * @param PriceFetcher $price_fetcher Price fetcher instance.
-     * @param ProductCache $product_cache Product cache instance.
-     * @param PriceHistory $price_history Price history instance.
-     * @param PriceTracker $price_tracker Price tracker instance.
-     * @param ViewTracker $view_tracker View tracker instance.
-     * @param ReviewQuery $review_query Review query instance.
-     * @param CronManager $cron_manager Cron manager instance.
+     * @param PriceFetcher  $price_fetcher  Price fetcher instance.
+     * @param ProductCache  $product_cache  Product cache instance.
+     * @param PriceHistory  $price_history  Price history instance.
+     * @param PriceTracker  $price_tracker  Price tracker instance.
+     * @param ViewTracker   $view_tracker   View tracker instance.
+     * @param ReviewQuery   $review_query   Review query instance.
+     * @param CronManager   $cron_manager   Cron manager instance.
+     * @param ProductScorer $product_scorer Product scorer instance.
      */
     public function __construct(
         PriceFetcher $price_fetcher,
@@ -143,15 +152,17 @@ class CacheRebuildJob implements CronJobInterface {
         PriceTracker $price_tracker,
         ViewTracker $view_tracker,
         ReviewQuery $review_query,
-        CronManager $cron_manager
+        CronManager $cron_manager,
+        ProductScorer $product_scorer
     ) {
-        $this->price_fetcher = $price_fetcher;
-        $this->product_cache = $product_cache;
-        $this->price_history = $price_history;
-        $this->price_tracker = $price_tracker;
-        $this->view_tracker = $view_tracker;
-        $this->review_query = $review_query;
-        $this->cron_manager = $cron_manager;
+        $this->price_fetcher  = $price_fetcher;
+        $this->product_cache  = $product_cache;
+        $this->price_history  = $price_history;
+        $this->price_tracker  = $price_tracker;
+        $this->view_tracker   = $view_tracker;
+        $this->review_query   = $review_query;
+        $this->cron_manager   = $cron_manager;
+        $this->product_scorer = $product_scorer;
     }
 
     /**
@@ -406,6 +417,10 @@ class CacheRebuildJob implements CronJobInterface {
 
         // Add computed comparisons to specs (using best price from any geo, prefer US).
         $product_data['specs'] = $this->add_computed_specs($product_data['specs'], $best_price_for_computed_specs, $product_type);
+
+        // Calculate and add absolute category scores for comparison tool.
+        $scores = $this->product_scorer->calculate_scores($product_data['specs'], $product_type);
+        $product_data['specs']['scores'] = $scores;
 
         // Save to cache.
         $this->product_cache->upsert($product_data);

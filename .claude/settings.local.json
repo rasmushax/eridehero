@@ -8,7 +8,9 @@
       "Bash(node --check:*)",
       "Bash(xargs basename:*)",
       "WebFetch(domain:versus.com)",
-      "Bash(node --input-type=module -e:*)"
+      "Bash(node --input-type=module -e:*)",
+      "Bash(composer dump-autoload:*)",
+      "Bash(php -l:*)"
     ]
   }
 }

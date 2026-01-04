@@ -473,7 +473,8 @@ function renderAdvantageCard(product, advantages) {
 }
 
 /**
- * Render specs section.
+ * Render specs section with category score bars.
+ * Each category shows its consumer question and score comparison.
  */
 function renderSpecs() {
     const container = document.querySelector(SELECTORS.specs);
@@ -486,13 +487,72 @@ function renderSpecs() {
         const rows = renderSpecRows(group.specs || []);
         if (!rows.length) continue;
 
+        // Calculate category scores for each product (if showScore is true).
+        // Uses pre-calculated backend scores when available via calculateCategoryScore.
+        const categoryScores = group.showScore
+            ? products.map(p => calculateCategoryScore(p, name))
+            : null;
+
+        // Find winner(s) for score comparison
+        let scoreWinnerIdx = -1;
+        if (categoryScores && categoryScores.filter(s => s > 0).length >= 2) {
+            const maxScore = Math.max(...categoryScores.filter(s => s > 0));
+            const winners = categoryScores.map((s, i) => s === maxScore ? i : -1).filter(i => i >= 0);
+            // Only mark winner if there's one clear winner (not a tie)
+            if (winners.length === 1) scoreWinnerIdx = winners[0];
+        }
+
+        // Build score bars HTML
+        const scoreBarsHtml = categoryScores ? `
+            <div class="compare-category-scores">
+                ${products.map((p, i) => {
+                    const score = categoryScores[i];
+                    const isWinner = i === scoreWinnerIdx;
+                    const barWidth = Math.max(0, Math.min(100, score));
+                    return `
+                        <div class="compare-category-score${isWinner ? ' is-winner' : ''}">
+                            <span class="compare-category-score-name">${escapeHtml(p.name)}</span>
+                            <div class="compare-category-score-bar">
+                                <div class="compare-category-score-fill" style="width: ${barWidth}%"></div>
+                            </div>
+                            <span class="compare-category-score-value">${score}</span>
+                        </div>
+                    `;
+                }).join('')}
+            </div>
+        ` : '';
+
+        // Build value metric row if defined
+        const valueMetricRow = group.valueMetric ? renderValueMetricRow(group.valueMetric) : '';
+
+        // Build context note if defined
+        const contextNoteHtml = group.contextNote
+            ? `<p class="compare-category-note"><svg class="icon" width="14" height="14"><use href="#icon-info"></use></svg>${escapeHtml(group.contextNote)}</p>`
+            : '';
+
+        // Build question subtitle
+        const questionHtml = group.question
+            ? `<span class="compare-spec-group-question">${escapeHtml(group.question)}</span>`
+            : '';
+
+        // Icon for category
+        const iconHtml = group.icon
+            ? `<svg class="icon compare-spec-group-icon" width="18" height="18"><use href="#icon-${group.icon}"></use></svg>`
+            : '';
+
         sections.push(`
-            <div class="compare-spec-group" data-group>
+            <div class="compare-spec-group${group.isValueSection ? ' compare-spec-group--value' : ''}" data-group>
                 <button class="compare-spec-group-header" data-toggle-group>
-                    <span>${name}</span>
-                    <svg class="icon" width="16" height="16"><use href="#icon-chevron-down"></use></svg>
+                    <div class="compare-spec-group-header-text">
+                        ${iconHtml}
+                        <span class="compare-spec-group-title">${name}</span>
+                        ${questionHtml}
+                    </div>
+                    <svg class="icon compare-spec-group-chevron" width="16" height="16"><use href="#icon-chevron-down"></use></svg>
                 </button>
                 <div class="compare-spec-group-body">
+                    ${scoreBarsHtml}
+                    ${contextNoteHtml}
                     <table class="compare-spec-table">
                         <thead>
                             <tr>
@@ -500,7 +560,7 @@ function renderSpecs() {
                                 ${products.map(p => `<th>${escapeHtml(p.name)}</th>`).join('')}
                             </tr>
                         </thead>
-                        <tbody>${rows.join('')}</tbody>
+                        <tbody>${rows.join('')}${valueMetricRow}</tbody>
                     </table>
                 </div>
             </div>
@@ -515,6 +575,44 @@ function renderSpecs() {
             btn.closest('[data-group]')?.classList.toggle('is-collapsed');
         });
     });
+}
+
+/**
+ * Render value metric row for a category.
+ */
+function renderValueMetricRow(metric) {
+    const values = products.map(p => {
+        // Try primary key first, then fallback
+        let val = getSpec(p, metric.key);
+        if ((val == null || val === '') && metric.fallback) {
+            val = getSpec(p, metric.fallback);
+        }
+        return val;
+    });
+
+    // Skip if all values are missing
+    if (values.every(v => v == null || v === '')) return '';
+
+    // Find winner (lower is better for value metrics)
+    const valid = values.map((v, i) => ({ v: parseFloat(v) || Infinity, i })).filter(x => isFinite(x.v) && x.v > 0);
+    let winnerIdx = -1;
+    if (valid.length >= 2) {
+        const best = metric.lowerBetter
+            ? Math.min(...valid.map(x => x.v))
+            : Math.max(...valid.map(x => x.v));
+        const winners = valid.filter(x => x.v === best);
+        if (winners.length === 1) winnerIdx = winners[0].i;
+    }
+
+    const cells = values.map((v, i) => {
+        const cls = i === winnerIdx ? 'is-winner' : '';
+        const formatted = v != null && v !== ''
+            ? `$${parseFloat(v).toFixed(2)}`
+            : '—';
+        return `<td class="${cls}">${formatted}</td>`;
+    }).join('');
+
+    return `<tr class="compare-spec-value-metric"><td>💰 ${metric.label}</td>${cells}</tr>`;
 }
 
 /**
@@ -649,8 +747,17 @@ function pricingRow(label, values, lowerWins = true, invertWinner = false) {
 
 /**
  * Calculate overall product score.
+ * Uses pre-calculated backend score when available, falls back to JS calculation.
  */
 function calculateProductScore(product) {
+    const specs = product.specs || product;
+
+    // Try pre-calculated overall score first (from backend CacheRebuildJob).
+    if (specs.scores && typeof specs.scores.overall === 'number') {
+        return specs.scores.overall;
+    }
+
+    // Fallback to JS calculation using category scores.
     const weights = CATEGORY_WEIGHTS[category] || {};
     let total = 0, weightSum = 0;
 
@@ -663,11 +770,32 @@ function calculateProductScore(product) {
 }
 
 /**
+ * Map JS category names to PHP score keys.
+ */
+const CATEGORY_SCORE_KEYS = {
+    'Motor Performance': 'motor_performance',
+    'Range & Battery': 'range_battery',
+    'Ride Quality': 'ride_quality',
+    'Portability & Fit': 'portability',
+    'Safety': 'safety',
+    'Features': 'features',
+    'Maintenance': 'maintenance',
+};
+
+/**
  * Calculate category score using absolute scoring.
- * Returns fixed scores based on thresholds, not relative comparison.
+ * Uses pre-calculated backend scores when available, falls back to JS calculation.
  */
 function calculateCategoryScore(product, categoryName) {
     const specs = product.specs || product;
+
+    // Try pre-calculated scores first (from backend CacheRebuildJob).
+    const scoreKey = CATEGORY_SCORE_KEYS[categoryName];
+    if (scoreKey && specs.scores && typeof specs.scores[scoreKey] === 'number') {
+        return specs.scores[scoreKey];
+    }
+
+    // Fallback to JS calculation.
     return calculateAbsoluteCategoryScore(specs, categoryName, category);
 }
 
