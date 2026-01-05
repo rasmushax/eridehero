@@ -1797,11 +1797,11 @@ class Finder {
         const indicator = product.price_indicator;
         if (indicator < -5) {
             return `<span class="product-card-indicator product-card-indicator--below">
-                <span class="product-card-indicator-arrow">↓</span>${Math.abs(indicator)}%
+                <svg class="icon product-card-indicator-icon" aria-hidden="true"><use href="#icon-arrow-down"></use></svg>${Math.abs(indicator)}%
             </span>`;
         } else if (indicator > 10) {
             return `<span class="product-card-indicator product-card-indicator--above">
-                <span class="product-card-indicator-arrow">↑</span>${indicator}%
+                <svg class="icon product-card-indicator-icon" aria-hidden="true"><use href="#icon-arrow-up"></use></svg>${indicator}%
             </span>`;
         }
         return '';

@@ -262,8 +262,8 @@ class PriceAlertModalManager {
         if (isEdit && this.existingTracker.start_price && displayPrice) {
             const diff = this.existingTracker.start_price - displayPrice;
             if (diff !== 0) {
-                const sign = diff > 0 ? '↓' : '↑';
-                priceChange = `${sign} ${currencySymbol}${Math.abs(diff).toFixed(0)} since you started tracking`;
+                const icon = diff > 0 ? 'arrow-down' : 'arrow-up';
+                priceChange = `<svg class="icon price-alert-change-icon" aria-hidden="true"><use href="#icon-${icon}"></use></svg> ${currencySymbol}${Math.abs(diff).toFixed(0)} since you started tracking`;
             }
         }
 

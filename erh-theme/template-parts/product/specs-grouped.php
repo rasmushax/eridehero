@@ -1,10 +1,9 @@
 <?php
 /**
- * Product Grouped Specifications
+ * Product Specifications
  *
- * Full specifications table organized by category with collapsible sections.
- * Content is rendered server-side from wp_product_data cache using
- * SPEC_GROUPS config for consistency with comparison tool.
+ * Simple flat table layout with category headers.
+ * Uses same spec groupings as the compare tool.
  *
  * @package ERideHero
  *
@@ -33,10 +32,7 @@ if ( ! $product_id ) {
 $specs_html = erh_render_specs_from_cache( $product_id, $category_key );
 ?>
 
-<section class="review-section specs-grouped" id="full-specs" data-specs-grouped>
-    <h2 class="review-section-title">Full Specifications</h2>
-
-    <div class="specs-grouped-categories">
-        <?php echo $specs_html; // phpcs:ignore WordPress.Security.EscapeOutput.OutputNotEscaped -- Already escaped in function. ?>
-    </div>
+<section class="review-section" id="full-specs">
+    <h2 class="review-section-title">Specifications</h2>
+    <?php echo $specs_html; // phpcs:ignore WordPress.Security.EscapeOutput.OutputNotEscaped -- Already escaped in function. ?>
 </section>

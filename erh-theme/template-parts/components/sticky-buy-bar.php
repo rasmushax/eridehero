@@ -75,10 +75,8 @@ if ( empty( $thumbnail_url ) ) {
         <div class="sticky-buy-bar-right">
             <!-- Verdict badge (arrow + %) -->
             <div class="sticky-buy-bar-verdict" data-sticky-verdict style="display: none;">
-                <span class="sticky-buy-bar-verdict-icon" data-sticky-verdict-icon>
-                    <?php erh_the_icon( 'trending-up' ); ?>
-                </span>
-                <span data-sticky-verdict-text>2% above avg</span>
+                <svg class="icon sticky-buy-bar-verdict-icon" aria-hidden="true" data-sticky-verdict-icon><use href="#icon-arrow-down"></use></svg>
+                <span data-sticky-verdict-text>2% below avg</span>
             </div>
 
             <!-- Price block -->

@@ -493,6 +493,13 @@
     color: var(--color-error);
 }
 
+.compare-price-icon {
+    width: 12px;
+    height: 12px;
+    vertical-align: middle;
+    margin-right: 2px;
+}
+
 .compare-pricing-actions td {
     padding: var(--space-5);
 }

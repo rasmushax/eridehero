@@ -92,9 +92,6 @@ class ProductPage {
      * Initialize all components.
      */
     async init() {
-        // Initialize specs toggle immediately (PHP-rendered content is already there)
-        this.initSpecsToggle();
-
         // Load product data for performance profile
         await this.loadProductData();
 
@@ -335,25 +332,6 @@ class ProductPage {
         requestAnimationFrame(() => {
             container.querySelectorAll('.performance-score-fill').forEach(bar => {
                 bar.style.width = bar.style.width; // Trigger reflow
-            });
-        });
-    }
-
-    /**
-     * Initialize specs collapse/expand functionality.
-     * Specs are rendered server-side by PHP, this just adds interactivity.
-     */
-    initSpecsToggle() {
-        const specsSection = this.container.querySelector('[data-specs-grouped]');
-        if (!specsSection) return;
-
-        specsSection.querySelectorAll('[data-specs-toggle]').forEach(toggle => {
-            toggle.addEventListener('click', () => {
-                const category = toggle.closest('[data-specs-category]');
-                if (category) {
-                    const isOpen = category.classList.toggle('is-open');
-                    toggle.setAttribute('aria-expanded', isOpen.toString());
-                }
             });
         });
     }

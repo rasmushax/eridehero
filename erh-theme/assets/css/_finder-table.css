@@ -676,8 +676,10 @@
     border-radius: var(--radius-sm);
 }
 
-.finder-table-indicator-arrow {
-    font-weight: var(--font-bold);
+.finder-table-indicator-icon {
+    width: 12px;
+    height: 12px;
+    flex-shrink: 0;
 }
 
 .finder-table-indicator--below {

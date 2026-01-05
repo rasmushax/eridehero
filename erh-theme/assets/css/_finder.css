@@ -1291,8 +1291,10 @@
     border-radius: var(--radius-sm);
 }
 
-.product-card-indicator-arrow {
-    font-weight: var(--font-bold);
+.product-card-indicator-icon {
+    width: 12px;
+    height: 12px;
+    flex-shrink: 0;
 }
 
 .product-card-indicator--below {

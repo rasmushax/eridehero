@@ -505,12 +505,12 @@ class PriceIntelComponent {
 
         if (diff < 0) {
             // Below average (good)
-            this.priceVerdict.textContent = `↓ ${Math.abs(Math.round(diff))}% below avg`;
+            this.priceVerdict.innerHTML = `<svg class="icon price-intel-verdict-icon" aria-hidden="true"><use href="#icon-arrow-down"></use></svg> ${Math.abs(Math.round(diff))}% below avg`;
             this.priceVerdict.classList.remove('price-intel-verdict--high');
             this.priceVerdict.classList.add('price-intel-verdict--low');
         } else {
             // Above average (not great)
-            this.priceVerdict.textContent = `↑ ${Math.round(diff)}% above avg`;
+            this.priceVerdict.innerHTML = `<svg class="icon price-intel-verdict-icon" aria-hidden="true"><use href="#icon-arrow-up"></use></svg> ${Math.round(diff)}% above avg`;
             this.priceVerdict.classList.remove('price-intel-verdict--low');
             this.priceVerdict.classList.add('price-intel-verdict--high');
         }

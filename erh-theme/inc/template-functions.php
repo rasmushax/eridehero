@@ -1348,10 +1348,26 @@ function erh_get_spec_groups_config( string $category ): array {
 				'icon'      => 'settings',
 				'score_key' => 'features',
 				'specs'     => array(
-					array( 'key' => 'features', 'label' => 'Features', 'format' => 'features' ),
 					array( 'key' => 'other.display_type', 'label' => 'Display' ),
 					array( 'key' => 'other.throttle_type', 'label' => 'Throttle' ),
 					array( 'key' => 'other.kickstand', 'label' => 'Kickstand', 'format' => 'boolean' ),
+					// Individual feature checkboxes - rendered with Yes/No indicators
+					array( 'key' => 'features', 'label' => 'App', 'format' => 'feature_check', 'feature_value' => 'App' ),
+					array( 'key' => 'features', 'label' => 'Speed Modes', 'format' => 'feature_check', 'feature_value' => 'Speed Modes' ),
+					array( 'key' => 'features', 'label' => 'Cruise Control', 'format' => 'feature_check', 'feature_value' => 'Cruise Control' ),
+					array( 'key' => 'features', 'label' => 'Folding', 'format' => 'feature_check', 'feature_value' => 'Folding' ),
+					array( 'key' => 'features', 'label' => 'Push-To-Start', 'format' => 'feature_check', 'feature_value' => 'Push-To-Start' ),
+					array( 'key' => 'features', 'label' => 'Zero-Start', 'format' => 'feature_check', 'feature_value' => 'Zero-Start' ),
+					array( 'key' => 'features', 'label' => 'Brake Adjustment', 'format' => 'feature_check', 'feature_value' => 'Brake Curve Adjustment' ),
+					array( 'key' => 'features', 'label' => 'Accel Adjustment', 'format' => 'feature_check', 'feature_value' => 'Acceleration Adjustment' ),
+					array( 'key' => 'features', 'label' => 'Speed Limiting', 'format' => 'feature_check', 'feature_value' => 'Speed Limiting' ),
+					array( 'key' => 'features', 'label' => 'OTA Updates', 'format' => 'feature_check', 'feature_value' => 'OTA Updates' ),
+					array( 'key' => 'features', 'label' => 'Location Tracking', 'format' => 'feature_check', 'feature_value' => 'Location Tracking' ),
+					array( 'key' => 'features', 'label' => 'Quick-Swap Battery', 'format' => 'feature_check', 'feature_value' => 'Quick-Swap Battery' ),
+					array( 'key' => 'features', 'label' => 'Steering Damper', 'format' => 'feature_check', 'feature_value' => 'Steering Damper' ),
+					array( 'key' => 'features', 'label' => 'Electronic Horn', 'format' => 'feature_check', 'feature_value' => 'Electronic Horn' ),
+					array( 'key' => 'features', 'label' => 'NFC Unlock', 'format' => 'feature_check', 'feature_value' => 'NFC Unlock' ),
+					array( 'key' => 'features', 'label' => 'Seat Option', 'format' => 'feature_check', 'feature_value' => 'Seat Option' ),
 				),
 			),
 			'Maintenance' => array(
@@ -1520,39 +1536,122 @@ function erh_format_spec_value( $value, array $spec ): string {
 }
 
 /**
- * Render specs HTML from product_data cache.
+ * Get spec value from product_data specs array.
+ *
+ * Handles the database structure where:
+ * - Flat keys (tested_top_speed, etc.) are at root level
+ * - Nested specs are under product type key (e-scooters, e-bikes, etc.)
+ *
+ * @param array  $specs          Full specs array from product_data.
+ * @param string $key            Spec key (may be dot-notation like 'motor.power_nominal').
+ * @param string $nested_wrapper The wrapper key for nested specs ('e-scooters', 'e-bikes', etc.).
+ * @return mixed|null Spec value or null.
+ */
+function erh_get_spec_from_cache( array $specs, string $key, string $nested_wrapper ) {
+	// First try direct/flat key at root level (e.g., 'tested_top_speed')
+	if ( strpos( $key, '.' ) === false ) {
+		if ( isset( $specs[ $key ] ) && $specs[ $key ] !== '' && $specs[ $key ] !== null ) {
+			return $specs[ $key ];
+		}
+	}
+
+	// For nested keys (e.g., 'motor.power_nominal'), look inside the wrapper
+	if ( ! empty( $specs[ $nested_wrapper ] ) && is_array( $specs[ $nested_wrapper ] ) ) {
+		$value = erh_get_nested_value( $specs[ $nested_wrapper ], $key );
+		if ( $value !== null && $value !== '' ) {
+			return $value;
+		}
+	}
+
+	// Also try at root level for nested keys (in case data structure varies)
+	$value = erh_get_nested_value( $specs, $key );
+	if ( $value !== null && $value !== '' ) {
+		return $value;
+	}
+
+	return null;
+}
+
+/**
+ * Get the nested wrapper key for a category.
+ *
+ * Returns the key used in product_data.specs for nested ACF fields.
+ *
+ * @param string $category Category key ('escooter', 'ebike', etc.).
+ * @return string Wrapper key ('e-scooters', 'e-bikes', etc.).
+ */
+function erh_get_specs_wrapper_key( string $category ): string {
+	$wrappers = array(
+		'escooter'    => 'e-scooters',
+		'ebike'       => 'e-bikes',
+		'eskateboard' => 'e-skateboards',
+		'euc'         => 'eucs',
+		'hoverboard'  => 'hoverboards',
+	);
+
+	return $wrappers[ $category ] ?? 'e-scooters';
+}
+
+/**
+ * Render specs HTML from wp_product_data table.
+ *
+ * Simple flat table layout with category headers - no expand/collapse.
+ * Matches the compare tool's spec groupings.
  *
  * @param int    $product_id  Product ID.
  * @param string $category    Category key ('escooter', 'ebike', etc.).
- * @return string HTML for specs categories.
+ * @return string HTML for specs table.
  */
 function erh_render_specs_from_cache( int $product_id, string $category ): string {
-	// Get cached product data
+	// Get product data from wp_product_data cache table
 	$product_data = erh_get_product_cache_data( $product_id );
+
 	if ( ! $product_data || empty( $product_data['specs'] ) ) {
 		return '<p class="specs-empty">Specifications not available.</p>';
 	}
 
-	$specs       = $product_data['specs'];
-	$scores      = $specs['scores'] ?? array();
+	$specs = $product_data['specs'];
+
+	// Ensure specs is an array (it should be unserialized by erh_get_product_cache_data)
+	if ( ! is_array( $specs ) ) {
+		$specs = maybe_unserialize( $specs );
+	}
+
+	if ( ! is_array( $specs ) ) {
+		return '<p class="specs-empty">Specifications not available.</p>';
+	}
+
 	$spec_groups = erh_get_spec_groups_config( $category );
 
 	if ( empty( $spec_groups ) ) {
 		return '<p class="specs-empty">Specifications not available for this product type.</p>';
 	}
 
-	$html = '';
+	// Get the wrapper key for nested specs (e.g., 'e-scooters' for escooter)
+	$nested_wrapper = erh_get_specs_wrapper_key( $category );
+
+	$html = '<div class="specs-table">';
 
 	foreach ( $spec_groups as $category_name => $category_config ) {
-		$icon      = $category_config['icon'] ?? 'list';
-		$score_key = $category_config['score_key'] ?? null;
-		$score     = $score_key && isset( $scores[ $score_key ] ) ? round( $scores[ $score_key ] ) : null;
+		// Skip Value Analysis section on product page
+		if ( ! empty( $category_config['is_value_section'] ) ) {
+			continue;
+		}
+
 		$spec_defs = $category_config['specs'] ?? array();
 
 		// Build spec rows
 		$rows_html = '';
 		foreach ( $spec_defs as $spec_def ) {
-			$value     = erh_get_nested_value( $specs, $spec_def['key'] );
+			// Special handling for feature_check format
+			if ( ( $spec_def['format'] ?? '' ) === 'feature_check' ) {
+				$features_array = erh_get_spec_from_cache( $specs, $spec_def['key'], $nested_wrapper );
+				$has_feature    = is_array( $features_array ) && in_array( $spec_def['feature_value'], $features_array, true );
+				$rows_html     .= erh_render_feature_check_row( $spec_def['label'], $has_feature );
+				continue;
+			}
+
+			$value     = erh_get_spec_from_cache( $specs, $spec_def['key'], $nested_wrapper );
 			$formatted = erh_format_spec_value( $value, $spec_def );
 
 			// Skip empty values
@@ -1561,7 +1660,7 @@ function erh_render_specs_from_cache( int $product_id, string $category ): strin
 			}
 
 			$rows_html .= sprintf(
-				'<div class="specs-row"><span class="specs-label">%s</span><span class="specs-value">%s</span></div>',
+				'<tr><td class="specs-label">%s</td><td class="specs-value">%s</td></tr>',
 				esc_html( $spec_def['label'] ),
 				esc_html( $formatted )
 			);
@@ -1572,34 +1671,47 @@ function erh_render_specs_from_cache( int $product_id, string $category ): strin
 			continue;
 		}
 
-		// Build score badge
-		$score_html = '';
-		if ( $score !== null ) {
-			$score_class = $score >= 80 ? 'score-high' : ( $score >= 60 ? 'score-medium' : 'score-low' );
-			$score_html  = sprintf(
-				'<span class="specs-category-score %s"><span data-score-value>%d</span></span>',
-				esc_attr( $score_class ),
-				$score
-			);
-		}
-
-		// Build category HTML
+		// Category header + rows
 		$html .= sprintf(
-			'<div class="specs-category is-open" data-specs-category>
-				<button type="button" class="specs-category-header" data-specs-toggle aria-expanded="true">
-					<svg class="icon specs-category-icon" aria-hidden="true"><use href="#icon-%s"></use></svg>
-					<span class="specs-category-name">%s</span>
-					%s
-					<svg class="icon specs-category-chevron" aria-hidden="true"><use href="#icon-chevron-down"></use></svg>
-				</button>
-				<div class="specs-category-body">%s</div>
-			</div>',
-			esc_attr( $icon ),
+			'<table class="specs-group">
+				<thead><tr><th colspan="2" class="specs-group-header">%s</th></tr></thead>
+				<tbody>%s</tbody>
+			</table>',
 			esc_html( $category_name ),
-			$score_html,
 			$rows_html
 		);
 	}
 
-	return $html ?: '<p class="specs-empty">No specifications available.</p>';
+	$html .= '</div>';
+
+	return $html;
+}
+
+/**
+ * Render a feature check row with Yes/No indicator.
+ *
+ * Displays a circle background with check/x icon from the sprite.
+ *
+ * @param string $label       Feature label.
+ * @param bool   $has_feature Whether the product has this feature.
+ * @return string HTML for the table row.
+ */
+function erh_render_feature_check_row( string $label, bool $has_feature ): string {
+	$status_class = $has_feature ? 'feature-yes' : 'feature-no';
+	$status_text  = $has_feature ? 'Yes' : 'No';
+	$icon_name    = $has_feature ? 'check' : 'x';
+
+	// Use icon from sprite with circle background
+	$icon = sprintf(
+		'<span class="feature-badge"><svg class="icon" aria-hidden="true"><use href="#icon-%s"></use></svg></span>',
+		$icon_name
+	);
+
+	return sprintf(
+		'<tr class="%s"><td class="specs-label">%s</td><td class="specs-value specs-feature-value">%s<span class="feature-text">%s</span></td></tr>',
+		esc_attr( $status_class ),
+		esc_html( $label ),
+		$icon,
+		esc_html( $status_text )
+	);
 }

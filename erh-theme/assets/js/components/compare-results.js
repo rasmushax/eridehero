@@ -659,8 +659,9 @@ function renderPricing() {
             if (!curr || !avg) return { html: '—', raw: 0 };
             const diff = ((curr - avg) / avg) * 100;
             const cls = diff < -3 ? 'is-good' : diff > 3 ? 'is-bad' : '';
-            const arrow = diff < 0 ? '↓' : diff > 0 ? '↑' : '';
-            return { html: `<span class="${cls}">${arrow}${Math.abs(Math.round(diff))}%</span>`, raw: diff };
+            const icon = diff < 0 ? 'arrow-down' : diff > 0 ? 'arrow-up' : '';
+            const iconHtml = icon ? `<svg class="icon compare-price-icon" aria-hidden="true"><use href="#icon-${icon}"></use></svg>` : '';
+            return { html: `<span class="${cls}">${iconHtml}${Math.abs(Math.round(diff))}%</span>`, raw: diff };
         }), false, true),
         pricingRow('All-Time Low', products.map(p => {
             const low = p.priceData?.low_all;

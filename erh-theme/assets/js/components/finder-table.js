@@ -591,11 +591,11 @@ export class FinderTable {
 
         if (indicator < -5) {
             return `<span class="finder-table-indicator finder-table-indicator--below">
-                <span class="finder-table-indicator-arrow">↓</span>${Math.abs(indicator)}%
+                <svg class="icon finder-table-indicator-icon" aria-hidden="true"><use href="#icon-arrow-down"></use></svg>${Math.abs(indicator)}%
             </span>`;
         } else if (indicator > 10) {
             return `<span class="finder-table-indicator finder-table-indicator--above">
-                <span class="finder-table-indicator-arrow">↑</span>${indicator}%
+                <svg class="icon finder-table-indicator-icon" aria-hidden="true"><use href="#icon-arrow-up"></use></svg>${indicator}%
             </span>`;
         }
         return '';

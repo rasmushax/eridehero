@@ -221,19 +221,9 @@
 }
 
 .sticky-buy-bar-verdict-icon {
-    display: flex;
-    align-items: center;
-    justify-content: center;
-}
-
-.sticky-buy-bar-verdict-icon .icon {
     width: 12px;
     height: 12px;
-}
-
-/* Flip icon for below avg (price drop) */
-.sticky-buy-bar-verdict[data-verdict-type="below"] .sticky-buy-bar-verdict-icon .icon {
-    transform: rotate(180deg);
+    flex-shrink: 0;
 }
 
 /* Price block */

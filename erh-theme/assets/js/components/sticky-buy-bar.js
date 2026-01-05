@@ -18,6 +18,7 @@ const SELECTORS = {
     price: '[data-sticky-price]',
     verdict: '[data-sticky-verdict]',
     verdictText: '[data-sticky-verdict-text]',
+    verdictIcon: '[data-sticky-verdict-icon]',
     buyLink: '[data-sticky-buy-link]',
     retailer: '[data-sticky-retailer]',
     trackPriceBtn: '[data-modal-trigger="price-alert-modal"]',
@@ -114,6 +115,7 @@ async function loadPriceData() {
         // Populate verdict if we have history statistics
         const verdictEl = stickyBar.querySelector(SELECTORS.verdict);
         const verdictTextEl = stickyBar.querySelector(SELECTORS.verdictText);
+        const verdictIconEl = stickyBar.querySelector(SELECTORS.verdictIcon);
         if (verdictEl && verdictTextEl && data.history?.statistics?.average) {
             const avgPrice = data.history.statistics.average;
             const pctDiff = ((bestOffer.price - avgPrice) / avgPrice) * 100;
@@ -121,11 +123,17 @@ async function loadPriceData() {
                 // Below average - good deal
                 verdictTextEl.textContent = `${Math.abs(Math.round(pctDiff))}% below avg`;
                 verdictEl.setAttribute('data-verdict-type', 'below');
+                if (verdictIconEl) {
+                    verdictIconEl.querySelector('use')?.setAttribute('href', '#icon-arrow-down');
+                }
                 verdictEl.style.display = '';
             } else if (pctDiff > 5) {
                 // Above average - not great
                 verdictTextEl.textContent = `${Math.round(pctDiff)}% above avg`;
                 verdictEl.setAttribute('data-verdict-type', 'above');
+                if (verdictIconEl) {
+                    verdictIconEl.querySelector('use')?.setAttribute('href', '#icon-arrow-up');
+                }
                 verdictEl.style.display = '';
             }
         }
