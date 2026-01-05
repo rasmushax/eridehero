@@ -72,6 +72,13 @@ class UserPreferences {
                     'type' => 'string',
                     'enum' => UserRepository::VALID_FREQUENCIES,
                 ],
+                'sales_roundup_types'     => [
+                    'type'  => 'array',
+                    'items' => [
+                        'type' => 'string',
+                        'enum' => array_keys(UserRepository::VALID_ROUNDUP_TYPES),
+                    ],
+                ],
                 'newsletter_subscription' => ['type' => 'boolean'],
             ],
         ]);
@@ -164,6 +171,10 @@ class UserPreferences {
             $preferences['sales_roundup_frequency'] = $params['sales_roundup_frequency'];
         }
 
+        if (isset($params['sales_roundup_types'])) {
+            $preferences['sales_roundup_types'] = (array) $params['sales_roundup_types'];
+        }
+
         if (isset($params['newsletter_subscription'])) {
             $old_status = $this->user_repo->get_preferences($user_id)['newsletter_subscription'];
             $new_status = (bool) $params['newsletter_subscription'];
@@ -176,15 +187,7 @@ class UserPreferences {
             $preferences['newsletter_subscription'] = $new_status;
         }
 
-        $updated = $this->user_repo->update_preferences($user_id, $preferences);
-
-        if (!$updated) {
-            return new \WP_Error(
-                'update_failed',
-                'Failed to update preferences.',
-                ['status' => 500]
-            );
-        }
+        $this->user_repo->update_preferences($user_id, $preferences);
 
         return new \WP_REST_Response([
             'success'     => true,

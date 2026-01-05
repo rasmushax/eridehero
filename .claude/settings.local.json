@@ -10,7 +10,9 @@
       "WebFetch(domain:versus.com)",
       "Bash(node --input-type=module -e:*)",
       "Bash(composer dump-autoload:*)",
-      "Bash(php -l:*)"
+      "Bash(php -l:*)",
+      "Bash(/mnt/c/xampp/php/php.exe:*)",
+      "Bash(cat:*)"
     ]
   }
 }

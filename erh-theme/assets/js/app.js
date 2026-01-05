@@ -172,6 +172,13 @@ import './components/toast.js'; // Toast notifications (auto-init container)
         });
     }
 
+    // Account page - tabs, settings, and trackers
+    if (document.querySelector('.account-page')) {
+        import('./components/account-tabs.js');
+        import('./components/account-settings.js');
+        import('./components/account-trackers.js');
+    }
+
     // Global keyboard handling
     document.addEventListener('keydown', (e) => {
         // Escape key closes menu/search

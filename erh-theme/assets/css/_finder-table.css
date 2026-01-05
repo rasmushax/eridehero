@@ -451,11 +451,25 @@
 .finder-table-sort-icon {
     display: inline-flex;
     margin-left: var(--space-1);
-    opacity: 0.4;
     transition: opacity var(--transition-fast);
 }
 
-.finder-table th[data-sortable]:hover .finder-table-sort-icon {
+.finder-table-sort-icon .icon {
+    width: 13px;
+    height: 13px;
+    display: none;
+}
+
+.finder-table-sort-icon .icon--neutral {
+    display: block;
+    opacity: 0.4;
+}
+
+.finder-table-sort-icon .icon--desc {
+    transform: rotate(180deg);
+}
+
+.finder-table th[data-sortable]:hover .finder-table-sort-icon .icon--neutral {
     opacity: 0.7;
 }
 
@@ -463,17 +477,14 @@
     color: var(--color-primary);
 }
 
-.finder-table th[data-sort-active] .finder-table-sort-icon {
-    opacity: 1;
+.finder-table th[data-sort-active] .finder-table-sort-icon .icon--neutral {
+    display: none;
 }
 
-.finder-table th[data-sort-active="desc"] .finder-table-sort-icon {
-    transform: rotate(180deg);
-}
-
-.finder-table-sort-icon .icon {
-    width: 12px;
-    height: 12px;
+.finder-table th[data-sort-active="asc"] .finder-table-sort-icon .icon--asc,
+.finder-table th[data-sort-active="desc"] .finder-table-sort-icon .icon--desc {
+    display: block;
+    color: var(--color-primary);
 }
 
 /* Table Body */

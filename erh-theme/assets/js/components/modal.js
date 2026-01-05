@@ -375,13 +375,21 @@ class Modal {
     };
 
     /**
-     * Handle backdrop click
+     * Track mousedown origin to prevent closing when dragging from content to backdrop
+     */
+    _handleMousedown = (e) => {
+        this._mousedownTarget = e.target;
+    };
+
+    /**
+     * Handle backdrop click - only close if both mousedown and mouseup on backdrop
      */
     _handleBackdropClick = (e) => {
         if (!this.options.closeOnBackdrop) return;
 
-        // Only close if clicking directly on modal (backdrop area), not content
-        if (e.target === this.element) {
+        // Only close if BOTH mousedown and click happened on the modal backdrop
+        // This prevents closing when user drags from content to backdrop (e.g., selecting text)
+        if (e.target === this.element && this._mousedownTarget === this.element) {
             this.close();
         }
     };
@@ -391,6 +399,7 @@ class Modal {
      */
     _bindEvents() {
         document.addEventListener('keydown', this._handleKeydown);
+        this.element.addEventListener('mousedown', this._handleMousedown);
         this.element.addEventListener('click', this._handleBackdropClick);
     }
 
@@ -399,6 +408,7 @@ class Modal {
      */
     _unbindEvents() {
         document.removeEventListener('keydown', this._handleKeydown);
+        this.element.removeEventListener('mousedown', this._handleMousedown);
         this.element.removeEventListener('click', this._handleBackdropClick);
     }
 

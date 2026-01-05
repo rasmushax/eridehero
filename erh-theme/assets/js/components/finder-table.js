@@ -401,7 +401,11 @@ export class FinderTable {
 
             html += `<th ${sortable ? 'data-sortable' : ''} data-column="${col.columnKey}" ${sortAttr}>
                 ${col.label}
-                ${sortable ? `<span class="finder-table-sort-icon"><svg class="icon"><use href="#icon-arrow-up"></use></svg></span>` : ''}
+                ${sortable ? `<span class="finder-table-sort-icon">
+                    <svg class="icon icon--neutral"><use href="#icon-sort"></use></svg>
+                    <svg class="icon icon--asc"><use href="#icon-sort-up"></use></svg>
+                    <svg class="icon icon--desc"><use href="#icon-sort-up"></use></svg>
+                </span>` : ''}
             </th>`;
         });
 
@@ -657,15 +661,29 @@ export class FinderTable {
         const config = this.columnConfig[columnKey] || {};
         const productKey = config.key || columnKey;
         const defaultDir = config.sort_dir || 'desc';
+        const oppositeDir = defaultDir === 'desc' ? 'asc' : 'desc';
 
         if (this.sortColumn === columnKey) {
-            this.sortDirection = this.sortDirection === 'asc' ? 'desc' : 'asc';
+            // 3-click cycle: defaultDir → opposite → none
+            if (this.sortDirection === defaultDir) {
+                this.sortDirection = oppositeDir;
+            } else {
+                // Reset to unsorted
+                this.sortColumn = null;
+                this.sortDirection = 'desc';
+            }
         } else {
             this.sortColumn = columnKey;
             this.sortDirection = defaultDir;
         }
 
-        this.sortProducts(productKey);
+        if (this.sortColumn) {
+            this.sortProducts(productKey);
+        } else {
+            // Reset to finder's default sort order
+            this.finder.sortFilteredProducts();
+        }
+
         this.buildHeader();
         this.renderRows();
         this.updateLoadMoreButton();

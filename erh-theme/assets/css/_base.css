@@ -126,16 +126,22 @@ button {
 }
 
 /* Screen reader only utility */
-.sr-only {
-    position: absolute;
-    width: 1px;
-    height: 1px;
-    padding: 0;
-    margin: -1px;
-    overflow: hidden;
-    clip: rect(0, 0, 0, 0);
-    white-space: nowrap;
-    border: 0;
+.sr-only,
+.visually-hidden {
+    position: absolute !important;
+    width: 1px !important;
+    height: 1px !important;
+    padding: 0 !important;
+    margin: -1px !important;
+    overflow: hidden !important;
+    clip: rect(0, 0, 0, 0) !important;
+    white-space: nowrap !important;
+    border: 0 !important;
+}
+
+/* Hidden attribute - ensure it always hides */
+[hidden] {
+    display: none !important;
 }
 
 
@@ -426,4 +432,62 @@ body.header-is-fixed {
     .scroll-section .scroll-container::after {
         flex: 0 0 var(--space-5);
     }
+}
+
+
+/* ===== LOADING STATES ===== */
+
+/* Spinner animation - single source of truth */
+@keyframes spin {
+    from { transform: rotate(0deg); }
+    to { transform: rotate(360deg); }
+}
+
+/* Base spinner class */
+.spinner {
+    animation: spin 0.8s linear infinite;
+}
+
+/* Common spinner sizes */
+.spinner-sm {
+    width: 16px;
+    height: 16px;
+}
+
+.spinner-md {
+    width: 20px;
+    height: 20px;
+}
+
+.spinner-lg {
+    width: 32px;
+    height: 32px;
+}
+
+/* Loading spinner with wrapper */
+.loading-spinner {
+    display: flex;
+    align-items: center;
+    justify-content: center;
+}
+
+.loading-spinner .spinner {
+    width: 24px;
+    height: 24px;
+}
+
+/* Button loading state */
+.btn.is-loading .btn-text {
+    display: none;
+}
+
+.btn.is-loading .btn-loading {
+    display: inline-flex !important; /* Override hidden attribute */
+    align-items: center;
+    justify-content: center;
+}
+
+.btn-loading .spinner {
+    width: 20px;
+    height: 20px;
 }

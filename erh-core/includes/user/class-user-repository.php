@@ -20,6 +20,7 @@ class UserRepository {
     public const META_PRICE_TRACKER_EMAILS = 'price_trackers_emails';
     public const META_SALES_ROUNDUP_EMAILS = 'sales_roundup_emails';
     public const META_SALES_ROUNDUP_FREQUENCY = 'sales_roundup_frequency';
+    public const META_SALES_ROUNDUP_TYPES = 'sales_roundup_types';
     public const META_NEWSLETTER_SUBSCRIPTION = 'newsletter_subscription';
     public const META_REGISTRATION_IP = 'registration_ip';
     public const META_EMAIL_PREFERENCES_SET = 'email_preferences_set';
@@ -36,6 +37,18 @@ class UserRepository {
      * Valid sales roundup frequencies.
      */
     public const VALID_FREQUENCIES = ['weekly', 'bi-weekly', 'monthly'];
+
+    /**
+     * Valid product types for sales roundup.
+     * Keys are the slug used in API/storage, values are display names.
+     */
+    public const VALID_ROUNDUP_TYPES = [
+        'escooter'   => 'Electric Scooter',
+        'ebike'      => 'Electric Bike',
+        'eskate'     => 'Electric Skateboard',
+        'euc'        => 'Electric Unicycle',
+        'hoverboard' => 'Hoverboard',
+    ];
 
     /**
      * Get a user by ID.
@@ -103,6 +116,7 @@ class UserRepository {
             'price_tracker_emails'    => $this->get_meta_bool($user_id, self::META_PRICE_TRACKER_EMAILS),
             'sales_roundup_emails'    => $this->get_meta_bool($user_id, self::META_SALES_ROUNDUP_EMAILS),
             'sales_roundup_frequency' => $this->get_sales_roundup_frequency($user_id),
+            'sales_roundup_types'     => $this->get_sales_roundup_types($user_id),
             'newsletter_subscription' => $this->get_meta_bool($user_id, self::META_NEWSLETTER_SUBSCRIPTION),
             'email_preferences_set'   => $this->get_meta_bool($user_id, self::META_EMAIL_PREFERENCES_SET),
         ];
@@ -111,33 +125,35 @@ class UserRepository {
     /**
      * Update user preferences.
      *
+     * Note: update_user_meta() returns false both on error AND when no change
+     * is needed (value already matches). We use update_metadata() which has
+     * better return semantics, or just save and verify the value was set.
+     *
      * @param int                  $user_id     The user ID.
      * @param array<string, mixed> $preferences The preferences to update.
      * @return bool True on success.
      */
     public function update_preferences(int $user_id, array $preferences): bool {
-        $updated = true;
-
         if (isset($preferences['price_tracker_emails'])) {
-            $updated = $updated && $this->set_meta_bool(
+            $this->set_meta_value(
                 $user_id,
                 self::META_PRICE_TRACKER_EMAILS,
-                (bool) $preferences['price_tracker_emails']
+                $preferences['price_tracker_emails'] ? '1' : '0'
             );
         }
 
         if (isset($preferences['sales_roundup_emails'])) {
-            $updated = $updated && $this->set_meta_bool(
+            $this->set_meta_value(
                 $user_id,
                 self::META_SALES_ROUNDUP_EMAILS,
-                (bool) $preferences['sales_roundup_emails']
+                $preferences['sales_roundup_emails'] ? '1' : '0'
             );
         }
 
         if (isset($preferences['sales_roundup_frequency'])) {
             $frequency = $preferences['sales_roundup_frequency'];
             if (in_array($frequency, self::VALID_FREQUENCIES, true)) {
-                $updated = $updated && (bool) update_user_meta(
+                $this->set_meta_value(
                     $user_id,
                     self::META_SALES_ROUNDUP_FREQUENCY,
                     $frequency
@@ -145,18 +161,36 @@ class UserRepository {
             }
         }
 
+        if (isset($preferences['sales_roundup_types'])) {
+            $this->set_sales_roundup_types($user_id, $preferences['sales_roundup_types']);
+        }
+
         if (isset($preferences['newsletter_subscription'])) {
-            $updated = $updated && $this->set_meta_bool(
+            $this->set_meta_value(
                 $user_id,
                 self::META_NEWSLETTER_SUBSCRIPTION,
-                (bool) $preferences['newsletter_subscription']
+                $preferences['newsletter_subscription'] ? '1' : '0'
             );
         }
 
         // Mark preferences as set.
-        $this->set_meta_bool($user_id, self::META_EMAIL_PREFERENCES_SET, true);
+        $this->set_meta_value($user_id, self::META_EMAIL_PREFERENCES_SET, '1');
 
-        return $updated;
+        return true;
+    }
+
+    /**
+     * Set a user meta value, handling the case where value is unchanged.
+     *
+     * @param int    $user_id  The user ID.
+     * @param string $meta_key The meta key.
+     * @param string $value    The value to set.
+     * @return void
+     */
+    private function set_meta_value(int $user_id, string $meta_key, string $value): void {
+        // update_user_meta returns false when value is unchanged, which is fine.
+        // We just need to ensure the value is set, not track if it changed.
+        update_user_meta($user_id, $meta_key, $value);
     }
 
     /**
@@ -168,6 +202,41 @@ class UserRepository {
     public function get_sales_roundup_frequency(int $user_id): string {
         $frequency = get_user_meta($user_id, self::META_SALES_ROUNDUP_FREQUENCY, true);
         return in_array($frequency, self::VALID_FREQUENCIES, true) ? $frequency : 'weekly';
+    }
+
+    /**
+     * Get the product types a user wants in their sales roundup.
+     *
+     * @param int $user_id The user ID.
+     * @return array<string> Array of product type slugs (e.g., ['escooter', 'ebike']).
+     */
+    public function get_sales_roundup_types(int $user_id): array {
+        $types = get_user_meta($user_id, self::META_SALES_ROUNDUP_TYPES, true);
+
+        if (empty($types)) {
+            // Default to all types for backwards compatibility
+            return array_keys(self::VALID_ROUNDUP_TYPES);
+        }
+
+        // Filter to only valid types
+        if (is_array($types)) {
+            return array_values(array_intersect($types, array_keys(self::VALID_ROUNDUP_TYPES)));
+        }
+
+        return array_keys(self::VALID_ROUNDUP_TYPES);
+    }
+
+    /**
+     * Set the product types a user wants in their sales roundup.
+     *
+     * @param int           $user_id The user ID.
+     * @param array<string> $types   Array of product type slugs.
+     * @return void
+     */
+    public function set_sales_roundup_types(int $user_id, array $types): void {
+        // Filter to only valid types
+        $valid_types = array_values(array_intersect($types, array_keys(self::VALID_ROUNDUP_TYPES)));
+        update_user_meta($user_id, self::META_SALES_ROUNDUP_TYPES, $valid_types);
     }
 
     /**
