@@ -561,10 +561,19 @@ class Finder {
 
     /**
      * Format price with current geo's currency symbol
+     * Shows cents only when they exist (e.g., $999.99), otherwise whole number (e.g., $500)
      */
     formatProductPrice(product) {
         if (!product.price) return '';
-        return `${this.currencySymbol}${Math.round(product.price).toLocaleString()}`;
+
+        const price = product.price;
+        const hasCents = (price % 1) >= 0.005;
+
+        if (hasCents) {
+            return `${this.currencySymbol}${price.toLocaleString(undefined, { minimumFractionDigits: 2, maximumFractionDigits: 2 })}`;
+        }
+
+        return `${this.currencySymbol}${Math.floor(price).toLocaleString()}`;
     }
 
     // =========================================

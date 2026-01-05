@@ -164,6 +164,9 @@ function erh_get_category_short_name( string $category ): string {
 /**
  * Format price for display
  *
+ * Shows cents only when they exist (e.g., $999.99), otherwise whole number (e.g., $500).
+ * This preserves psychological pricing like .99 endings.
+ *
  * @param float  $price Price value
  * @param string $currency Currency code
  * @return string Formatted price
@@ -173,9 +176,18 @@ function erh_format_price( float $price, string $currency = 'USD' ): string {
         'USD' => '$',
         'GBP' => '£',
         'EUR' => '€',
+        'CAD' => 'CA$',
+        'AUD' => 'A$',
     );
 
     $symbol = $symbols[ $currency ] ?? '$';
+
+    // Check if price has meaningful cents (not .00)
+    $has_cents = ( $price - floor( $price ) ) >= 0.005;
+
+    if ( $has_cents ) {
+        return $symbol . number_format( $price, 2 );
+    }
 
     return $symbol . number_format( $price, 0 );
 }

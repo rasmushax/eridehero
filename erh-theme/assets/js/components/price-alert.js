@@ -279,7 +279,7 @@ class PriceAlertModalManager {
                 <div class="price-alert-product-info">
                     <span class="price-alert-product-name">${this.escapeHtml(productName || 'Product')}</span>
                     <span class="price-alert-product-price">
-                        Current price: ${currencySymbol}${displayPrice ? displayPrice.toFixed(0) : '--'}
+                        Current price: ${currencySymbol}${this.formatPriceValue(displayPrice)}
                         ${priceChange ? `<span class="price-alert-price-change">${priceChange}</span>` : ''}
                     </span>
                 </div>
@@ -435,7 +435,7 @@ class PriceAlertModalManager {
         // For target price: must be lower than current price
         const currentPrice = this.productData.currentPrice;
         if (this.alertType === 'target' && currentPrice && value >= currentPrice) {
-            errorEl.textContent = `Target price must be lower than ${this.productData.symbol}${Math.floor(currentPrice)}.`;
+            errorEl.textContent = `Target price must be lower than ${this.productData.symbol}${this.formatPriceValue(currentPrice)}.`;
             errorEl.hidden = false;
             return;
         }
@@ -559,6 +559,19 @@ class PriceAlertModalManager {
         } finally {
             this.isDeleting = false;
         }
+    }
+
+    /**
+     * Format a price value (number only, no symbol)
+     * Shows cents only when they exist (e.g., 999.99), otherwise whole number (e.g., 500)
+     */
+    formatPriceValue(price) {
+        if (price == null) return '--';
+        const hasCents = (price % 1) >= 0.005;
+        if (hasCents) {
+            return price.toLocaleString(undefined, { minimumFractionDigits: 2, maximumFractionDigits: 2 });
+        }
+        return Math.floor(price).toLocaleString();
     }
 
     /**
