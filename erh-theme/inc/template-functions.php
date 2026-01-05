@@ -1117,3 +1117,489 @@ function erh_get_reading_time( int $post_id ): int {
 
 	return max( 1, (int) $reading_time );
 }
+
+/**
+ * Get category key from product type
+ *
+ * Returns the lowercase key used in JS configs (compare-config.js).
+ *
+ * @param string $product_type Product type label (e.g., 'Electric Scooter').
+ * @return string Category key (e.g., 'escooter').
+ */
+function erh_get_category_key( string $product_type ): string {
+	$keys = array(
+		'Electric Scooter'    => 'escooter',
+		'Electric Bike'       => 'ebike',
+		'Electric Skateboard' => 'eskateboard',
+		'Electric Unicycle'   => 'euc',
+		'Hoverboard'          => 'hoverboard',
+	);
+
+	return $keys[ $product_type ] ?? 'escooter';
+}
+
+/**
+ * Extract brand name from product title
+ *
+ * Assumes brand is the first word of the product name.
+ * Handles compound brand names like "Segway Ninebot".
+ *
+ * @param string $title Product title.
+ * @return string Brand name.
+ */
+function erh_extract_brand_from_title( string $title ): string {
+	// Known compound brand names to check first
+	$compound_brands = array(
+		'Segway Ninebot',
+		'Zero Motorcycles',
+		'Xiaomi Mi',
+		'Hiboy S',
+		'Gotrax G',
+		'Inokim Light',
+		'Inokim Quick',
+		'Inokim Ox',
+		'Apollo City',
+		'Apollo Ghost',
+		'Apollo Phantom',
+		'Niu KQi',
+		'Mantis King',
+		'Wolf King',
+		'Wolf Warrior',
+	);
+
+	// Check for compound brands first
+	foreach ( $compound_brands as $brand ) {
+		if ( stripos( $title, $brand ) === 0 ) {
+			return $brand;
+		}
+	}
+
+	// Fall back to first word
+	$parts = explode( ' ', trim( $title ) );
+	return $parts[0] ?? '';
+}
+
+/**
+ * Get overall score for a product
+ *
+ * Returns editor rating (scaled to 0-100) or null if not available.
+ * This is used as the main score badge on product pages.
+ *
+ * @param int $product_id Product ID.
+ * @return int|null Score 0-100 or null.
+ */
+function erh_get_product_score( int $product_id ): ?int {
+	$rating = get_field( 'editor_rating', $product_id );
+
+	if ( empty( $rating ) ) {
+		return null;
+	}
+
+	// Editor rating is 0-10, scale to 0-100
+	return (int) round( (float) $rating * 10 );
+}
+
+/**
+ * Get score label for 0-100 scale score
+ *
+ * Maps numeric score to human-readable label.
+ *
+ * @param int $score Score 0-100.
+ * @return string Label like 'Excellent', 'Great', etc.
+ */
+function erh_get_score_label_100( int $score ): string {
+	if ( $score >= 90 ) {
+		return 'Excellent';
+	} elseif ( $score >= 80 ) {
+		return 'Great';
+	} elseif ( $score >= 70 ) {
+		return 'Good';
+	} elseif ( $score >= 60 ) {
+		return 'Average';
+	} else {
+		return 'Below Average';
+	}
+}
+
+/**
+ * Get product data from the wp_product_data cache table.
+ *
+ * @param int $product_id Product ID.
+ * @return array|null Product data or null if not found.
+ */
+function erh_get_product_cache_data( int $product_id ): ?array {
+	global $wpdb;
+
+	$table = $wpdb->prefix . 'product_data';
+	$row   = $wpdb->get_row(
+		$wpdb->prepare(
+			"SELECT * FROM {$table} WHERE product_id = %d",
+			$product_id
+		),
+		ARRAY_A
+	);
+
+	if ( ! $row ) {
+		return null;
+	}
+
+	// Unserialize specs and price_history
+	if ( isset( $row['specs'] ) ) {
+		$row['specs'] = maybe_unserialize( $row['specs'] );
+	}
+	if ( isset( $row['price_history'] ) ) {
+		$row['price_history'] = maybe_unserialize( $row['price_history'] );
+	}
+
+	return $row;
+}
+
+/**
+ * Get spec groups configuration for a product category.
+ *
+ * Returns structured spec groups matching the SPEC_GROUPS config in compare-config.js.
+ * Used for rendering specs from the product_data cache table.
+ *
+ * @param string $category Category key ('escooter', 'ebike', etc.).
+ * @return array Spec groups configuration.
+ */
+function erh_get_spec_groups_config( string $category ): array {
+	$configs = array(
+		'escooter' => array(
+			'Motor Performance' => array(
+				'icon'      => 'zap',
+				'score_key' => 'motor_performance',
+				'specs'     => array(
+					array( 'key' => 'tested_top_speed', 'label' => 'Tested Top Speed', 'unit' => 'mph' ),
+					array( 'key' => 'manufacturer_top_speed', 'label' => 'Claimed Top Speed', 'unit' => 'mph' ),
+					array( 'key' => 'motor.power_nominal', 'label' => 'Motor Power', 'unit' => 'W' ),
+					array( 'key' => 'motor.power_peak', 'label' => 'Peak Power', 'unit' => 'W' ),
+					array( 'key' => 'motor.voltage', 'label' => 'Voltage', 'unit' => 'V' ),
+					array( 'key' => 'motor.motor_position', 'label' => 'Motor Config' ),
+					array( 'key' => 'motor.motor_type', 'label' => 'Motor Type' ),
+					array( 'key' => 'hill_climbing', 'label' => 'Tested Hill Climb', 'unit' => '°' ),
+					array( 'key' => 'max_incline', 'label' => 'Claimed Hill Grade', 'unit' => '°' ),
+					array( 'key' => 'fastest_0_15', 'label' => '0-15 mph (tested)', 'unit' => 's' ),
+					array( 'key' => 'acceleration_0_15_mph', 'label' => '0-15 mph (claimed)', 'unit' => 's' ),
+					array( 'key' => 'fastest_0_20', 'label' => '0-20 mph (tested)', 'unit' => 's' ),
+					array( 'key' => 'acceleration_0_20_mph', 'label' => '0-20 mph (claimed)', 'unit' => 's' ),
+				),
+			),
+			'Range & Battery' => array(
+				'icon'      => 'battery',
+				'score_key' => 'range_battery',
+				'specs'     => array(
+					array( 'key' => 'tested_range_regular', 'label' => 'Tested Range', 'unit' => 'mi' ),
+					array( 'key' => 'tested_range_fast', 'label' => 'Tested Range (fast)', 'unit' => 'mi' ),
+					array( 'key' => 'tested_range_slow', 'label' => 'Tested Range (eco)', 'unit' => 'mi' ),
+					array( 'key' => 'manufacturer_range', 'label' => 'Claimed Range', 'unit' => 'mi' ),
+					array( 'key' => 'battery.capacity', 'label' => 'Battery', 'unit' => 'Wh' ),
+					array( 'key' => 'battery.voltage', 'label' => 'Battery Voltage', 'unit' => 'V' ),
+					array( 'key' => 'battery.charging_time', 'label' => 'Charge Time', 'unit' => 'h' ),
+					array( 'key' => 'battery.battery_type', 'label' => 'Battery Type' ),
+				),
+			),
+			'Ride Quality' => array(
+				'icon'      => 'smile',
+				'score_key' => 'ride_quality',
+				'specs'     => array(
+					array( 'key' => 'suspension.type', 'label' => 'Suspension', 'format' => 'array' ),
+					array( 'key' => 'suspension.adjustable', 'label' => 'Adjustable Suspension', 'format' => 'boolean' ),
+					array( 'key' => 'wheels.tire_type', 'label' => 'Tire Type' ),
+					array( 'key' => 'wheels.tire_size_front', 'label' => 'Front Tire Size', 'unit' => '"' ),
+					array( 'key' => 'wheels.tire_size_rear', 'label' => 'Rear Tire Size', 'unit' => '"' ),
+					array( 'key' => 'wheels.tire_width', 'label' => 'Tire Width', 'unit' => '"' ),
+					array( 'key' => 'dimensions.deck_length', 'label' => 'Deck Length', 'unit' => '"' ),
+					array( 'key' => 'dimensions.deck_width', 'label' => 'Deck Width', 'unit' => '"' ),
+					array( 'key' => 'dimensions.ground_clearance', 'label' => 'Ground Clearance', 'unit' => '"' ),
+					array( 'key' => 'dimensions.handlebar_height_min', 'label' => 'Handlebar Height (min)', 'unit' => '"' ),
+					array( 'key' => 'dimensions.handlebar_height_max', 'label' => 'Handlebar Height (max)', 'unit' => '"' ),
+					array( 'key' => 'dimensions.handlebar_width', 'label' => 'Handlebar Width', 'unit' => '"' ),
+					array( 'key' => 'other.footrest', 'label' => 'Footrest', 'format' => 'boolean' ),
+					array( 'key' => 'other.terrain', 'label' => 'Terrain Type' ),
+				),
+			),
+			'Portability & Fit' => array(
+				'icon'      => 'box',
+				'score_key' => 'portability',
+				'specs'     => array(
+					array( 'key' => 'dimensions.weight', 'label' => 'Weight', 'unit' => 'lbs' ),
+					array( 'key' => 'dimensions.max_load', 'label' => 'Max Rider Weight', 'unit' => 'lbs' ),
+					array( 'key' => 'dimensions.folded_length', 'label' => 'Folded Length', 'unit' => '"' ),
+					array( 'key' => 'dimensions.folded_width', 'label' => 'Folded Width', 'unit' => '"' ),
+					array( 'key' => 'dimensions.folded_height', 'label' => 'Folded Height', 'unit' => '"' ),
+					array( 'key' => 'dimensions.foldable_handlebars', 'label' => 'Foldable Bars', 'format' => 'boolean' ),
+					array( 'key' => 'other.fold_location', 'label' => 'Fold Mechanism' ),
+				),
+			),
+			'Safety' => array(
+				'icon'      => 'shield',
+				'score_key' => 'safety',
+				'specs'     => array(
+					array( 'key' => 'brakes.front', 'label' => 'Front Brake' ),
+					array( 'key' => 'brakes.rear', 'label' => 'Rear Brake' ),
+					array( 'key' => 'brakes.regenerative', 'label' => 'Regen Braking', 'format' => 'boolean' ),
+					array( 'key' => 'brake_distance', 'label' => 'Tested Brake Distance', 'unit' => 'ft' ),
+					array( 'key' => 'lighting.lights', 'label' => 'Lights', 'format' => 'array' ),
+					array( 'key' => 'lighting.turn_signals', 'label' => 'Turn Signals', 'format' => 'boolean' ),
+				),
+			),
+			'Features' => array(
+				'icon'      => 'settings',
+				'score_key' => 'features',
+				'specs'     => array(
+					array( 'key' => 'features', 'label' => 'Features', 'format' => 'features' ),
+					array( 'key' => 'other.display_type', 'label' => 'Display' ),
+					array( 'key' => 'other.throttle_type', 'label' => 'Throttle' ),
+					array( 'key' => 'other.kickstand', 'label' => 'Kickstand', 'format' => 'boolean' ),
+				),
+			),
+			'Maintenance' => array(
+				'icon'      => 'tool',
+				'score_key' => 'maintenance',
+				'specs'     => array(
+					array( 'key' => 'wheels.tire_type', 'label' => 'Tire Type' ),
+					array( 'key' => 'wheels.self_healing', 'label' => 'Self-Healing Tires', 'format' => 'boolean' ),
+					array( 'key' => 'other.ip_rating', 'label' => 'IP Rating' ),
+				),
+			),
+		),
+		'ebike' => array(
+			'Motor & Power' => array(
+				'icon'      => 'zap',
+				'score_key' => 'motor_performance',
+				'specs'     => array(
+					array( 'key' => 'e-bikes.motor.power_nominal', 'label' => 'Motor Power', 'unit' => 'W' ),
+					array( 'key' => 'e-bikes.motor.power_peak', 'label' => 'Peak Power', 'unit' => 'W' ),
+					array( 'key' => 'e-bikes.motor.torque', 'label' => 'Torque', 'unit' => 'Nm' ),
+					array( 'key' => 'e-bikes.motor.type', 'label' => 'Motor Type' ),
+					array( 'key' => 'e-bikes.motor.position', 'label' => 'Motor Position' ),
+				),
+			),
+			'Range & Battery' => array(
+				'icon'      => 'battery',
+				'score_key' => 'range_battery',
+				'specs'     => array(
+					array( 'key' => 'e-bikes.battery.range_claimed', 'label' => 'Claimed Range', 'unit' => 'mi' ),
+					array( 'key' => 'e-bikes.battery.capacity', 'label' => 'Battery', 'unit' => 'Wh' ),
+					array( 'key' => 'e-bikes.battery.voltage', 'label' => 'Voltage', 'unit' => 'V' ),
+					array( 'key' => 'e-bikes.battery.removable', 'label' => 'Removable Battery', 'format' => 'boolean' ),
+					array( 'key' => 'e-bikes.battery.charge_time', 'label' => 'Charge Time', 'unit' => 'h' ),
+				),
+			),
+			'Speed & Performance' => array(
+				'icon'      => 'gauge',
+				'score_key' => null,
+				'specs'     => array(
+					array( 'key' => 'e-bikes.performance.top_speed', 'label' => 'Top Speed', 'unit' => 'mph' ),
+					array( 'key' => 'e-bikes.performance.class', 'label' => 'Class' ),
+					array( 'key' => 'e-bikes.performance.pedal_assist_levels', 'label' => 'Assist Levels' ),
+					array( 'key' => 'e-bikes.performance.throttle', 'label' => 'Throttle', 'format' => 'boolean' ),
+				),
+			),
+			'Build & Frame' => array(
+				'icon'      => 'box',
+				'score_key' => null,
+				'specs'     => array(
+					array( 'key' => 'e-bikes.frame.weight', 'label' => 'Weight', 'unit' => 'lbs' ),
+					array( 'key' => 'e-bikes.frame.max_load', 'label' => 'Max Load', 'unit' => 'lbs' ),
+					array( 'key' => 'e-bikes.frame.material', 'label' => 'Frame Material' ),
+					array( 'key' => 'e-bikes.frame.type', 'label' => 'Frame Type' ),
+					array( 'key' => 'e-bikes.frame.suspension', 'label' => 'Suspension' ),
+					array( 'key' => 'e-bikes.frame.foldable', 'label' => 'Foldable', 'format' => 'boolean' ),
+				),
+			),
+			'Components' => array(
+				'icon'      => 'settings',
+				'score_key' => null,
+				'specs'     => array(
+					array( 'key' => 'e-bikes.components.gears', 'label' => 'Gears' ),
+					array( 'key' => 'e-bikes.components.brakes', 'label' => 'Brakes' ),
+					array( 'key' => 'e-bikes.components.wheel_size', 'label' => 'Wheel Size', 'unit' => '"' ),
+					array( 'key' => 'e-bikes.components.tire_type', 'label' => 'Tire Type' ),
+					array( 'key' => 'e-bikes.components.display', 'label' => 'Display' ),
+					array( 'key' => 'e-bikes.components.lights', 'label' => 'Lights' ),
+				),
+			),
+		),
+	);
+
+	return $configs[ $category ] ?? array();
+}
+
+/**
+ * Get a nested value from an array using dot notation.
+ *
+ * @param array  $array The array to traverse.
+ * @param string $path  Dot-separated path (e.g., 'motor.power_nominal').
+ * @return mixed|null Value at path or null if not found.
+ */
+function erh_get_nested_value( array $array, string $path ) {
+	if ( empty( $path ) ) {
+		return null;
+	}
+
+	// Direct key access if no dot
+	if ( strpos( $path, '.' ) === false ) {
+		return $array[ $path ] ?? null;
+	}
+
+	// Navigate nested path
+	$parts   = explode( '.', $path );
+	$current = $array;
+
+	foreach ( $parts as $part ) {
+		if ( ! is_array( $current ) || ! isset( $current[ $part ] ) ) {
+			return null;
+		}
+		$current = $current[ $part ];
+	}
+
+	return $current;
+}
+
+/**
+ * Format a spec value for display.
+ *
+ * @param mixed  $value  The raw value.
+ * @param array  $spec   Spec configuration with optional 'unit' and 'format'.
+ * @return string Formatted display value.
+ */
+function erh_format_spec_value( $value, array $spec ): string {
+	if ( $value === null || $value === '' ) {
+		return '';
+	}
+
+	// Handle arrays (suspension, features, lights, etc.)
+	if ( is_array( $value ) ) {
+		if ( empty( $value ) ) {
+			return '';
+		}
+
+		// Features array - show count + first few
+		if ( ( $spec['format'] ?? '' ) === 'features' ) {
+			$filtered = array_filter( $value, function( $v ) {
+				return ! empty( $v ) && $v !== 'None';
+			} );
+			if ( count( $filtered ) <= 3 ) {
+				return implode( ', ', $filtered );
+			}
+			return implode( ', ', array_slice( $filtered, 0, 3 ) ) . ' +' . ( count( $filtered ) - 3 ) . ' more';
+		}
+
+		// Generic array format
+		$filtered = array_filter( $value, function( $v ) {
+			return ! empty( $v ) && $v !== 'None';
+		} );
+		if ( empty( $filtered ) ) {
+			return '';
+		}
+		return implode( ', ', $filtered );
+	}
+
+	// Handle booleans
+	if ( ( $spec['format'] ?? '' ) === 'boolean' ) {
+		if ( $value === true || $value === 'Yes' || $value === 'yes' || $value === 1 || $value === '1' ) {
+			return 'Yes';
+		}
+		if ( $value === false || $value === 'No' || $value === 'no' || $value === 0 || $value === '0' ) {
+			return 'No';
+		}
+		return (string) $value;
+	}
+
+	// Numeric with unit
+	if ( isset( $spec['unit'] ) && is_numeric( $value ) ) {
+		$formatted = is_float( $value + 0 ) && floor( $value ) != $value
+			? number_format( (float) $value, 1 )
+			: (string) $value;
+		return $formatted . ' ' . $spec['unit'];
+	}
+
+	return (string) $value;
+}
+
+/**
+ * Render specs HTML from product_data cache.
+ *
+ * @param int    $product_id  Product ID.
+ * @param string $category    Category key ('escooter', 'ebike', etc.).
+ * @return string HTML for specs categories.
+ */
+function erh_render_specs_from_cache( int $product_id, string $category ): string {
+	// Get cached product data
+	$product_data = erh_get_product_cache_data( $product_id );
+	if ( ! $product_data || empty( $product_data['specs'] ) ) {
+		return '<p class="specs-empty">Specifications not available.</p>';
+	}
+
+	$specs       = $product_data['specs'];
+	$scores      = $specs['scores'] ?? array();
+	$spec_groups = erh_get_spec_groups_config( $category );
+
+	if ( empty( $spec_groups ) ) {
+		return '<p class="specs-empty">Specifications not available for this product type.</p>';
+	}
+
+	$html = '';
+
+	foreach ( $spec_groups as $category_name => $category_config ) {
+		$icon      = $category_config['icon'] ?? 'list';
+		$score_key = $category_config['score_key'] ?? null;
+		$score     = $score_key && isset( $scores[ $score_key ] ) ? round( $scores[ $score_key ] ) : null;
+		$spec_defs = $category_config['specs'] ?? array();
+
+		// Build spec rows
+		$rows_html = '';
+		foreach ( $spec_defs as $spec_def ) {
+			$value     = erh_get_nested_value( $specs, $spec_def['key'] );
+			$formatted = erh_format_spec_value( $value, $spec_def );
+
+			// Skip empty values
+			if ( $formatted === '' || $formatted === 'No' ) {
+				continue;
+			}
+
+			$rows_html .= sprintf(
+				'<div class="specs-row"><span class="specs-label">%s</span><span class="specs-value">%s</span></div>',
+				esc_html( $spec_def['label'] ),
+				esc_html( $formatted )
+			);
+		}
+
+		// Skip categories with no specs
+		if ( empty( $rows_html ) ) {
+			continue;
+		}
+
+		// Build score badge
+		$score_html = '';
+		if ( $score !== null ) {
+			$score_class = $score >= 80 ? 'score-high' : ( $score >= 60 ? 'score-medium' : 'score-low' );
+			$score_html  = sprintf(
+				'<span class="specs-category-score %s"><span data-score-value>%d</span></span>',
+				esc_attr( $score_class ),
+				$score
+			);
+		}
+
+		// Build category HTML
+		$html .= sprintf(
+			'<div class="specs-category is-open" data-specs-category>
+				<button type="button" class="specs-category-header" data-specs-toggle aria-expanded="true">
+					<svg class="icon specs-category-icon" aria-hidden="true"><use href="#icon-%s"></use></svg>
+					<span class="specs-category-name">%s</span>
+					%s
+					<svg class="icon specs-category-chevron" aria-hidden="true"><use href="#icon-chevron-down"></use></svg>
+				</button>
+				<div class="specs-category-body">%s</div>
+			</div>',
+			esc_attr( $icon ),
+			esc_html( $category_name ),
+			$score_html,
+			$rows_html
+		);
+	}
+
+	return $html ?: '<p class="specs-empty">No specifications available.</p>';
+}

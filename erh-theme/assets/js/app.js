@@ -172,6 +172,32 @@ import './components/toast.js'; // Toast notifications (auto-init container)
         });
     }
 
+    // Product page (single product database view)
+    if (document.querySelector('[data-product-page]')) {
+        import('./components/product-page.js').then(module => {
+            // Auto-initializes on import
+        });
+
+        // Also init comparison widget on product pages
+        const productComparison = document.querySelector('[data-product-comparison]');
+        if (productComparison) {
+            import('./components/comparison.js').then(module => {
+                const categoryFilter = productComparison.dataset.lockedCategory || null;
+
+                module.initComparison({
+                    containerId: null, // Uses data-product-comparison selector
+                    containerSelector: '[data-product-comparison]',
+                    submitBtnSelector: '[data-compare-submit]',
+                    announcerSelector: '[data-comparison-announcer]',
+                    wrapperClass: 'comparison-input-wrapper',
+                    categoryFilter: categoryFilter,
+                    showCategoryInResults: false,
+                    allowDynamicInputs: false
+                });
+            });
+        }
+    }
+
     // Account page - tabs, settings, and trackers
     if (document.querySelector('.account-page')) {
         import('./components/account-tabs.js');

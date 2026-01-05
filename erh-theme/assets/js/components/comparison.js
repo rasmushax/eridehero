@@ -16,13 +16,17 @@ export async function initComparison(options = {}) {
     // Default configuration
     const config = {
         containerId: 'comparison-container',
+        containerSelector: null, // Alternative to containerId - use CSS selector
         inputsContainerId: null, // If null, uses rightColumnId for dynamic inputs
+        inputsContainerSelector: null, // Alternative selector for inputs container
         rightColumnId: 'comparison-right-column',
         submitBtnId: 'comparison-submit',
+        submitBtnSelector: null, // Alternative to submitBtnId - use CSS selector
         categoryPillId: 'comparison-category-pill',
         categoryTextId: 'comparison-category-text',
         categoryClearId: 'comparison-category-clear',
         announcerId: 'comparison-announcer',
+        announcerSelector: null, // Alternative to announcerId - use CSS selector
         categoryFilter: null, // e.g., 'escooter' to filter products
         wrapperClass: 'comparison-input-wrapper', // Additional classes for new wrappers
         showCategoryInResults: true,
@@ -31,17 +35,30 @@ export async function initComparison(options = {}) {
         ...options
     };
 
-    // DOM Elements
-    const container = document.getElementById(config.containerId);
-    const inputsContainer = config.inputsContainerId
-        ? document.getElementById(config.inputsContainerId)
-        : document.getElementById(config.rightColumnId);
+    // DOM Elements - support both ID and selector options
+    const container = config.containerSelector
+        ? document.querySelector(config.containerSelector)
+        : (config.containerId ? document.getElementById(config.containerId) : null);
+
+    const inputsContainer = config.inputsContainerSelector
+        ? document.querySelector(config.inputsContainerSelector)
+        : (config.inputsContainerId
+            ? document.getElementById(config.inputsContainerId)
+            : document.getElementById(config.rightColumnId));
+
     const rightColumn = document.getElementById(config.rightColumnId);
-    const submitBtn = document.getElementById(config.submitBtnId);
+
+    const submitBtn = config.submitBtnSelector
+        ? (container ? container.querySelector(config.submitBtnSelector) : document.querySelector(config.submitBtnSelector))
+        : document.getElementById(config.submitBtnId);
+
     const categoryPill = document.getElementById(config.categoryPillId);
     const categoryText = document.getElementById(config.categoryTextId);
     const categoryClear = document.getElementById(config.categoryClearId);
-    const announcer = document.getElementById(config.announcerId);
+
+    const announcer = config.announcerSelector
+        ? (container ? container.querySelector(config.announcerSelector) : document.querySelector(config.announcerSelector))
+        : document.getElementById(config.announcerId);
 
     // For stacked layout (hub), inputsContainer is where all inputs live
     // For side-by-side layout (homepage), rightColumn is where dynamic inputs go
