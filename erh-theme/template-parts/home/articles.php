@@ -1,8 +1,13 @@
 <?php
 /**
- * Homepage Latest Articles Section
+ * Latest Articles Section
  *
- * Displays 4 latest articles (excluding reviews and buying guides) with About sidebar.
+ * Displays latest articles (excluding reviews and buying guides) with About sidebar.
+ *
+ * Accepts optional args:
+ * - category (string): Category slug to filter by (e.g., 'electric-scooters')
+ * - limit (int): Number of articles to show (default: 4)
+ * - show_sidebar (bool): Whether to show sidebar (default: true)
  *
  * @package ERideHero
  */
@@ -12,10 +17,15 @@ if ( ! defined( 'ABSPATH' ) ) {
     exit;
 }
 
-// Query latest 4 posts, excluding review and buying-guide tags
-$articles_query = new WP_Query( array(
+// Get args from get_template_part() or use defaults
+$category     = $args['category'] ?? '';
+$limit        = $args['limit'] ?? 4;
+$show_sidebar = $args['show_sidebar'] ?? true;
+
+// Build query args
+$query_args = array(
     'post_type'      => 'post',
-    'posts_per_page' => 4,
+    'posts_per_page' => $limit,
     'post_status'    => 'publish',
     'orderby'        => 'date',
     'order'          => 'DESC',
@@ -23,10 +33,17 @@ $articles_query = new WP_Query( array(
         get_term_by( 'slug', 'review', 'post_tag' ) ? get_term_by( 'slug', 'review', 'post_tag' )->term_id : 0,
         get_term_by( 'slug', 'buying-guide', 'post_tag' ) ? get_term_by( 'slug', 'buying-guide', 'post_tag' )->term_id : 0,
     ) ),
-) );
+);
+
+// Add category filter if specified
+if ( $category ) {
+    $query_args['category_name'] = $category;
+}
+
+$articles_query = new WP_Query( $query_args );
 ?>
 
-<section class="section latest-articles">
+<section class="section latest-articles" id="articles">
     <div class="container">
         <div class="section-header">
             <h2><?php esc_html_e( 'Latest articles', 'erh' ); ?></h2>
@@ -70,7 +87,9 @@ $articles_query = new WP_Query( array(
                 </div>
             <?php endif; ?>
 
-            <?php get_template_part( 'template-parts/components/sidebar-about' ); ?>
+            <?php if ( $show_sidebar ) : ?>
+                <?php get_template_part( 'template-parts/components/sidebar-about' ); ?>
+            <?php endif; ?>
         </div>
     </div>
 </section>

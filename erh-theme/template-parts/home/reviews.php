@@ -1,9 +1,14 @@
 <?php
 /**
- * Homepage Latest Reviews Section
+ * Latest Reviews Section
  *
- * Displays 4 latest review posts with "How We Test" sidebar.
+ * Displays latest review posts with "How We Test" sidebar.
  * Reviews are posts tagged with 'review' and linked to products CPT.
+ *
+ * Accepts optional args:
+ * - category (string): Category slug to filter by (e.g., 'electric-scooters')
+ * - limit (int): Number of reviews to show (default: 4)
+ * - show_sidebar (bool): Whether to show sidebar (default: true)
  *
  * @package ERideHero
  */
@@ -13,18 +18,30 @@ if ( ! defined( 'ABSPATH' ) ) {
     exit;
 }
 
-// Query latest 4 posts with 'review' tag
-$reviews_query = new WP_Query( array(
+// Get args from get_template_part() or use defaults
+$category     = $args['category'] ?? '';
+$limit        = $args['limit'] ?? 4;
+$show_sidebar = $args['show_sidebar'] ?? true;
+
+// Build query args
+$query_args = array(
     'post_type'      => 'post',
     'tag'            => 'review',
-    'posts_per_page' => 4,
+    'posts_per_page' => $limit,
     'post_status'    => 'publish',
     'orderby'        => 'date',
     'order'          => 'DESC',
-) );
+);
+
+// Add category filter if specified
+if ( $category ) {
+    $query_args['category_name'] = $category;
+}
+
+$reviews_query = new WP_Query( $query_args );
 ?>
 
-<section class="section latest-reviews">
+<section class="section latest-reviews" id="reviews">
     <div class="container">
         <div class="section-header">
             <h2><?php esc_html_e( 'Latest reviews', 'erh' ); ?></h2>
@@ -87,7 +104,9 @@ $reviews_query = new WP_Query( array(
                 </div>
             <?php endif; ?>
 
-            <?php get_template_part( 'template-parts/components/sidebar-how-we-test' ); ?>
+            <?php if ( $show_sidebar ) : ?>
+                <?php get_template_part( 'template-parts/components/sidebar-how-we-test' ); ?>
+            <?php endif; ?>
         </div>
     </div>
 </section>

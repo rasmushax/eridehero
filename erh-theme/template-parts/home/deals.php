@@ -1,9 +1,14 @@
 <?php
 /**
- * Homepage Deals Section
+ * Deals Section
  *
  * Displays today's best deals with category filtering.
  * Prices are loaded dynamically via JavaScript for geo-aware display.
+ *
+ * Accepts optional args:
+ * - category (string): Fixed category filter (e.g., 'escooter'). When set, hides category tabs.
+ * - show_tabs (bool): Whether to show category tabs (default: true, false when category is set)
+ * - limit (int): Number of deals to load (default: 12)
  *
  * @package ERideHero
  */
@@ -13,7 +18,12 @@ if ( ! defined( 'ABSPATH' ) ) {
     exit;
 }
 
-// Category configuration.
+// Get args from get_template_part() or use defaults.
+$fixed_category = $args['category'] ?? '';
+$show_tabs      = $args['show_tabs'] ?? ( empty( $fixed_category ) );
+$limit          = $args['limit'] ?? 12;
+
+// Category configuration for tabs.
 $categories = [
     'all'        => __( 'All', 'erh' ),
     'escooter'   => __( 'E-Scooters', 'erh' ),
@@ -22,8 +32,17 @@ $categories = [
     'euc'        => __( 'EUCs', 'erh' ),
     'hoverboard' => __( 'Hoverboards', 'erh' ),
 ];
+
+// Default active category.
+$default_category = $fixed_category ? $fixed_category : 'all';
 ?>
-<section class="deals-section section" id="deals-section">
+<section
+    class="deals-section section"
+    id="deals-section"
+    data-default-category="<?php echo esc_attr( $default_category ); ?>"
+    data-limit="<?php echo esc_attr( $limit ); ?>"
+    <?php if ( $fixed_category ) : ?>data-fixed-category="<?php echo esc_attr( $fixed_category ); ?>"<?php endif; ?>
+>
     <div class="container">
         <!-- Section Header -->
         <div class="section-header">
@@ -37,19 +56,21 @@ $categories = [
             </a>
         </div>
 
+        <?php if ( $show_tabs ) : ?>
         <!-- Category Tabs -->
         <div class="deals-tabs filter-pills" role="tablist">
             <?php foreach ( $categories as $slug => $label ) : ?>
                 <button
-                    class="filter-pill <?php echo $slug === 'all' ? 'active' : ''; ?>"
+                    class="filter-pill <?php echo $slug === $default_category ? 'active' : ''; ?>"
                     role="tab"
-                    aria-selected="<?php echo $slug === 'all' ? 'true' : 'false'; ?>"
+                    aria-selected="<?php echo $slug === $default_category ? 'true' : 'false'; ?>"
                     data-filter="<?php echo esc_attr( $slug ); ?>"
                 >
                     <?php echo esc_html( $label ); ?>
                 </button>
             <?php endforeach; ?>
         </div>
+        <?php endif; ?>
 
         <!-- Deals Carousel -->
         <div class="deals-carousel">

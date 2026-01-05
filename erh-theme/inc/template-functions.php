@@ -1103,3 +1103,17 @@ function erh_add_heading_ids( string $content ): string {
     return $content;
 }
 add_filter( 'the_content', 'erh_add_heading_ids', 5 ); // Early priority so IDs exist for other filters
+
+/**
+ * Estimate reading time for a post
+ *
+ * @param int $post_id Post ID.
+ * @return int Minutes to read.
+ */
+function erh_get_reading_time( int $post_id ): int {
+	$content    = get_post_field( 'post_content', $post_id );
+	$word_count = str_word_count( wp_strip_all_tags( $content ) );
+	$reading_time = ceil( $word_count / 200 ); // 200 words per minute
+
+	return max( 1, (int) $reading_time );
+}
