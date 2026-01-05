@@ -95,6 +95,49 @@ function bindEvents() {
             closeAllMenus();
         }
     });
+
+    // Event delegation for table row actions (prevents memory leak from rebinding)
+    if (elements.tbody) {
+        elements.tbody.addEventListener('click', handleTableClick);
+    }
+}
+
+/**
+ * Handle clicks on table rows via event delegation
+ */
+function handleTableClick(e) {
+    const target = e.target;
+
+    // Action menu toggle
+    const toggleBtn = target.closest('[data-action-toggle]');
+    if (toggleBtn) {
+        e.stopPropagation();
+        const menu = toggleBtn.nextElementSibling;
+        const isOpen = menu?.classList.contains('is-open');
+        closeAllMenus();
+        if (!isOpen && menu) {
+            menu.classList.add('is-open');
+        }
+        return;
+    }
+
+    // Edit action
+    const editBtn = target.closest('[data-action="edit"]');
+    if (editBtn) {
+        const trackerId = editBtn.dataset.trackerId;
+        const tracker = trackers.find(t => String(t.id) === trackerId);
+        if (tracker) openEditModal(tracker);
+        return;
+    }
+
+    // Delete action
+    const deleteBtn = target.closest('[data-action="delete"]');
+    if (deleteBtn) {
+        const trackerId = deleteBtn.dataset.trackerId;
+        const tracker = trackers.find(t => String(t.id) === trackerId);
+        if (tracker) openDeleteModal(tracker);
+        return;
+    }
 }
 
 /**
@@ -208,9 +251,7 @@ function renderTable() {
     } else {
         elements.tbody.innerHTML = sorted.map(tracker => renderRow(tracker)).join('');
     }
-
-    // Bind row actions
-    bindRowActions();
+    // Note: Row actions handled via event delegation in handleTableClick()
 }
 
 /**
@@ -269,42 +310,6 @@ function renderRow(tracker) {
 }
 
 /**
- * Bind actions to table rows
- */
-function bindRowActions() {
-    // Action menu toggles
-    document.querySelectorAll('[data-action-toggle]').forEach(btn => {
-        btn.addEventListener('click', (e) => {
-            e.stopPropagation();
-            const menu = btn.nextElementSibling;
-            const isOpen = menu?.classList.contains('is-open');
-            closeAllMenus();
-            if (!isOpen && menu) {
-                menu.classList.add('is-open');
-            }
-        });
-    });
-
-    // Edit buttons - use PriceAlertModal
-    document.querySelectorAll('[data-action="edit"]').forEach(btn => {
-        btn.addEventListener('click', () => {
-            const trackerId = btn.dataset.trackerId;
-            const tracker = trackers.find(t => String(t.id) === trackerId);
-            if (tracker) openEditModal(tracker);
-        });
-    });
-
-    // Delete buttons
-    document.querySelectorAll('[data-action="delete"]').forEach(btn => {
-        btn.addEventListener('click', () => {
-            const trackerId = btn.dataset.trackerId;
-            const tracker = trackers.find(t => String(t.id) === trackerId);
-            if (tracker) openDeleteModal(tracker);
-        });
-    });
-}
-
-/**
  * Close all action menus
  */
 function closeAllMenus() {
@@ -336,6 +341,12 @@ function openDeleteModal(tracker) {
     closeAllMenus();
     pendingDeleteId = tracker.id;
 
+    // Clean up any existing modal first
+    if (deleteModal) {
+        deleteModal.destroy(true);
+        deleteModal = null;
+    }
+
     // Create delete confirmation modal programmatically
     deleteModal = Modal.create({
         id: 'delete-tracker-confirm',
@@ -349,8 +360,23 @@ function openDeleteModal(tracker) {
         size: 'sm',
         footerContent: `
             <button type="button" class="btn btn-secondary" data-modal-close>Cancel</button>
-            <button type="button" class="btn btn-danger" data-confirm-delete>Delete</button>
-        `
+            <button type="button" class="btn btn-danger" data-confirm-delete>
+                <span class="btn-text">Delete</span>
+                <span class="btn-loading" hidden>
+                    <svg class="spinner" viewBox="0 0 24 24" width="20" height="20">
+                        <circle cx="12" cy="12" r="10" stroke="currentColor" stroke-width="3" fill="none" stroke-dasharray="31.4" stroke-linecap="round"/>
+                    </svg>
+                </span>
+            </button>
+        `,
+        afterClose: () => {
+            // Clean up modal on close
+            if (deleteModal) {
+                deleteModal.destroy(true);
+                deleteModal = null;
+            }
+            pendingDeleteId = null;
+        }
     });
 
     // Bind delete confirm button
@@ -368,10 +394,14 @@ async function handleDeleteConfirm() {
 
     const trackerId = pendingDeleteId;
     const confirmBtn = deleteModal?.element.querySelector('[data-confirm-delete]');
+    const btnText = confirmBtn?.querySelector('.btn-text');
+    const btnLoading = confirmBtn?.querySelector('.btn-loading');
 
     if (confirmBtn) {
         confirmBtn.disabled = true;
-        confirmBtn.innerHTML = '<span class="btn-loading">Deleting...</span>';
+        confirmBtn.classList.add('is-loading');
+        if (btnText) btnText.style.visibility = 'hidden';
+        if (btnLoading) btnLoading.hidden = false;
     }
 
     try {
@@ -391,10 +421,8 @@ async function handleDeleteConfirm() {
         // Remove from local state
         trackers = trackers.filter(t => String(t.id) !== String(trackerId));
 
-        // Close modal
+        // Close modal (afterClose callback handles cleanup)
         deleteModal?.close();
-        deleteModal = null;
-        pendingDeleteId = null;
 
         if (trackers.length === 0) {
             showState('empty');
@@ -408,7 +436,9 @@ async function handleDeleteConfirm() {
         Toast.error(error.message);
         if (confirmBtn) {
             confirmBtn.disabled = false;
-            confirmBtn.textContent = 'Delete';
+            confirmBtn.classList.remove('is-loading');
+            if (btnText) btnText.style.visibility = '';
+            if (btnLoading) btnLoading.hidden = true;
         }
     }
 }

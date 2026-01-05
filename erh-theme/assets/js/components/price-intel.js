@@ -9,6 +9,14 @@ import { getUserGeo, formatPrice, getCurrencySymbol, getProductPrices } from '..
 import { createChart } from './chart.js';
 import { PriceAlertModal } from './price-alert.js';
 
+// Period labels for stats display
+const PERIOD_LABELS = {
+    '3m': '3-month',
+    '6m': '6-month',
+    '1y': '12-month',
+    'all': 'All-time'
+};
+
 /**
  * Initialize all price intel components on the page
  */
@@ -415,17 +423,9 @@ class PriceIntelComponent {
             return;
         }
 
-        // Period label (server returns all-time stats, we label based on data range)
-        const periodLabels = {
-            '3m': '3-month',
-            '6m': '6-month',
-            '1y': '12-month',
-            'all': 'All-time'
-        };
-
         // Update avg
         if (this.periodLabel) {
-            this.periodLabel.textContent = `${periodLabels[this.currentPeriod]} avg`;
+            this.periodLabel.textContent = `${PERIOD_LABELS[this.currentPeriod]} avg`;
         }
         if (this.periodAvg) {
             this.periodAvg.textContent = `${currencySymbol}${Math.round(stats.average)}`;
@@ -433,7 +433,7 @@ class PriceIntelComponent {
 
         // Update low
         if (this.periodLowLabel) {
-            this.periodLowLabel.textContent = `${periodLabels[this.currentPeriod]} low`;
+            this.periodLowLabel.textContent = `${PERIOD_LABELS[this.currentPeriod]} low`;
         }
         if (this.periodLow) {
             this.periodLow.textContent = `${currencySymbol}${Math.round(stats.lowest)}`;
@@ -461,17 +461,9 @@ class PriceIntelComponent {
         const min = Math.min(...values);
         const minIndex = values.indexOf(min);
 
-        // Period label mapping
-        const periodLabels = {
-            '3m': '3-month',
-            '6m': '6-month',
-            '1y': '12-month',
-            'all': 'All-time'
-        };
-
         // Update avg
         if (this.periodLabel) {
-            this.periodLabel.textContent = `${periodLabels[this.currentPeriod]} avg`;
+            this.periodLabel.textContent = `${PERIOD_LABELS[this.currentPeriod]} avg`;
         }
         if (this.periodAvg) {
             this.periodAvg.textContent = `${currencySymbol}${Math.round(avg)}`;
@@ -479,7 +471,7 @@ class PriceIntelComponent {
 
         // Update low
         if (this.periodLowLabel) {
-            this.periodLowLabel.textContent = `${periodLabels[this.currentPeriod]} low`;
+            this.periodLowLabel.textContent = `${PERIOD_LABELS[this.currentPeriod]} low`;
         }
         if (this.periodLow) {
             this.periodLow.textContent = `${currencySymbol}${Math.round(min)}`;

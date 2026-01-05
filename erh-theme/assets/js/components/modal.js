@@ -135,14 +135,27 @@ class Modal {
             this.element.setAttribute('aria-labelledby', title.id);
         }
 
+        // Bound close handler (for proper removal)
+        this._boundClose = () => this.close();
+
         // Find close buttons within modal
         this.closeButtons = this.element.querySelectorAll('[data-modal-close]');
         this.closeButtons.forEach(btn => {
-            btn.addEventListener('click', () => this.close());
+            btn.addEventListener('click', this._boundClose);
         });
 
         // Cache content wrapper
         this.content = this.element.querySelector('.modal-content');
+
+        // Cache for focusable elements (refreshed on open)
+        this._focusableElements = null;
+    }
+
+    /**
+     * Refresh cached focusable elements
+     */
+    _refreshFocusableCache() {
+        this._focusableElements = this.element.querySelectorAll(FOCUSABLE_SELECTORS);
     }
 
     /**
@@ -220,6 +233,9 @@ class Modal {
 
         // Set z-index based on stack position
         this.element.style.zIndex = 1000 + openModals.length;
+
+        // Refresh focusable elements cache
+        this._refreshFocusableCache();
 
         // Focus management
         if (this.options.autoFocus) {
@@ -322,10 +338,9 @@ class Modal {
             return;
         }
 
-        // Then try to focus the first focusable element
-        const focusable = this.element.querySelectorAll(FOCUSABLE_SELECTORS);
-        if (focusable.length) {
-            focusable[0].focus();
+        // Then try to focus the first focusable element (use cache)
+        if (this._focusableElements?.length) {
+            this._focusableElements[0].focus();
             return;
         }
 
@@ -337,13 +352,13 @@ class Modal {
     }
 
     /**
-     * Trap focus within modal
+     * Trap focus within modal (uses cached elements)
      */
     _handleFocusTrap(e) {
         if (!this.options.trapFocus) return;
 
-        const focusable = this.element.querySelectorAll(FOCUSABLE_SELECTORS);
-        if (focusable.length === 0) return;
+        const focusable = this._focusableElements;
+        if (!focusable?.length) return;
 
         const firstFocusable = focusable[0];
         const lastFocusable = focusable[focusable.length - 1];
@@ -414,17 +429,29 @@ class Modal {
 
     /**
      * Destroy the modal instance
+     * @param {boolean} removeElement - Whether to remove the DOM element (for dynamic modals)
      */
-    destroy() {
+    destroy(removeElement = false) {
         if (this.isOpen) {
             this.close();
         }
 
+        // Properly remove close button listeners using stored reference
         this.closeButtons.forEach(btn => {
-            btn.removeEventListener('click', () => this.close());
+            btn.removeEventListener('click', this._boundClose);
         });
 
+        // Remove from instances map
         Modal.instances.delete(this.element);
+
+        // Optionally remove from DOM (for dynamically created modals)
+        if (removeElement && this.element.parentNode) {
+            this.element.parentNode.removeChild(this.element);
+        }
+
+        // Clear references
+        this._focusableElements = null;
+        this._boundClose = null;
     }
 
     /**
@@ -528,17 +555,20 @@ class Modal {
  * Call this on DOMContentLoaded or after dynamic content loads
  */
 function initModals() {
-    // Set up triggers
-    document.querySelectorAll('[data-modal-trigger]').forEach(trigger => {
+    // Set up triggers (skip already initialized)
+    document.querySelectorAll('[data-modal-trigger]:not([data-modal-initialized])').forEach(trigger => {
         const modalId = trigger.getAttribute('data-modal-trigger');
 
         trigger.addEventListener('click', (e) => {
             e.preventDefault();
             Modal.openById(modalId, trigger);
         });
+
+        // Mark as initialized to prevent duplicate listeners
+        trigger.setAttribute('data-modal-initialized', 'true');
     });
 
-    // Initialize existing modal elements
+    // Initialize existing modal elements (Modal constructor handles duplicates via instances Map)
     document.querySelectorAll('[data-modal]').forEach(element => {
         new Modal(element);
     });
