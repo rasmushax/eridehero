@@ -106,9 +106,9 @@ $card_template = $context === 'review'
 $finder_url = home_url( '/' . $product_slug . '-finder/' );
 ?>
 
-<section class="review-section related-products" id="related">
+<section class="content-section related-products" id="related">
     <div class="related-products-header">
-        <h2 class="review-section-title"><?php echo esc_html( $section_title ); ?></h2>
+        <h2 class="section-title"><?php echo esc_html( $section_title ); ?></h2>
         <a href="<?php echo esc_url( $finder_url ); ?>" class="related-products-link">
             <?php printf( esc_html__( 'Find more %ss', 'erh' ), esc_html( $category_name ) ); ?>
             <?php erh_the_icon( 'arrow-right' ); ?>

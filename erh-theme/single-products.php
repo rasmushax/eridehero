@@ -39,12 +39,22 @@ while ( have_posts() ) :
     $product_image   = $big_thumbnail ?: $featured_image;
 
     // Get linked review (if exists).
-    $review_post = get_field( 'review_relationship', $product_id );
-    $video_url   = get_field( 'video_review_url', $product_id );
+    // ACF fields are nested under 'review' group: review.review_post, review.youtube_video
+    $review_group = get_field( 'review', $product_id );
+    $review_post  = null;
+    $video_url    = '';
 
-    // Get editor rating or calculated score.
-    $editor_rating = get_field( 'editor_rating', $product_id );
-    $overall_score = $editor_rating ? round( $editor_rating * 10 ) : null;
+    if ( is_array( $review_group ) ) {
+        // Get the review post object (field returns post ID)
+        $review_post_id = $review_group['review_post'] ?? null;
+        if ( $review_post_id ) {
+            $review_post = get_post( $review_post_id );
+        }
+        $video_url = $review_group['youtube_video'] ?? '';
+    }
+
+    // Build key specs summary for hero.
+    $key_specs = erh_get_hero_key_specs( $product_id, $product_type );
 
     // Category display info.
     $category_name  = erh_get_product_type_short_name( $product_type );
@@ -55,8 +65,15 @@ while ( have_posts() ) :
 
         <!-- Breadcrumb -->
         <div class="container">
+            <?php
+            $finder_url = erh_get_finder_url( $product_id );
+            ?>
             <nav class="breadcrumb" aria-label="Breadcrumb">
-                <a href="<?php echo esc_url( home_url( '/' . $product_slug . '/' ) ); ?>"><?php echo esc_html( $category_plural ); ?></a>
+                <?php if ( $finder_url ) : ?>
+                    <a href="<?php echo esc_url( $finder_url ); ?>"><?php echo esc_html( $category_plural ); ?></a>
+                <?php else : ?>
+                    <span><?php echo esc_html( $category_plural ); ?></span>
+                <?php endif; ?>
                 <span class="breadcrumb-sep">/</span>
                 <span class="breadcrumb-current"><?php echo esc_html( $product_name ); ?></span>
             </nav>
@@ -69,9 +86,10 @@ while ( have_posts() ) :
             'product_name'  => $product_name,
             'brand'         => $brand,
             'product_image' => $product_image,
-            'overall_score' => $overall_score,
+            'product_type'  => $product_type,
             'review_post'   => $review_post,
             'video_url'     => $video_url,
+            'key_specs'     => $key_specs,
         ] );
         ?>
 

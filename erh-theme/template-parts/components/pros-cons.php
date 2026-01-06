@@ -54,7 +54,7 @@ if ( empty( $pros_items ) && empty( $cons_items ) ) {
 }
 ?>
 
-<section class="review-section" id="<?php echo esc_attr( $section_id ); ?>">
+<section class="content-section" id="<?php echo esc_attr( $section_id ); ?>">
     <div class="pros-cons">
         <?php if ( ! empty( $pros_items ) ) : ?>
             <div class="pros">

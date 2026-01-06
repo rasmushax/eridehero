@@ -102,6 +102,11 @@ export async function initComparison(options = {}) {
             category: lockedProduct.category,
             categoryLabel: lockedProduct.categoryLabel || lockedProduct.category
         });
+
+        // Set active category from locked product (filters search to same category)
+        if (lockedProduct.category && !config.categoryFilter) {
+            activeCategory = lockedProduct.category;
+        }
     }
 
     // Category labels for display

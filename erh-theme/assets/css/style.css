@@ -31,6 +31,7 @@
 @import '_price-alert-modal.css';
 
 /* === REUSABLE CONTENT COMPONENTS === */
+@import '_page-sections.css';
 @import '_breadcrumb.css';
 @import '_page-title.css';
 @import '_gallery.css';

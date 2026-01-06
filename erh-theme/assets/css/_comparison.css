@@ -278,6 +278,42 @@
 }
 
 
+/* ===== LOCKED PRODUCT (for product page) ===== */
+
+.comparison-input-wrapper--locked {
+    animation: none;
+}
+
+.comparison-locked-product {
+    display: flex;
+    align-items: center;
+    gap: var(--space-3);
+    padding: var(--space-3) var(--space-4);
+    background: var(--color-white-5);
+    border: var(--border-width) solid var(--color-white-18);
+    border-radius: var(--radius-lg);
+}
+
+.comparison-locked-thumb {
+    width: 28px;
+    height: 28px;
+    border-radius: var(--radius-sm);
+    background: var(--color-white);
+    object-fit: contain;
+    flex-shrink: 0;
+}
+
+.comparison-locked-name {
+    flex: 1;
+    font-size: var(--text-sm);
+    font-weight: var(--font-medium);
+    color: var(--color-white);
+    white-space: nowrap;
+    overflow: hidden;
+    text-overflow: ellipsis;
+}
+
+
 /* ===== SEARCH RESULTS DROPDOWN ===== */
 
 .comparison-results {

@@ -35,13 +35,13 @@ if ( empty( $product_name ) ) {
 }
 ?>
 
-<section class="review-section" id="prices">
-    <h2 class="review-section-title">
+<section class="content-section" id="prices">
+    <h2 class="section-title">
         Where to buy
         <?php if ( $thumb_id ) : ?>
-            <?php echo wp_get_attachment_image( $thumb_id, 'erh-product-xs', false, array( 'class' => 'review-section-product-img' ) ); ?>
+            <?php echo wp_get_attachment_image( $thumb_id, 'erh-product-xs', false, array( 'class' => 'section-product-img' ) ); ?>
         <?php endif; ?>
-        <span class="review-section-product-name"><?php echo esc_html( $product_name ); ?></span>
+        <span class="section-product-name"><?php echo esc_html( $product_name ); ?></span>
     </h2>
 
     <div class="price-intel" data-price-intel data-product-id="<?php echo esc_attr( $product_id ); ?>">

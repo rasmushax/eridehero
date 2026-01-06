@@ -64,7 +64,7 @@ function getRestUrl() {
  */
 export async function getUserGeo() {
     // DEV OVERRIDE: Hardcode country for testing (uncomment to enable)
-    // const DEV_COUNTRY_OVERRIDE = 'DK'; // Set to 'DK', 'DE', 'GB', etc.
+    // const DEV_COUNTRY_OVERRIDE = 'DE'; // Set to 'DK', 'DE', 'GB', etc.
     // if (DEV_COUNTRY_OVERRIDE) {
     //     const region = getRegionForCountry(DEV_COUNTRY_OVERRIDE);
     //     const config = getRegionConfig(region);

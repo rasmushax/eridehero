@@ -34,8 +34,8 @@ if ( empty( $spec_groups ) ) {
 }
 ?>
 
-<section class="review-section" id="full-specs">
-    <h2 class="review-section-title">Full specifications</h2>
+<section class="content-section" id="full-specs">
+    <h2 class="section-title">Full specifications</h2>
     <div class="review-full-specs">
         <?php
         $first = true;

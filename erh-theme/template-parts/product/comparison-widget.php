@@ -3,7 +3,7 @@
  * Product Comparison Widget
  *
  * Head-to-head comparison widget for product pages.
- * Uses dark card style from homepage with locked product pattern.
+ * Reuses homepage comparison structure with locked first slot.
  *
  * @package ERideHero
  *
@@ -50,76 +50,81 @@ $upload_dir = wp_upload_dir();
 $json_url   = $upload_dir['baseurl'] . '/comparison_products.json';
 ?>
 
-<section class="review-section product-comparison-section" id="compare">
-    <div class="product-comparison"
-         data-product-comparison
+<section class="content-section product-comparison-section" id="compare">
+    <div class="comparison-card"
+         id="comparison-container"
          data-json-url="<?php echo esc_url( $json_url ); ?>"
          data-locked-id="<?php echo esc_attr( $product_id ); ?>"
          data-locked-name="<?php echo esc_attr( $product_name ); ?>"
          data-locked-image="<?php echo esc_url( $thumbnail_url ); ?>"
          data-locked-category="<?php echo esc_attr( $category_key ); ?>">
 
-        <!-- Dark gradient background -->
-        <div class="product-comparison-bg" aria-hidden="true">
-            <div class="product-comparison-orb"></div>
+        <!-- Background (clips orbs, allows dropdown overflow) -->
+        <div class="comparison-card-bg" aria-hidden="true">
+            <div class="comparison-orb"></div>
         </div>
 
-        <div class="product-comparison-content">
-            <!-- Header -->
-            <header class="product-comparison-header">
-                <h2>Compare head-to-head</h2>
-                <p>See how this product stacks up against competitors.</p>
+        <div class="comparison-content">
+            <!-- Header (no category pill on product page) -->
+            <header class="comparison-header">
+                <h2><?php
+                    $category_labels = array(
+                        'escooter'   => 'e-scooters',
+                        'ebike'      => 'e-bikes',
+                        'eskate'     => 'e-skateboards',
+                        'euc'        => 'electric unicycles',
+                        'hoverboard' => 'hoverboards',
+                    );
+                    $category_label = $category_labels[ $category_key ] ?? 'products';
+                    printf( esc_html__( 'Compare %1$s to other %2$s', 'erh' ), esc_html( $product_name ), esc_html( $category_label ) );
+                ?></h2>
             </header>
 
             <!-- Screen reader announcements -->
-            <div class="sr-only" aria-live="polite" aria-atomic="true" data-comparison-announcer></div>
+            <div id="comparison-announcer" class="sr-only" aria-live="polite" aria-atomic="true"></div>
 
-            <!-- Comparison Row -->
-            <div class="product-comparison-row">
-
-                <!-- Locked Product (Slot 0) -->
-                <div class="product-comparison-slot product-comparison-slot--locked">
-                    <div class="product-comparison-locked">
-                        <?php if ( $thumbnail_url ) : ?>
-                            <img class="product-comparison-locked-thumb"
-                                 src="<?php echo esc_url( $thumbnail_url ); ?>"
-                                 alt=""
-                                 loading="lazy">
-                        <?php endif; ?>
-                        <span class="product-comparison-locked-name"><?php echo esc_html( $product_name ); ?></span>
-                        <span class="product-comparison-locked-badge">This product</span>
+            <div class="comparison-row-main">
+                <!-- Left column: Locked current product -->
+                <div class="comparison-column-left">
+                    <div class="comparison-input-wrapper comparison-input-wrapper--locked">
+                        <div class="comparison-locked-product">
+                            <?php if ( $thumbnail_url ) : ?>
+                                <img class="comparison-locked-thumb"
+                                     src="<?php echo esc_url( $thumbnail_url ); ?>"
+                                     alt=""
+                                     loading="lazy">
+                            <?php endif; ?>
+                            <span class="comparison-locked-name"><?php echo esc_html( $product_name ); ?></span>
+                        </div>
                     </div>
                 </div>
 
-                <!-- VS Divider -->
-                <span class="product-comparison-vs">vs</span>
+                <!-- VS divider -->
+                <span class="comparison-vs"><?php esc_html_e( 'vs', 'erh' ); ?></span>
 
-                <!-- Search Input (Slot 1) -->
-                <div class="product-comparison-slot">
+                <!-- Right column: search inputs (supports multiple) -->
+                <div class="comparison-column-right" id="comparison-right-column">
                     <div class="comparison-input-wrapper">
-                        <input type="text"
-                               class="comparison-input"
-                               placeholder="Search products..."
-                               autocomplete="off"
-                               data-slot="1">
-                        <button type="button" class="comparison-input-clear" aria-label="Clear selection">
-                            <?php erh_the_icon( 'x' ); ?>
+                        <input type="text" class="comparison-input" placeholder="<?php esc_attr_e( 'Search products...', 'erh' ); ?>" autocomplete="off" data-slot="1">
+                        <button type="button" class="comparison-input-clear" aria-label="<?php esc_attr_e( 'Clear selection', 'erh' ); ?>">
+                            <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2">
+                                <line x1="18" y1="6" x2="6" y2="18"></line>
+                                <line x1="6" y1="6" x2="18" y2="18"></line>
+                            </svg>
                         </button>
                         <img class="comparison-input-thumb" src="" alt="" aria-hidden="true">
                         <div class="comparison-results"></div>
                     </div>
                 </div>
 
-                <!-- Compare Button -->
-                <div class="product-comparison-actions">
-                    <button type="button" class="product-comparison-btn" data-compare-submit disabled>
-                        Compare
-                        <?php erh_the_icon( 'arrow-right' ); ?>
+                <!-- Compare button -->
+                <div class="comparison-actions">
+                    <button type="button" class="comparison-btn" id="comparison-submit" disabled>
+                        <?php esc_html_e( 'Compare', 'erh' ); ?>
+                        <?php echo erh_icon( 'arrow-right', 'icon' ); ?>
                     </button>
                 </div>
-
             </div>
-
         </div>
     </div>
 </section>

@@ -634,6 +634,38 @@ function erh_register_acf_fields(): void {
     ) );
 
     // ===========================================
+    // TAXONOMY FIELDS
+    // ===========================================
+
+    // Product Type Taxonomy Fields
+    acf_add_local_field_group( array(
+        'key'      => 'group_product_type_taxonomy',
+        'title'    => __( 'Product Type Settings', 'erh' ),
+        'fields'   => array(
+            array(
+                'key'           => 'field_product_type_finder_page',
+                'label'         => __( 'Finder Page', 'erh' ),
+                'name'          => 'finder_page',
+                'type'          => 'page_link',
+                'post_type'     => array( 'page' ),
+                'allow_null'    => 1,
+                'allow_archives' => 0,
+                'instructions'  => __( 'Select the finder page for this product type. Used in breadcrumbs on product pages.', 'erh' ),
+            ),
+        ),
+        'location' => array(
+            array(
+                array(
+                    'param'    => 'taxonomy',
+                    'operator' => '==',
+                    'value'    => 'product_type',
+                ),
+            ),
+        ),
+        'menu_order' => 0,
+    ) );
+
+    // ===========================================
     // USER PROFILE FIELDS
     // ===========================================
 

@@ -62,9 +62,9 @@ $tooltips = array(
 );
 ?>
 
-<section class="review-section" id="tested-performance">
-    <div class="review-section-header">
-        <h2 class="review-section-title">Tested performance</h2>
+<section class="content-section" id="tested-performance">
+    <div class="section-header">
+        <h2 class="section-title">Tested performance</h2>
         <div class="popover-wrapper">
             <button type="button" class="btn btn-link btn-sm" data-popover-trigger="how-we-test-popover">
                 <svg class="icon" aria-hidden="true"><use href="#icon-info"></use></svg>

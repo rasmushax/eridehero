@@ -71,9 +71,9 @@ if ( ! $related_query->have_posts() ) {
 $reviews_url = home_url( '/' . $category_slug . '-reviews/' );
 ?>
 
-<section class="related-reviews review-section">
-    <div class="review-section-header">
-        <h2 class="review-section-title">More <?php echo esc_html( $category_name ); ?> reviews</h2>
+<section class="related-reviews content-section">
+    <div class="section-header">
+        <h2 class="section-title">More <?php echo esc_html( $category_name ); ?> reviews</h2>
         <a href="<?php echo esc_url( $reviews_url ); ?>" class="btn btn-secondary btn-sm">
             View all
             <?php erh_the_icon( 'arrow-right' ); ?>

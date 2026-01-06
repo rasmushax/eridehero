@@ -146,7 +146,7 @@
     inset: 0;
     background: var(--color-overlay-light);
     pointer-events: none;
-    z-index: 0;
+    z-index: 1;
 }
 
 .deal-card:hover .deal-card-title {

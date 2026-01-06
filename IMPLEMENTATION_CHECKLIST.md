@@ -732,3 +732,58 @@ See `ACF_RESTRUCTURE_PLAN.md` for full details.
 
 **Estimated time**: 2 days focused work
 **Risk**: Low (can be done incrementally, old fields work as fallback)
+
+---
+
+## Phase 11: Performance Profile Relative Insights (Post-Launch)
+
+**Do this AFTER populating complete price data for all products.**
+
+### Overview
+Replace the hardcoded "What to Know" section on product pages with data-driven relative insights based on category-wide statistics.
+
+### Requirements
+- [ ] Complete price data for all products (required for "value" comparisons)
+- [ ] Category averages computed in cache rebuild job:
+  - Average price per category
+  - Average weight per category
+  - Average range per category
+  - Average battery capacity per category
+  - Price-to-spec ratios ($/Wh, $/mile range, $/lb, etc.)
+- [ ] Percentile calculations for key specs
+
+### Insight Types to Implement
+
+**Relative Value Insights:**
+- "Range is 23% above average for this price range"
+- "Battery capacity is in the top 25% for e-scooters"
+- "Good value: $1.20/Wh vs category average $1.45/Wh"
+- "Lightweight for its range (0.8 lbs/mile)"
+
+**Comparison-Based:**
+- "Heavier than 75% of e-scooters in this price range"
+- "Faster charging than average (4h vs 6h typical)"
+- "More range per dollar than competitors"
+
+### Implementation Steps
+1. [ ] Add category statistics to `class-cache-rebuild-job.php`
+   - Compute averages, percentiles per product type
+   - Store in wp_options or dedicated table
+2. [ ] Create `includes/insights/class-product-insights.php`
+   - Rules engine for generating insight text
+   - Thresholds for "above average", "top 25%", etc.
+3. [ ] Update `template-parts/product/performance-profile.php`
+   - Call insights generator
+   - Replace hardcoded content
+4. [ ] Add insights to finder JSON for preview cards (optional)
+
+### Example Output
+```
+✓ Great range for the price — 23% above average
+✓ Lightweight at 42 lbs — easier to carry
+⚠ Longer charge time — 6 hours vs 4.5h average
+⚠ Lower top speed — 20 mph vs 25 mph typical
+```
+
+**Estimated time**: 3-4 days
+**Dependencies**: Complete price data, category-wide product specs

@@ -2,8 +2,8 @@
 /**
  * Product Specifications
  *
- * Simple flat table layout with category headers.
- * Uses same spec groupings as the compare tool.
+ * SEO-friendly spec groups with heading + bordered box per group.
+ * Uses logical groupings matching how users search for specs.
  *
  * @package ERideHero
  *
@@ -28,11 +28,11 @@ if ( ! $product_id ) {
     return;
 }
 
-// Render specs from cache.
-$specs_html = erh_render_specs_from_cache( $product_id, $category_key );
+// Render specs using SEO-friendly grouped layout.
+$specs_html = erh_render_product_specs( $product_id, $category_key );
 ?>
 
-<section class="review-section" id="full-specs">
-    <h2 class="review-section-title">Specifications</h2>
+<section class="content-section" id="full-specs">
+    <h2 class="section-title">Specifications</h2>
     <?php echo $specs_html; // phpcs:ignore WordPress.Security.EscapeOutput.OutputNotEscaped -- Already escaped in function. ?>
 </section>

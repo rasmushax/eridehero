@@ -85,13 +85,20 @@ function erh_get_logo( string $class = '' ): string {
  * Get product type label
  *
  * @param int|null $post_id Post ID (optional, uses current post if null)
- * @return string Product type label
+ * @return string Product type label (e.g., "Electric Scooter")
  */
 function erh_get_product_type( ?int $post_id = null ): string {
     $post_id = $post_id ?? get_the_ID();
-    $type = get_field( 'product_type', $post_id );
 
-    return $type ? $type : '';
+    // Product type is stored as a taxonomy, not an ACF field
+    $terms = get_the_terms( $post_id, 'product_type' );
+
+    if ( $terms && ! is_wp_error( $terms ) ) {
+        // Return the first term's name
+        return $terms[0]->name;
+    }
+
+    return '';
 }
 
 /**
@@ -110,6 +117,32 @@ function erh_product_type_slug( string $type ): string {
     );
 
     return $slugs[ $type ] ?? sanitize_title( $type );
+}
+
+/**
+ * Get finder page URL for a product type
+ *
+ * Returns the ACF finder_page URL if set on the taxonomy term,
+ * otherwise returns null.
+ *
+ * @param int|null $post_id Post ID (optional, uses current post if null)
+ * @return string|null Finder page URL or null if not set
+ */
+function erh_get_finder_url( ?int $post_id = null ): ?string {
+    $post_id = $post_id ?? get_the_ID();
+
+    $terms = get_the_terms( $post_id, 'product_type' );
+
+    if ( ! $terms || is_wp_error( $terms ) ) {
+        return null;
+    }
+
+    $term = $terms[0];
+
+    // Get the finder_page ACF field from the taxonomy term
+    $finder_url = get_field( 'finder_page', 'product_type_' . $term->term_id );
+
+    return $finder_url ?: null;
 }
 
 /**
@@ -159,6 +192,242 @@ function erh_get_category_short_name( string $category ): string {
     );
 
     return $short_names[ $category ] ?? $category;
+}
+
+/**
+ * Get key specs for hero section display
+ *
+ * Returns an array of formatted spec strings for the product hero summary line.
+ * Specs are pulled based on product type and formatted for display.
+ *
+ * @param int    $product_id   Product post ID
+ * @param string $product_type Product type label
+ * @return array Array of formatted spec strings
+ */
+function erh_get_hero_key_specs( int $product_id, string $product_type ): array {
+    $result = array();
+
+    // Get category key and nested wrapper
+    $category_key   = erh_get_category_key( $product_type );
+    $nested_wrapper = erh_get_specs_wrapper_key( $category_key );
+
+    // Get product data from cache (more reliable than direct ACF calls)
+    $product_data = erh_get_product_cache_data( $product_id );
+    $specs        = array();
+
+    if ( $product_data && ! empty( $product_data['specs'] ) ) {
+        $specs = is_array( $product_data['specs'] )
+            ? $product_data['specs']
+            : maybe_unserialize( $product_data['specs'] );
+    }
+
+    // If no cache data, fall back to ACF for nested groups
+    if ( empty( $specs ) || ! is_array( $specs ) ) {
+        $specs = array();
+        // Try to get the nested group directly
+        $nested_data = get_field( $nested_wrapper, $product_id );
+        if ( is_array( $nested_data ) ) {
+            $specs[ $nested_wrapper ] = $nested_data;
+        }
+        // Also add root-level performance fields
+        $specs['manufacturer_top_speed'] = get_field( 'manufacturer_top_speed', $product_id );
+        $specs['manufacturer_range']     = get_field( 'manufacturer_range', $product_id );
+    }
+
+    // Helper to get spec
+    $get = function( $key ) use ( $specs, $nested_wrapper ) {
+        return erh_get_spec_from_cache( $specs, $key, $nested_wrapper );
+    };
+
+    // Define key specs per product type
+    switch ( $category_key ) {
+        case 'escooter':
+            // 1. Product type
+            $result[] = 'Electric Scooter';
+
+            // 2. Top speed
+            $speed = $get( 'manufacturer_top_speed' );
+            if ( $speed ) {
+                $result[] = $speed . ' mph';
+            }
+
+            // 3. Range (in parenthesis style - will be formatted in output)
+            $range = $get( 'manufacturer_range' );
+            if ( $range ) {
+                $result[] = '(' . $range . ' mi range)';
+            }
+
+            // 4. Motor - e.g., "500W rear motor (1000W peak)" or "dual 1000W motors (2000W peak)"
+            $motor_nominal  = $get( 'motor.power_nominal' );
+            $motor_peak     = $get( 'motor.power_peak' );
+            $motor_position = $get( 'motor.motor_position' );
+            if ( $motor_nominal ) {
+                if ( strtolower( $motor_position ) === 'dual' ) {
+                    $motor_str = 'dual ' . $motor_nominal . 'W motors';
+                } else {
+                    $position  = $motor_position ? strtolower( $motor_position ) . ' ' : '';
+                    $motor_str = $motor_nominal . 'W ' . $position . 'motor';
+                }
+                if ( $motor_peak && $motor_peak > $motor_nominal ) {
+                    $motor_str .= ' (' . $motor_peak . 'W peak)';
+                }
+                $result[] = $motor_str;
+            }
+
+            // 5. Battery - e.g., "551Wh 48V battery"
+            $battery_wh = $get( 'battery.capacity' );
+            $battery_v  = $get( 'battery.voltage' );
+            if ( $battery_wh ) {
+                $battery_str = $battery_wh . 'Wh';
+                if ( $battery_v ) {
+                    $battery_str .= ' ' . $battery_v . 'V';
+                }
+                $result[] = $battery_str . ' battery';
+            }
+
+            // 6. Weight
+            $weight = $get( 'dimensions.weight' );
+            if ( $weight ) {
+                $result[] = $weight . ' lbs';
+            }
+
+            // 7. Max load
+            $max_load = $get( 'dimensions.max_load' );
+            if ( $max_load ) {
+                $result[] = $max_load . ' lbs max load';
+            }
+
+            // 8. Tires - e.g., '10" pneumatic tires', '8.5"/8" solid tires'
+            $tire_front = $get( 'wheels.tire_size_front' );
+            $tire_rear  = $get( 'wheels.tire_size_rear' );
+            $tire_type  = $get( 'wheels.tire_type' );
+            $tubeless   = $get( 'wheels.tubeless' );
+            if ( $tire_front ) {
+                // Build size string
+                if ( $tire_rear && $tire_rear != $tire_front ) {
+                    $size_str = $tire_front . '"/' . $tire_rear . '"';
+                } else {
+                    $size_str = $tire_front . '"';
+                }
+                // Build type string
+                $type_str = '';
+                if ( $tire_type ) {
+                    $type_lower = strtolower( $tire_type );
+                    if ( $type_lower === 'pneumatic' ) {
+                        $type_str = $tubeless ? 'tubeless' : 'pneumatic';
+                    } elseif ( $type_lower === 'solid' ) {
+                        $type_str = 'solid';
+                    } elseif ( $type_lower === 'mixed' ) {
+                        $type_str = 'mixed';
+                    }
+                }
+                $result[] = $size_str . ( $type_str ? ' ' . $type_str : '' ) . ' tires';
+            }
+
+            // 9. Suspension
+            $suspension_type = $get( 'suspension.type' );
+            if ( $suspension_type && is_array( $suspension_type ) && ! empty( $suspension_type ) ) {
+                // Check if front and rear
+                $has_front = false;
+                $has_rear  = false;
+                foreach ( $suspension_type as $susp ) {
+                    if ( stripos( $susp, 'front' ) !== false ) {
+                        $has_front = true;
+                    }
+                    if ( stripos( $susp, 'rear' ) !== false ) {
+                        $has_rear = true;
+                    }
+                }
+                if ( $has_front && $has_rear ) {
+                    $result[] = 'dual suspension';
+                } elseif ( $has_front ) {
+                    $result[] = 'front suspension';
+                } elseif ( $has_rear ) {
+                    $result[] = 'rear suspension';
+                }
+            }
+
+            // 10. Brakes - e.g., "dual disc brakes" or "front drum, rear disc"
+            $brake_front = $get( 'brakes.front' );
+            $brake_rear  = $get( 'brakes.rear' );
+            if ( $brake_front && $brake_rear ) {
+                $front_lower = strtolower( $brake_front );
+                $rear_lower  = strtolower( $brake_rear );
+                if ( $front_lower === $rear_lower && $front_lower !== 'none' ) {
+                    $result[] = 'dual ' . $front_lower . ' brakes';
+                } elseif ( $front_lower !== 'none' && $rear_lower !== 'none' ) {
+                    $result[] = 'front ' . $front_lower . ', rear ' . $rear_lower;
+                } elseif ( $front_lower !== 'none' ) {
+                    $result[] = 'front ' . $front_lower . ' brake';
+                } elseif ( $rear_lower !== 'none' ) {
+                    $result[] = 'rear ' . $rear_lower . ' brake';
+                }
+            }
+
+            // 11. IP rating (if not none/unknown)
+            $ip_rating = $get( 'build.ip_rating' );
+            if ( $ip_rating && ! in_array( strtolower( $ip_rating ), array( 'none', 'unknown', '' ), true ) ) {
+                $result[] = $ip_rating;
+            }
+            break;
+
+        case 'ebike':
+            // Product type
+            $result[] = 'Electric Bike';
+
+            // Motor power
+            $motor = $get( 'motor.power_nominal' );
+            if ( $motor ) {
+                $result[] = $motor . 'W motor';
+            }
+
+            // Range
+            $range = $get( 'battery.range_claimed' );
+            if ( $range ) {
+                $result[] = '(' . $range . ' mi range)';
+            }
+
+            // Battery capacity
+            $battery = $get( 'battery.capacity' );
+            if ( $battery ) {
+                $result[] = $battery . 'Wh battery';
+            }
+
+            // Weight
+            $weight = $get( 'frame.weight' );
+            if ( $weight ) {
+                $result[] = $weight . ' lbs';
+            }
+
+            // Class
+            $class = $get( 'motor.class' );
+            if ( $class ) {
+                $result[] = 'Class ' . $class;
+            }
+            break;
+
+        default:
+            // Generic fallback
+            $result[] = $product_type ?: 'Electric Vehicle';
+
+            $motor = $get( 'motor.power_nominal' );
+            if ( $motor ) {
+                $result[] = $motor . 'W motor';
+            }
+
+            $range = $get( 'manufacturer_range' );
+            if ( $range ) {
+                $result[] = '(' . $range . ' mi range)';
+            }
+
+            $weight = $get( 'dimensions.weight' );
+            if ( $weight ) {
+                $result[] = $weight . ' lbs';
+            }
+            break;
+    }
+
+    return $result;
 }
 
 /**
@@ -1713,5 +1982,406 @@ function erh_render_feature_check_row( string $label, bool $has_feature ): strin
 		esc_html( $label ),
 		$icon,
 		esc_html( $status_text )
+	);
+}
+
+/**
+ * Get SEO-friendly spec groups for product page.
+ *
+ * Unlike the comparison tool's score-based groupings, this uses
+ * logical groupings that match how users search for specs.
+ *
+ * @param string $category Category key ('escooter', 'ebike', etc.).
+ * @return array Spec groups configuration with tooltips.
+ */
+function erh_get_product_spec_groups_config( string $category ): array {
+	// Tooltips for specs that need clarification
+	$tooltips = array(
+		'nominal_power'     => 'Continuous power the motor can sustain. Higher = more consistent performance.',
+		'peak_power'        => 'Maximum burst power for hills and acceleration. Used briefly to avoid overheating.',
+		'battery_capacity'  => 'Total energy storage in Watt-hours. Larger battery = longer range but more weight.',
+		'voltage'           => 'Higher voltage typically means more power and efficiency.',
+		'charge_time'       => 'Time to charge from empty to full using the included charger.',
+		'ip_rating'         => 'Ingress Protection rating. First digit = dust, second = water. IP54 = splash resistant, IP67 = submersible.',
+		'regenerative'      => 'Recovers energy when braking to extend range slightly.',
+		'tested_top_speed'  => 'GPS-verified max speed on flat ground. 175 lb rider, 80%+ battery.',
+		'tested_range'      => 'Real-world range on mixed terrain. 175 lb rider, three tests at different intensities.',
+		'brake_distance'    => 'Stopping distance from 15 mph with max braking. Average of 10+ runs.',
+		'hill_climb'        => 'Average speed climbing 250 ft at 8% grade. 175 lb rider.',
+		'acceleration'      => 'Median time from standstill to target speed over 10+ runs.',
+		'suspension_type'   => 'Spring = traditional coil, Hydraulic = oil-damped for smoother ride.',
+		'tire_type'         => 'Pneumatic = air-filled (comfort, grip). Solid = puncture-proof (less comfort).',
+		'self_healing'      => 'Tires contain sealant that automatically plugs small punctures.',
+		'ground_clearance'  => 'Height from ground to lowest point. Important for curbs and obstacles.',
+		'max_load'          => 'Maximum recommended rider weight. Exceeding may void warranty.',
+	);
+
+	$configs = array(
+		'escooter' => array(
+			'Motor & Power' => array(
+				'icon'  => 'zap',
+				'specs' => array(
+					array( 'key' => 'motor.power_nominal', 'label' => 'Nominal Power', 'unit' => 'W', 'tooltip' => $tooltips['nominal_power'] ),
+					array( 'key' => 'motor.power_peak', 'label' => 'Peak Power', 'unit' => 'W', 'tooltip' => $tooltips['peak_power'] ),
+					array( 'key' => 'motor.voltage', 'label' => 'Voltage', 'unit' => 'V', 'tooltip' => $tooltips['voltage'] ),
+					array( 'key' => 'motor.motor_position', 'label' => 'Motor Configuration' ),
+					array( 'key' => 'motor.motor_type', 'label' => 'Motor Type' ),
+				),
+			),
+			'Battery & Charging' => array(
+				'icon'  => 'battery',
+				'specs' => array(
+					array( 'key' => 'battery.capacity', 'label' => 'Battery Capacity', 'unit' => 'Wh', 'tooltip' => $tooltips['battery_capacity'] ),
+					array( 'key' => 'battery.voltage', 'label' => 'Battery Voltage', 'unit' => 'V' ),
+					array( 'key' => 'battery.amphours', 'label' => 'Amp Hours', 'unit' => 'Ah' ),
+					array( 'key' => 'battery.battery_type', 'label' => 'Battery Type' ),
+					array( 'key' => 'battery.brand', 'label' => 'Battery Brand' ),
+					array( 'key' => 'battery.charging_time', 'label' => 'Charge Time', 'unit' => 'hrs', 'tooltip' => $tooltips['charge_time'] ),
+				),
+			),
+			'Claimed Performance' => array(
+				'icon'  => 'gauge',
+				'specs' => array(
+					array( 'key' => 'manufacturer_top_speed', 'label' => 'Top Speed (Claimed)', 'unit' => 'mph' ),
+					array( 'key' => 'manufacturer_range', 'label' => 'Range (Claimed)', 'unit' => 'mi' ),
+					array( 'key' => 'max_incline', 'label' => 'Max Hill Grade', 'unit' => '°' ),
+				),
+			),
+			'ERideHero Test Results' => array(
+				'icon'  => 'clipboard-check',
+				'specs' => array(
+					array( 'key' => 'tested_top_speed', 'label' => 'Top Speed (Tested)', 'unit' => 'mph', 'tooltip' => $tooltips['tested_top_speed'] ),
+					array( 'key' => 'tested_range_regular', 'label' => 'Range (Regular Riding)', 'unit' => 'mi', 'tooltip' => $tooltips['tested_range'] ),
+					array( 'key' => 'tested_range_fast', 'label' => 'Range (Fast Riding)', 'unit' => 'mi' ),
+					array( 'key' => 'tested_range_slow', 'label' => 'Range (Eco Mode)', 'unit' => 'mi' ),
+					array( 'key' => 'acceleration_0_15_mph', 'label' => '0–15 mph', 'unit' => 's', 'tooltip' => $tooltips['acceleration'] ),
+					array( 'key' => 'acceleration_0_20_mph', 'label' => '0–20 mph', 'unit' => 's' ),
+					array( 'key' => 'acceleration_0_25_mph', 'label' => '0–25 mph', 'unit' => 's' ),
+					array( 'key' => 'acceleration_0_30_mph', 'label' => '0–30 mph', 'unit' => 's' ),
+					array( 'key' => 'hill_climbing', 'label' => 'Hill Climb Speed', 'unit' => 'mph', 'tooltip' => $tooltips['hill_climb'] ),
+					array( 'key' => 'brake_distance', 'label' => 'Braking Distance', 'unit' => 'ft', 'tooltip' => $tooltips['brake_distance'] ),
+				),
+			),
+			'Weight & Dimensions' => array(
+				'icon'  => 'box',
+				'specs' => array(
+					array( 'key' => 'dimensions.weight', 'label' => 'Weight', 'unit' => 'lbs' ),
+					array( 'key' => 'dimensions.max_load', 'label' => 'Max Rider Weight', 'unit' => 'lbs', 'tooltip' => $tooltips['max_load'] ),
+					array( 'key' => 'dimensions.deck_length', 'label' => 'Deck Length', 'unit' => '"' ),
+					array( 'key' => 'dimensions.deck_width', 'label' => 'Deck Width', 'unit' => '"' ),
+					array( 'key' => 'dimensions.ground_clearance', 'label' => 'Ground Clearance', 'unit' => '"', 'tooltip' => $tooltips['ground_clearance'] ),
+					array( 'key' => 'dimensions.handlebar_height_min', 'label' => 'Handlebar Height (Min)', 'unit' => '"' ),
+					array( 'key' => 'dimensions.handlebar_height_max', 'label' => 'Handlebar Height (Max)', 'unit' => '"' ),
+					array( 'key' => 'dimensions.handlebar_width', 'label' => 'Handlebar Width', 'unit' => '"' ),
+					array( 'key' => 'dimensions.unfolded_length', 'label' => 'Length (Unfolded)', 'unit' => '"' ),
+					array( 'key' => 'dimensions.unfolded_width', 'label' => 'Width (Unfolded)', 'unit' => '"' ),
+					array( 'key' => 'dimensions.unfolded_height', 'label' => 'Height (Unfolded)', 'unit' => '"' ),
+					array( 'key' => 'dimensions.folded_length', 'label' => 'Length (Folded)', 'unit' => '"' ),
+					array( 'key' => 'dimensions.folded_width', 'label' => 'Width (Folded)', 'unit' => '"' ),
+					array( 'key' => 'dimensions.folded_height', 'label' => 'Height (Folded)', 'unit' => '"' ),
+					array( 'key' => 'dimensions.foldable_handlebars', 'label' => 'Foldable Handlebars', 'format' => 'feature_check', 'feature_value' => true ),
+				),
+			),
+			'Wheels & Suspension' => array(
+				'icon'  => 'circle',
+				'specs' => array(
+					array( 'key' => 'wheels.tire_type', 'label' => 'Tire Type', 'tooltip' => $tooltips['tire_type'] ),
+					array( 'key' => 'wheels.tire_size_front', 'label' => 'Front Tire Size', 'unit' => '"' ),
+					array( 'key' => 'wheels.tire_size_rear', 'label' => 'Rear Tire Size', 'unit' => '"' ),
+					array( 'key' => 'wheels.tire_width', 'label' => 'Tire Width', 'unit' => '"' ),
+					array( 'key' => 'wheels.pneumatic_type', 'label' => 'Pneumatic Type' ),
+					array( 'key' => 'wheels.self_healing', 'label' => 'Self-Healing Tires', 'format' => 'feature_check', 'feature_value' => true, 'tooltip' => $tooltips['self_healing'] ),
+					array( 'key' => 'suspension.type', 'label' => 'Suspension', 'format' => 'array', 'tooltip' => $tooltips['suspension_type'] ),
+					array( 'key' => 'suspension.adjustable', 'label' => 'Adjustable Suspension', 'format' => 'feature_check', 'feature_value' => true ),
+				),
+			),
+			'Brakes & Safety' => array(
+				'icon'  => 'shield',
+				'specs' => array(
+					array( 'key' => 'brakes.front', 'label' => 'Front Brake' ),
+					array( 'key' => 'brakes.rear', 'label' => 'Rear Brake' ),
+					array( 'key' => 'brakes.regenerative', 'label' => 'Regenerative Braking', 'format' => 'feature_check', 'feature_value' => true, 'tooltip' => $tooltips['regenerative'] ),
+					array( 'key' => 'lighting.lights', 'label' => 'Lights', 'format' => 'array' ),
+					array( 'key' => 'lighting.turn_signals', 'label' => 'Turn Signals', 'format' => 'feature_check', 'feature_value' => true ),
+					array( 'key' => 'other.ip_rating', 'label' => 'IP Rating', 'tooltip' => $tooltips['ip_rating'] ),
+				),
+			),
+			'Features' => array(
+				'icon'  => 'settings',
+				'specs' => array(
+					array( 'key' => 'other.display_type', 'label' => 'Display Type' ),
+					array( 'key' => 'other.throttle_type', 'label' => 'Throttle Type' ),
+					array( 'key' => 'other.terrain', 'label' => 'Terrain Type' ),
+					array( 'key' => 'other.kickstand', 'label' => 'Kickstand', 'format' => 'feature_check', 'feature_value' => true ),
+					array( 'key' => 'other.footrest', 'label' => 'Footrest', 'format' => 'feature_check', 'feature_value' => true ),
+					// Individual feature checkboxes
+					array( 'key' => 'features', 'label' => 'App Connectivity', 'format' => 'feature_check', 'feature_value' => 'App' ),
+					array( 'key' => 'features', 'label' => 'Speed Modes', 'format' => 'feature_check', 'feature_value' => 'Speed Modes' ),
+					array( 'key' => 'features', 'label' => 'Cruise Control', 'format' => 'feature_check', 'feature_value' => 'Cruise Control' ),
+					array( 'key' => 'features', 'label' => 'Folding', 'format' => 'feature_check', 'feature_value' => 'Folding' ),
+					array( 'key' => 'features', 'label' => 'Push-To-Start', 'format' => 'feature_check', 'feature_value' => 'Push-To-Start' ),
+					array( 'key' => 'features', 'label' => 'Zero-Start', 'format' => 'feature_check', 'feature_value' => 'Zero-Start' ),
+					array( 'key' => 'features', 'label' => 'Brake Curve Adjustment', 'format' => 'feature_check', 'feature_value' => 'Brake Curve Adjustment' ),
+					array( 'key' => 'features', 'label' => 'Acceleration Adjustment', 'format' => 'feature_check', 'feature_value' => 'Acceleration Adjustment' ),
+					array( 'key' => 'features', 'label' => 'Speed Limiting', 'format' => 'feature_check', 'feature_value' => 'Speed Limiting' ),
+					array( 'key' => 'features', 'label' => 'OTA Updates', 'format' => 'feature_check', 'feature_value' => 'OTA Updates' ),
+					array( 'key' => 'features', 'label' => 'Location Tracking', 'format' => 'feature_check', 'feature_value' => 'Location Tracking' ),
+					array( 'key' => 'features', 'label' => 'Quick-Swap Battery', 'format' => 'feature_check', 'feature_value' => 'Quick-Swap Battery' ),
+					array( 'key' => 'features', 'label' => 'Steering Damper', 'format' => 'feature_check', 'feature_value' => 'Steering Damper' ),
+					array( 'key' => 'features', 'label' => 'Electronic Horn', 'format' => 'feature_check', 'feature_value' => 'Electronic Horn' ),
+					array( 'key' => 'features', 'label' => 'NFC Unlock', 'format' => 'feature_check', 'feature_value' => 'NFC Unlock' ),
+					array( 'key' => 'features', 'label' => 'Seat Option', 'format' => 'feature_check', 'feature_value' => 'Seat Option' ),
+				),
+			),
+		),
+		'ebike' => array(
+			'Motor & Power' => array(
+				'icon'  => 'zap',
+				'specs' => array(
+					array( 'key' => 'motor.power_nominal', 'label' => 'Nominal Power', 'unit' => 'W', 'tooltip' => $tooltips['nominal_power'] ),
+					array( 'key' => 'motor.power_peak', 'label' => 'Peak Power', 'unit' => 'W', 'tooltip' => $tooltips['peak_power'] ),
+					array( 'key' => 'motor.torque', 'label' => 'Torque', 'unit' => 'Nm' ),
+					array( 'key' => 'motor.type', 'label' => 'Motor Type' ),
+					array( 'key' => 'motor.position', 'label' => 'Motor Position' ),
+				),
+			),
+			'Battery & Range' => array(
+				'icon'  => 'battery',
+				'specs' => array(
+					array( 'key' => 'battery.capacity', 'label' => 'Battery Capacity', 'unit' => 'Wh', 'tooltip' => $tooltips['battery_capacity'] ),
+					array( 'key' => 'battery.voltage', 'label' => 'Voltage', 'unit' => 'V' ),
+					array( 'key' => 'battery.range_claimed', 'label' => 'Range (Claimed)', 'unit' => 'mi' ),
+					array( 'key' => 'battery.charging_time', 'label' => 'Charge Time', 'unit' => 'hrs', 'tooltip' => $tooltips['charge_time'] ),
+					array( 'key' => 'battery.removable', 'label' => 'Removable Battery', 'format' => 'boolean' ),
+				),
+			),
+			'Speed & Performance' => array(
+				'icon'  => 'gauge',
+				'specs' => array(
+					array( 'key' => 'performance.top_speed', 'label' => 'Top Speed', 'unit' => 'mph' ),
+					array( 'key' => 'performance.class', 'label' => 'E-Bike Class' ),
+					array( 'key' => 'performance.pedal_assist_levels', 'label' => 'Pedal Assist Levels' ),
+					array( 'key' => 'performance.throttle', 'label' => 'Throttle', 'format' => 'boolean' ),
+				),
+			),
+			'Frame & Build' => array(
+				'icon'  => 'box',
+				'specs' => array(
+					array( 'key' => 'frame.weight', 'label' => 'Weight', 'unit' => 'lbs' ),
+					array( 'key' => 'frame.max_load', 'label' => 'Max Load', 'unit' => 'lbs', 'tooltip' => $tooltips['max_load'] ),
+					array( 'key' => 'frame.material', 'label' => 'Frame Material' ),
+					array( 'key' => 'frame.type', 'label' => 'Frame Type' ),
+					array( 'key' => 'frame.suspension', 'label' => 'Suspension' ),
+					array( 'key' => 'frame.foldable', 'label' => 'Foldable', 'format' => 'boolean' ),
+				),
+			),
+			'Components' => array(
+				'icon'  => 'settings',
+				'specs' => array(
+					array( 'key' => 'components.gears', 'label' => 'Gears' ),
+					array( 'key' => 'components.brakes', 'label' => 'Brakes' ),
+					array( 'key' => 'components.wheel_size', 'label' => 'Wheel Size', 'unit' => '"' ),
+					array( 'key' => 'components.tire_type', 'label' => 'Tire Type' ),
+					array( 'key' => 'components.display', 'label' => 'Display' ),
+					array( 'key' => 'components.lights', 'label' => 'Lights' ),
+				),
+			),
+		),
+	);
+
+	return $configs[ $category ] ?? array();
+}
+
+/**
+ * Render product specs HTML with bordered sections.
+ *
+ * Uses SEO-friendly groupings with heading + bordered table per group.
+ * Similar styling to the tested-performance section.
+ *
+ * @param int    $product_id Product ID.
+ * @param string $category   Category key ('escooter', 'ebike', etc.).
+ * @return string HTML for specs sections.
+ */
+function erh_render_product_specs( int $product_id, string $category ): string {
+	// Get product data from wp_product_data cache table
+	$product_data = erh_get_product_cache_data( $product_id );
+
+	if ( ! $product_data || empty( $product_data['specs'] ) ) {
+		return '<p class="specs-empty">Specifications not available.</p>';
+	}
+
+	$specs = $product_data['specs'];
+
+	// Ensure specs is an array
+	if ( ! is_array( $specs ) ) {
+		$specs = maybe_unserialize( $specs );
+	}
+
+	if ( ! is_array( $specs ) ) {
+		return '<p class="specs-empty">Specifications not available.</p>';
+	}
+
+	$spec_groups = erh_get_product_spec_groups_config( $category );
+
+	if ( empty( $spec_groups ) ) {
+		return '<p class="specs-empty">Specifications not available for this product type.</p>';
+	}
+
+	// Get the wrapper key for nested specs
+	$nested_wrapper = erh_get_specs_wrapper_key( $category );
+
+	$html = '<div class="product-specs">';
+
+	foreach ( $spec_groups as $group_name => $group_config ) {
+		$spec_defs = $group_config['specs'] ?? array();
+		$icon      = $group_config['icon'] ?? 'info';
+
+		// Build spec rows
+		$rows_html     = '';
+		$has_any_specs = false;
+
+		foreach ( $spec_defs as $spec_def ) {
+			// Special handling for feature_check format
+			if ( ( $spec_def['format'] ?? '' ) === 'feature_check' ) {
+				$feature_value = $spec_def['feature_value'] ?? '';
+				$raw_value     = erh_get_spec_from_cache( $specs, $spec_def['key'], $nested_wrapper );
+
+				// Determine if feature is present
+				if ( $feature_value === true ) {
+					// Boolean field - check if truthy
+					$has_feature = ! empty( $raw_value ) && $raw_value !== 'No' && $raw_value !== 'no' && $raw_value !== '0';
+				} else {
+					// Array field - check if value is in array
+					$has_feature = is_array( $raw_value ) && in_array( $feature_value, $raw_value, true );
+				}
+
+				$rows_html .= erh_render_spec_row_with_tooltip(
+					$spec_def['label'],
+					$has_feature ? 'Yes' : 'No',
+					$spec_def['tooltip'] ?? '',
+					$has_feature ? 'feature-yes' : 'feature-no',
+					true
+				);
+				$has_any_specs = true;
+				continue;
+			}
+
+			$value     = erh_get_spec_from_cache( $specs, $spec_def['key'], $nested_wrapper );
+			$formatted = erh_format_spec_value( $value, $spec_def );
+
+			// Skip empty values and "No" for booleans
+			if ( $formatted === '' || $formatted === 'No' ) {
+				continue;
+			}
+
+			$rows_html .= erh_render_spec_row_with_tooltip(
+				$spec_def['label'],
+				$formatted,
+				$spec_def['tooltip'] ?? ''
+			);
+			$has_any_specs = true;
+		}
+
+		// Skip groups with no specs
+		if ( ! $has_any_specs ) {
+			continue;
+		}
+
+		// Render group section
+		// Special handling for ERideHero Test Results - add "How we test" popover
+		if ( $group_name === 'ERideHero Test Results' ) {
+			$html .= sprintf(
+				'<section class="product-specs-section">
+					<div class="product-specs-header">
+						<h3 class="product-specs-title">%s</h3>
+						<div class="popover-wrapper">
+							<button type="button" class="btn btn-link btn-sm" data-popover-trigger="how-we-test-popover-product">
+								<svg class="icon" aria-hidden="true"><use href="#icon-info"></use></svg>
+								How we test
+							</button>
+							<div id="how-we-test-popover-product" class="popover popover--top" aria-hidden="true">
+								<div class="popover-arrow"></div>
+								<h4 class="popover-title">Data-driven testing</h4>
+								<p class="popover-text">All performance data is captured using a VBox Sport GPS logger — professional-grade equipment for precise vehicle measurements. Tests follow strict protocols with a 175 lb rider under controlled conditions.</p>
+								<a href="/how-we-test/" class="popover-link">
+									Full methodology
+									<svg class="icon" aria-hidden="true"><use href="#icon-arrow-right"></use></svg>
+								</a>
+							</div>
+						</div>
+					</div>
+					<div class="product-specs-box">
+						<table class="product-specs-table">
+							<tbody>%s</tbody>
+						</table>
+					</div>
+				</section>',
+				esc_html( $group_name ),
+				$rows_html
+			);
+		} else {
+			$html .= sprintf(
+				'<section class="product-specs-section">
+					<h3 class="product-specs-title">%s</h3>
+					<div class="product-specs-box">
+						<table class="product-specs-table">
+							<tbody>%s</tbody>
+						</table>
+					</div>
+				</section>',
+				esc_html( $group_name ),
+				$rows_html
+			);
+		}
+	}
+
+	$html .= '</div>';
+
+	return $html;
+}
+
+/**
+ * Render a spec row with optional tooltip.
+ *
+ * @param string $label       Spec label.
+ * @param string $value       Formatted value.
+ * @param string $tooltip     Tooltip text (optional).
+ * @param string $row_class   Additional row class (optional).
+ * @param bool   $is_feature  Whether this is a feature check row.
+ * @return string HTML for the table row.
+ */
+function erh_render_spec_row_with_tooltip( string $label, string $value, string $tooltip = '', string $row_class = '', bool $is_feature = false ): string {
+	// Build label - wrap in flex container if tooltip present
+	if ( ! empty( $tooltip ) ) {
+		$label_html = sprintf(
+			'<div class="product-specs-label-inner">%s<span class="info-trigger" data-tooltip="%s" data-tooltip-position="top"><svg class="icon" aria-hidden="true"><use href="#icon-info"></use></svg></span></div>',
+			esc_html( $label ),
+			esc_attr( $tooltip )
+		);
+	} else {
+		$label_html = esc_html( $label );
+	}
+
+	// Build value HTML - wrap in flex container if feature check
+	if ( $is_feature ) {
+		$is_yes    = $value === 'Yes';
+		$icon_name = $is_yes ? 'check' : 'x';
+		$value_html = sprintf(
+			'<div class="product-specs-value-inner"><span class="feature-badge"><svg class="icon" aria-hidden="true"><use href="#icon-%s"></use></svg></span><span class="feature-text">%s</span></div>',
+			$icon_name,
+			esc_html( $value )
+		);
+		$value_class = 'product-specs-value';
+	} else {
+		$value_html  = esc_html( $value );
+		$value_class = 'product-specs-value';
+	}
+
+	return sprintf(
+		'<tr class="%s"><td class="product-specs-label">%s</td><td class="%s">%s</td></tr>',
+		esc_attr( $row_class ),
+		$label_html,
+		$value_class,
+		$value_html
 	);
 }

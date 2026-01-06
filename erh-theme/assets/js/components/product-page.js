@@ -4,11 +4,11 @@
  * Coordinates all functionality for single product pages:
  * - Loads product data from finder JSON (for performance profile)
  * - Initializes RadarChart for performance profile
- * - Displays "Great for..." highlights based on scores
- * - Handles specs collapse/expand
  * - Loads geo-aware prices for product cards
  *
  * Note: Specs are rendered server-side by PHP from wp_product_data cache.
+ * Note: "What to Know" insights are currently hardcoded in PHP.
+ *       Phase 11 TODO: Implement dynamic insights based on percentile data.
  *
  * @module components/product-page
  */
@@ -16,61 +16,6 @@
 import { RadarChart } from './radar-chart.js';
 import { SPEC_GROUPS } from '../config/compare-config.js';
 import { getUserGeo, formatPrice } from '../services/geo-price.js';
-
-// =============================================================================
-// Constants
-// =============================================================================
-
-/**
- * Maps high-scoring categories to consumer-friendly descriptions.
- * Used for "Great for..." highlights.
- */
-const HIGHLIGHT_MAP = {
-    motor_performance: {
-        label: 'Speed enthusiasts',
-        description: 'Excellent acceleration and top speed',
-        icon: 'zap',
-    },
-    range_battery: {
-        label: 'Long-range commuting',
-        description: 'Go further on a single charge',
-        icon: 'battery',
-    },
-    ride_quality: {
-        label: 'Comfort seekers',
-        description: 'Smooth ride with quality suspension',
-        icon: 'smile',
-    },
-    portability: {
-        label: 'Urban commuters',
-        description: 'Lightweight and easy to carry',
-        icon: 'box',
-    },
-    safety: {
-        label: 'Safety-conscious riders',
-        description: 'Quality brakes and lighting',
-        icon: 'shield',
-    },
-    features: {
-        label: 'Tech enthusiasts',
-        description: 'Packed with modern features',
-        icon: 'settings',
-    },
-    maintenance: {
-        label: 'Low-maintenance riders',
-        description: 'Reliable with minimal upkeep',
-        icon: 'tool',
-    },
-};
-
-/**
- * Score threshold for highlighting a category (out of 100).
- */
-const HIGHLIGHT_THRESHOLD = 75;
-
-// =============================================================================
-// Main Class
-// =============================================================================
 
 class ProductPage {
     /**
@@ -102,6 +47,7 @@ class ProductPage {
 
         // Initialize components that need product data
         this.initPerformanceProfile();
+        this.loadHeroPrice();
         this.loadProductCardPrices();
     }
 
@@ -134,45 +80,118 @@ class ProductPage {
     }
 
     /**
-     * Initialize performance profile section (radar chart + highlights).
+     * Load and display hero price.
+     * Fetches from prices API for both price and store count (appear together).
+     */
+    async loadHeroPrice() {
+        const heroPrice = this.container.querySelector('[data-hero-price]');
+        if (!heroPrice) return;
+
+        const amountEl = heroPrice.querySelector('.hero-price-amount');
+        const storesEl = heroPrice.querySelector('.hero-price-stores');
+
+        if (!amountEl) return;
+
+        try {
+            // Detect user's geo (same pattern as finder, deals, price-intel)
+            const { geo, currency } = await getUserGeo();
+
+            // Fetch from prices API for both price and store count
+            const baseUrl = window.erhData?.siteUrl || '';
+            const response = await fetch(`${baseUrl}/wp-json/erh/v1/prices/${this.productId}?geo=${geo}`);
+
+            if (!response.ok) {
+                throw new Error(`HTTP ${response.status}`);
+            }
+
+            const data = await response.json();
+            const offers = data.offers || [];
+
+            // Filter offers to only show geo-appropriate ones (same logic as price-intel)
+            const filteredOffers = this.filterOffersForGeo(offers, geo, currency);
+
+            // Get best price from filtered offers
+            const best = filteredOffers.find(o => o.in_stock) || filteredOffers[0];
+
+            if (best?.price) {
+                // Show best price
+                amountEl.textContent = formatPrice(best.price, best.currency || currency);
+                heroPrice.classList.add('has-price');
+
+                // Count in-stock offers from filtered list
+                const inStockCount = filteredOffers.filter(o => o.in_stock === true).length;
+                if (storesEl && inStockCount > 0) {
+                    storesEl.textContent = inStockCount === 1 ? 'at 1 store' : `at ${inStockCount} stores`;
+                }
+            } else {
+                amountEl.textContent = 'See prices';
+                heroPrice.classList.add('no-price');
+            }
+        } catch (error) {
+            console.warn('ProductPage: Failed to load hero price:', error);
+            amountEl.textContent = 'See prices';
+            heroPrice.classList.add('no-price');
+        }
+    }
+
+    /**
+     * Filter offers to only show geo-appropriate ones.
+     * Same logic as price-intel.js filterOffersForGeo().
+     *
+     * @param {Array} offers - Array of offer objects
+     * @param {string} userGeo - User's geo region (US, GB, EU, CA, AU)
+     * @param {string} userCurrency - User's currency (USD, GBP, EUR, etc.)
+     * @returns {Array} Filtered offers
+     */
+    filterOffersForGeo(offers, userGeo, userCurrency) {
+        const euCountries = ['DE', 'FR', 'IT', 'ES', 'NL', 'BE', 'AT', 'IE', 'PT', 'FI', 'GR', 'LU', 'SK', 'SI', 'EE', 'LV', 'LT', 'CY', 'MT'];
+
+        return offers.filter(offer => {
+            const offerCurrency = offer.currency || 'USD';
+            const offerGeo = offer.geo;
+
+            // Primary filter: currency must match user's currency
+            if (offerCurrency !== userCurrency) {
+                return false;
+            }
+
+            // If offer has explicit geo, it must match user's region
+            if (offerGeo) {
+                if (offerGeo === userGeo) return true;
+                if (userGeo === 'EU' && (offerGeo === 'EU' || euCountries.includes(offerGeo))) return true;
+                if (euCountries.includes(userGeo) && offerGeo === 'EU') return true;
+                return false;
+            }
+
+            // Offer has no explicit geo (global) - accept if currency matches
+            return true;
+        });
+    }
+
+    /**
+     * Initialize performance profile section (radar chart).
+     * Note: "What to Know" insights are hardcoded in PHP for now.
+     * Phase 11 TODO: Implement dynamic insights based on percentile data.
      */
     initPerformanceProfile() {
         const profileSection = this.container.querySelector('[data-performance-profile]');
         if (!profileSection) return;
 
         const radarContainer = profileSection.querySelector('[data-radar-chart]');
-        const highlightsList = profileSection.querySelector('[data-highlights-list]');
-        const scoreBarContainer = profileSection.querySelector('[data-score-bars]');
 
         // Calculate category scores
         const scores = this.calculateCategoryScores();
 
         if (!scores || Object.keys(scores).length === 0) {
-            // Show empty state
+            // Hide radar loading if no scores available
             const loadingEl = profileSection.querySelector('[data-radar-loading]');
             if (loadingEl) loadingEl.style.display = 'none';
-
-            const emptyEl = profileSection.querySelector('[data-highlights-empty]');
-            if (emptyEl) {
-                emptyEl.textContent = 'Performance data not available for this product.';
-                emptyEl.style.display = 'block';
-            }
             return;
         }
 
         // Render radar chart
         if (radarContainer) {
             this.renderRadarChart(radarContainer, scores);
-        }
-
-        // Render highlights
-        if (highlightsList) {
-            this.renderHighlights(highlightsList, scores);
-        }
-
-        // Render score bars
-        if (scoreBarContainer) {
-            this.renderScoreBars(scoreBarContainer, scores);
         }
     }
 
@@ -253,87 +272,6 @@ class ProductPage {
         // Hide legend element if it exists (RadarChart creates it by default)
         const legend = container.querySelector('.radar-chart-legend');
         if (legend) legend.style.display = 'none';
-    }
-
-    /**
-     * Render "Great for..." highlights.
-     *
-     * @param {HTMLElement} list - List container
-     * @param {Object} scores - Category scores
-     */
-    renderHighlights(list, scores) {
-        // Remove skeletons
-        list.querySelectorAll('[data-highlight-skeleton]').forEach(el => el.remove());
-
-        // Get high-scoring categories
-        const highlights = Object.entries(scores)
-            .filter(([, data]) => data.score >= HIGHLIGHT_THRESHOLD)
-            .sort((a, b) => b[1].score - a[1].score)
-            .slice(0, 4); // Show top 4
-
-        if (highlights.length === 0) {
-            // Show message if no highlights
-            const emptyEl = list.closest('.performance-highlights')?.querySelector('[data-highlights-empty]');
-            if (emptyEl) {
-                emptyEl.textContent = 'This product performs consistently across all categories.';
-                emptyEl.style.display = 'block';
-            }
-            return;
-        }
-
-        // Render highlights
-        const html = highlights.map(([key, data]) => {
-            const highlight = HIGHLIGHT_MAP[key] || {
-                label: data.name,
-                description: `Strong ${data.name.toLowerCase()} performance`,
-                icon: 'check',
-            };
-
-            return `
-                <li class="performance-highlight-item">
-                    <svg class="icon" aria-hidden="true">
-                        <use href="#icon-${highlight.icon}"></use>
-                    </svg>
-                    <span class="highlight-text">${this.escapeHtml(highlight.label)}</span>
-                    <span class="highlight-score">${data.score}</span>
-                </li>
-            `;
-        }).join('');
-
-        list.innerHTML = html;
-    }
-
-    /**
-     * Render score bars grid.
-     *
-     * @param {HTMLElement} container - Container element
-     * @param {Object} scores - Category scores
-     */
-    renderScoreBars(container, scores) {
-        const html = Object.entries(scores).map(([key, data]) => {
-            const colorClass = data.score >= 80 ? 'success' : data.score >= 60 ? 'warning' : 'muted';
-
-            return `
-                <div class="performance-score-item">
-                    <div class="performance-score-header">
-                        <span class="performance-score-label">${this.escapeHtml(data.name)}</span>
-                        <span class="performance-score-value">${data.score}</span>
-                    </div>
-                    <div class="performance-score-bar">
-                        <div class="performance-score-fill" style="width: ${data.score}%; background: var(--color-${colorClass})"></div>
-                    </div>
-                </div>
-            `;
-        }).join('');
-
-        container.innerHTML = html;
-
-        // Animate bars in
-        requestAnimationFrame(() => {
-            container.querySelectorAll('.performance-score-fill').forEach(bar => {
-                bar.style.width = bar.style.width; // Trigger reflow
-            });
-        });
     }
 
     /**
