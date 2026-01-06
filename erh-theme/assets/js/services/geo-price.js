@@ -40,6 +40,9 @@ const priceCache = new Map();
 // In-flight request deduplication (prevents duplicate concurrent requests)
 const pendingRequests = new Map();
 
+// Geo detection Promise (for deduplication of concurrent getUserGeo calls)
+let geoDetectionPromise = null;
+
 /**
  * Get REST URL base from WordPress localized data
  * @returns {string}
@@ -63,20 +66,46 @@ function getRestUrl() {
  * @returns {Promise<{geo: string, currency: string, symbol: string, region: string, country: string|null}>}
  */
 export async function getUserGeo() {
-    // DEV OVERRIDE: Hardcode country for testing (uncomment to enable)
-    // const DEV_COUNTRY_OVERRIDE = 'DE'; // Set to 'DK', 'DE', 'GB', etc.
-    // if (DEV_COUNTRY_OVERRIDE) {
-    //     const region = getRegionForCountry(DEV_COUNTRY_OVERRIDE);
-    //     const config = getRegionConfig(region);
-    //     return {
-    //         geo: region,
-    //         region: region,
-    //         currency: config.currency,
-    //         symbol: config.symbol,
-    //         country: DEV_COUNTRY_OVERRIDE,
-    //     };
-    // }
+    // DEV OVERRIDE: Hardcode country for testing (set to country code to enable, null to disable)
+    const DEV_COUNTRY_OVERRIDE = null; // Set to 'DK', 'DE', 'GB', etc. for testing
+    if (DEV_COUNTRY_OVERRIDE) {
+        const region = getRegionForCountry(DEV_COUNTRY_OVERRIDE);
+        const config = getRegionConfig(region);
+        return {
+            geo: region,
+            region: region,
+            currency: config.currency,
+            symbol: config.symbol,
+            country: DEV_COUNTRY_OVERRIDE,
+        };
+    }
 
+    // Return window-cached result if available (fastest path)
+    if (window.erhUserGeoData) {
+        return window.erhUserGeoData;
+    }
+
+    // If detection already in progress, wait for it (prevents duplicate IPInfo calls)
+    if (geoDetectionPromise) {
+        return geoDetectionPromise;
+    }
+
+    // Start detection and cache the Promise
+    geoDetectionPromise = detectUserGeo();
+    const result = await geoDetectionPromise;
+    geoDetectionPromise = null;
+
+    // Cache on window for instant access by other components
+    window.erhUserGeoData = result;
+
+    return result;
+}
+
+/**
+ * Internal function to detect user's geo (called once, result cached)
+ * @returns {Promise<{geo: string, currency: string, symbol: string, region: string, country: string|null}>}
+ */
+async function detectUserGeo() {
     // Check for manual override first (user selected a different region)
     const override = getRegionOverride();
     if (override) {
@@ -199,11 +228,19 @@ export function setUserRegion(regionCode) {
         localStorage.removeItem(REGION_STORAGE_KEY);
         localStorage.removeItem(REGION_EXPIRY_KEY);
 
+        // Clear window-level cache so next getUserGeo() returns new region
+        delete window.erhUserGeoData;
+
+        // Clear price caches (they're geo-specific)
+        priceCache.clear();
+
         // Dispatch event for components to update
+        const config = getRegionConfig(regionCode);
         window.dispatchEvent(new CustomEvent('erh:region-changed', {
             detail: {
                 region: regionCode,
-                ...getRegionConfig(regionCode),
+                currency: config.currency,
+                symbol: config.symbol,
             },
         }));
 
@@ -222,6 +259,12 @@ export function clearUserRegion() {
         localStorage.removeItem(REGION_OVERRIDE_KEY);
         localStorage.removeItem(REGION_STORAGE_KEY);
         localStorage.removeItem(REGION_EXPIRY_KEY);
+
+        // Clear window-level cache so next getUserGeo() re-detects
+        delete window.erhUserGeoData;
+
+        // Clear price caches (they're geo-specific)
+        priceCache.clear();
 
         window.dispatchEvent(new CustomEvent('erh:region-changed', {
             detail: { region: null, autoDetect: true },
@@ -414,6 +457,48 @@ export function getCurrencySymbol(currency) {
 }
 
 /**
+ * Filter offers to show only those matching user's geo/currency.
+ *
+ * @param {Array} offers - Array of price offers from API
+ * @param {{geo: string, currency: string}} userGeo - User's geo info
+ * @returns {Array} Filtered offers matching user's region
+ */
+export function filterOffersForGeo(offers, userGeo) {
+    if (!offers || !userGeo) return [];
+
+    const userCurrency = userGeo.currency;
+    const userGeoCode = userGeo.geo;
+
+    // EU countries that should be treated as EU
+    const euCountries = ['DE', 'FR', 'IT', 'ES', 'NL', 'BE', 'AT', 'IE', 'PT', 'FI', 'GR', 'LU', 'SK', 'SI', 'EE', 'LV', 'LT', 'CY', 'MT'];
+
+    return offers.filter(offer => {
+        const offerCurrency = offer.currency || 'USD';
+        const offerGeo = offer.geo;
+
+        // Primary filter: currency must match user's currency
+        if (offerCurrency !== userCurrency) {
+            return false;
+        }
+
+        // If offer has explicit geo, it must match user's region
+        if (offerGeo) {
+            // Direct match
+            if (offerGeo === userGeoCode) return true;
+            // EU: accept EU-tagged or EU country-tagged offers
+            if (userGeoCode === 'EU' && (offerGeo === 'EU' || euCountries.includes(offerGeo))) return true;
+            // User in EU country: accept EU offers
+            if (euCountries.includes(userGeoCode) && offerGeo === 'EU') return true;
+            // No match
+            return false;
+        }
+
+        // Offer has no explicit geo (global) - accept if currency matches
+        return true;
+    });
+}
+
+/**
  * Update price elements on the page with geo-aware prices
  * @param {string} selector CSS selector for price containers
  * @param {string} geo User's geo
@@ -517,6 +602,8 @@ export default {
     // Price fetching
     getBestPrices,
     getProductPrices,
+    // Filtering
+    filterOffersForGeo,
     // Formatting
     formatPrice,
     getCurrencySymbol,

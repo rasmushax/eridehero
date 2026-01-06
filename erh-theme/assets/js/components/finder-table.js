@@ -8,6 +8,7 @@
  */
 
 import { Modal } from './modal.js';
+import { escapeHtml } from '../utils/dom.js';
 
 export class FinderTable {
     constructor(finder) {
@@ -331,8 +332,8 @@ export class FinderTable {
         const header = document.createElement('div');
         header.className = 'filter-card-header';
         header.innerHTML = `
-            <span class="filter-card-label">${this.escapeHtml(label)}</span>
-            <button type="button" class="filter-card-remove" data-remove-column="${colKey}" aria-label="Remove ${this.escapeHtml(label)}">
+            <span class="filter-card-label">${escapeHtml(label)}</span>
+            <button type="button" class="filter-card-remove" data-remove-column="${colKey}" aria-label="Remove ${escapeHtml(label)}">
                 <svg class="icon"><use href="#icon-x"></use></svg>
             </button>
         `;
@@ -519,7 +520,7 @@ export class FinderTable {
                         <img src="${imgSrc}" alt="" class="finder-table-product-img" loading="lazy">
                     </div>
                 ` : ''}
-                <a href="${product.url}" class="finder-table-product-name">${this.escapeHtml(product.name)}</a>
+                <a href="${product.url}" class="finder-table-product-name">${escapeHtml(product.name)}</a>
             </div>
         `;
     }
@@ -562,7 +563,7 @@ export class FinderTable {
                 if (col.suffix || col.prefix) {
                     return this.renderNumberCell(value, col);
                 }
-                return this.escapeHtml(String(value));
+                return escapeHtml(String(value));
         }
     }
 
@@ -611,7 +612,7 @@ export class FinderTable {
 
     renderRatingCell(value) {
         const num = parseFloat(value);
-        if (isNaN(num)) return this.escapeHtml(String(value));
+        if (isNaN(num)) return escapeHtml(String(value));
 
         let ratingClass = 'average';
         if (num >= 9) ratingClass = 'excellent';
@@ -635,15 +636,15 @@ export class FinderTable {
 
     renderArrayCell(value) {
         if (Array.isArray(value)) {
-            return `<span class="finder-table-cell--array">${this.escapeHtml(value.join(', '))}</span>`;
+            return `<span class="finder-table-cell--array">${escapeHtml(value.join(', '))}</span>`;
         }
-        return this.escapeHtml(String(value));
+        return escapeHtml(String(value));
     }
 
     renderNumberCell(value, col) {
         let num = parseFloat(value);
         if (isNaN(num)) {
-            return `${col.prefix || ''}${this.escapeHtml(String(value))}${col.suffix || ''}`;
+            return `${col.prefix || ''}${escapeHtml(String(value))}${col.suffix || ''}`;
         }
 
         if (col.round !== undefined) {
@@ -968,9 +969,5 @@ export class FinderTable {
         });
     }
 
-    escapeHtml(str) {
-        const div = document.createElement('div');
-        div.textContent = str;
-        return div.innerHTML;
-    }
+    // escapeHtml imported from utils/dom.js
 }

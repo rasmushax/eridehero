@@ -2,20 +2,19 @@
  * Product Page Orchestrator
  *
  * Coordinates all functionality for single product pages:
- * - Loads product data from finder JSON (for performance profile)
+ * - Loads product data (inline or from finder JSON) for performance profile
  * - Initializes RadarChart for performance profile
- * - Loads geo-aware prices for product cards
+ * - Manages similar products carousel
  *
- * Note: Specs are rendered server-side by PHP from wp_product_data cache.
+ * Note: Hero price is updated by price-intel.js (shares the same API call).
+ * Note: Specs and similar products are rendered server-side by PHP.
  * Note: "What to Know" insights are currently hardcoded in PHP.
- *       Phase 11 TODO: Implement dynamic insights based on percentile data.
  *
  * @module components/product-page
  */
 
 import { RadarChart } from './radar-chart.js';
-import { SPEC_GROUPS } from '../config/compare-config.js';
-import { getUserGeo, formatPrice } from '../services/geo-price.js';
+import { initCarousel } from '../utils/carousel.js';
 
 class ProductPage {
     /**
@@ -29,6 +28,7 @@ class ProductPage {
         this.category = container.dataset.category || 'escooter';
         this.product = null;
         this.radarChart = null;
+        this.carousel = null;
 
         this.init();
     }
@@ -36,9 +36,9 @@ class ProductPage {
     /**
      * Initialize all components.
      */
-    async init() {
-        // Load product data for performance profile
-        await this.loadProductData();
+    init() {
+        // Load product data for performance profile (synchronous - reads from inline data)
+        this.loadProductData();
 
         if (!this.product) {
             console.warn('ProductPage: Could not load product data');
@@ -47,125 +47,19 @@ class ProductPage {
 
         // Initialize components that need product data
         this.initPerformanceProfile();
-        this.loadHeroPrice();
-        this.loadProductCardPrices();
+        this.initSimilarCarousel();
+        // Note: Hero price is updated by price-intel.js to avoid duplicate API calls
     }
 
     /**
-     * Load product data from finder JSON.
+     * Load product data for performance profile.
+     * Reads inline data from PHP (erhData.productData) - no async fetch needed.
      */
-    async loadProductData() {
-        try {
-            // Try to get from inline data first
-            if (window.erhData?.productData) {
-                this.product = window.erhData.productData;
-                return;
-            }
-
-            // Otherwise load from finder JSON
-            const baseUrl = window.erhData?.siteUrl || '';
-            const jsonUrl = `${baseUrl}/wp-content/uploads/finder_${this.category}.json`;
-            const response = await fetch(jsonUrl);
-
-            if (!response.ok) {
-                throw new Error(`HTTP ${response.status}`);
-            }
-
-            const products = await response.json();
-            this.product = products.find(p => p.id === this.productId);
-
-        } catch (error) {
-            console.warn('ProductPage: Failed to load product data:', error);
+    loadProductData() {
+        // Get from inline data (provided by PHP via wp_localize_script)
+        if (window.erhData?.productData) {
+            this.product = window.erhData.productData;
         }
-    }
-
-    /**
-     * Load and display hero price.
-     * Fetches from prices API for both price and store count (appear together).
-     */
-    async loadHeroPrice() {
-        const heroPrice = this.container.querySelector('[data-hero-price]');
-        if (!heroPrice) return;
-
-        const amountEl = heroPrice.querySelector('.hero-price-amount');
-        const storesEl = heroPrice.querySelector('.hero-price-stores');
-
-        if (!amountEl) return;
-
-        try {
-            // Detect user's geo (same pattern as finder, deals, price-intel)
-            const { geo, currency } = await getUserGeo();
-
-            // Fetch from prices API for both price and store count
-            const baseUrl = window.erhData?.siteUrl || '';
-            const response = await fetch(`${baseUrl}/wp-json/erh/v1/prices/${this.productId}?geo=${geo}`);
-
-            if (!response.ok) {
-                throw new Error(`HTTP ${response.status}`);
-            }
-
-            const data = await response.json();
-            const offers = data.offers || [];
-
-            // Filter offers to only show geo-appropriate ones (same logic as price-intel)
-            const filteredOffers = this.filterOffersForGeo(offers, geo, currency);
-
-            // Get best price from filtered offers
-            const best = filteredOffers.find(o => o.in_stock) || filteredOffers[0];
-
-            if (best?.price) {
-                // Show best price
-                amountEl.textContent = formatPrice(best.price, best.currency || currency);
-                heroPrice.classList.add('has-price');
-
-                // Count in-stock offers from filtered list
-                const inStockCount = filteredOffers.filter(o => o.in_stock === true).length;
-                if (storesEl && inStockCount > 0) {
-                    storesEl.textContent = inStockCount === 1 ? 'at 1 store' : `at ${inStockCount} stores`;
-                }
-            } else {
-                amountEl.textContent = 'See prices';
-                heroPrice.classList.add('no-price');
-            }
-        } catch (error) {
-            console.warn('ProductPage: Failed to load hero price:', error);
-            amountEl.textContent = 'See prices';
-            heroPrice.classList.add('no-price');
-        }
-    }
-
-    /**
-     * Filter offers to only show geo-appropriate ones.
-     * Same logic as price-intel.js filterOffersForGeo().
-     *
-     * @param {Array} offers - Array of offer objects
-     * @param {string} userGeo - User's geo region (US, GB, EU, CA, AU)
-     * @param {string} userCurrency - User's currency (USD, GBP, EUR, etc.)
-     * @returns {Array} Filtered offers
-     */
-    filterOffersForGeo(offers, userGeo, userCurrency) {
-        const euCountries = ['DE', 'FR', 'IT', 'ES', 'NL', 'BE', 'AT', 'IE', 'PT', 'FI', 'GR', 'LU', 'SK', 'SI', 'EE', 'LV', 'LT', 'CY', 'MT'];
-
-        return offers.filter(offer => {
-            const offerCurrency = offer.currency || 'USD';
-            const offerGeo = offer.geo;
-
-            // Primary filter: currency must match user's currency
-            if (offerCurrency !== userCurrency) {
-                return false;
-            }
-
-            // If offer has explicit geo, it must match user's region
-            if (offerGeo) {
-                if (offerGeo === userGeo) return true;
-                if (userGeo === 'EU' && (offerGeo === 'EU' || euCountries.includes(offerGeo))) return true;
-                if (euCountries.includes(userGeo) && offerGeo === 'EU') return true;
-                return false;
-            }
-
-            // Offer has no explicit geo (global) - accept if currency matches
-            return true;
-        });
     }
 
     /**
@@ -197,7 +91,7 @@ class ProductPage {
 
     /**
      * Calculate category scores for the product.
-     * Uses pre-calculated scores from finder JSON (specs.scores).
+     * Uses pre-calculated scores from inline product data (specs.scores).
      *
      * @returns {Object} Category scores keyed by category id
      */
@@ -205,9 +99,6 @@ class ProductPage {
         if (!this.product?.specs?.scores) return {};
 
         const preCalculatedScores = this.product.specs.scores;
-        const specGroups = SPEC_GROUPS[this.category];
-
-        if (!specGroups) return {};
 
         // Map of score keys to display names and icons
         const scoreConfig = {
@@ -275,67 +166,26 @@ class ProductPage {
     }
 
     /**
-     * Load prices for product cards in related section.
+     * Initialize similar products carousel.
+     * Uses shared carousel utility for arrow navigation and fade effects.
      */
-    async loadProductCardPrices() {
-        const priceEls = this.container.querySelectorAll('[data-product-price]');
-        if (priceEls.length === 0) return;
+    initSimilarCarousel() {
+        const section = this.container.querySelector('[data-similar-carousel]');
+        if (!section) return;
 
-        try {
-            const { geo, currency } = await getUserGeo();
+        const carousel = section.querySelector('.similar-carousel');
+        const grid = section.querySelector('.similar-grid');
+        const leftArrow = section.querySelector('.carousel-arrow-left');
+        const rightArrow = section.querySelector('.carousel-arrow-right');
 
-            // Load finder JSON if not already loaded
-            if (!this.finderProducts) {
-                const baseUrl = window.erhData?.siteUrl || '';
-                const jsonUrl = `${baseUrl}/wp-content/uploads/finder_${this.category}.json`;
-                const response = await fetch(jsonUrl);
-                if (response.ok) {
-                    this.finderProducts = await response.json();
-                }
-            }
+        if (!carousel || !grid || !leftArrow || !rightArrow) return;
 
-            if (!this.finderProducts) return;
-
-            // Create lookup map
-            const productMap = new Map(this.finderProducts.map(p => [p.id, p]));
-
-            priceEls.forEach(el => {
-                const productId = parseInt(el.dataset.productPrice, 10);
-                const product = productMap.get(productId);
-
-                if (product?.pricing) {
-                    const pricing = product.pricing[geo] || product.pricing['US'];
-                    if (pricing?.current_price) {
-                        const displayCurrency = product.pricing[geo] ? currency : 'USD';
-                        el.textContent = formatPrice(pricing.current_price, displayCurrency);
-                        el.classList.add('has-price');
-                    } else {
-                        el.innerHTML = '<span class="no-price">Price unavailable</span>';
-                    }
-                } else {
-                    el.innerHTML = '<span class="no-price">Price unavailable</span>';
-                }
-            });
-
-        } catch (error) {
-            console.warn('ProductPage: Failed to load prices:', error);
-            priceEls.forEach(el => {
-                el.innerHTML = '<span class="no-price">—</span>';
-            });
-        }
-    }
-
-    /**
-     * Escape HTML entities.
-     *
-     * @param {string} str - String to escape
-     * @returns {string} Escaped string
-     */
-    escapeHtml(str) {
-        if (!str) return '';
-        return str.replace(/[&<>"']/g, c => ({
-            '&': '&amp;', '<': '&lt;', '>': '&gt;', '"': '&quot;', "'": '&#39;'
-        })[c]);
+        this.carousel = initCarousel(carousel, {
+            grid,
+            leftArrow,
+            rightArrow,
+            scrollAmount: 420, // ~2 cards
+        });
     }
 
     /**
@@ -345,6 +195,10 @@ class ProductPage {
         if (this.radarChart) {
             this.radarChart.destroy();
             this.radarChart = null;
+        }
+        if (this.carousel) {
+            this.carousel.destroy();
+            this.carousel = null;
         }
     }
 }

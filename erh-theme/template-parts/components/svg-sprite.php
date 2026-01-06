@@ -328,4 +328,11 @@ if ( ! defined( 'ABSPATH' ) ) {
         <circle cx="411.076" cy="276.711" r="46.114"/>
         <path d="M229.931,230.597h207.126c15.9,0,31.491-4.395,45.049-12.7l25.67-15.723" stroke-linecap="round"/>
     </symbol>
+
+    <!-- Archive (discontinued) -->
+    <symbol id="icon-archive" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round">
+        <polyline points="21 8 21 21 3 21 3 8"/>
+        <rect x="1" y="3" width="22" height="5"/>
+        <line x1="10" y1="12" x2="14" y2="12"/>
+    </symbol>
 </svg>

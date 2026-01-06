@@ -115,8 +115,18 @@ class PriceFetcher {
 
         // Add geo filter if specified.
         if ($geo !== null) {
-            $sql .= " AND (tl.geo_target IS NULL OR tl.geo_target = '' OR tl.geo_target = %s)";
-            $params[] = $geo;
+            $geo = strtoupper($geo);
+
+            // EU region needs to match EU + individual EU country codes.
+            if ($geo === 'EU') {
+                $eu_countries = ['EU', 'DE', 'FR', 'IT', 'ES', 'NL', 'BE', 'AT', 'IE', 'PT', 'FI', 'GR', 'LU', 'SK', 'SI', 'EE', 'LV', 'LT', 'CY', 'MT'];
+                $placeholders = implode(',', array_fill(0, count($eu_countries), '%s'));
+                $sql .= " AND (tl.geo_target IS NULL OR tl.geo_target = '' OR tl.geo_target IN ({$placeholders}))";
+                $params = array_merge($params, $eu_countries);
+            } else {
+                $sql .= " AND (tl.geo_target IS NULL OR tl.geo_target = '' OR tl.geo_target = %s)";
+                $params[] = $geo;
+            }
         }
 
         // Order by: in-stock first, then by price ascending.
@@ -227,8 +237,18 @@ class PriceFetcher {
         $params = $product_ids;
 
         if ($geo !== null) {
-            $sql .= " AND (tl.geo_target IS NULL OR tl.geo_target = '' OR tl.geo_target = %s)";
-            $params[] = $geo;
+            $geo = strtoupper($geo);
+
+            // EU region needs to match EU + individual EU country codes.
+            if ($geo === 'EU') {
+                $eu_countries = ['EU', 'DE', 'FR', 'IT', 'ES', 'NL', 'BE', 'AT', 'IE', 'PT', 'FI', 'GR', 'LU', 'SK', 'SI', 'EE', 'LV', 'LT', 'CY', 'MT'];
+                $placeholders = implode(',', array_fill(0, count($eu_countries), '%s'));
+                $sql .= " AND (tl.geo_target IS NULL OR tl.geo_target = '' OR tl.geo_target IN ({$placeholders}))";
+                $params = array_merge($params, $eu_countries);
+            } else {
+                $sql .= " AND (tl.geo_target IS NULL OR tl.geo_target = '' OR tl.geo_target = %s)";
+                $params[] = $geo;
+            }
         }
 
         $sql .= " ORDER BY
@@ -300,8 +320,18 @@ class PriceFetcher {
         $params = [$product_id];
 
         if ($geo !== null) {
-            $sql .= " AND (geo_target IS NULL OR geo_target = '' OR geo_target = %s)";
-            $params[] = $geo;
+            $geo = strtoupper($geo);
+
+            // EU region needs to match EU + individual EU country codes.
+            if ($geo === 'EU') {
+                $eu_countries = ['EU', 'DE', 'FR', 'IT', 'ES', 'NL', 'BE', 'AT', 'IE', 'PT', 'FI', 'GR', 'LU', 'SK', 'SI', 'EE', 'LV', 'LT', 'CY', 'MT'];
+                $placeholders = implode(',', array_fill(0, count($eu_countries), '%s'));
+                $sql .= " AND (geo_target IS NULL OR geo_target = '' OR geo_target IN ({$placeholders}))";
+                $params = array_merge($params, $eu_countries);
+            } else {
+                $sql .= " AND (geo_target IS NULL OR geo_target = '' OR geo_target = %s)";
+                $params[] = $geo;
+            }
         }
 
         // phpcs:ignore WordPress.DB.PreparedSQL.NotPrepared

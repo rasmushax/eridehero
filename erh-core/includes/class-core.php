@@ -43,6 +43,7 @@ use ERH\Admin\SettingsPage;
 use ERH\Migration\MigrationAdmin;
 use ERH\Api\RestPrices;
 use ERH\Api\RestDeals;
+use ERH\Api\RestProducts;
 use ERH\Api\ContactHandler;
 
 /**
@@ -552,6 +553,10 @@ class Core {
         // Initialize and register REST Deals API.
         $rest_deals = new RestDeals();
         $rest_deals->register_routes();
+
+        // Initialize and register REST Products API.
+        $rest_products = new RestProducts();
+        $rest_products->register_routes();
     }
 
     /**

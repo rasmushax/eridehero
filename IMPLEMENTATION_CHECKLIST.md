@@ -233,12 +233,28 @@ Use this file alongside CLAUDE.md to track progress.
 - [x] Verify `erh-theme/assets/js/components/deals.js` compatibility
   - Already uses `getUserGeo()` - works with new region system
 
+### Geo-Aware Optimizations (Session 2025-01-06)
+- [x] Fixed DEV_COUNTRY_OVERRIDE bug (was permanently set to 'DE', now `null`)
+- [x] Added window-level caching (`window.erhUserGeoData`) for getUserGeo()
+- [x] Added Promise deduplication (`geoDetectionPromise`) to prevent concurrent IPInfo calls
+- [x] Updated `setUserRegion()` and `clearUserRegion()` to clear window cache + priceCache
+- [x] Consolidated DRY utilities:
+  - `formatPrice()` - single source in geo-price.js
+  - `getCurrencySymbol()` - single source in geo-price.js
+  - `splitPrice()` - single source in product-card.js
+  - Updated `account-trackers.js` to import from geo-price.js (removed local duplicate)
+- [x] Fixed currency consistency in comparison.js:
+  - Removed US fallback (was mixing currencies in comparisons)
+  - Now matches finder.js behavior: show user's region price only, null if unavailable
+  - Comment: "Users from unmapped countries already default to US at geo-detection level"
+
 ### 5-Region Architecture
 - **Regions**: US, GB, EU, CA, AU
 - **HFT stores**: Per-country (DE, FR, IT, ES, etc.)
 - **Cache groups**: Country→Region (DE/FR/IT → EU)
 - **Validation**: Currency match required (EU = EUR only)
-- **Frontend fallback**: Show US price if user's region has no data
+- **Frontend fallback**: Unmapped countries default to US at geo-detection level (NOT at product level)
+- **No currency mixing**: All components show prices in user's region currency only
 
 ---
 
@@ -381,15 +397,44 @@ Browser Request
 
 ---
 
-## Phase 6B: Remaining Templates - PENDING
+## Phase 6B: Product Page (single-products.php) - IN PROGRESS
 
-### Product Templates
-- [ ] Create `template-parts/product/card.php`
-- [ ] Create `template-parts/product/specs-table.php`
-- [ ] Create `template-parts/product/price-box.php`
-- [ ] Create `template-parts/product/offers-modal.php`
-- [ ] Create `templates/single-products.php`
-- [ ] Test: Single product page renders
+### Product Page Structure (Plan Created)
+See plan file: `/home/rasmu/.claude/plans/resilient-jumping-feather.md`
+
+**Layout:** Full-width, no sidebar - product database hub for specs/pricing
+
+### Template Files
+- [x] Create `single-products.php` - Main template with full layout
+- [x] Create `template-parts/product/hero.php` - Product image, name, brand, score, review link
+- [x] Create `template-parts/product/performance-profile.php` - Radar chart + highlights (placeholder)
+- [x] Create `template-parts/product/comparison-widget.php` - Dark H2H widget (locked product)
+- [x] Create `template-parts/product/specs-grouped.php` - Full specs by category
+- [x] Create `template-parts/product/related.php` - Related products grid
+
+### Section Order (Updated 2025-01-06)
+1. Breadcrumb
+2. Hero (product image, name, score, review/video links)
+3. Price Intelligence (reuses `components/price-intel.php`)
+4. Performance Profile (radar chart + "Great for..." highlights)
+5. H2H Comparison Widget (dark style, current product locked)
+6. **Related Products** (moved above specs)
+7. Full Specifications (grouped by category)
+
+### CSS & JavaScript
+- [ ] Create `_single-product.css`
+- [ ] Import in `style.css`
+- [ ] Create `product-page.js` orchestrator
+- [ ] Extract `RadarChart` from compare-results.js to `radar-chart.js`
+- [ ] Add "locked" mode to comparison.js
+
+### ACF Fields Required
+- [ ] Add `review.review_post` (Post Object) - Links to review post
+- [ ] Add `review.youtube_video` (URL) - YouTube video URL
+
+---
+
+## Phase 6C: Remaining Templates - PENDING
 
 ### Tool Pages
 - [ ] Create `template-parts/finder/filters.php`
@@ -580,21 +625,31 @@ erh-theme/
 │   │   ├── app.js                  # Main entry, dynamic imports
 │   │   ├── services/
 │   │   │   ├── geo-config.js       # 5-region config, country→region mapping
-│   │   │   └── geo-price.js        # Region detection & price formatting
+│   │   │   └── geo-price.js        # Region detection, price formatting, caching
+│   │   ├── utils/
+│   │   │   ├── dom.js              # DOM utilities (escapeHtml, etc.)
+│   │   │   ├── product-card.js     # Product card utilities (splitPrice, createProductCard)
+│   │   │   └── carousel.js         # Carousel navigation utility
 │   │   └── components/
 │   │       ├── gallery.js          # Image gallery with lightbox
 │   │       ├── price-intel.js      # Price data loading (skeleton states)
 │   │       ├── mobile-menu.js      # Mobile navigation
 │   │       ├── search.js           # Search functionality
 │   │       ├── dropdown.js         # Dropdown menus
-│   │       ├── comparison.js       # H2H comparison widget
-│   │       ├── deals.js            # Deals section
+│   │       ├── comparison.js       # H2H comparison widget (geo-aware)
+│   │       ├── deals.js            # Deals section (geo-aware)
+│   │       ├── finder.js           # Finder tool (geo-aware)
+│   │       ├── finder-table.js     # Finder table view (geo-aware)
 │   │       ├── chart.js            # Price history charts
+│   │       ├── price-chart.js      # Price chart component
 │   │       ├── toc.js              # Table of contents
 │   │       ├── modal.js            # Modal dialogs
 │   │       ├── tooltip.js          # Tooltips
 │   │       ├── popover.js          # Popovers
 │   │       ├── toast.js            # Toast notifications
+│   │       ├── auth-modal.js       # Login/register modal
+│   │       ├── price-alert.js      # Price alert modal
+│   │       ├── account-trackers.js # User tracker management
 │   │       └── ... (more components)
 │   └── images/
 │       └── logos/                  # Retailer logos
@@ -602,6 +657,7 @@ erh-theme/
 │   ├── enqueue.php                 # Asset registration
 │   ├── theme-setup.php             # Theme supports, menus
 │   ├── template-functions.php      # Helper functions (icons, scores, specs)
+│   ├── finder-config.php           # Finder tool configuration
 │   └── acf-options.php             # ACF options pages & user fields
 ├── template-parts/
 │   ├── header.php                  # Site header with mega menu
@@ -619,14 +675,27 @@ erh-theme/
 │   │   ├── author-box.php          # Author bio with socials
 │   │   ├── related-reviews.php     # Related reviews grid
 │   │   └── sticky-buy-bar.php      # Sticky purchase CTA bar
-│   └── sidebar/
-│       ├── tools.php               # Finder, Deals, Compare links
-│       ├── comparison.php          # H2H comparison widget
-│       └── toc.php                 # Table of contents
+│   ├── product/                    # Product page components (IN PROGRESS)
+│   │   ├── hero.php                # Product hero section
+│   │   ├── performance-profile.php # Radar chart + highlights
+│   │   ├── comparison-widget.php   # H2H comparison (locked mode)
+│   │   ├── specs-grouped.php       # Grouped specifications
+│   │   └── related.php             # Related products
+│   ├── sidebar/
+│   │   ├── tools.php               # Finder, Deals, Compare links
+│   │   ├── comparison.php          # H2H comparison widget
+│   │   └── toc.php                 # Table of contents
+│   └── home/
+│       ├── hero.php                # Homepage hero
+│       ├── deals.php               # Deals section
+│       └── comparison.php          # Comparison widget
 ├── functions.php
 ├── header.php
 ├── footer.php
 ├── single.php                      # Routes to single-review.php
+├── single-products.php             # Product database page
+├── page-finder.php                 # Finder tool
+├── front-page.php                  # Homepage
 └── style.css                       # Theme header
 ```
 
@@ -657,6 +726,9 @@ erh-theme/
 | Price Cache TTL | 6 hours + HFT invalidation | Prices update 2x daily, invalidate on scrape |
 | JS Request Dedup | pendingRequests Map | Prevents duplicate concurrent API calls |
 | Deals API | Combined deals + counts | Single request instead of two |
+| Geo Detection Cache | Window-level + Promise dedup | Single IPInfo call per page load |
+| Currency Consistency | No product-level US fallback | Unmapped countries default at detection level |
+| DRY Utilities | formatPrice/getCurrencySymbol in geo-price.js | All components import from single source |
 
 ---
 

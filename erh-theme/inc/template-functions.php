@@ -146,6 +146,403 @@ function erh_get_finder_url( ?int $post_id = null ): ?string {
 }
 
 /**
+ * Get product obsolete status
+ *
+ * Returns information about whether a product is obsolete and if it has
+ * been superseded by another product.
+ *
+ * @param int|null $post_id Post ID (optional, uses current post if null)
+ * @return array {
+ *     @type bool     $is_obsolete   Whether the product is obsolete/discontinued.
+ *     @type bool     $is_superseded Whether the product has been replaced by a newer model.
+ *     @type int|null $new_product_id ID of the replacement product (if superseded).
+ *     @type string|null $new_product_name Name of the replacement product.
+ *     @type string|null $new_product_url URL of the replacement product.
+ * }
+ */
+function erh_get_product_obsolete_status( ?int $post_id = null ): array {
+    $post_id = $post_id ?? get_the_ID();
+
+    $result = array(
+        'is_obsolete'       => false,
+        'is_superseded'     => false,
+        'new_product_id'    => null,
+        'new_product_name'  => null,
+        'new_product_url'   => null,
+    );
+
+    // Get obsolete group from ACF.
+    $obsolete = get_field( 'obsolete', $post_id );
+
+    if ( ! is_array( $obsolete ) ) {
+        return $result;
+    }
+
+    $result['is_obsolete'] = ! empty( $obsolete['is_product_obsolete'] );
+
+    if ( $result['is_obsolete'] && ! empty( $obsolete['has_the_product_been_superseded'] ) ) {
+        $result['is_superseded'] = true;
+
+        // Get replacement product info.
+        $new_product = $obsolete['new_product'] ?? null;
+        if ( $new_product ) {
+            // ACF post_object can return ID or object depending on config.
+            $new_product_id = is_object( $new_product ) ? $new_product->ID : $new_product;
+            $result['new_product_id']   = $new_product_id;
+            $result['new_product_name'] = get_the_title( $new_product_id );
+            $result['new_product_url']  = get_permalink( $new_product_id );
+        }
+    }
+
+    return $result;
+}
+
+/**
+ * Check if product is obsolete (simple boolean helper)
+ *
+ * @param int|null $post_id Post ID (optional, uses current post if null)
+ * @return bool
+ */
+function erh_is_product_obsolete( ?int $post_id = null ): bool {
+    $status = erh_get_product_obsolete_status( $post_id );
+    return $status['is_obsolete'];
+}
+
+/**
+ * Check if product has any active pricing data
+ *
+ * Checks the wp_product_data cache for any region with a current price.
+ * Returns false if product has no pricing in any region.
+ *
+ * @param int $product_id The product ID to check.
+ * @return bool True if product has pricing, false otherwise.
+ */
+function erh_product_has_pricing( int $product_id ): bool {
+    global $wpdb;
+
+    $table_name = $wpdb->prefix . 'product_data';
+    $row = $wpdb->get_row(
+        $wpdb->prepare(
+            "SELECT price_history FROM {$table_name} WHERE product_id = %d",
+            $product_id
+        ),
+        ARRAY_A
+    );
+
+    if ( ! $row || empty( $row['price_history'] ) ) {
+        return false;
+    }
+
+    $price_history = maybe_unserialize( $row['price_history'] );
+
+    if ( ! is_array( $price_history ) || empty( $price_history ) ) {
+        return false;
+    }
+
+    // Check if any region has a current price.
+    foreach ( $price_history as $region => $data ) {
+        if ( ! empty( $data['current_price'] ) && $data['current_price'] > 0 ) {
+            return true;
+        }
+    }
+
+    return false;
+}
+
+/**
+ * Get similar products based on specs and price
+ *
+ * Queries the wp_product_data cache table and calculates similarity scores
+ * based on key specs. Returns products of the same type that are most similar.
+ *
+ * Similarity factors (for e-scooters):
+ * - Price (±25% = 100 points, scales down)
+ * - Top speed (±5 mph = 100 points)
+ * - Range (±10 miles = 100 points)
+ * - Weight (±10 lbs = 100 points)
+ * - Motor power (±200W = 100 points)
+ *
+ * @param int $product_id The product to find similar products for.
+ * @param int $count Number of similar products to return.
+ * @param bool $exclude_obsolete Whether to exclude obsolete products.
+ * @return array Array of similar product data with similarity scores.
+ */
+function erh_get_similar_products( int $product_id, int $count = 4, bool $exclude_obsolete = true ): array {
+    global $wpdb;
+
+    // Get the source product data.
+    $table_name = $wpdb->prefix . 'product_data';
+    $source = $wpdb->get_row(
+        $wpdb->prepare(
+            "SELECT * FROM {$table_name} WHERE product_id = %d",
+            $product_id
+        ),
+        ARRAY_A
+    );
+
+    if ( ! $source ) {
+        return array();
+    }
+
+    $source_specs = maybe_unserialize( $source['specs'] );
+    $source_type  = $source['product_type'];
+
+    // Get all products of same type (excluding source).
+    $candidates = $wpdb->get_results(
+        $wpdb->prepare(
+            "SELECT * FROM {$table_name}
+             WHERE product_type = %s
+             AND product_id != %d
+             ORDER BY popularity_score DESC",
+            $source_type,
+            $product_id
+        ),
+        ARRAY_A
+    );
+
+    if ( empty( $candidates ) ) {
+        return array();
+    }
+
+    // Define spec comparison config by product type.
+    $spec_config = erh_get_similarity_spec_config( $source_type );
+
+    // Calculate similarity scores.
+    $scored = array();
+    foreach ( $candidates as $candidate ) {
+        // Skip obsolete products if requested.
+        if ( $exclude_obsolete ) {
+            $obsolete = get_field( 'obsolete', $candidate['product_id'] );
+            if ( ! empty( $obsolete['is_product_obsolete'] ) ) {
+                continue;
+            }
+        }
+
+        $candidate_specs = maybe_unserialize( $candidate['specs'] );
+        $score = erh_calculate_similarity_score( $source_specs, $candidate_specs, $spec_config );
+
+        // Add popularity as a tiebreaker (small weight).
+        $score += ( (int) $candidate['popularity_score'] / 100 );
+
+        // Get pricing data (geo-keyed).
+        $price_history = maybe_unserialize( $candidate['price_history'] );
+        $pricing       = is_array( $price_history ) ? $price_history : array();
+
+        $scored[] = array(
+            'product_id'       => (int) $candidate['product_id'],
+            'name'             => $candidate['name'],
+            'permalink'        => $candidate['permalink'],
+            'image_url'        => $candidate['image_url'],
+            'rating'           => $candidate['rating'],
+            'popularity_score' => (int) $candidate['popularity_score'],
+            'similarity_score' => $score,
+            'specs'            => $candidate_specs,
+            'pricing'          => $pricing,
+        );
+    }
+
+    // Sort by similarity score (descending).
+    usort( $scored, function( $a, $b ) {
+        return $b['similarity_score'] <=> $a['similarity_score'];
+    } );
+
+    // Return top N.
+    return array_slice( $scored, 0, $count );
+}
+
+/**
+ * Get spec comparison configuration for a product type
+ *
+ * @param string $product_type The product type.
+ * @return array Spec config with keys, ideal ranges, and weights.
+ */
+function erh_get_similarity_spec_config( string $product_type ): array {
+    // Default config for e-scooters.
+    // 'paths' is an array of alternative keys to try (flat first, then nested).
+    $config = array(
+        'speed' => array(
+            'paths'  => array( 'manufacturer_top_speed' ),
+            'range'  => 5,    // ±5 mph for 100 points.
+            'weight' => 1.0,
+        ),
+        'range' => array(
+            'paths'  => array( 'manufacturer_range' ),
+            'range'  => 10,   // ±10 miles for 100 points.
+            'weight' => 1.0,
+        ),
+        'weight' => array(
+            'paths'  => array( 'weight', 'e-scooters.dimensions.weight' ),
+            'range'  => 10,   // ±10 lbs for 100 points.
+            'weight' => 0.8,
+        ),
+        'motor' => array(
+            'paths'  => array( 'peak_motor_wattage', 'e-scooters.motor.power_peak', 'nominal_motor_wattage', 'e-scooters.motor.power_nominal' ),
+            'range'  => 300,  // ±300W for 100 points.
+            'weight' => 0.7,
+        ),
+        'battery' => array(
+            'paths'  => array( 'battery_capacity', 'e-scooters.battery.capacity' ),
+            'range'  => 150,  // ±150Wh for 100 points.
+            'weight' => 0.6,
+        ),
+    );
+
+    // Adjust for other product types as needed.
+    if ( 'Electric Bike' === $product_type ) {
+        $config = array(
+            'range' => array(
+                'paths'  => array( 'e-bikes.battery.range_claimed' ),
+                'range'  => 15,
+                'weight' => 1.0,
+            ),
+            'motor' => array(
+                'paths'  => array( 'e-bikes.motor.power_nominal' ),
+                'range'  => 100,
+                'weight' => 0.8,
+            ),
+            'battery' => array(
+                'paths'  => array( 'e-bikes.battery.capacity' ),
+                'range'  => 150,
+                'weight' => 0.7,
+            ),
+        );
+    }
+
+    return $config;
+}
+
+/**
+ * Calculate similarity score between two products
+ *
+ * @param array $source_specs Source product specs.
+ * @param array $candidate_specs Candidate product specs.
+ * @param array $config Spec comparison config.
+ * @return float Similarity score (higher = more similar).
+ */
+function erh_calculate_similarity_score( array $source_specs, array $candidate_specs, array $config ): float {
+    $total_score  = 0;
+    $total_weight = 0;
+
+    // Helper to get first available value from array of paths.
+    $get_first_value = function ( array $specs, array $paths ) {
+        foreach ( $paths as $path ) {
+            $value = erh_get_nested_value( $specs, $path );
+            if ( is_numeric( $value ) ) {
+                return (float) $value;
+            }
+        }
+        return null;
+    };
+
+    foreach ( $config as $spec_name => $params ) {
+        $paths = $params['paths'] ?? array( $spec_name );
+
+        $source_val    = $get_first_value( $source_specs, $paths );
+        $candidate_val = $get_first_value( $candidate_specs, $paths );
+
+        // Skip if either value is missing.
+        if ( $source_val === null || $candidate_val === null ) {
+            continue;
+        }
+
+        $range  = $params['range'];
+        $weight = $params['weight'];
+
+        // Calculate how close the values are (100 = identical, 0 = at range limit or beyond).
+        $diff       = abs( $source_val - $candidate_val );
+        $spec_score = max( 0, 100 - ( $diff / $range ) * 100 );
+
+        $total_score  += $spec_score * $weight;
+        $total_weight += $weight;
+    }
+
+    // Return weighted average (0-100 scale).
+    return $total_weight > 0 ? $total_score / $total_weight : 0;
+}
+
+/**
+ * Format basic specs line for product cards
+ *
+ * Returns a comma-separated string of key specs matching the finder tool defaults:
+ * speed, battery, motor, weight, max load, voltage, tires.
+ *
+ * @param array $specs Product specs array from wp_product_data.
+ * @return string Formatted specs line.
+ */
+function erh_format_card_specs( array $specs ): string {
+    $parts = array();
+
+    // Helper to get value from flat key or nested e-scooters path.
+    // Checks flat key first, then nested path.
+    $get_value = function ( string ...$paths ) use ( $specs ) {
+        foreach ( $paths as $path ) {
+            // Check flat key first.
+            if ( isset( $specs[ $path ] ) && $specs[ $path ] !== '' && $specs[ $path ] !== null ) {
+                return $specs[ $path ];
+            }
+
+            // Check nested path (e.g., 'e-scooters.battery.capacity').
+            if ( strpos( $path, '.' ) !== false ) {
+                $value = erh_get_nested_value( $specs, $path );
+                if ( $value !== null && $value !== '' ) {
+                    return $value;
+                }
+            }
+        }
+        return null;
+    };
+
+    // Top speed (flat only for e-scooters).
+    $speed = $get_value( 'manufacturer_top_speed' );
+    if ( $speed && is_numeric( $speed ) ) {
+        $parts[] = round( (float) $speed ) . ' mph';
+    }
+
+    // Battery capacity - check flat AND nested.
+    $battery = $get_value( 'battery_capacity', 'e-scooters.battery.capacity' );
+    if ( $battery && is_numeric( $battery ) ) {
+        $parts[] = round( (float) $battery ) . ' Wh';
+    }
+
+    // Motor power (peak preferred, then nominal) - check flat AND nested.
+    $motor = $get_value(
+        'peak_motor_wattage',
+        'e-scooters.motor.power_peak',
+        'nominal_motor_wattage',
+        'e-scooters.motor.power_nominal'
+    );
+    if ( $motor && is_numeric( $motor ) ) {
+        $parts[] = round( (float) $motor ) . 'W';
+    }
+
+    // Weight - check flat AND nested.
+    $weight = $get_value( 'weight', 'e-scooters.dimensions.weight' );
+    if ( $weight && is_numeric( $weight ) ) {
+        $parts[] = round( (float) $weight ) . ' lbs';
+    }
+
+    // Max load (weight limit) - check flat AND nested.
+    $max_load = $get_value( 'max_weight_capacity', 'e-scooters.dimensions.max_load' );
+    if ( $max_load && is_numeric( $max_load ) ) {
+        $parts[] = round( (float) $max_load ) . ' lbs limit';
+    }
+
+    // Voltage - check flat AND nested.
+    $voltage = $get_value( 'voltage', 'e-scooters.battery.voltage' );
+    if ( $voltage && is_numeric( $voltage ) ) {
+        $parts[] = round( (float) $voltage ) . 'V';
+    }
+
+    // Tire type - check flat AND nested (consolidated by cache-rebuild-job).
+    $tires = $get_value( 'tire_type', 'e-scooters.wheels.tire_type' );
+    if ( $tires && is_string( $tires ) && ! empty( $tires ) ) {
+        $parts[] = $tires;
+    }
+
+    return implode( ', ', $parts );
+}
+
+/**
  * Get product type short name for display in badges/cards
  *
  * @param string $type Full product type label
@@ -2383,5 +2780,53 @@ function erh_render_spec_row_with_tooltip( string $label, string $value, string 
 		$label_html,
 		$value_class,
 		$value_html
+	);
+}
+
+/**
+ * Get inline product data for JS.
+ *
+ * Retrieves product data from wp_product_data cache table, including
+ * pre-calculated scores. Used to inline data for single product pages
+ * so JS doesn't need to load the entire finder JSON file.
+ *
+ * @param int $product_id The product ID.
+ * @return array|null Product data array or null if not found.
+ */
+function erh_get_inline_product_data( int $product_id ): ?array {
+	global $wpdb;
+
+	$table_name = $wpdb->prefix . 'product_data';
+
+	// Check if table exists.
+	if ( $wpdb->get_var( $wpdb->prepare( 'SHOW TABLES LIKE %s', $table_name ) ) !== $table_name ) {
+		return null;
+	}
+
+	// Get product from cache table.
+	$row = $wpdb->get_row(
+		$wpdb->prepare(
+			"SELECT product_id, name, product_type, specs, rating, popularity_score
+			FROM {$table_name}
+			WHERE product_id = %d
+			LIMIT 1",
+			$product_id
+		)
+	);
+
+	if ( ! $row ) {
+		return null;
+	}
+
+	// Unserialize specs.
+	$specs = maybe_unserialize( $row->specs );
+
+	// Return data matching the finder JSON structure that JS expects.
+	return array(
+		'id'         => (int) $row->product_id,
+		'name'       => $row->name,
+		'rating'     => $row->rating !== null ? (float) $row->rating : null,
+		'popularity' => (int) $row->popularity_score,
+		'specs'      => is_array( $specs ) ? $specs : array(),
 	);
 }

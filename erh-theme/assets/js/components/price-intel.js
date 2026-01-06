@@ -5,7 +5,7 @@
  * Hydrates server-rendered shell with dynamic data based on user's region.
  */
 
-import { getUserGeo, formatPrice, getCurrencySymbol, getProductPrices } from '../services/geo-price.js';
+import { getUserGeo, formatPrice, getCurrencySymbol, getProductPrices, filterOffersForGeo } from '../services/geo-price.js';
 import { createChart } from './chart.js';
 import { PriceAlertModal } from './price-alert.js';
 
@@ -165,7 +165,7 @@ class PriceIntelComponent {
             }
 
             // Filter offers to only show those matching user's currency/geo
-            this.prices = this.filterOffersForGeo(data.offers);
+            this.prices = filterOffersForGeo(data.offers, this.userGeo);
 
             if (this.prices.length === 0) {
                 this.showNoPrices();
@@ -210,6 +210,9 @@ class PriceIntelComponent {
         // Store current price and currency for price alert modal
         this.currentPrice = best.price || 0;
         this.currentCurrency = currency;
+
+        // Update hero price (shares API data, avoids duplicate fetch)
+        this.updateHeroPrice(best, currency);
 
         // Update best price header
         if (this.bestPriceEl) {
@@ -299,6 +302,32 @@ class PriceIntelComponent {
         }).join('');
 
         this.retailerList.innerHTML = html;
+    }
+
+    /**
+     * Update hero price element (outside price-intel component).
+     * Shares the same API data to avoid duplicate fetches.
+     */
+    updateHeroPrice(best, currency) {
+        const heroPrice = document.querySelector('[data-hero-price]');
+        if (!heroPrice) return;
+
+        const amountEl = heroPrice.querySelector('.hero-price-amount');
+        const storesEl = heroPrice.querySelector('.hero-price-stores');
+
+        if (amountEl && best?.price) {
+            amountEl.textContent = formatPrice(best.price, currency);
+            heroPrice.classList.add('has-price');
+
+            // Count in-stock offers
+            const inStockCount = this.prices.filter(o => o.in_stock === true).length;
+            if (storesEl && inStockCount > 0) {
+                storesEl.textContent = inStockCount === 1 ? 'at 1 store' : `at ${inStockCount} stores`;
+            }
+        } else if (amountEl) {
+            amountEl.textContent = 'See prices';
+            heroPrice.classList.add('no-price');
+        }
     }
 
     /**
@@ -529,8 +558,12 @@ class PriceIntelComponent {
                 if (!period) return;
 
                 // Update active state
-                buttons.forEach(b => b.classList.remove('is-active'));
+                buttons.forEach(b => {
+                    b.classList.remove('is-active');
+                    b.setAttribute('aria-selected', 'false');
+                });
                 btn.classList.add('is-active');
+                btn.setAttribute('aria-selected', 'true');
 
                 // Update current period and refresh
                 this.currentPeriod = period;
@@ -576,43 +609,6 @@ class PriceIntelComponent {
             this.regionNoticeText.textContent = message;
             this.regionNotice.style.display = '';
         }
-    }
-
-    /**
-     * Filter offers to only show geo-appropriate ones.
-     * Only shows offers that match the user's currency/region.
-     */
-    filterOffersForGeo(offers) {
-        const userCurrency = this.userGeo.currency;
-        const userGeo = this.userGeo.geo;
-
-        // EU countries that should be treated as EU
-        const euCountries = ['DE', 'FR', 'IT', 'ES', 'NL', 'BE', 'AT', 'IE', 'PT', 'FI', 'GR', 'LU', 'SK', 'SI', 'EE', 'LV', 'LT', 'CY', 'MT'];
-
-        return offers.filter(offer => {
-            const offerCurrency = offer.currency || 'USD';
-            const offerGeo = offer.geo;
-
-            // Primary filter: currency must match user's currency
-            if (offerCurrency !== userCurrency) {
-                return false;
-            }
-
-            // If offer has explicit geo, it must match user's region
-            if (offerGeo) {
-                // Direct match
-                if (offerGeo === userGeo) return true;
-                // EU: accept EU-tagged or EU country-tagged offers
-                if (userGeo === 'EU' && (offerGeo === 'EU' || euCountries.includes(offerGeo))) return true;
-                // User in EU country: accept EU offers
-                if (euCountries.includes(userGeo) && offerGeo === 'EU') return true;
-                // No match
-                return false;
-            }
-
-            // Offer has no explicit geo (global) - accept if currency matches
-            return true;
-        });
     }
 
     /**
@@ -695,11 +691,139 @@ class PriceIntelComponent {
     }
 }
 
-// Auto-initialize on DOM ready
-if (document.readyState === 'loading') {
-    document.addEventListener('DOMContentLoaded', initPriceIntel);
-} else {
-    initPriceIntel();
+/**
+ * Initialize discontinued/no-pricing alternatives sections.
+ * These are rendered with skeleton cards and hydrated with geo-aware pricing.
+ */
+async function initAlternatives() {
+    const alternativesSections = document.querySelectorAll('[data-alternatives]');
+    if (alternativesSections.length === 0) return;
+
+    // Get user's geo
+    const userGeo = await getUserGeo();
+    const region = userGeo.geo;
+    const currency = userGeo.currency;
+
+    alternativesSections.forEach(section => {
+        try {
+            const data = JSON.parse(section.dataset.alternatives);
+            if (!data || !Array.isArray(data)) return;
+
+            const grid = section.querySelector('.discontinued-alternatives-grid');
+            if (!grid) return;
+
+            // Render the cards with geo-aware pricing
+            grid.innerHTML = data.map(product => {
+                const pricing = product.pricing || {};
+                const regionPricing = pricing[region] || pricing['US'] || {};
+                const price = regionPricing.current_price;
+                const avg6m = regionPricing.avg_6m;
+                const displayCurrency = pricing[region] ? currency : 'USD';
+
+                // Calculate price indicator
+                let indicatorHtml = '';
+                if (price && avg6m && avg6m > 0) {
+                    const diff = Math.round(((price - avg6m) / avg6m) * 100);
+                    if (diff < -5) {
+                        indicatorHtml = `
+                            <span class="discontinued-alternative-indicator discontinued-alternative-indicator--below">
+                                <svg class="icon" aria-hidden="true"><use href="#icon-arrow-down"></use></svg>${Math.abs(diff)}%
+                            </span>`;
+                    } else if (diff > 10) {
+                        indicatorHtml = `
+                            <span class="discontinued-alternative-indicator discontinued-alternative-indicator--above">
+                                <svg class="icon" aria-hidden="true"><use href="#icon-arrow-up"></use></svg>${diff}%
+                            </span>`;
+                    }
+                }
+
+                // Price row HTML
+                const priceRowHtml = price ? `
+                    <div class="discontinued-alternative-price-row">
+                        <span class="discontinued-alternative-price">${formatPrice(price, displayCurrency)}</span>
+                        ${indicatorHtml}
+                    </div>` : '';
+
+                // Image HTML
+                const imageHtml = product.image
+                    ? `<img src="${product.image}" alt="" class="discontinued-alternative-img" loading="lazy">`
+                    : `<div class="discontinued-alternative-img discontinued-alternative-img--placeholder"></div>`;
+
+                // Specs HTML
+                const specsHtml = product.specs
+                    ? `<span class="discontinued-alternative-specs">${product.specs}</span>`
+                    : '';
+
+                return `
+                    <a href="${product.url}" class="discontinued-alternative-card">
+                        <div class="discontinued-alternative-img-wrap">
+                            ${imageHtml}
+                            ${priceRowHtml}
+                        </div>
+                        <div class="discontinued-alternative-info">
+                            <span class="discontinued-alternative-name">${product.name}</span>
+                            ${specsHtml}
+                        </div>
+                    </a>`;
+            }).join('');
+        } catch (e) {
+            console.error('[PriceIntel] Failed to parse alternatives data:', e);
+        }
+    });
 }
 
-export default { initPriceIntel, PriceIntelComponent };
+/**
+ * Initialize successor card pricing (geo-aware).
+ * The card is pre-rendered but the price is a skeleton until JS hydrates it.
+ */
+async function initSuccessorPricing() {
+    const successorSections = document.querySelectorAll('[data-successor]');
+    if (successorSections.length === 0) return;
+
+    // Get user's geo
+    const userGeo = await getUserGeo();
+    const region = userGeo.geo;
+    const currency = userGeo.currency;
+
+    successorSections.forEach(section => {
+        try {
+            const data = JSON.parse(section.dataset.successor);
+            if (!data || !data.pricing) return;
+
+            const priceEl = section.querySelector('[data-successor-price]');
+            if (!priceEl) return;
+
+            const pricing = data.pricing;
+            const regionPricing = pricing[region] || pricing['US'] || {};
+            const price = regionPricing.current_price;
+            const displayCurrency = pricing[region] ? currency : 'USD';
+
+            if (price) {
+                priceEl.textContent = formatPrice(price, displayCurrency);
+            } else {
+                // No price available - hide the price element
+                priceEl.style.display = 'none';
+            }
+        } catch (e) {
+            console.error('[PriceIntel] Failed to parse successor data:', e);
+        }
+    });
+}
+
+/**
+ * Initialize all price intel functionality
+ */
+function initAll() {
+    initPriceIntel();
+    initAlternatives();
+    initSuccessorPricing();
+}
+
+// Auto-initialize on DOM ready
+if (document.readyState === 'loading') {
+    document.addEventListener('DOMContentLoaded', initAll);
+} else {
+    initAll();
+}
+
+export default { initPriceIntel, PriceIntelComponent, initAlternatives, initSuccessorPricing };

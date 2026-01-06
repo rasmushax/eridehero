@@ -15,6 +15,7 @@ import { getUserGeo, formatPrice } from '../services/geo-price.js';
 import { PriceAlertModal } from './price-alert.js';
 import { Modal } from './modal.js';
 import { RadarChart } from './radar-chart.js';
+import { escapeHtml } from '../utils/dom.js';
 import {
     SPEC_GROUPS,
     CATEGORY_WEIGHTS,
@@ -1021,15 +1022,7 @@ function showError(msg) {
     }
 }
 
-/**
- * Escape HTML.
- */
-function escapeHtml(str) {
-    if (!str) return '';
-    return str.replace(/[&<>"']/g, c => ({
-        '&': '&amp;', '<': '&lt;', '>': '&gt;', '"': '&quot;', "'": '&#39;'
-    })[c]);
-}
+// escapeHtml imported from utils/dom.js
 
 /**
  * Throttle function.

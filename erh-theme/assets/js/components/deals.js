@@ -9,8 +9,10 @@
  * - Skeleton loading states
  */
 
-import { getUserGeo } from '../services/geo-price.js';
+import { getUserGeo, getCurrencySymbol } from '../services/geo-price.js';
+import { splitPrice } from '../utils/product-card.js';
 import { PriceAlertModal } from './price-alert.js';
+import { initCarousel } from '../utils/carousel.js';
 
 // Configuration
 const CONFIG = {
@@ -125,13 +127,21 @@ export async function initDeals() {
         });
     });
 
-    // Carousel navigation
-    if (leftArrow && rightArrow) {
-        leftArrow.addEventListener('click', () => scrollCarousel(-1));
-        rightArrow.addEventListener('click', () => scrollCarousel(1));
-        grid.addEventListener('scroll', updateScrollState);
-        window.addEventListener('resize', updateScrollState);
-        updateScrollState();
+    // Carousel navigation using shared utility
+    let carouselInstance = null;
+    if (leftArrow && rightArrow && carousel) {
+        // Card width + gap for scroll amount calculation
+        const cardWidth = 180; // deal card width
+        const gap = 12; // var(--space-5)
+        const scrollAmount = (cardWidth + gap) * 2;
+
+        carouselInstance = initCarousel(carousel, {
+            grid,
+            leftArrow,
+            rightArrow,
+            scrollAmount,
+            threshold: 1,
+        });
     }
 
     /**
@@ -164,7 +174,10 @@ export async function initDeals() {
             grid.appendChild(ctaCard);
         }
 
-        updateScrollState();
+        // Update carousel scroll state
+        if (carouselInstance) {
+            carouselInstance.update();
+        }
     }
 
     /**
@@ -220,24 +233,11 @@ export async function initDeals() {
             const priceParts = splitPrice(deal.current_price);
             priceValue.textContent = priceParts.whole;
             if (priceCurrency) {
-                const symbols = { 'USD': '$', 'EUR': '€', 'GBP': '£', 'CAD': 'CA$', 'AUD': 'A$' };
-                priceCurrency.textContent = symbols[deal.currency] || '$';
+                priceCurrency.textContent = getCurrencySymbol(deal.currency);
             }
         }
 
         return clone;
-    }
-
-    /**
-     * Split price into whole and cents
-     */
-    function splitPrice(price) {
-        const whole = Math.floor(price);
-        const cents = Math.round((price - whole) * 100);
-        return {
-            whole: whole.toLocaleString(),
-            cents: cents.toString().padStart(2, '0')
-        };
     }
 
     /**
@@ -267,9 +267,11 @@ export async function initDeals() {
             hideEmptyState();
         }
 
-        // Reset scroll position
+        // Reset scroll position and update carousel state
         grid.scrollLeft = 0;
-        updateScrollState();
+        if (carouselInstance) {
+            carouselInstance.update();
+        }
     }
 
     /**
@@ -281,40 +283,6 @@ export async function initDeals() {
             tab.classList.toggle('active', isActive);
             tab.setAttribute('aria-selected', isActive ? 'true' : 'false');
         });
-    }
-
-    /**
-     * Scroll carousel left/right
-     */
-    function scrollCarousel(direction) {
-        const cardWidth = grid.querySelector('.deal-card')?.offsetWidth || 180;
-        const gap = 12; // var(--space-5)
-        const scrollAmount = (cardWidth + gap) * 2;
-
-        grid.scrollBy({
-            left: direction * scrollAmount,
-            behavior: 'smooth'
-        });
-    }
-
-    /**
-     * Update scroll button states and fade masks
-     */
-    function updateScrollState() {
-        if (!leftArrow || !rightArrow || !carousel) return;
-
-        const scrollLeft = grid.scrollLeft;
-        const maxScroll = grid.scrollWidth - grid.clientWidth;
-
-        const canScrollLeft = scrollLeft > 0;
-        const canScrollRight = scrollLeft < maxScroll - 1;
-
-        leftArrow.disabled = !canScrollLeft;
-        rightArrow.disabled = !canScrollRight;
-
-        // Update fade mask classes
-        carousel.classList.toggle('can-scroll-left', canScrollLeft);
-        carousel.classList.toggle('can-scroll-right', canScrollRight);
     }
 
     /**

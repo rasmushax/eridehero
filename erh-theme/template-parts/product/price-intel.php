@@ -50,10 +50,10 @@ $product_id = get_the_ID();
         <div class="price-intel-history-header">
             <h3><?php esc_html_e( 'Price history', 'erh' ); ?></h3>
             <div class="price-intel-period-tabs" role="tablist">
-                <button class="tab tab-sm" role="tab" data-period="3m"><?php esc_html_e( '3M', 'erh' ); ?></button>
-                <button class="tab tab-sm is-active" role="tab" data-period="6m"><?php esc_html_e( '6M', 'erh' ); ?></button>
-                <button class="tab tab-sm" role="tab" data-period="1y"><?php esc_html_e( '1Y', 'erh' ); ?></button>
-                <button class="tab tab-sm" role="tab" data-period="all"><?php esc_html_e( 'All', 'erh' ); ?></button>
+                <button class="tab tab-sm" role="tab" aria-selected="false" data-period="3m"><?php esc_html_e( '3M', 'erh' ); ?></button>
+                <button class="tab tab-sm is-active" role="tab" aria-selected="true" data-period="6m"><?php esc_html_e( '6M', 'erh' ); ?></button>
+                <button class="tab tab-sm" role="tab" aria-selected="false" data-period="1y"><?php esc_html_e( '1Y', 'erh' ); ?></button>
+                <button class="tab tab-sm" role="tab" aria-selected="false" data-period="all"><?php esc_html_e( 'All', 'erh' ); ?></button>
             </div>
         </div>
         <div class="price-intel-chart-visual" data-erh-chart="main" data-product-id="<?php echo esc_attr( $product_id ); ?>">

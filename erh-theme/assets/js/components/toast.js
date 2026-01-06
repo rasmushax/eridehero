@@ -20,6 +20,8 @@
  *   });
  */
 
+import { escapeHtml } from '../utils/dom.js';
+
 const TOAST_DURATION = 4000;
 const TOAST_GAP = 12;
 
@@ -96,8 +98,8 @@ class ToastManager {
         // Build toast HTML
         toast.innerHTML = `
             ${icons[type] || icons.info}
-            <span class="toast-message">${this.escapeHtml(message)}</span>
-            ${action ? `<button type="button" class="toast-action">${this.escapeHtml(action.label)}</button>` : ''}
+            <span class="toast-message">${escapeHtml(message)}</span>
+            ${action ? `<button type="button" class="toast-action">${escapeHtml(action.label)}</button>` : ''}
             <button type="button" class="toast-close" aria-label="Dismiss">
                 <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2">
                     <line x1="18" y1="6" x2="6" y2="18"></line>
@@ -174,14 +176,7 @@ class ToastManager {
         [...this.toasts].forEach(toast => this.dismiss(toast.id));
     }
 
-    /**
-     * Escape HTML to prevent XSS
-     */
-    escapeHtml(str) {
-        const div = document.createElement('div');
-        div.textContent = str;
-        return div.innerHTML;
-    }
+    // escapeHtml imported from utils/dom.js
 
     // Convenience methods
     success(message, options = {}) {

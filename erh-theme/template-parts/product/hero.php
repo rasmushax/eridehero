@@ -38,6 +38,13 @@ $review_post   = $args['review_post'] ?? null;
 $video_url     = $args['video_url'] ?? '';
 $key_specs     = $args['key_specs'] ?? array();
 
+// Get obsolete status.
+$obsolete_status = erh_get_product_obsolete_status( $product_id );
+$is_obsolete     = $obsolete_status['is_obsolete'];
+
+// Check if product has any pricing data.
+$has_pricing = erh_product_has_pricing( $product_id );
+
 // Get image HTML.
 $image_html = '';
 if ( $product_image ) {
@@ -75,8 +82,8 @@ if ( $review_post ) {
     if ( $review_thumb_id ) {
         $review_image_url = wp_get_attachment_image_url( $review_thumb_id, 'medium' );
     }
-    // Get editor rating from the review.
-    $review_score = get_field( 'editor_rating', $review_post->ID );
+    // Get editor rating from the product (not the review post).
+    $review_score = get_field( 'editor_rating', $product_id );
 }
 ?>
 
@@ -97,17 +104,19 @@ if ( $review_post ) {
                     <p class="product-hero-specs"><?php echo esc_html( $specs_summary ); ?></p>
                 <?php endif; ?>
 
-                <!-- Price (links to Price Intel section) -->
-                <a href="#prices" class="product-hero-price-link" data-hero-price>
-                    <span class="hero-price-label"><?php esc_html_e( 'from', 'erh' ); ?></span>
-                    <span class="hero-price-amount"></span>
-                    <span class="hero-price-stores"></span>
-                    <span class="hero-price-chevron"><?php erh_the_icon( 'chevron-down' ); ?></span>
-                    <!-- Skeleton loader -->
-                    <span class="hero-price-skeleton">
-                        <span class="skeleton"></span>
-                    </span>
-                </a>
+                <!-- Price (links to Price Intel section) - hidden for obsolete or no-pricing products -->
+                <?php if ( ! $is_obsolete && $has_pricing ) : ?>
+                    <a href="#prices" class="product-hero-price-link" data-hero-price>
+                        <span class="hero-price-label"><?php esc_html_e( 'from', 'erh' ); ?></span>
+                        <span class="hero-price-amount"></span>
+                        <span class="hero-price-stores"></span>
+                        <span class="hero-price-chevron"><?php erh_the_icon( 'chevron-down' ); ?></span>
+                        <!-- Skeleton loader -->
+                        <span class="hero-price-skeleton">
+                            <span class="skeleton"></span>
+                        </span>
+                    </a>
+                <?php endif; ?>
 
                 <!-- Content Preview Cards -->
                 <?php if ( $review_post || $video_id ) : ?>
@@ -120,12 +129,13 @@ if ( $review_post ) {
                                     <div class="hero-content-card-img hero-content-card-img--placeholder"></div>
                                 <?php endif; ?>
                                 <div class="hero-content-card-overlay"></div>
-                                <?php if ( $review_score ) : ?>
-                                    <span class="hero-content-card-score"><?php echo esc_html( $review_score ); ?></span>
+                                <?php if ( $review_score ) :
+                                    $score_attr = erh_get_score_attr( (float) $review_score );
+                                ?>
+                                    <span class="hero-content-card-score" data-score="<?php echo esc_attr( $score_attr ); ?>">
+                                        <?php echo esc_html( number_format( (float) $review_score, 1 ) ); ?>
+                                    </span>
                                 <?php endif; ?>
-                                <span class="hero-content-card-icon">
-                                    <?php erh_the_icon( 'file-text' ); ?>
-                                </span>
                                 <span class="hero-content-card-label">
                                     <?php esc_html_e( 'Our review', 'erh' ); ?>
                                     <?php erh_the_icon( 'arrow-right' ); ?>
@@ -142,7 +152,7 @@ if ( $review_post ) {
                                 </span>
                                 <span class="hero-content-card-label">
                                     <?php esc_html_e( 'Video review', 'erh' ); ?>
-                                    <?php erh_the_icon( 'play' ); ?>
+                                    <?php erh_the_icon( 'arrow-right' ); ?>
                                 </span>
                             </a>
                         <?php endif; ?>

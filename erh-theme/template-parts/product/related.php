@@ -1,19 +1,17 @@
 <?php
 /**
- * Related Products
+ * Similar Products Carousel
  *
- * Displays related products of the same type, sorted by popularity.
- * For product pages, shows product cards. For review pages, shows review cards.
+ * Displays similar products in a horizontally scrollable carousel.
+ * Products are loaded client-side via REST API for geo-aware pricing.
  *
  * @package ERideHero
  *
  * @var array $args {
- *     @type int    $product_id    Current product ID to exclude.
+ *     @type int    $product_id    Current product ID to find similar products for.
  *     @type string $product_type  Product type label (e.g., 'Electric Scooter').
- *     @type string $product_slug  Category slug for finder link (e.g., 'e-scooters').
  *     @type string $category_name Short category name (e.g., 'E-Scooter').
- *     @type string $context       Display context: 'product' or 'review' (default: 'product').
- *     @type int    $limit         Number of products to show (default: 4).
+ *     @type int    $limit         Number of products to show (default: 10).
  * }
  */
 
@@ -22,106 +20,86 @@ if ( ! defined( 'ABSPATH' ) ) {
     exit;
 }
 
-// Extract args with fallbacks for backwards compatibility.
+// Extract args with fallbacks.
 $product_id    = $args['product_id'] ?? get_the_ID();
 $product_type  = $args['product_type'] ?? erh_get_product_type( $product_id );
-$product_slug  = $args['product_slug'] ?? erh_product_type_slug( $product_type );
 $category_name = $args['category_name'] ?? erh_get_product_type_short_name( $product_type );
-$context       = $args['context'] ?? 'product';
-$limit         = $args['limit'] ?? 4;
+$limit         = $args['limit'] ?? 10;
 
-if ( empty( $product_type ) ) {
+if ( empty( $product_type ) || empty( $product_id ) ) {
     return;
 }
 
-// Query products sorted by popularity (from wp_product_data table).
-global $wpdb;
-$table = $wpdb->prefix . 'product_data';
+// Section title.
+$section_title = sprintf( __( 'Similar %ss', 'erh' ), $category_name );
 
-// Check if product_data table exists.
-$table_exists = $wpdb->get_var( $wpdb->prepare(
-    "SHOW TABLES LIKE %s",
-    $table
-) );
-
-if ( $table_exists ) {
-    // Get product IDs sorted by popularity from cache table.
-    $related_ids = $wpdb->get_col( $wpdb->prepare(
-        "SELECT pd.product_id
-         FROM {$table} pd
-         INNER JOIN {$wpdb->posts} p ON pd.product_id = p.ID
-         WHERE pd.product_type = %s
-           AND pd.product_id != %d
-           AND p.post_status = 'publish'
-         ORDER BY pd.popularity_score DESC
-         LIMIT %d",
-        $product_type,
-        $product_id,
-        $limit
-    ) );
-} else {
-    // Fallback: random products if cache table doesn't exist.
-    $related_ids = array();
-}
-
-// If we have IDs from popularity query, use them.
-if ( ! empty( $related_ids ) ) {
-    $related_query = new WP_Query( array(
-        'post_type'      => 'products',
-        'posts_per_page' => $limit,
-        'post__in'       => $related_ids,
-        'orderby'        => 'post__in', // Preserve popularity order.
-    ) );
-} else {
-    // Fallback query without popularity sort.
-    $related_query = new WP_Query( array(
-        'post_type'      => 'products',
-        'posts_per_page' => $limit,
-        'post__not_in'   => array( $product_id ),
-        'meta_query'     => array(
-            array(
-                'key'   => 'product_type',
-                'value' => $product_type,
-            ),
-        ),
-        'orderby'        => 'rand',
-    ) );
-}
-
-if ( ! $related_query->have_posts() ) {
-    wp_reset_postdata();
-    return;
-}
-
-// Determine section title and card template based on context.
-$section_title = $context === 'review'
-    ? __( 'Related reviews', 'erh' )
-    : sprintf( __( 'More %ss', 'erh' ), $category_name );
-
-$card_template = $context === 'review'
-    ? 'template-parts/components/review-card'
-    : 'template-parts/components/product-card';
-
-// Finder URL.
-$finder_url = home_url( '/' . $product_slug . '-finder/' );
+// Get finder page URL from ACF on product_type taxonomy.
+$finder_url = erh_get_finder_url( $product_id );
 ?>
 
-<section class="content-section related-products" id="related">
-    <div class="related-products-header">
-        <h2 class="section-title"><?php echo esc_html( $section_title ); ?></h2>
-        <a href="<?php echo esc_url( $finder_url ); ?>" class="related-products-link">
-            <?php printf( esc_html__( 'Find more %ss', 'erh' ), esc_html( $category_name ) ); ?>
-            <?php erh_the_icon( 'arrow-right' ); ?>
-        </a>
+<section
+    class="content-section similar-products"
+    id="similar"
+    data-similar-products
+    data-product-id="<?php echo esc_attr( $product_id ); ?>"
+    data-limit="<?php echo esc_attr( $limit ); ?>"
+>
+    <div class="section-header">
+        <h2><?php echo esc_html( $section_title ); ?></h2>
+        <?php if ( $finder_url ) : ?>
+            <a href="<?php echo esc_url( $finder_url ); ?>" class="btn btn-secondary">
+                <?php printf( esc_html__( 'Find more %ss', 'erh' ), $category_name ); ?>
+                <?php erh_the_icon( 'arrow-right' ); ?>
+            </a>
+        <?php endif; ?>
     </div>
 
-    <div class="related-grid">
-        <?php
-        while ( $related_query->have_posts() ) :
-            $related_query->the_post();
-            get_template_part( $card_template );
-        endwhile;
-        wp_reset_postdata();
-        ?>
+    <div class="similar-carousel">
+        <!-- Carousel Arrows -->
+        <button type="button" class="carousel-arrow carousel-arrow-left" aria-label="<?php esc_attr_e( 'Scroll left', 'erh' ); ?>" disabled>
+            <?php erh_the_icon( 'chevron-left' ); ?>
+        </button>
+        <button type="button" class="carousel-arrow carousel-arrow-right" aria-label="<?php esc_attr_e( 'Scroll right', 'erh' ); ?>">
+            <?php erh_the_icon( 'chevron-right' ); ?>
+        </button>
+
+        <!-- Products Grid -->
+        <div class="similar-grid" data-similar-grid>
+            <!-- Skeleton loading cards -->
+            <?php for ( $i = 0; $i < min( 6, $limit ); $i++ ) : ?>
+                <div class="similar-card similar-card-skeleton">
+                    <div class="similar-card-image">
+                        <div class="skeleton skeleton-img"></div>
+                    </div>
+                    <div class="similar-card-content">
+                        <div class="skeleton skeleton-text"></div>
+                        <div class="skeleton skeleton-text-sm"></div>
+                    </div>
+                </div>
+            <?php endfor; ?>
+        </div>
+
+        <!-- Empty state (hidden by default) -->
+        <div class="similar-empty empty-state" style="display: none;" data-similar-empty>
+            <?php erh_the_icon( 'search' ); ?>
+            <p><?php esc_html_e( 'No similar products found.', 'erh' ); ?></p>
+        </div>
     </div>
 </section>
+
+<!-- Similar Card Template (used by JavaScript) -->
+<template id="similar-card-template">
+    <a href="" class="similar-card" data-category="">
+        <div class="similar-card-image">
+            <img src="" alt="" loading="lazy">
+            <div class="similar-card-price-row">
+                <span class="similar-card-price" data-card-price></span>
+                <span class="similar-card-indicator" data-card-indicator style="display: none;"></span>
+            </div>
+        </div>
+        <div class="similar-card-content">
+            <span class="similar-card-name" data-card-name></span>
+            <span class="similar-card-specs" data-card-specs></span>
+        </div>
+    </a>
+</template>

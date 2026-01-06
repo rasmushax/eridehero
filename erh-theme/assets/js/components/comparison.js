@@ -11,6 +11,7 @@
  */
 
 import { getUserGeo, formatPrice } from '../services/geo-price.js';
+import { escapeHtml } from '../utils/dom.js';
 
 export async function initComparison(options = {}) {
     // Default configuration
@@ -131,9 +132,9 @@ export async function initComparison(options = {}) {
         const rawProducts = Array.isArray(data) ? data : (data.products || []);
 
         // Map to expected format with category labels and geo-aware pricing
+        // NO fallback to US - all prices must be in user's currency for fair comparison
+        // (Users from unmapped countries already default to US at geo-detection level)
         products = rawProducts.map(p => {
-            // Get price for user's geo ONLY - no fallback to other regions
-            // (Users from unmapped countries already default to US at geo-detection level)
             const prices = p.prices || {};
             const geoPrice = prices[userGeo] ?? null;
 
@@ -385,14 +386,7 @@ export async function initComparison(options = {}) {
         return escapeHtml(text).replace(regex, '<mark>$1</mark>');
     }
 
-    /**
-     * Escape HTML special characters
-     */
-    function escapeHtml(text) {
-        const div = document.createElement('div');
-        div.textContent = text;
-        return div.innerHTML;
-    }
+    // escapeHtml imported from utils/dom.js
 
     /**
      * Escape regex special characters

@@ -7,6 +7,8 @@
  * @module components/radar-chart
  */
 
+import { escapeHtml } from '../utils/dom.js';
+
 // =============================================================================
 // Configuration
 // =============================================================================
@@ -264,7 +266,7 @@ export class RadarChart {
             return `
                 <button class="radar-legend-item" data-product-index="${i}" type="button">
                     <span class="radar-legend-color" style="--radar-color: ${color}"></span>
-                    <span class="radar-legend-name">${this.escapeHtml(product.name)}</span>
+                    <span class="radar-legend-name">${escapeHtml(product.name)}</span>
                 </button>
             `;
         }).join('');
@@ -338,7 +340,7 @@ export class RadarChart {
         this.tooltip.innerHTML = `
             <div class="radar-tooltip-header">
                 <span class="radar-tooltip-dot" style="--radar-color: ${color}"></span>
-                <span class="radar-tooltip-product">${this.escapeHtml(product.name)}</span>
+                <span class="radar-tooltip-product">${escapeHtml(product.name)}</span>
             </div>
             <div class="radar-tooltip-category">${category.name}</div>
             <div class="radar-tooltip-value">${point.value}<span>pts</span></div>
@@ -357,7 +359,7 @@ export class RadarChart {
             return `
                 <div class="radar-tooltip-row">
                     <span class="radar-tooltip-dot" style="--radar-color: ${color}"></span>
-                    <span class="radar-tooltip-name">${this.escapeHtml(product.name)}</span>
+                    <span class="radar-tooltip-name">${escapeHtml(product.name)}</span>
                     <span class="radar-tooltip-score">${Math.round(value)}</span>
                 </div>
             `;
@@ -410,15 +412,7 @@ export class RadarChart {
         }
     }
 
-    /**
-     * Escape HTML entities.
-     */
-    escapeHtml(str) {
-        if (!str) return '';
-        return str.replace(/[&<>"']/g, c => ({
-            '&': '&amp;', '<': '&lt;', '>': '&gt;', '"': '&quot;', "'": '&#39;'
-        })[c]);
-    }
+    // escapeHtml imported from utils/dom.js
 
     /**
      * Destroy the chart.

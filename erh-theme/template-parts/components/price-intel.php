@@ -5,6 +5,12 @@
  * Displays geo-aware pricing with retailer comparison and price history.
  * Renders a shell that JavaScript hydrates with dynamic data based on user's region.
  *
+ * Handles states:
+ * - Normal: Show prices, chart, retailers (JS hydrates)
+ * - Obsolete (superseded): Show discontinued message + successor + alternatives
+ * - Obsolete (not superseded): Show discontinued message + alternatives
+ * - No pricing: Show "no pricing available" message + alternatives
+ *
  * @package ERideHero
  *
  * @var array $args {
@@ -33,6 +39,14 @@ $thumb_id = get_post_thumbnail_id( $product_id );
 if ( empty( $product_name ) ) {
     $product_name = get_the_title( $product_id );
 }
+
+// Get obsolete status.
+$obsolete_status = erh_get_product_obsolete_status( $product_id );
+$is_obsolete     = $obsolete_status['is_obsolete'];
+$is_superseded   = $obsolete_status['is_superseded'];
+
+// Check if product has any pricing data.
+$has_pricing = erh_product_has_pricing( $product_id );
 ?>
 
 <section class="content-section" id="prices">
@@ -43,6 +57,179 @@ if ( empty( $product_name ) ) {
         <?php endif; ?>
         <span class="section-product-name"><?php echo esc_html( $product_name ); ?></span>
     </h2>
+
+    <?php if ( $is_obsolete ) : ?>
+        <!-- Discontinued Product State with Alternatives -->
+        <div class="price-intel price-intel--discontinued">
+            <div class="price-intel-discontinued">
+                <div class="discontinued-header">
+                    <div class="discontinued-icon">
+                        <?php erh_the_icon( 'archive' ); ?>
+                    </div>
+                    <h3 class="discontinued-title"><?php esc_html_e( 'This product has been discontinued', 'erh' ); ?></h3>
+                    <p class="discontinued-text"><?php esc_html_e( 'No longer available from major retailers.', 'erh' ); ?></p>
+                </div>
+
+                <?php
+                // Show successor product if superseded - rendered client-side for geo-aware pricing.
+                if ( $is_superseded && ! empty( $obsolete_status['new_product_id'] ) ) :
+                    $successor_id   = $obsolete_status['new_product_id'];
+                    $successor_name = $obsolete_status['new_product_name'];
+                    $successor_url  = $obsolete_status['new_product_url'];
+
+                    // Get successor image.
+                    $successor_thumb_id = get_post_thumbnail_id( $successor_id );
+                    $successor_image    = $successor_thumb_id
+                        ? wp_get_attachment_image_url( $successor_thumb_id, 'erh-product-sm' )
+                        : '';
+
+                    // Get successor specs and pricing from wp_product_data cache.
+                    global $wpdb;
+                    $table_name     = $wpdb->prefix . 'product_data';
+                    $successor_data = $wpdb->get_row(
+                        $wpdb->prepare(
+                            "SELECT specs, price_history FROM {$table_name} WHERE product_id = %d",
+                            $successor_id
+                        ),
+                        ARRAY_A
+                    );
+
+                    $successor_specs_line = '';
+                    $successor_pricing    = array();
+
+                    if ( $successor_data ) {
+                        $successor_specs = maybe_unserialize( $successor_data['specs'] );
+                        if ( is_array( $successor_specs ) ) {
+                            $successor_specs_line = erh_format_card_specs( $successor_specs );
+                        }
+
+                        $successor_pricing = maybe_unserialize( $successor_data['price_history'] );
+                        if ( ! is_array( $successor_pricing ) ) {
+                            $successor_pricing = array();
+                        }
+                    }
+
+                    // Encode successor data for JS hydration.
+                    $successor_json = wp_json_encode( array(
+                        'id'      => $successor_id,
+                        'pricing' => $successor_pricing,
+                    ) );
+                ?>
+                    <div class="discontinued-successor" data-successor='<?php echo esc_attr( $successor_json ); ?>'>
+                        <span class="discontinued-section-label"><?php esc_html_e( 'Replaced by', 'erh' ); ?></span>
+                        <a href="<?php echo esc_url( $successor_url ); ?>" class="discontinued-successor-card">
+                            <div class="discontinued-successor-img-wrap">
+                                <?php if ( $successor_image ) : ?>
+                                    <img src="<?php echo esc_url( $successor_image ); ?>" alt="" class="discontinued-successor-img" loading="lazy">
+                                <?php else : ?>
+                                    <div class="discontinued-successor-img discontinued-successor-img--placeholder"></div>
+                                <?php endif; ?>
+                            </div>
+                            <div class="discontinued-successor-info">
+                                <span class="discontinued-successor-name"><?php echo esc_html( $successor_name ); ?></span>
+                                <?php if ( $successor_specs_line ) : ?>
+                                    <span class="discontinued-successor-specs"><?php echo esc_html( $successor_specs_line ); ?></span>
+                                <?php endif; ?>
+                            </div>
+                            <div class="discontinued-successor-action">
+                                <span class="discontinued-successor-price" data-successor-price>
+                                    <span class="skeleton skeleton-text" style="width: 50px;"></span>
+                                </span>
+                                <?php erh_the_icon( 'chevron-right' ); ?>
+                            </div>
+                        </a>
+                    </div>
+                <?php endif; ?>
+
+                <?php
+                // Get similar products as alternatives - rendered client-side for geo-aware pricing.
+                $similar_products = erh_get_similar_products( $product_id, 4 );
+
+                if ( ! empty( $similar_products ) ) :
+                    // Encode pricing data for JS.
+                    $alternatives_data = array_map( function( $p ) {
+                        return array(
+                            'id'        => $p['product_id'],
+                            'name'      => $p['name'],
+                            'url'       => $p['permalink'],
+                            'image'     => $p['image_url'],
+                            'specs'     => erh_format_card_specs( $p['specs'] ?? array() ),
+                            'pricing'   => $p['pricing'] ?? array(),
+                        );
+                    }, $similar_products );
+                ?>
+                    <div class="discontinued-alternatives" data-alternatives='<?php echo esc_attr( wp_json_encode( $alternatives_data ) ); ?>'>
+                        <span class="discontinued-section-label"><?php esc_html_e( 'Similar alternatives', 'erh' ); ?></span>
+                        <div class="discontinued-alternatives-grid">
+                            <!-- Skeleton loading cards -->
+                            <?php for ( $i = 0; $i < min( 4, count( $similar_products ) ); $i++ ) : ?>
+                                <div class="discontinued-alternative-card discontinued-alternative-skeleton">
+                                    <div class="discontinued-alternative-img-wrap">
+                                        <div class="skeleton skeleton-img"></div>
+                                    </div>
+                                    <div class="discontinued-alternative-info">
+                                        <span class="skeleton skeleton-text"></span>
+                                        <span class="skeleton skeleton-text-sm"></span>
+                                    </div>
+                                </div>
+                            <?php endfor; ?>
+                        </div>
+                    </div>
+                <?php endif; ?>
+            </div>
+        </div>
+
+    <?php elseif ( ! $has_pricing ) : ?>
+        <!-- No Pricing Available State with Alternatives -->
+        <div class="price-intel price-intel--unavailable">
+            <div class="price-intel-discontinued">
+                <div class="discontinued-header">
+                    <div class="discontinued-icon">
+                        <?php erh_the_icon( 'tag' ); ?>
+                    </div>
+                    <h3 class="discontinued-title"><?php esc_html_e( 'No pricing available', 'erh' ); ?></h3>
+                    <p class="discontinued-text"><?php esc_html_e( 'We don\'t have current pricing for this product.', 'erh' ); ?></p>
+                </div>
+
+                <?php
+                // Get similar products as alternatives - rendered client-side for geo-aware pricing.
+                $similar_products = erh_get_similar_products( $product_id, 4 );
+
+                if ( ! empty( $similar_products ) ) :
+                    // Encode pricing data for JS.
+                    $alternatives_data = array_map( function( $p ) {
+                        return array(
+                            'id'        => $p['product_id'],
+                            'name'      => $p['name'],
+                            'url'       => $p['permalink'],
+                            'image'     => $p['image_url'],
+                            'specs'     => erh_format_card_specs( $p['specs'] ?? array() ),
+                            'pricing'   => $p['pricing'] ?? array(),
+                        );
+                    }, $similar_products );
+                ?>
+                    <div class="discontinued-alternatives" data-alternatives='<?php echo esc_attr( wp_json_encode( $alternatives_data ) ); ?>'>
+                        <span class="discontinued-section-label"><?php esc_html_e( 'Similar alternatives', 'erh' ); ?></span>
+                        <div class="discontinued-alternatives-grid">
+                            <!-- Skeleton loading cards -->
+                            <?php for ( $i = 0; $i < min( 4, count( $similar_products ) ); $i++ ) : ?>
+                                <div class="discontinued-alternative-card discontinued-alternative-skeleton">
+                                    <div class="discontinued-alternative-img-wrap">
+                                        <div class="skeleton skeleton-img"></div>
+                                    </div>
+                                    <div class="discontinued-alternative-info">
+                                        <span class="skeleton skeleton-text"></span>
+                                        <span class="skeleton skeleton-text-sm"></span>
+                                    </div>
+                                </div>
+                            <?php endfor; ?>
+                        </div>
+                    </div>
+                <?php endif; ?>
+            </div>
+        </div>
+
+    <?php else : ?>
 
     <div class="price-intel" data-price-intel data-product-id="<?php echo esc_attr( $product_id ); ?>">
         <!-- Header: Best Price + CTA -->
@@ -147,4 +334,6 @@ if ( empty( $product_name ) ) {
             <span data-region-notice-text></span>
         </div>
     </div>
+
+    <?php endif; // End obsolete check. ?>
 </section>

@@ -124,15 +124,6 @@ while ( have_posts() ) :
                 ] );
                 ?>
 
-                <!-- Full Specifications (Grouped by Category) -->
-                <?php
-                get_template_part( 'template-parts/product/specs-grouped', null, [
-                    'product_id'   => $product_id,
-                    'product_type' => $product_type,
-                    'category_key' => $category_key,
-                ] );
-                ?>
-
                 <!-- Related Products -->
                 <?php
                 get_template_part( 'template-parts/product/related', null, [
@@ -140,6 +131,15 @@ while ( have_posts() ) :
                     'product_type'  => $product_type,
                     'product_slug'  => $product_slug,
                     'category_name' => $category_name,
+                ] );
+                ?>
+
+                <!-- Full Specifications (Grouped by Category) -->
+                <?php
+                get_template_part( 'template-parts/product/specs-grouped', null, [
+                    'product_id'   => $product_id,
+                    'product_type' => $product_type,
+                    'category_key' => $category_key,
                 ] );
                 ?>
 

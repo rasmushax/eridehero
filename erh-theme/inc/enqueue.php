@@ -81,8 +81,8 @@ function erh_enqueue_assets(): void {
         add_filter( 'script_loader_tag', 'erh_add_module_type', 10, 3 );
     }
 
-    // Localize script with data the JS might need
-    wp_localize_script( 'erh-app', 'erhData', array(
+    // Build erhData object.
+    $erh_data = array(
         'siteUrl'    => home_url(),
         'ajaxUrl'    => admin_url( 'admin-ajax.php' ),
         'restUrl'    => rest_url( 'erh/v1/' ),
@@ -91,7 +91,18 @@ function erh_enqueue_assets(): void {
         'ajaxNonce'  => wp_create_nonce( 'erh_nonce' ), // Legacy AJAX nonce
         'themeUrl'   => ERH_THEME_URI,
         'isLoggedIn' => is_user_logged_in(),
-    ) );
+    );
+
+    // Add product data for single product pages (avoids loading finder JSON).
+    if ( is_singular( 'products' ) ) {
+        $product_data = erh_get_inline_product_data( get_the_ID() );
+        if ( $product_data ) {
+            $erh_data['productData'] = $product_data;
+        }
+    }
+
+    // Localize script with data the JS might need.
+    wp_localize_script( 'erh-app', 'erhData', $erh_data );
 
     // Comment reply script (only on singular with comments)
     if ( is_singular() && comments_open() && get_option( 'thread_comments' ) ) {

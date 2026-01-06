@@ -7,6 +7,8 @@
 import { Toast } from './toast.js';
 import { Modal } from './modal.js';
 import { PriceAlertModal } from './price-alert.js';
+import { escapeHtml } from '../utils/dom.js';
+import { formatPrice } from '../services/geo-price.js';
 
 // Use erhData.restUrl which includes correct site path (e.g., /eridehero/wp-json/erh/v1/)
 const getApiBase = () => (window.erhData?.restUrl || '/wp-json/erh/v1/').replace(/\/$/, '');
@@ -258,9 +260,11 @@ function renderTable() {
  * Render a single table row
  */
 function renderRow(tracker) {
+    // Price trackers currently stored in USD
+    const currency = tracker.currency || 'USD';
     const trackerType = tracker.target_price
-        ? `Price $${formatPrice(tracker.target_price)}`
-        : `Drop $${formatPrice(tracker.price_drop)}`;
+        ? `Price ${formatPrice(tracker.target_price, currency)}`
+        : `Drop ${formatPrice(tracker.price_drop, currency)}`;
 
     return `
         <tr class="trackers-row" data-tracker-row="${tracker.id}">
@@ -278,10 +282,10 @@ function renderRow(tracker) {
                 </div>
             </td>
             <td class="trackers-td trackers-td--start">
-                <span class="trackers-price">$${formatPrice(tracker.start_price)}</span>
+                <span class="trackers-price">${formatPrice(tracker.start_price, currency)}</span>
             </td>
             <td class="trackers-td trackers-td--current">
-                <span class="trackers-price">$${formatPrice(tracker.current_price)}</span>
+                <span class="trackers-price">${formatPrice(tracker.current_price, currency)}</span>
             </td>
             <td class="trackers-td trackers-td--tracker">
                 <span class="trackers-tracker">
@@ -479,25 +483,8 @@ function handleTrackerDeleted(event) {
     }
 }
 
-/**
- * Format price for display
- */
-function formatPrice(price) {
-    const num = parseFloat(price);
-    if (isNaN(num)) return '0';
-    // Show cents only if present
-    return num % 1 === 0 ? num.toFixed(0) : num.toFixed(2);
-}
-
-/**
- * Escape HTML
- */
-function escapeHtml(str) {
-    if (!str) return '';
-    const div = document.createElement('div');
-    div.textContent = str;
-    return div.innerHTML;
-}
+// formatPrice imported from services/geo-price.js
+// escapeHtml imported from utils/dom.js
 
 /**
  * Debounce helper

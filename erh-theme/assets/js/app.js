@@ -39,8 +39,8 @@ import './components/toast.js'; // Toast notifications (auto-init container)
         import('./components/gallery.js');
     }
 
-    // Price Intelligence - only on pages with the component
-    if (document.querySelector('[data-price-intel]')) {
+    // Price Intelligence - load for normal pricing, discontinued, or no-pricing states
+    if (document.querySelector('[data-price-intel], [data-alternatives], [data-successor]')) {
         import('./components/price-intel.js');
     }
 
@@ -196,6 +196,13 @@ import './components/toast.js'; // Toast notifications (auto-init container)
                 });
             });
         }
+    }
+
+    // Similar products carousel - geo-aware client-side rendering
+    if (document.querySelector('[data-similar-products]')) {
+        import('./components/similar-products.js').then(module => {
+            module.initSimilarProducts();
+        });
     }
 
     // Account page - tabs, settings, and trackers

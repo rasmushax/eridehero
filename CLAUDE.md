@@ -339,21 +339,29 @@ The pricing system uses a **5-region model** for simplicity and practical covera
 ```javascript
 import { getUserGeo, formatPrice, setUserRegion } from './services/geo-price.js';
 
-// Detect user's region (country → region mapping, cached 24h)
+// Detect user's region (country → region mapping, cached 24h in localStorage)
+// Also cached in window.erhUserGeoData for instant subsequent calls
 const { geo, region, currency, country } = await getUserGeo();
 // French user: { geo: 'EU', region: 'EU', currency: 'EUR', country: 'FR' }
+// Japanese user: { geo: 'US', region: 'US', currency: 'USD', country: 'JP' } // Unmapped → US
 
-// Get price for user's region, fallback to US
+// Get price for user's region (NO fallback to US at product level!)
+// Unmapped countries already default to US at geo-detection level
 const prices = product.pricing || {};
-const price = prices[region]?.current_price ?? prices['US']?.current_price;
-const displayCurrency = prices[region] ? currency : 'USD';
+const price = prices[region]?.current_price ?? null;
 
 // Format with proper symbol
-formatPrice(price, displayCurrency); // "$499" or "€399"
+formatPrice(price, currency); // "$499" or "€399"
 
 // Manual region override (for region selector)
 setUserRegion('GB'); // User can switch to see UK prices
 ```
+
+**Currency Consistency Rule**:
+- All components show prices in user's region currency ONLY
+- Products without regional pricing show "no price" (not USD fallback)
+- Unmapped countries (JP, BR, MX, etc.) default to US at detection level
+- This ensures no mixed currencies in comparisons, finder, or deals
 
 ### Generated JSON Files
 

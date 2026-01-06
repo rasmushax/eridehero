@@ -18,6 +18,7 @@
 
 import { Modal } from './modal.js';
 import { Toast } from './toast.js';
+import { escapeHtml } from '../utils/dom.js';
 import { AuthModal } from './auth-modal.js';
 import { getUserGeo, formatPrice, getCurrencySymbol } from '../services/geo-price.js';
 
@@ -277,7 +278,7 @@ class PriceAlertModalManager {
             <div class="price-alert-product">
                 ${productImage ? `<img src="${productImage}" alt="" class="price-alert-product-img">` : ''}
                 <div class="price-alert-product-info">
-                    <span class="price-alert-product-name">${this.escapeHtml(productName || 'Product')}</span>
+                    <span class="price-alert-product-name">${escapeHtml(productName || 'Product')}</span>
                     <span class="price-alert-product-price">
                         Current price: ${currencySymbol}${this.formatPriceValue(displayPrice)}
                         ${priceChange ? `<span class="price-alert-price-change">${priceChange}</span>` : ''}
@@ -359,7 +360,7 @@ class PriceAlertModalManager {
                 </div>
                 <h3 class="price-alert-confirm-title">Delete price alert?</h3>
                 <p class="price-alert-confirm-text">
-                    You'll no longer receive notifications when the price of <strong>${this.escapeHtml(productName || 'this product')}</strong> drops.
+                    You'll no longer receive notifications when the price of <strong>${escapeHtml(productName || 'this product')}</strong> drops.
                 </p>
                 <div class="price-alert-confirm-actions">
                     <button type="button" class="btn btn-secondary" data-cancel-delete>Cancel</button>
@@ -574,15 +575,7 @@ class PriceAlertModalManager {
         return Math.floor(price).toLocaleString();
     }
 
-    /**
-     * Escape HTML
-     */
-    escapeHtml(str) {
-        if (!str) return '';
-        const div = document.createElement('div');
-        div.textContent = str;
-        return div.innerHTML;
-    }
+    // escapeHtml imported from utils/dom.js
 }
 
 // Singleton instance
