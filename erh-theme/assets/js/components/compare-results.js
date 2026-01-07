@@ -11,7 +11,7 @@
  * @module components/compare-results
  */
 
-import { getUserGeo, formatPrice } from '../services/geo-price.js';
+import { getUserGeo, formatPrice, getCurrencySymbol } from '../services/geo-price.js';
 import { PriceAlertModal } from './price-alert.js';
 import { Modal } from './modal.js';
 import { RadarChart } from './radar-chart.js';
@@ -608,7 +608,7 @@ function renderValueMetricRow(metric) {
     const cells = values.map((v, i) => {
         const cls = i === winnerIdx ? 'is-winner' : '';
         const formatted = v != null && v !== ''
-            ? `$${parseFloat(v).toFixed(2)}`
+            ? formatPrice(parseFloat(v), products[i]?.currency || userGeo.currency)
             : '—';
         return `<td class="${cls}">${formatted}</td>`;
     }).join('');
@@ -668,12 +668,13 @@ function renderPricing() {
             const low = p.priceData?.low_all;
             return { html: low ? formatPrice(low, p.currency) : '—', raw: low || 0 };
         })),
-        pricingRow('Value ($/mi)', products.map(p => {
+        pricingRow('Value/mi', products.map(p => {
             const price = p.currentPrice;
             const range = getSpec(p, 'tested_range_regular') || getSpec(p, 'manufacturer_range');
             if (!price || !range) return { html: '—', raw: Infinity };
             const perMile = price / range;
-            return { html: `$${perMile.toFixed(0)}/mi`, raw: perMile };
+            const symbol = getCurrencySymbol(p.currency);
+            return { html: `${symbol}${perMile.toFixed(0)}/mi`, raw: perMile };
         }), true),
     ];
 

@@ -87,12 +87,11 @@ $default_category = $fixed_category ? $fixed_category : 'all';
                 <!-- Loading skeleton cards -->
                 <?php for ( $i = 0; $i < 6; $i++ ) : ?>
                     <div class="deal-card deal-card-skeleton">
-                        <div class="deal-card-img">
+                        <div class="deal-card-image">
                             <div class="skeleton skeleton-img"></div>
                         </div>
                         <div class="deal-card-content">
                             <div class="skeleton skeleton-text"></div>
-                            <div class="skeleton skeleton-text-sm"></div>
                         </div>
                     </div>
                 <?php endfor; ?>
@@ -114,18 +113,18 @@ $default_category = $fixed_category ? $fixed_category : 'all';
         <button type="button" class="deal-card-track" data-track-price aria-label="<?php esc_attr_e( 'Track price', 'erh' ); ?>">
             <?php erh_the_icon( 'bell' ); ?>
         </button>
-        <div class="deal-card-img">
-            <img src="" alt="" class="deal-thumbnail" loading="lazy">
-            <div class="deal-price" data-geo-price data-product-id="">
-                <span class="deal-price-currency">$</span><span class="deal-price-value" data-price>---</span>
+        <div class="deal-card-image">
+            <img src="" alt="" loading="lazy">
+            <div class="deal-card-price-row">
+                <span class="deal-card-price" data-price></span>
+                <span class="deal-card-indicator deal-card-indicator--below" data-indicator>
+                    <svg class="icon deal-card-indicator-icon" aria-hidden="true"><use href="#icon-arrow-down"></use></svg>
+                    <span data-indicator-value></span>
+                </span>
             </div>
         </div>
         <div class="deal-card-content">
             <h3 class="deal-card-title"></h3>
-            <div class="deal-trend">
-                <?php erh_the_icon( 'trending-down' ); ?>
-                <span class="deal-discount-text"></span>
-            </div>
         </div>
     </a>
 </template>

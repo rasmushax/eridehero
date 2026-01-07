@@ -114,6 +114,13 @@ import './components/toast.js'; // Toast notifications (auto-init container)
         });
     }
 
+    // Deals page - category deals with period toggle
+    if (document.querySelector('[data-deals-page]')) {
+        import('./components/deals-page.js').then(module => {
+            module.initDealsPage();
+        });
+    }
+
     // Comparison tools - only if containers exist
     if (document.getElementById('comparison-container')) {
         import('./components/comparison.js').then(module => {

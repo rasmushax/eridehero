@@ -295,19 +295,7 @@ $product_count = count( $products );
         </div>
     </section>
 
-    <!-- Comparison Bar (fixed at bottom when products selected) -->
-    <div class="comparison-bar" data-comparison-bar hidden>
-        <div class="container">
-            <div class="comparison-bar-inner">
-                <div class="comparison-bar-products" data-comparison-products></div>
-                <div class="comparison-bar-actions">
-                    <span class="comparison-bar-count"><span data-comparison-count>0</span> selected</span>
-                    <button type="button" class="btn btn-secondary btn-sm" data-comparison-clear>Clear</button>
-                    <a href="#" class="btn btn-primary btn-sm" data-comparison-link>Compare</a>
-                </div>
-            </div>
-        </div>
-    </div>
+    <?php get_template_part( 'template-parts/components/comparison-bar' ); ?>
 
     <!-- Column Selector Modal (Table View) - Uses standard modal system -->
     <div class="modal" id="columns-modal" data-modal aria-hidden="true">

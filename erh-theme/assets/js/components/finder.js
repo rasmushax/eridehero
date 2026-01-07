@@ -7,9 +7,10 @@
  * This ensures a SINGLE SOURCE OF TRUTH - PHP generates all filter metadata
  */
 
-import { getUserGeo } from '../services/geo-price.js';
+import { getUserGeo, formatPrice } from '../services/geo-price.js';
 import { FinderTable } from './finder-table.js';
 import { PriceAlertModal } from './price-alert.js';
+import { ComparisonBar } from './comparison-bar.js';
 
 class Finder {
     constructor() {
@@ -22,7 +23,6 @@ class Finder {
         this.emptyState = this.container.querySelector('[data-finder-empty]');
         this.resultsCount = this.container.querySelector('[data-results-count]');
         this.sortSelect = this.container.querySelector('[data-finder-sort]');
-        this.comparisonBar = this.container.querySelector('[data-comparison-bar]');
         this.loadMoreContainer = this.container.querySelector('[data-load-more]');
         this.loadMoreBtn = this.container.querySelector('[data-load-more-btn]');
 
@@ -45,9 +45,13 @@ class Finder {
         // Sort state
         this.currentSort = 'popularity';
 
-        // Comparison state
-        this.selectedProducts = new Set();
-        this.maxCompare = 4;
+        // Comparison bar (shared module)
+        this.comparisonBar = new ComparisonBar({
+            container: this.container,
+            grid: this.grid,
+            getProductById: (id) => this.products.find(p => String(p.id) === String(id)),
+            maxCompare: 4,
+        });
 
         // Search state
         this.searchTerm = '';
@@ -560,20 +564,11 @@ class Finder {
     }
 
     /**
-     * Format price with current geo's currency symbol
-     * Shows cents only when they exist (e.g., $999.99), otherwise whole number (e.g., $500)
+     * Format price with current geo's currency - uses shared formatPrice for consistency
      */
     formatProductPrice(product) {
         if (!product.price) return '';
-
-        const price = product.price;
-        const hasCents = (price % 1) >= 0.005;
-
-        if (hasCents) {
-            return `${this.currencySymbol}${price.toLocaleString(undefined, { minimumFractionDigits: 2, maximumFractionDigits: 2 })}`;
-        }
-
-        return `${this.currencySymbol}${Math.floor(price).toLocaleString()}`;
+        return formatPrice(product.price, this.userCurrency);
     }
 
     // =========================================
@@ -1656,7 +1651,7 @@ class Finder {
         card.className = 'product-card';
         card.dataset.productId = product.id;
 
-        const isSelected = this.selectedProducts.has(String(product.id));
+        const isSelected = this.comparisonBar.isSelected(product.id);
         const priceIndicator = this.getPriceIndicator(product);
         const specsText = this.formatProductSpecs(product);
 
@@ -2406,83 +2401,17 @@ class Finder {
 
     bindComparisonEvents() {
         // Use event delegation on the grid for comparison checkboxes
-        // This avoids re-binding on every render
+        // ComparisonBar handles the state and UI updates
         this.grid.addEventListener('change', (e) => {
             const checkbox = e.target.closest('[data-compare-select]');
             if (!checkbox) return;
 
-            const productId = checkbox.value;
-
-            if (checkbox.checked) {
-                if (this.selectedProducts.size >= this.maxCompare) {
-                    checkbox.checked = false;
-                    return;
-                }
-                this.selectedProducts.add(productId);
-            } else {
-                this.selectedProducts.delete(productId);
-            }
-
-            this.updateComparisonBar();
+            this.comparisonBar.handleCheckboxChange(checkbox);
         });
-
-        const clearBtn = this.container.querySelector('[data-comparison-clear]');
-        clearBtn?.addEventListener('click', () => this.clearComparison());
-
-        const compareLink = this.container.querySelector('[data-comparison-link]');
-        compareLink?.addEventListener('click', (e) => {
-            if (this.selectedProducts.size < 2) {
-                e.preventDefault();
-                return;
-            }
-            const ids = Array.from(this.selectedProducts).join(',');
-            const base = window.erhData?.siteUrl || '';
-            compareLink.href = `${base}/compare/?products=${ids}`;
-        });
-    }
-
-    updateComparisonBar() {
-        if (!this.comparisonBar) return;
-
-        const count = this.selectedProducts.size;
-        const countEl = this.comparisonBar.querySelector('[data-comparison-count]');
-        const productsEl = this.comparisonBar.querySelector('[data-comparison-products]');
-        const compareLink = this.comparisonBar.querySelector('[data-comparison-link]');
-
-        if (countEl) countEl.textContent = count;
-
-        if (count > 0) {
-            this.comparisonBar.classList.add('is-visible');
-            this.comparisonBar.hidden = false;
-        } else {
-            this.comparisonBar.classList.remove('is-visible');
-        }
-
-        if (compareLink) {
-            compareLink.classList.toggle('btn-disabled', count < 2);
-        }
-
-        if (productsEl) {
-            productsEl.innerHTML = '';
-            this.selectedProducts.forEach(id => {
-                const product = this.products.find(p => String(p.id) === String(id));
-                if (product?.thumbnail) {
-                    const img = document.createElement('img');
-                    img.src = product.thumbnail;
-                    img.alt = '';
-                    img.className = 'comparison-bar-thumb';
-                    productsEl.appendChild(img);
-                }
-            });
-        }
     }
 
     clearComparison() {
-        this.selectedProducts.clear();
-        this.grid.querySelectorAll('[data-compare-select]').forEach(checkbox => {
-            checkbox.checked = false;
-        });
-        this.updateComparisonBar();
+        this.comparisonBar.clear();
     }
 }
 

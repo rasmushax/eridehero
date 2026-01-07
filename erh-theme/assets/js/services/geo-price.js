@@ -413,30 +413,30 @@ export async function getProductPrices(productId, geo, convertTo = null) {
  * @param {number} price - The price value
  * @param {string} currency - Currency code (USD, EUR, GBP, CAD, AUD)
  * @param {boolean} [isConverted=false] - Whether this is a converted/approximate price
- * @returns {string} Formatted price string (e.g., "$499", "€399")
+ * @returns {string} Formatted price string (e.g., "$599.99", "€399.00")
  */
 export function formatPrice(price, currency, isConverted = false) {
     if (price === null || price === undefined) {
         return '';
     }
 
-    // Get symbol from REGIONS config or use fallback
-    const symbols = {
-        'USD': '$',
-        'EUR': '€',
-        'GBP': '£',
-        'CAD': 'CA$',
-        'AUD': 'A$',
+    // Get symbol and locale per currency
+    const currencyConfig = {
+        'USD': { symbol: '$', locale: 'en-US' },
+        'EUR': { symbol: '€', locale: 'de-DE' },
+        'GBP': { symbol: '£', locale: 'en-GB' },
+        'CAD': { symbol: 'CA$', locale: 'en-CA' },
+        'AUD': { symbol: 'A$', locale: 'en-AU' },
     };
 
-    const symbol = symbols[currency] || currency + ' ';
-    const formatted = price.toLocaleString(undefined, {
-        minimumFractionDigits: 0,
+    const config = currencyConfig[currency] || { symbol: currency + ' ', locale: 'en-US' };
+    const formatted = price.toLocaleString(config.locale, {
+        minimumFractionDigits: 2,
         maximumFractionDigits: 2
     });
 
     // Add ~ prefix for converted prices to indicate approximation
-    return isConverted ? `~${symbol}${formatted}` : `${symbol}${formatted}`;
+    return isConverted ? `~${config.symbol}${formatted}` : `${config.symbol}${formatted}`;
 }
 
 /**

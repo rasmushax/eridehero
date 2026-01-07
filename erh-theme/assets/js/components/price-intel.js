@@ -100,11 +100,11 @@ class PriceIntelComponent {
      * Extract product info from the page for price alert modal
      */
     extractProductInfo() {
-        // Try to get from the section header (review-section-product-name, review-section-product-img)
-        const section = this.el.closest('.review-section');
+        // Try to get from the section header (section-product-name, section-product-img)
+        const section = this.el.closest('section');
         if (section) {
-            const nameEl = section.querySelector('.review-section-product-name');
-            const imgEl = section.querySelector('.review-section-product-img');
+            const nameEl = section.querySelector('.section-product-name');
+            const imgEl = section.querySelector('.section-product-img');
 
             this.productName = nameEl?.textContent?.trim() || '';
             this.productImage = imgEl?.src || imgEl?.getAttribute('data-src') || '';
@@ -116,7 +116,16 @@ class PriceIntelComponent {
             this.productName = pageTitle?.textContent?.trim() || '';
         }
 
-        // Fallback thumbnail from Open Graph or product card
+        // Fallback thumbnail from various sources
+        if (!this.productImage) {
+            // Try the review hero gallery
+            const galleryImg = document.querySelector('.gallery-main-img');
+            if (galleryImg) {
+                this.productImage = galleryImg.src || galleryImg.getAttribute('data-src') || '';
+            }
+        }
+
+        // Final fallback: Open Graph image
         if (!this.productImage) {
             const ogImage = document.querySelector('meta[property="og:image"]');
             this.productImage = ogImage?.content || '';
@@ -424,9 +433,9 @@ class PriceIntelComponent {
             return;
         }
 
-        // Create the chart
+        // Create the chart with currency-aware formatting
         this.chart = createChart(this.chartContainer, {
-            formatValue: (v) => `${currencySymbol}${v}`,
+            currency: this.currentCurrency, // Pass currency for geo-aware formatting
             lineColor: '#5e2ced',
             areaColor: 'rgba(94, 44, 237, 0.1)',
             showYAxis: true,
@@ -457,7 +466,7 @@ class PriceIntelComponent {
             this.periodLabel.textContent = `${PERIOD_LABELS[this.currentPeriod]} avg`;
         }
         if (this.periodAvg) {
-            this.periodAvg.textContent = `${currencySymbol}${Math.round(stats.average)}`;
+            this.periodAvg.textContent = formatPrice(stats.average, this.currentCurrency);
         }
 
         // Update low
@@ -465,7 +474,7 @@ class PriceIntelComponent {
             this.periodLowLabel.textContent = `${PERIOD_LABELS[this.currentPeriod]} low`;
         }
         if (this.periodLow) {
-            this.periodLow.textContent = `${currencySymbol}${Math.round(stats.lowest)}`;
+            this.periodLow.textContent = formatPrice(stats.lowest, this.currentCurrency);
         }
         if (this.periodLowMeta && stats.lowest_date) {
             const dateStr = this.formatChartDate(stats.lowest_date);
@@ -495,7 +504,7 @@ class PriceIntelComponent {
             this.periodLabel.textContent = `${PERIOD_LABELS[this.currentPeriod]} avg`;
         }
         if (this.periodAvg) {
-            this.periodAvg.textContent = `${currencySymbol}${Math.round(avg)}`;
+            this.periodAvg.textContent = formatPrice(avg, this.currentCurrency);
         }
 
         // Update low
@@ -503,7 +512,7 @@ class PriceIntelComponent {
             this.periodLowLabel.textContent = `${PERIOD_LABELS[this.currentPeriod]} low`;
         }
         if (this.periodLow) {
-            this.periodLow.textContent = `${currencySymbol}${Math.round(min)}`;
+            this.periodLow.textContent = formatPrice(min, this.currentCurrency);
         }
         if (this.periodLowMeta && periodData.dates[minIndex]) {
             const store = periodData.stores[minIndex] || '';

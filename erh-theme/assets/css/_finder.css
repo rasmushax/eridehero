@@ -1363,7 +1363,6 @@
     display: flex;
     gap: var(--space-3);
     flex: 1;
-    overflow-x: auto;
 }
 
 .comparison-bar-actions {
@@ -1378,13 +1377,53 @@
     color: var(--color-muted);
 }
 
+.comparison-bar-thumb-wrapper {
+    position: relative;
+    flex-shrink: 0;
+}
+
+.comparison-bar-thumb-wrapper::after {
+    content: '';
+    position: absolute;
+    inset: 0;
+    background: var(--color-overlay-light);
+    pointer-events: none;
+    border-radius: var(--radius-md);
+}
+
 .comparison-bar-thumb {
+    display: block;
     width: 48px;
     height: 48px;
+    padding: 2px;
     object-fit: contain;
-    background: var(--color-background);
     border-radius: var(--radius-md);
-    border: var(--border-width) solid var(--color-border);
+}
+
+.comparison-bar-remove {
+    position: absolute;
+    top: -6px;
+    right: -6px;
+    display: flex;
+    align-items: center;
+    justify-content: center;
+    width: 20px;
+    height: 20px;
+    background: var(--color-dark);
+    border: 2px solid var(--color-white);
+    border-radius: 50%;
+    cursor: pointer;
+    transition: background var(--transition-fast);
+}
+
+.comparison-bar-remove:hover {
+    background: var(--color-error);
+}
+
+.comparison-bar-remove .icon {
+    width: 10px;
+    height: 10px;
+    color: var(--color-white);
 }
 
 

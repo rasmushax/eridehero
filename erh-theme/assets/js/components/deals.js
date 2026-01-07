@@ -9,8 +9,7 @@
  * - Skeleton loading states
  */
 
-import { getUserGeo, getCurrencySymbol } from '../services/geo-price.js';
-import { splitPrice } from '../utils/product-card.js';
+import { getUserGeo, formatPrice } from '../services/geo-price.js';
 import { PriceAlertModal } from './price-alert.js';
 import { initCarousel } from '../utils/carousel.js';
 
@@ -60,6 +59,7 @@ export async function initDeals() {
     let currentCategory = 'all';
     let userGeo = { geo: 'US', currency: 'USD' };
     let totalDealsCount = 0;
+    let carouselInstance = null;
 
     // Get user geo
     try {
@@ -128,7 +128,6 @@ export async function initDeals() {
     });
 
     // Carousel navigation using shared utility
-    let carouselInstance = null;
     if (leftArrow && rightArrow && carousel) {
         // Card width + gap for scroll amount calculation
         const cardWidth = 180; // deal card width
@@ -187,12 +186,12 @@ export async function initDeals() {
         const clone = template.content.cloneNode(true);
         const card = clone.querySelector('.deal-card');
         const trackBtn = clone.querySelector('[data-track-price]');
-        const thumbnail = clone.querySelector('.deal-thumbnail');
-        const priceContainer = clone.querySelector('[data-geo-price]');
-        const priceValue = clone.querySelector('.deal-price-value');
-        const priceCurrency = clone.querySelector('.deal-price-currency');
+        const imageContainer = clone.querySelector('.deal-card-image');
+        const img = imageContainer?.querySelector('img');
         const title = clone.querySelector('.deal-card-title');
-        const discountText = clone.querySelector('.deal-discount-text');
+        const priceEl = clone.querySelector('.deal-card-price');
+        const indicator = clone.querySelector('.deal-card-indicator');
+        const indicatorValue = clone.querySelector('[data-indicator-value]');
 
         // Set data attributes
         card.dataset.category = deal.category;
@@ -207,33 +206,49 @@ export async function initDeals() {
             trackBtn.dataset.currency = deal.currency || 'USD';
         }
 
-        if (priceContainer) {
-            priceContainer.dataset.productId = deal.id;
-        }
-
-        // Set content
-        if (thumbnail) {
-            thumbnail.src = deal.thumbnail || '';
-            thumbnail.alt = deal.name || '';
-            thumbnail.onerror = () => {
-                thumbnail.src = 'data:image/svg+xml,%3Csvg xmlns="http://www.w3.org/2000/svg" width="80" height="80"%3E%3Crect fill="%23f0f0f0" width="80" height="80"/%3E%3C/svg%3E';
+        // Set image
+        if (img) {
+            img.src = deal.thumbnail || '';
+            img.alt = deal.name || '';
+            img.onerror = () => {
+                img.src = 'data:image/svg+xml,%3Csvg xmlns="http://www.w3.org/2000/svg" width="80" height="80"%3E%3Crect fill="%23f0f0f0" width="80" height="80"/%3E%3C/svg%3E';
             };
         }
 
+        // Set title
         if (title) {
             title.textContent = deal.name || '';
         }
 
-        if (discountText) {
-            discountText.textContent = `${Math.round(deal.discount_percent)}% below avg`;
+        // Set price (formatted with decimals)
+        if (priceEl && deal.current_price > 0) {
+            priceEl.textContent = formatPrice(deal.current_price, deal.currency || 'USD');
+        } else if (priceEl) {
+            priceEl.textContent = '';
+            priceEl.classList.add('deal-card-no-price');
         }
 
-        // Set price from deals API response (already geo-specific)
-        if (priceValue && deal.current_price > 0) {
-            const priceParts = splitPrice(deal.current_price);
-            priceValue.textContent = priceParts.whole;
-            if (priceCurrency) {
-                priceCurrency.textContent = getCurrencySymbol(deal.currency);
+        // Set discount indicator
+        // Note: discount_percent is positive for deals (e.g., 22 means 22% below average)
+        if (indicator && indicatorValue) {
+            const discountPercent = Math.abs(Math.round(deal.discount_percent));
+            indicatorValue.textContent = `${discountPercent}%`;
+
+            const iconUse = indicator.querySelector('use');
+
+            // Toggle indicator style based on above/below average
+            // Positive discount_percent = below average (good deal)
+            // Negative or zero = at or above average
+            if (deal.discount_percent > 0) {
+                // Below average (good deal)
+                indicator.classList.remove('deal-card-indicator--above');
+                indicator.classList.add('deal-card-indicator--below');
+                if (iconUse) iconUse.setAttribute('href', '#icon-arrow-down');
+            } else {
+                // At or above average - should not typically show in deals
+                indicator.classList.remove('deal-card-indicator--below');
+                indicator.classList.add('deal-card-indicator--above');
+                if (iconUse) iconUse.setAttribute('href', '#icon-arrow-up');
             }
         }
 

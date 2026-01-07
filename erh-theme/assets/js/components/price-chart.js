@@ -7,32 +7,61 @@
  * @module components/price-chart
  */
 
-const DEFAULT_OPTIONS = {
-    height: 180,
-    colors: ['#5e2ced'],
-    axisOptions: {
-        xAxisMode: 'tick',
-        xIsSeries: true,
-        shortenYAxisNumbers: true,
-        yAxisMode: 'tick'   // Minimal y-axis
-    },
-    lineOptions: {
-        regionFill: 1,      // Fill area under line (like PriceRunner)
-        hideDots: 1,        // Hide dots by default (CSS shows on hover)
-        dotSize: 5,
-        heatline: 0,
-        spline: 0           // Sharp lines for price data (not curved)
-    },
-    tooltipOptions: {
-        formatTooltipX: d => d,
-        formatTooltipY: d => `$${d}`
-    },
-    animate: 0, // Disable animation for performance
-    barOptions: {
-        spaceRatio: 0.2
-    },
-    truncateLegends: true
-};
+/**
+ * Format price for chart display (consistent 2-decimal formatting)
+ * @param {number} price - Price value
+ * @param {string} currency - Currency code
+ * @returns {string} Formatted price
+ */
+function formatChartPrice(price, currency = 'USD') {
+    const currencyConfig = {
+        'USD': { symbol: '$', locale: 'en-US' },
+        'EUR': { symbol: '€', locale: 'de-DE' },
+        'GBP': { symbol: '£', locale: 'en-GB' },
+        'CAD': { symbol: 'CA$', locale: 'en-CA' },
+        'AUD': { symbol: 'A$', locale: 'en-AU' },
+    };
+    const config = currencyConfig[currency] || { symbol: currency + ' ', locale: 'en-US' };
+    const formatted = price.toLocaleString(config.locale, {
+        minimumFractionDigits: 2,
+        maximumFractionDigits: 2
+    });
+    return `${config.symbol}${formatted}`;
+}
+
+/**
+ * Create default options with currency support
+ * @param {string} currency - Currency code for formatting
+ * @returns {Object} Default chart options
+ */
+function createDefaultOptions(currency = 'USD') {
+    return {
+        height: 180,
+        colors: ['#5e2ced'],
+        axisOptions: {
+            xAxisMode: 'tick',
+            xIsSeries: true,
+            shortenYAxisNumbers: true,
+            yAxisMode: 'tick'   // Minimal y-axis
+        },
+        lineOptions: {
+            regionFill: 1,      // Fill area under line (like PriceRunner)
+            hideDots: 1,        // Hide dots by default (CSS shows on hover)
+            dotSize: 5,
+            heatline: 0,
+            spline: 0           // Sharp lines for price data (not curved)
+        },
+        tooltipOptions: {
+            formatTooltipX: d => d,
+            formatTooltipY: d => formatChartPrice(d, currency)
+        },
+        animate: 0, // Disable animation for performance
+        barOptions: {
+            spaceRatio: 0.2
+        },
+        truncateLegends: true
+    };
+}
 
 /**
  * Initialize a price history chart
@@ -42,6 +71,7 @@ const DEFAULT_OPTIONS = {
  * @param {string[]} data.labels - Date/time labels for x-axis
  * @param {number[]} data.values - Price values for y-axis
  * @param {Object} [options] - Override default chart options
+ * @param {string} [options.currency] - Currency code for price formatting (default: 'USD')
  * @returns {Object|null} Frappe Chart instance or null if initialization fails
  */
 export function initPriceChart(container, data, options = {}) {
@@ -67,9 +97,15 @@ export function initPriceChart(container, data, options = {}) {
         return null;
     }
 
-    // Merge options
+    // Get currency from options or default to USD
+    const currency = options.currency || 'USD';
+
+    // Create default options with currency support
+    const defaultOptions = createDefaultOptions(currency);
+
+    // Merge options (user options override defaults)
     const chartOptions = {
-        ...DEFAULT_OPTIONS,
+        ...defaultOptions,
         ...options,
         data: {
             labels: data.labels,
@@ -83,6 +119,7 @@ export function initPriceChart(container, data, options = {}) {
 
         // Store reference on element for later access
         el._priceChart = chart;
+        el._priceChartCurrency = currency;
 
         return chart;
     } catch (error) {
@@ -167,6 +204,7 @@ export function initPeriodToggles(container, periodData) {
  * Auto-initialize all price charts on page
  * Looks for elements with [data-price-chart] attribute
  * Expects data to be in window.erhData.priceChartData[chartId]
+ * Chart data can include 'currency' property for geo-aware formatting
  */
 export function autoInit() {
     const charts = document.querySelectorAll('[data-price-chart]');
@@ -176,7 +214,9 @@ export function autoInit() {
         const chartData = window.erhData?.priceChartData?.[chartId];
 
         if (chartData) {
-            const chart = initPriceChart(el, chartData.current || chartData);
+            // Pass currency from chart data for geo-aware price formatting
+            const options = chartData.currency ? { currency: chartData.currency } : {};
+            const chart = initPriceChart(el, chartData.current || chartData, options);
 
             // Initialize period toggles if period data provided
             if (chartData.periods) {

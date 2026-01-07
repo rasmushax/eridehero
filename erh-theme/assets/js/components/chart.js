@@ -53,12 +53,37 @@ const DEFAULTS = {
 
     // Tooltip
     showTooltip: true,
-    formatValue: (v) => `$${v}`,
+    formatValue: (v, currency = 'USD') => formatChartPrice(v, currency),
     formatLabel: (l) => l,
+
+    // Currency for price formatting (passed to formatValue)
+    currency: 'USD',
 
     // Responsive
     responsive: true
 };
+
+/**
+ * Format price for chart display (consistent 2-decimal formatting)
+ * @param {number} price - Price value
+ * @param {string} currency - Currency code
+ * @returns {string} Formatted price
+ */
+function formatChartPrice(price, currency = 'USD') {
+    const currencyConfig = {
+        'USD': { symbol: '$', locale: 'en-US' },
+        'EUR': { symbol: '€', locale: 'de-DE' },
+        'GBP': { symbol: '£', locale: 'en-GB' },
+        'CAD': { symbol: 'CA$', locale: 'en-CA' },
+        'AUD': { symbol: 'A$', locale: 'en-AU' },
+    };
+    const config = currencyConfig[currency] || { symbol: currency + ' ', locale: 'en-US' };
+    const formatted = price.toLocaleString(config.locale, {
+        minimumFractionDigits: 2,
+        maximumFractionDigits: 2
+    });
+    return `${config.symbol}${formatted}`;
+}
 
 /**
  * Main Chart class
@@ -639,7 +664,7 @@ class ERideHeroChart {
             text.setAttribute('fill', textColor);
             text.setAttribute('font-size', '11');
             text.setAttribute('opacity', '0.7');
-            text.textContent = this.options.formatValue(Math.round(tick));
+            text.textContent = this.options.formatValue(Math.round(tick), this.options.currency);
 
             group.appendChild(text);
         });
@@ -785,7 +810,7 @@ class ERideHeroChart {
         if (!this.tooltip) return;
 
         const value = this.data.values[index];
-        const formattedValue = this.options.formatValue(value);
+        const formattedValue = this.options.formatValue(value, this.options.currency);
 
         // Get date - prefer dates array, fall back to labels
         const date = this.data.dates?.[index] || this.data.labels?.[index] || '';
@@ -926,8 +951,8 @@ export function setupPeriodToggles(container, chart, periodsData) {
                 btn.classList.add('is-active');
                 chart.update(data);
 
-                // Update the dynamic stats
-                updatePeriodStats(period, data, statElements);
+                // Update the dynamic stats with currency from chart options
+                updatePeriodStats(period, data, statElements, chart.options.currency);
             }
         });
     });
@@ -935,8 +960,12 @@ export function setupPeriodToggles(container, chart, periodsData) {
 
 /**
  * Update the period-based stats (average and low)
+ * @param {string} period - Period key (3m, 6m, 1y, all)
+ * @param {Object} data - Period data with values array
+ * @param {Object} elements - DOM elements to update
+ * @param {string} currency - Currency code for formatting
  */
-function updatePeriodStats(period, data, elements) {
+function updatePeriodStats(period, data, elements, currency = 'USD') {
     if (!data?.values?.length) return;
 
     const { avgLabel, avgValue, lowLabel, lowValue, lowMeta } = elements;
@@ -956,7 +985,7 @@ function updatePeriodStats(period, data, elements) {
         const sum = data.values.reduce((a, b) => a + b, 0);
         const avg = Math.round(sum / data.values.length);
         avgLabel.textContent = labels.avg;
-        avgValue.textContent = `$${avg}`;
+        avgValue.textContent = formatChartPrice(avg, currency);
     }
 
     // Find and update low
@@ -965,7 +994,7 @@ function updatePeriodStats(period, data, elements) {
         const minIndex = data.values.indexOf(minValue);
 
         lowLabel.textContent = labels.low;
-        lowValue.textContent = `$${minValue}`;
+        lowValue.textContent = formatChartPrice(minValue, currency);
 
         // Update meta (date · store) if available
         if (lowMeta && data.dates && data.stores) {

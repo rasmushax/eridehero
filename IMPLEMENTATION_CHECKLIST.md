@@ -397,20 +397,19 @@ Browser Request
 
 ---
 
-## Phase 6B: Product Page (single-products.php) - IN PROGRESS
+## Phase 6B: Product Page (single-products.php) - COMPLETE ✅
 
-### Product Page Structure (Plan Created)
-See plan file: `/home/rasmu/.claude/plans/resilient-jumping-feather.md`
-
+### Product Page Structure
 **Layout:** Full-width, no sidebar - product database hub for specs/pricing
 
 ### Template Files
 - [x] Create `single-products.php` - Main template with full layout
 - [x] Create `template-parts/product/hero.php` - Product image, name, brand, score, review link
-- [x] Create `template-parts/product/performance-profile.php` - Radar chart + highlights (placeholder)
+- [x] Create `template-parts/product/performance-profile.php` - Radar chart + highlights
 - [x] Create `template-parts/product/comparison-widget.php` - Dark H2H widget (locked product)
 - [x] Create `template-parts/product/specs-grouped.php` - Full specs by category
 - [x] Create `template-parts/product/related.php` - Related products grid
+- [x] Create `template-parts/product/price-intel.php` - Price intelligence section
 
 ### Section Order (Updated 2025-01-06)
 1. Breadcrumb
@@ -421,35 +420,52 @@ See plan file: `/home/rasmu/.claude/plans/resilient-jumping-feather.md`
 6. **Related Products** (moved above specs)
 7. Full Specifications (grouped by category)
 
-### CSS & JavaScript
-- [ ] Create `_single-product.css`
-- [ ] Import in `style.css`
-- [ ] Create `product-page.js` orchestrator
-- [ ] Extract `RadarChart` from compare-results.js to `radar-chart.js`
-- [ ] Add "locked" mode to comparison.js
-
-### ACF Fields Required
-- [ ] Add `review.review_post` (Post Object) - Links to review post
-- [ ] Add `review.youtube_video` (URL) - YouTube video URL
+### ACF Fields
+- [x] `review.review_post` (Post Object) - Links to review post
+- [x] `review.youtube_video` (URL) - YouTube video URL
 
 ---
 
-## Phase 6C: Remaining Templates - PENDING
+## Phase 6C: Finder Tool - COMPLETE ✅
 
-### Tool Pages
-- [ ] Create `template-parts/finder/filters.php`
-- [ ] Create `template-parts/finder/results.php`
-- [ ] Create `templates/page-finder.php`
-- [ ] Create `templates/page-deals.php`
-- [ ] Test: Finder tool works
+### Template Files
+- [x] Create `page-finder.php` - Main finder page
+- [x] Create `template-parts/finder/checkbox-filter.php`
+- [x] Create `template-parts/finder/group-filters.php`
+- [x] Create `template-parts/finder/range-filter.php`
+- [x] Create `template-parts/finder/tristate-filter.php`
+- [x] Create `inc/finder-config.php` - Filter configuration
 
-### Account Pages
-- [ ] Create `template-parts/account/nav.php`
-- [ ] Create `template-parts/account/reviews.php`
-- [ ] Create `template-parts/account/trackers.php`
-- [ ] Create `template-parts/account/settings.php`
-- [ ] Create `templates/page-account.php`
-- [ ] Test: All account views work
+### JavaScript
+- [x] Create `finder.js` - Main finder component (geo-aware)
+- [x] Create `finder-table.js` - Table view (geo-aware)
+- [x] Create `finder-tabs.js` - Category tabs
+
+---
+
+## Phase 6D: Account Pages - COMPLETE ✅
+
+### Template Files
+- [x] Create `page-account.php` - Main account page
+- [x] Create `template-parts/account/sidebar.php` - Account navigation
+- [x] Create `template-parts/account/trackers.php` - Price tracker management
+- [x] Create `template-parts/account/settings.php` - User settings/preferences
+
+### JavaScript
+- [x] Create `account-trackers.js` - Tracker CRUD, search, sort
+
+---
+
+## Phase 6E: Deals Page - PENDING
+
+### Template Files
+- [ ] Create `page-deals.php` - Dedicated deals page
+  - Full deals listing (not just homepage preview)
+  - Category filtering
+  - Geo-aware pricing
+  - Price alert integration
+
+**Note:** Homepage deals section exists (`template-parts/home/deals.php`) but no dedicated deals page yet.
 
 ---
 

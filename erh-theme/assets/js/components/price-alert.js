@@ -264,7 +264,7 @@ class PriceAlertModalManager {
             const diff = this.existingTracker.start_price - displayPrice;
             if (diff !== 0) {
                 const icon = diff > 0 ? 'arrow-down' : 'arrow-up';
-                priceChange = `<svg class="icon price-alert-change-icon" aria-hidden="true"><use href="#icon-${icon}"></use></svg> ${currencySymbol}${Math.abs(diff).toFixed(0)} since you started tracking`;
+                priceChange = `<svg class="icon price-alert-change-icon" aria-hidden="true"><use href="#icon-${icon}"></use></svg> ${currencySymbol}${this.formatPriceValue(Math.abs(diff))} since you started tracking`;
             }
         }
 
@@ -302,7 +302,7 @@ class PriceAlertModalManager {
                     <label class="price-alert-label">Target price</label>
                     <div class="price-alert-input-wrapper">
                         <span class="price-alert-input-prefix">${currencySymbol}</span>
-                        <input type="number" name="target_price" class="price-alert-input" placeholder="0" min="1" step="1" value="${initialTarget}">
+                        <input type="number" name="target_price" class="price-alert-input" placeholder="0.00" min="0.01" step="0.01" value="${initialTarget}">
                     </div>
                     <div class="price-alert-suggestions">
                         ${currentPrice ? `
@@ -317,7 +317,7 @@ class PriceAlertModalManager {
                     <label class="price-alert-label">Drop amount</label>
                     <div class="price-alert-input-wrapper">
                         <span class="price-alert-input-prefix">${currencySymbol}</span>
-                        <input type="number" name="price_drop" class="price-alert-input" placeholder="0" min="1" step="1" value="${initialDrop}">
+                        <input type="number" name="price_drop" class="price-alert-input" placeholder="0.00" min="0.01" step="0.01" value="${initialDrop}">
                     </div>
                     <div class="price-alert-suggestions">
                         <button type="button" class="price-alert-suggestion" data-suggestion="50">${currencySymbol}50</button>
@@ -564,15 +564,11 @@ class PriceAlertModalManager {
 
     /**
      * Format a price value (number only, no symbol)
-     * Shows cents only when they exist (e.g., 999.99), otherwise whole number (e.g., 500)
+     * Always shows 2 decimal places for consistency
      */
     formatPriceValue(price) {
         if (price == null) return '--';
-        const hasCents = (price % 1) >= 0.005;
-        if (hasCents) {
-            return price.toLocaleString(undefined, { minimumFractionDigits: 2, maximumFractionDigits: 2 });
-        }
-        return Math.floor(price).toLocaleString();
+        return price.toLocaleString('en-US', { minimumFractionDigits: 2, maximumFractionDigits: 2 });
     }
 
     // escapeHtml imported from utils/dom.js
