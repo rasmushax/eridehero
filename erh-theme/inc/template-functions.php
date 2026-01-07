@@ -918,97 +918,71 @@ function erh_truncate_text( string $text, int $length = 150, bool $show_more = t
 }
 
 /**
- * Get breadcrumb items for current page
+ * Render breadcrumb navigation
  *
- * @return array Array of breadcrumb items with 'label' and 'url' keys
+ * Single reusable function for all breadcrumbs across the site.
+ * Takes an array of items, each with 'label' and optional 'url'.
+ * Last item is automatically treated as current page (no link).
+ *
+ * @param array $items Array of breadcrumb items: [ ['label' => 'Home', 'url' => '/'], ['label' => 'Current'] ]
  */
-function erh_get_breadcrumbs(): array {
-    $breadcrumbs = array();
-
-    // Home
-    $breadcrumbs[] = array(
-        'label' => 'Home',
-        'url'   => home_url( '/' ),
-    );
-
-    if ( is_singular( 'products' ) ) {
-        $type = erh_get_product_type();
-        if ( $type ) {
-            $slug = erh_product_type_slug( $type );
-            $breadcrumbs[] = array(
-                'label' => $type . ' Reviews',
-                'url'   => home_url( '/' . $slug . '-reviews/' ),
-            );
-        }
-        $breadcrumbs[] = array(
-            'label' => get_the_title(),
-            'url'   => '',
-        );
-    } elseif ( is_singular( 'post' ) ) {
-        $breadcrumbs[] = array(
-            'label' => 'Articles',
-            'url'   => home_url( '/articles/' ),
-        );
-        $breadcrumbs[] = array(
-            'label' => get_the_title(),
-            'url'   => '',
-        );
-    } elseif ( is_page() ) {
-        $breadcrumbs[] = array(
-            'label' => get_the_title(),
-            'url'   => '',
-        );
-    } elseif ( is_archive() ) {
-        $breadcrumbs[] = array(
-            'label' => get_the_archive_title(),
-            'url'   => '',
-        );
-    }
-
-    return $breadcrumbs;
-}
-
-/**
- * Render breadcrumbs
- */
-function erh_the_breadcrumbs(): void {
-    $items = erh_get_breadcrumbs();
-
+function erh_breadcrumb( array $items ): void {
     if ( empty( $items ) ) {
         return;
     }
 
-    echo '<nav class="breadcrumb" aria-label="Breadcrumb">';
-    echo '<ol class="breadcrumb-list">';
-
     $count = count( $items );
+    $output = '<nav class="breadcrumb" aria-label="Breadcrumb">';
+
     foreach ( $items as $index => $item ) {
         $is_last = ( $index === $count - 1 );
 
-        echo '<li class="breadcrumb-item">';
-
         if ( ! $is_last && ! empty( $item['url'] ) ) {
-            printf(
-                '<a href="%s" class="breadcrumb-link">%s</a>',
+            $output .= sprintf(
+                '<a href="%s">%s</a>',
                 esc_url( $item['url'] ),
                 esc_html( $item['label'] )
             );
+            $output .= '<span class="breadcrumb-sep" aria-hidden="true">/</span>';
         } else {
-            printf(
-                '<span class="breadcrumb-current" aria-current="page">%s</span>',
+            $output .= sprintf(
+                '<span class="breadcrumb-current">%s</span>',
                 esc_html( $item['label'] )
             );
         }
-
-        if ( ! $is_last ) {
-            echo erh_icon( 'chevron-right', 'breadcrumb-separator' );
-        }
-
-        echo '</li>';
     }
 
-    echo '</ol>';
-    echo '</nav>';
+    $output .= '</nav>';
+
+    echo $output;
+}
+
+/**
+ * Auto-detect and render breadcrumbs for current page
+ *
+ * Convenience wrapper for standard post types.
+ * For custom breadcrumbs, use erh_breadcrumb() directly.
+ */
+function erh_the_breadcrumbs(): void {
+    $items = array();
+
+    if ( is_singular( 'post' ) ) {
+        $items[] = [ 'label' => 'Articles', 'url' => home_url( '/articles/' ) ];
+        $items[] = [ 'label' => get_the_title() ];
+    } elseif ( is_page() ) {
+        // Check for parent page
+        $parent_id = wp_get_post_parent_id( get_the_ID() );
+        if ( $parent_id ) {
+            $items[] = [ 'label' => get_the_title( $parent_id ), 'url' => get_permalink( $parent_id ) ];
+        }
+        $items[] = [ 'label' => get_the_title() ];
+    } elseif ( is_archive() ) {
+        $items[] = [ 'label' => get_the_archive_title() ];
+    }
+
+    if ( ! empty( $items ) ) {
+        erh_breadcrumb( $items );
+    }
 }
 
 /**
@@ -1086,17 +1060,11 @@ function erh_get_template_part( string $slug, string $name = '', array $data = a
  * @param string $category_name Category display name (e.g., 'E-Scooters')
  */
 function erh_review_breadcrumb( string $category_slug, string $category_name ): void {
-    $reviews_url = home_url( '/' . $category_slug . '-reviews/' );
-    $hub_url     = home_url( '/' . $category_slug . '/' );
-    ?>
-    <nav class="breadcrumb" aria-label="Breadcrumb">
-        <a href="<?php echo esc_url( $hub_url ); ?>"><?php echo esc_html( $category_name ); ?></a>
-        <span class="breadcrumb-sep">/</span>
-        <a href="<?php echo esc_url( $reviews_url ); ?>">Reviews</a>
-        <span class="breadcrumb-sep breadcrumb-current-sep">/</span>
-        <span class="breadcrumb-current"><?php the_title(); ?></span>
-    </nav>
-    <?php
+    erh_breadcrumb( [
+        [ 'label' => $category_name, 'url' => home_url( '/' . $category_slug . '/' ) ],
+        [ 'label' => 'Reviews', 'url' => home_url( '/' . $category_slug . '-reviews/' ) ],
+        [ 'label' => get_the_title() ],
+    ] );
 }
 
 /**

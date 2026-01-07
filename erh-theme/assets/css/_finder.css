@@ -215,7 +215,7 @@
     white-space: nowrap;
 }
 
-.finder-sort .custom-select {
+.finder-sort .custom-select:not(.custom-select--inline) {
     min-width: 160px;
 }
 
@@ -1600,7 +1600,7 @@
         margin: 0;
     }
 
-    .finder-sort .custom-select {
+    .finder-sort .custom-select:not(.custom-select--inline) {
         min-width: 140px;
     }
 }

@@ -221,12 +221,12 @@
 
 @media (max-width: 600px) {
     .modal {
-        padding: var(--space-3);
+        padding: 0;
         align-items: flex-end;
     }
 
     .modal-content {
-        max-height: calc(100vh - var(--space-6));
+        max-height: 100vh;
         border-radius: var(--radius-2xl) var(--radius-2xl) 0 0;
         transform: translateY(100%);
     }

@@ -11,6 +11,7 @@
  * - Supports disabled options and option groups
  * - Click outside to close
  * - Focus management
+ * - Mobile drawer mode (bottom sheet on small screens)
  *
  * Usage:
  * 1. Add data-custom-select to a <select> element
@@ -22,7 +23,12 @@
  *   <option value="1">Option 1</option>
  *   <option value="2">Option 2</option>
  * </select>
+ *
+ * Mobile drawer opt-out:
+ * <select data-custom-select data-mobile-drawer="false">
  */
+
+import { SelectDrawer } from './select-drawer.js';
 
 export class CustomSelect {
     constructor(selectElement, options = {}) {
@@ -37,6 +43,10 @@ export class CustomSelect {
         this.focusedIndex = -1;
         this.searchString = '';
         this.searchTimeout = null;
+
+        // Mobile drawer mode (opt-out via data-mobile-drawer="false")
+        this.useDrawerOnMobile = selectElement.dataset.mobileDrawer !== 'false';
+        this.drawer = null;
 
         this.init();
     }
@@ -55,12 +65,18 @@ export class CustomSelect {
             this.wrapper.classList.add('is-disabled');
         }
 
-        // Transfer size variant classes from select to wrapper
+        // Transfer variant classes from select to wrapper
         if (this.select.classList.contains('custom-select-sm')) {
             this.wrapper.classList.add('custom-select-sm');
         }
         if (this.select.classList.contains('custom-select-lg')) {
             this.wrapper.classList.add('custom-select-lg');
+        }
+        if (this.select.classList.contains('custom-select--inline')) {
+            this.wrapper.classList.add('custom-select--inline');
+        }
+        if (this.select.classList.contains('custom-select--align-right')) {
+            this.wrapper.classList.add('custom-select--align-right');
         }
 
         // Get selected option
@@ -301,6 +317,17 @@ export class CustomSelect {
     open() {
         if (this.wrapper.classList.contains('is-disabled')) return;
 
+        // Check for mobile drawer mode
+        if (this.useDrawerOnMobile && SelectDrawer.shouldUseDrawer()) {
+            // Lazy-create drawer instance
+            if (!this.drawer) {
+                this.drawer = new SelectDrawer(this);
+            }
+            this.drawer.open();
+            return;
+        }
+
+        // Desktop dropdown mode
         this.isOpen = true;
         this.wrapper.classList.add('is-open');
         this.trigger.setAttribute('aria-expanded', 'true');
@@ -316,6 +343,12 @@ export class CustomSelect {
     }
 
     close() {
+        // If drawer is open, close it instead
+        if (this.drawer?.isOpen) {
+            this.drawer.close();
+            return;
+        }
+
         this.isOpen = false;
         this.wrapper.classList.remove('is-open');
         this.trigger.setAttribute('aria-expanded', 'false');
@@ -476,12 +509,21 @@ export class CustomSelect {
 }
 
 /**
- * Initialize all custom selects on the page
- * @param {string} selector - CSS selector for select elements to enhance
+ * Initialize all custom selects on the page or within a container
+ * @param {string|HTMLElement} selectorOrContainer - CSS selector or container element
  * @returns {CustomSelect[]} Array of CustomSelect instances
  */
-export function initCustomSelects(selector = '[data-custom-select]') {
-    const selects = document.querySelectorAll(selector);
+export function initCustomSelects(selectorOrContainer = '[data-custom-select]') {
+    let selects;
+
+    if (selectorOrContainer instanceof HTMLElement) {
+        // Container element passed - find selects within it
+        selects = selectorOrContainer.querySelectorAll('[data-custom-select]');
+    } else {
+        // Selector string passed
+        selects = document.querySelectorAll(selectorOrContainer);
+    }
+
     const instances = [];
 
     selects.forEach(select => {

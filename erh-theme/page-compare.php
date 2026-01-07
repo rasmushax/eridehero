@@ -43,11 +43,12 @@ $page_title    = $has_products
     <?php if ( ! $has_products ) : ?>
         <!-- Empty State -->
         <div class="container">
-            <nav class="breadcrumb" aria-label="Breadcrumb">
-                <a href="<?php echo esc_url( home_url( '/' . $category_slug . '/' ) ); ?>"><?php echo esc_html( $category_name ); ?></a>
-                <span class="breadcrumb-sep">/</span>
-                <span class="breadcrumb-current">Compare</span>
-            </nav>
+            <?php
+            erh_breadcrumb( [
+                [ 'label' => $category_name, 'url' => home_url( '/' . $category_slug . '/' ) ],
+                [ 'label' => 'Compare' ],
+            ] );
+            ?>
         </div>
 
         <section class="compare-empty">
@@ -70,11 +71,12 @@ $page_title    = $has_products
     <?php else : ?>
         <!-- Comparison Content -->
         <div class="container">
-            <nav class="breadcrumb" aria-label="Breadcrumb">
-                <a href="<?php echo esc_url( home_url( '/' . $category_slug . '/' ) ); ?>"><?php echo esc_html( $category_name ); ?></a>
-                <span class="breadcrumb-sep">/</span>
-                <span class="breadcrumb-current"><?php echo esc_html( $page_title ); ?></span>
-            </nav>
+            <?php
+            erh_breadcrumb( [
+                [ 'label' => $category_name, 'url' => home_url( '/' . $category_slug . '/' ) ],
+                [ 'label' => $page_title ],
+            ] );
+            ?>
         </div>
 
         <!-- Sticky Product Header -->

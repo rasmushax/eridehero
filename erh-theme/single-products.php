@@ -67,16 +67,11 @@ while ( have_posts() ) :
         <div class="container">
             <?php
             $finder_url = erh_get_finder_url( $product_id );
+            erh_breadcrumb( [
+                [ 'label' => $category_plural, 'url' => $finder_url ?: '' ],
+                [ 'label' => $product_name ],
+            ] );
             ?>
-            <nav class="breadcrumb" aria-label="Breadcrumb">
-                <?php if ( $finder_url ) : ?>
-                    <a href="<?php echo esc_url( $finder_url ); ?>"><?php echo esc_html( $category_plural ); ?></a>
-                <?php else : ?>
-                    <span><?php echo esc_html( $category_plural ); ?></span>
-                <?php endif; ?>
-                <span class="breadcrumb-sep">/</span>
-                <span class="breadcrumb-current"><?php echo esc_html( $product_name ); ?></span>
-            </nav>
         </div>
 
         <!-- Hero Section -->

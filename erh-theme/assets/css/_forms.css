@@ -381,6 +381,65 @@
 }
 
 
+/* ===== INLINE SELECT VARIANT ===== */
+/* Minimal inline style - just bold text + chevron, no button styling */
+
+.custom-select--inline {
+    width: auto;
+    display: inline-flex;
+}
+
+.custom-select--inline .custom-select-trigger {
+    width: auto;
+    padding: 0;
+    border: none;
+    background: none;
+    font-size: var(--text-sm);
+    font-weight: var(--font-semibold);
+    color: var(--color-dark);
+    gap: var(--space-1);
+}
+
+.custom-select--inline .custom-select-trigger:hover {
+    border: none;
+    color: var(--color-primary);
+}
+
+.custom-select--inline .custom-select-trigger:focus {
+    border: none;
+    box-shadow: none;
+    color: var(--color-primary);
+}
+
+.custom-select--inline.is-open .custom-select-trigger {
+    border: none;
+    box-shadow: none;
+    color: var(--color-primary);
+}
+
+.custom-select--inline .custom-select-trigger .icon {
+    width: 14px;
+    height: 14px;
+    color: currentColor;
+}
+
+.custom-select--inline .custom-select-value {
+    flex: none;
+}
+
+.custom-select--inline .custom-select-dropdown {
+    min-width: 160px;
+    left: 0;
+    right: auto;
+}
+
+/* Right-align dropdown variant (for right-side placement) */
+.custom-select--inline.custom-select--align-right .custom-select-dropdown {
+    left: auto;
+    right: 0;
+}
+
+
 /* ===== FORM ERRORS ===== */
 
 .form-error {

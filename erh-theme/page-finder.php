@@ -218,8 +218,8 @@ $product_count = count( $products );
                         <div class="finder-toolbar-right">
                             <!-- Sort -->
                             <div class="finder-sort">
-                                <label class="finder-sort-label" id="finder-sort-label">Sort:</label>
-                                <select id="finder-sort" class="custom-select-sm" data-custom-select data-finder-sort aria-labelledby="finder-sort-label">
+                                <span class="finder-sort-label" id="finder-sort-label">Sort by</span>
+                                <select id="finder-sort" class="custom-select--inline custom-select--align-right" data-custom-select data-finder-sort aria-labelledby="finder-sort-label">
                                     <option value="popularity">Most popular</option>
                                     <option value="price-asc">Price: Low to High</option>
                                     <option value="price-desc">Price: High to Low</option>

@@ -20,34 +20,29 @@ $page_slug = get_post_field( 'post_name', get_the_ID() );
 
 $category_config = [
     'electric-scooters' => [
-        'title'       => 'E-Scooter Deals',
-        'description' => 'Electric scooters currently priced below their average.',
-        'category'    => 'escooter',
-        'type'        => 'Electric Scooter',
+        'category'         => 'escooter',
+        'type'             => 'Electric Scooter',
+        'breadcrumb_title' => 'Electric Scooters',
     ],
     'electric-bikes' => [
-        'title'       => 'E-Bike Deals',
-        'description' => 'Electric bikes currently priced below their average.',
-        'category'    => 'ebike',
-        'type'        => 'Electric Bike',
+        'category'         => 'ebike',
+        'type'             => 'Electric Bike',
+        'breadcrumb_title' => 'Electric Bikes',
     ],
     'electric-skateboards' => [
-        'title'       => 'E-Skateboard Deals',
-        'description' => 'Electric skateboards currently priced below their average.',
-        'category'    => 'eskateboard',
-        'type'        => 'Electric Skateboard',
+        'category'         => 'eskateboard',
+        'type'             => 'Electric Skateboard',
+        'breadcrumb_title' => 'Electric Skateboards',
     ],
     'electric-unicycles' => [
-        'title'       => 'EUC Deals',
-        'description' => 'Electric unicycles currently priced below their average.',
-        'category'    => 'euc',
-        'type'        => 'Electric Unicycle',
+        'category'         => 'euc',
+        'type'             => 'Electric Unicycle',
+        'breadcrumb_title' => 'Electric Unicycles',
     ],
     'hoverboards' => [
-        'title'       => 'Hoverboard Deals',
-        'description' => 'Hoverboards currently priced below their average.',
-        'category'    => 'hoverboard',
-        'type'        => 'Hoverboard',
+        'category'         => 'hoverboard',
+        'type'             => 'Hoverboard',
+        'breadcrumb_title' => 'Hoverboards',
     ],
 ];
 
@@ -62,13 +57,13 @@ $parent_url = $parent_id ? get_permalink( $parent_id ) : home_url( '/deals/' );
 <main class="deals-page" data-deals-page data-category="<?php echo esc_attr( $config['category'] ); ?>">
 
     <?php
-    // Hero section.
+    // Hero section - uses WordPress title and content.
     get_template_part( 'template-parts/deals/hero', null, [
-        'title'       => $config['title'],
-        'description' => $config['description'],
-        'category'    => $config['category'],
-        'back_url'    => $parent_url,
-        'back_text'   => 'All Deals',
+        'title'            => get_the_title(),
+        'content'          => get_the_content(),
+        'category'         => $config['category'],
+        'back_url'         => $parent_url,
+        'breadcrumb_title' => $config['breadcrumb_title'],
     ] );
     ?>
 
@@ -79,21 +74,43 @@ $parent_url = $parent_id ? get_permalink( $parent_id ) : home_url( '/deals/' );
             <!-- Toolbar (sort, filters) -->
             <div class="deals-toolbar" data-deals-toolbar>
                 <div class="deals-toolbar-left">
-                    <!-- Period toggle -->
+                    <!-- Price filter -->
+                    <div class="deals-filter">
+                        <span class="deals-filter-label">Price</span>
+                        <select class="custom-select--inline" data-custom-select data-deals-price-filter>
+                            <option value="all" selected>Any price</option>
+                            <option value="0-500">Under $500</option>
+                            <option value="500-1000">$500 – $1,000</option>
+                            <option value="1000-1500">$1,000 – $1,500</option>
+                            <option value="1500-2000">$1,500 – $2,000</option>
+                            <option value="2000+">$2,000+</option>
+                        </select>
+                    </div>
+
+                    <!-- Period toggle with info popover -->
                     <div class="deals-period">
-                        <label class="deals-period-label">Compare to:</label>
-                        <select class="custom-select-sm" data-custom-select data-deals-period>
+                        <span class="deals-period-label">Compare to</span>
+                        <select class="custom-select--inline" data-custom-select data-deals-period>
                             <option value="3m">3-month avg</option>
                             <option value="6m" selected>6-month avg</option>
                             <option value="12m">12-month avg</option>
                         </select>
+                        <div class="popover-wrapper">
+                            <button type="button" class="deals-period-info" data-popover-trigger="compare-to-popover" aria-label="What does this mean?">
+                                <?php erh_the_icon( 'info' ); ?>
+                            </button>
+                            <div id="compare-to-popover" class="popover popover--bottom-start" aria-hidden="true">
+                                <div class="popover-arrow"></div>
+                                <p class="popover-text">We calculate the average price over your selected time period. Products are shown as deals when their current price falls below this average.</p>
+                            </div>
+                        </div>
                     </div>
                 </div>
                 <div class="deals-toolbar-right">
                     <!-- Sort -->
                     <div class="deals-sort">
-                        <label class="deals-sort-label">Sort:</label>
-                        <select class="custom-select-sm" data-custom-select data-deals-sort>
+                        <span class="deals-sort-label">Sort by</span>
+                        <select class="custom-select--inline custom-select--align-right" data-custom-select data-deals-sort>
                             <option value="discount" selected>Biggest discount</option>
                             <option value="price-asc">Price: Low to High</option>
                             <option value="price-desc">Price: High to Low</option>
@@ -176,6 +193,15 @@ $parent_url = $parent_id ? get_permalink( $parent_id ) : home_url( '/deals/' );
                 </div>
             </div>
         </div>
+    </div>
+</template>
+
+<!-- Inline CTA Card Template -->
+<template id="deals-info-card-template">
+    <div class="deals-info-card deals-info-card--cta">
+        <h2 class="deals-info-card-title"><?php erh_the_icon( 'bell' ); ?> Never miss a deal</h2>
+        <p class="deals-info-card-text">Not ready to buy? Click the <?php erh_the_icon( 'bell' ); ?> icon on any product to track its price.</p>
+        <p class="deals-info-card-text">We'll notify you when it drops below your target so you can buy at the perfect time.</p>
     </div>
 </template>
 

@@ -9,9 +9,9 @@
  * - Geo-aware pricing
  */
 
-import { getUserGeo, formatPrice } from '../services/geo-price.js';
+import { getUserGeo, formatPrice, getCurrencySymbol } from '../services/geo-price.js';
 import { PriceAlertModal } from './price-alert.js';
-import { initCustomSelects } from './custom-select.js';
+import { initCustomSelects, CustomSelect } from './custom-select.js';
 import { ComparisonBar } from './comparison-bar.js';
 
 // Configuration
@@ -40,8 +40,10 @@ export async function initDealsPage() {
     const grid = page.querySelector('[data-deals-grid]');
     const emptyState = page.querySelector('[data-deals-empty]');
     const template = document.getElementById('deal-card-template');
+    const infoCardTemplate = document.getElementById('deals-info-card-template');
     const periodSelect = page.querySelector('[data-deals-period]');
     const sortSelect = page.querySelector('[data-deals-sort]');
+    const priceFilterSelect = page.querySelector('[data-deals-price-filter]');
     const countEl = page.querySelector('[data-deals-count]');
 
     if (!grid || !template) return null;
@@ -50,6 +52,7 @@ export async function initDealsPage() {
     let deals = [];
     let currentPeriod = periodSelect?.value || CONFIG.defaultPeriod;
     let currentSort = sortSelect?.value || CONFIG.defaultSort;
+    let currentPriceFilter = priceFilterSelect?.value || 'all';
     let userGeo = { geo: 'US', currency: 'USD' };
     let isLoading = false;
 
@@ -64,6 +67,7 @@ export async function initDealsPage() {
     // Get user geo
     try {
         userGeo = await getUserGeo();
+        updateCurrencySymbols(userGeo.currency);
     } catch (e) {
         // Use defaults
     }
@@ -83,7 +87,15 @@ export async function initDealsPage() {
     if (sortSelect) {
         sortSelect.addEventListener('change', (e) => {
             currentSort = e.target.value;
-            sortAndRender();
+            filterSortAndRender();
+        });
+    }
+
+    // Price filter change handler
+    if (priceFilterSelect) {
+        priceFilterSelect.addEventListener('change', (e) => {
+            currentPriceFilter = e.target.value;
+            filterSortAndRender();
         });
     }
 
@@ -142,8 +154,8 @@ export async function initDealsPage() {
             // Update count
             updateCount(deals.length);
 
-            // Sort and render
-            sortAndRender();
+            // Filter, sort and render
+            filterSortAndRender();
 
         } catch (error) {
             console.error('[DealsPage] Failed to load:', error);
@@ -154,10 +166,66 @@ export async function initDealsPage() {
     }
 
     /**
-     * Sort deals and render
+     * Update currency symbols in price filter select
      */
-    function sortAndRender() {
-        const sorted = [...deals].sort((a, b) => {
+    function updateCurrencySymbols(currency) {
+        if (!priceFilterSelect) return;
+
+        const symbol = getCurrencySymbol(currency);
+        const options = priceFilterSelect.options;
+
+        for (let i = 0; i < options.length; i++) {
+            const option = options[i];
+            // Replace $ with the correct symbol
+            option.text = option.text.replace(/[$£€A-Z]{1,3}(?=\d)/g, symbol);
+        }
+
+        // Reinitialize custom select to pick up new text
+        const wrapper = priceFilterSelect.closest('.custom-select');
+        if (wrapper) {
+            // Destroy and recreate
+            const parent = wrapper.parentNode;
+            parent.insertBefore(priceFilterSelect, wrapper);
+            wrapper.remove();
+            new CustomSelect(priceFilterSelect);
+        }
+    }
+
+    /**
+     * Filter deals by price range
+     */
+    function filterByPrice(dealsToFilter) {
+        if (currentPriceFilter === 'all') return dealsToFilter;
+
+        return dealsToFilter.filter(deal => {
+            const price = deal.current_price || 0;
+
+            switch (currentPriceFilter) {
+                case '0-500':
+                    return price < 500;
+                case '500-1000':
+                    return price >= 500 && price < 1000;
+                case '1000-1500':
+                    return price >= 1000 && price < 1500;
+                case '1500-2000':
+                    return price >= 1500 && price < 2000;
+                case '2000+':
+                    return price >= 2000;
+                default:
+                    return true;
+            }
+        });
+    }
+
+    /**
+     * Filter, sort deals and render
+     */
+    function filterSortAndRender() {
+        // Filter by price
+        const filtered = filterByPrice(deals);
+
+        // Sort
+        const sorted = [...filtered].sort((a, b) => {
             switch (currentSort) {
                 case 'discount':
                     return b.discount_percent - a.discount_percent;
@@ -171,6 +239,9 @@ export async function initDealsPage() {
                     return 0;
             }
         });
+
+        // Update visible count
+        updateCount(sorted.length);
 
         renderDeals(sorted);
     }
@@ -188,7 +259,17 @@ export async function initDealsPage() {
 
         hideEmptyState();
 
-        dealsToRender.forEach(deal => {
+        // Insert info card as 5th item (first column of row 2), requires 7+ deals
+        const infoCardPosition = 4;
+        const minDealsForInfoCard = 7;
+
+        dealsToRender.forEach((deal, index) => {
+            // Insert info card at position if we have enough deals
+            if (index === infoCardPosition && infoCardTemplate && dealsToRender.length >= minDealsForInfoCard) {
+                const infoCard = infoCardTemplate.content.cloneNode(true);
+                grid.appendChild(infoCard);
+            }
+
             const card = createDealCard(deal);
             grid.appendChild(card);
         });

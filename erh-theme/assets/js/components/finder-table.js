@@ -456,7 +456,7 @@ export class FinderTable {
         let html = '';
 
         products.forEach(product => {
-            const isSelected = this.finder.selectedProducts.has(String(product.id));
+            const isSelected = this.finder.comparisonBar.isSelected(product.id);
             const rowClass = isSelected ? 'is-selected' : '';
 
             html += `<tr class="${rowClass}" data-product-id="${product.id}">`;
@@ -479,23 +479,14 @@ export class FinderTable {
             const checkbox = e.target.closest('[data-table-compare]');
             if (!checkbox) return;
 
-            const productId = checkbox.value;
-            if (checkbox.checked) {
-                if (this.finder.selectedProducts.size >= this.finder.maxCompare) {
-                    checkbox.checked = false;
-                    return;
-                }
-                this.finder.selectedProducts.add(productId);
-            } else {
-                this.finder.selectedProducts.delete(productId);
-            }
+            // Delegate to ComparisonBar which manages selection state
+            this.finder.comparisonBar.handleCheckboxChange(checkbox);
 
             // Update row styling
             const row = checkbox.closest('tr');
             row?.classList.toggle('is-selected', checkbox.checked);
 
-            // Update comparison bar and sync with grid
-            this.finder.updateComparisonBar();
+            // Sync with grid view checkboxes
             this.syncSelectionWithGrid();
         });
     }
@@ -504,7 +495,7 @@ export class FinderTable {
      * Render the product cell (checkbox + image + name)
      */
     renderProductCell(product) {
-        const isSelected = this.finder.selectedProducts.has(String(product.id));
+        const isSelected = this.finder.comparisonBar.isSelected(product.id);
         const imgSrc = product.thumbnail || '';
 
         return `
@@ -952,7 +943,7 @@ export class FinderTable {
 
     syncSelectionWithGrid() {
         this.finder.grid?.querySelectorAll('[data-compare-select]').forEach(checkbox => {
-            checkbox.checked = this.finder.selectedProducts.has(checkbox.value);
+            checkbox.checked = this.finder.comparisonBar.isSelected(checkbox.value);
         });
     }
 
@@ -961,7 +952,7 @@ export class FinderTable {
 
         this.tableBody.querySelectorAll('[data-table-compare]').forEach(checkbox => {
             const productId = checkbox.value;
-            const isSelected = this.finder.selectedProducts.has(productId);
+            const isSelected = this.finder.comparisonBar.isSelected(productId);
             checkbox.checked = isSelected;
 
             const row = checkbox.closest('tr');

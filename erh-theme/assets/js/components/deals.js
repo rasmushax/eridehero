@@ -130,7 +130,7 @@ export async function initDeals() {
     // Carousel navigation using shared utility
     if (leftArrow && rightArrow && carousel) {
         // Card width + gap for scroll amount calculation
-        const cardWidth = 180; // deal card width
+        const cardWidth = 160; // deal card width (matches CSS)
         const gap = 12; // var(--space-5)
         const scrollAmount = (cardWidth + gap) * 2;
 
