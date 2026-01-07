@@ -196,11 +196,6 @@ export class Gallery {
     this.arrowPrev = this.element.querySelector(SELECTORS.arrowPrev);
     this.arrowNext = this.element.querySelector(SELECTORS.arrowNext);
 
-    // Single image with no thumbnails is valid - just skip JS initialization
-    if (!this.mainImage || !this.thumbs.length) {
-      return;
-    }
-
     this.currentIndex = 0;
     this.boundHandleKeydown = this.handleKeydown.bind(this);
     this.boundUpdateScrollState = this.updateScrollState.bind(this);
@@ -212,12 +207,7 @@ export class Gallery {
    * Initialize gallery event listeners
    */
   init() {
-    // Thumbnail clicks
-    this.thumbs.forEach((thumb, index) => {
-      thumb.addEventListener('click', (e) => this.handleThumbClick(e, thumb, index));
-    });
-
-    // Video thumbnail click
+    // Video thumbnail click - always bind if present
     if (this.videoThumb) {
       this.videoThumb.addEventListener('click', () => {
         const videoId = this.videoThumb.dataset.video;
@@ -226,6 +216,17 @@ export class Gallery {
         }
       });
     }
+
+    // Skip thumbnail/keyboard init if no thumbnails
+    if (!this.mainImage || !this.thumbs.length) {
+      this.element.setAttribute('data-gallery-initialized', 'true');
+      return;
+    }
+
+    // Thumbnail clicks
+    this.thumbs.forEach((thumb, index) => {
+      thumb.addEventListener('click', (e) => this.handleThumbClick(e, thumb, index));
+    });
 
     // Keyboard navigation
     this.element.addEventListener('keydown', this.boundHandleKeydown);

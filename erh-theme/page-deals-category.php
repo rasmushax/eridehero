@@ -178,19 +178,9 @@ $parent_url = $parent_id ? get_permalink( $parent_id ) : home_url( '/deals/' );
             <h3 class="product-card-name">
                 <a href="" data-product-link></a>
             </h3>
-            <div class="deal-card-averages" data-deal-averages>
-                <div class="deal-card-avg" data-avg-3m>
-                    <span class="deal-card-avg-label">3-mo avg</span>
-                    <span class="deal-card-avg-price" data-avg-3m-price></span>
-                </div>
-                <div class="deal-card-avg" data-avg-6m>
-                    <span class="deal-card-avg-label">6-mo avg</span>
-                    <span class="deal-card-avg-price" data-avg-6m-price></span>
-                </div>
-                <div class="deal-card-avg" data-avg-12m>
-                    <span class="deal-card-avg-label">12-mo avg</span>
-                    <span class="deal-card-avg-price" data-avg-12m-price></span>
-                </div>
+            <div class="deal-card-compare" data-deal-compare>
+                <span class="deal-card-compare-label" data-compare-label>6-mo avg</span>
+                <span class="deal-card-compare-price" data-compare-price></span>
             </div>
         </div>
     </div>

@@ -204,13 +204,13 @@
 }
 
 .price-intel-chart-period button {
-    padding: var(--space-1) var(--space-3);
+    padding: 3px var(--space-3);
     font-family: var(--font-family);
     font-size: var(--text-xs);
     font-weight: var(--font-medium);
     color: var(--color-muted);
     background: transparent;
-    border: var(--border-width) solid transparent;
+    border: none;
     border-radius: var(--radius-sm);
     cursor: pointer;
     transition: all var(--transition-fast);
@@ -224,7 +224,6 @@
 .price-intel-chart-period button.is-active {
     color: var(--color-primary);
     background: var(--color-primary-light);
-    border-color: rgba(94, 44, 237, 0.2);
 }
 
 /* ===== PRICE HISTORY SECTION ===== */

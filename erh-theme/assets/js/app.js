@@ -34,8 +34,8 @@ import './components/toast.js'; // Toast notifications (auto-init container)
     // Only load JS for components that exist on the page
     // ===========================================
 
-    // Gallery - only if there are thumbnails to interact with
-    if (document.querySelector('[data-gallery] .gallery-thumbs')) {
+    // Gallery - load if there are thumbnails or video card
+    if (document.querySelector('[data-gallery] .gallery-thumbs') || document.querySelector('[data-gallery] .gallery-video-card')) {
         import('./components/gallery.js');
     }
 

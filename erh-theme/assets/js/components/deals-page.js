@@ -259,9 +259,15 @@ export async function initDealsPage() {
 
         hideEmptyState();
 
-        // Insert info card as 5th item (first column of row 2), requires 7+ deals
-        const infoCardPosition = 4;
-        const minDealsForInfoCard = 7;
+        // Info card position depends on grid columns (first item of row 2)
+        // Desktop 5 cols: position 5, 1024px 4 cols: position 4, 850px 3 cols: position 6
+        let infoCardPosition = 4;
+        if (window.innerWidth > 1024) {
+            infoCardPosition = 5;
+        } else if (window.innerWidth <= 850) {
+            infoCardPosition = 6;
+        }
+        const minDealsForInfoCard = infoCardPosition + 3; // Need enough deals after info card
 
         dealsToRender.forEach((deal, index) => {
             // Insert info card at position if we have enough deals
@@ -335,31 +341,23 @@ export async function initDealsPage() {
             indicator.style.display = 'none';
         }
 
-        // Average prices (3-column grid)
-        const avg3mPrice = clone.querySelector('[data-avg-3m-price]');
-        const avg6mPrice = clone.querySelector('[data-avg-6m-price]');
-        const avg12mPrice = clone.querySelector('[data-avg-12m-price]');
-        const avg3mEl = clone.querySelector('[data-avg-3m]');
-        const avg6mEl = clone.querySelector('[data-avg-6m]');
-        const avg12mEl = clone.querySelector('[data-avg-12m]');
+        // Comparison average (shows only selected period)
+        const compareLabel = clone.querySelector('[data-compare-label]');
+        const comparePrice = clone.querySelector('[data-compare-price]');
 
-        if (avg3mPrice) {
-            const price = deal.avg_price_3m || deal.avg_price || 0;
-            avg3mPrice.textContent = price > 0 ? formatPrice(price, deal.currency) : '—';
-        }
-        if (avg6mPrice) {
-            const price = deal.avg_price_6m || deal.avg_price || 0;
-            avg6mPrice.textContent = price > 0 ? formatPrice(price, deal.currency) : '—';
-        }
-        if (avg12mPrice) {
-            const price = deal.avg_price_12m || deal.avg_price || 0;
-            avg12mPrice.textContent = price > 0 ? formatPrice(price, deal.currency) : '—';
-        }
+        if (compareLabel && comparePrice) {
+            // Set label based on current period
+            const periodLabels = {
+                '3m': '3-mo avg',
+                '6m': '6-mo avg',
+                '12m': '12-mo avg',
+            };
+            compareLabel.textContent = periodLabels[currentPeriod] || '6-mo avg';
 
-        // Highlight selected period
-        if (currentPeriod === '3m' && avg3mEl) avg3mEl.classList.add('is-selected');
-        if (currentPeriod === '6m' && avg6mEl) avg6mEl.classList.add('is-selected');
-        if (currentPeriod === '12m' && avg12mEl) avg12mEl.classList.add('is-selected');
+            // Set price for the selected period
+            const avgPrice = getAvgForPeriod(deal, currentPeriod);
+            comparePrice.textContent = avgPrice > 0 ? formatPrice(avgPrice, deal.currency) : '—';
+        }
 
         return clone;
     }

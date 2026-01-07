@@ -54,8 +54,7 @@ $is_category = ! empty( $back_url );
             <?php if ( $is_category ) : ?>
                 <div class="deals-hero-meta" data-deals-meta>
                     <span class="deals-hero-count" data-deals-count>
-                        <!-- Populated by JS after geo detection -->
-                        <span class="skeleton skeleton-text" style="width: 120px;"></span>
+                        <span class="skeleton skeleton-text" style="display: inline-block; width: 120px; height: 17px; margin-bottom: 0;"></span>
                     </span>
                 </div>
             <?php endif; ?>
