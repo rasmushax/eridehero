@@ -94,12 +94,11 @@ export async function initDealsHub() {
         CONFIG.categories.forEach(category => {
             const countEl = hub.querySelector(`[data-category-count="${category}"]`);
             if (countEl) {
-                // Replace skeleton with count (or hide if no count)
                 if (counts[category]) {
                     countEl.textContent = counts[category];
-                } else {
-                    countEl.style.display = 'none';
+                    countEl.hidden = false;
                 }
+                // Keep hidden if no count
             }
         });
     }

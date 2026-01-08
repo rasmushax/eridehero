@@ -2,12 +2,15 @@
 /**
  * Single Post Template
  *
- * Handles all single posts. Routes to review template for posts with "review" tag.
+ * Routes single posts to appropriate template based on tags:
+ * - "review" tag → single-review.php (product reviews)
+ * - "buying-guide" tag → single-guide.php (buying guides)
+ * - else → single-article.php (articles)
  *
  * @package ERideHero
  */
 
-// Prevent direct access
+// Prevent direct access.
 if ( ! defined( 'ABSPATH' ) ) {
     exit;
 }
@@ -17,28 +20,29 @@ get_header();
 while ( have_posts() ) :
     the_post();
 
-    // Check if this post has the "review" tag (check multiple variations)
-    $is_review = has_tag( 'review' ) || has_tag( 'Review' );
+    // Get all tags for this post.
+    $tags = get_the_tags();
+    $tag_slugs = array();
 
-    // Also check by getting all tags and looking for 'review' in slug or name
-    if ( ! $is_review ) {
-        $tags = get_the_tags();
-        if ( $tags ) {
-            foreach ( $tags as $tag ) {
-                if ( strtolower( $tag->slug ) === 'review' || strtolower( $tag->name ) === 'review' ) {
-                    $is_review = true;
-                    break;
-                }
-            }
+    if ( $tags ) {
+        foreach ( $tags as $tag ) {
+            $tag_slugs[] = strtolower( $tag->slug );
         }
     }
 
+    // Determine post type by tag.
+    $is_review = in_array( 'review', $tag_slugs, true );
+    $is_guide  = in_array( 'buying-guide', $tag_slugs, true );
+
     if ( $is_review ) {
-        // Use review template
+        // Product review template.
         get_template_part( 'template-parts/single', 'review' );
+    } elseif ( $is_guide ) {
+        // Buying guide template.
+        get_template_part( 'template-parts/single', 'guide' );
     } else {
-        // Use standard post template
-        get_template_part( 'template-parts/single', 'post' );
+        // Article template (default).
+        get_template_part( 'template-parts/single', 'article' );
     }
 
 endwhile;

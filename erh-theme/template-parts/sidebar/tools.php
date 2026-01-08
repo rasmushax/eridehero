@@ -7,9 +7,10 @@
  * @package ERideHero
  *
  * Expected $args:
- *   'product_type' => string - Product type (e.g., 'Electric Scooter')
- *   'category_slug' => string - Category slug (e.g., 'e-scooters')
- *   'category_name' => string - Short category name (e.g., 'E-Scooters')
+ *   'product_type'  => string - Product type (e.g., 'Electric Scooter')
+ *   'category_name' => string - Short category name (e.g., 'E-Scooter')
+ *   'finder_page'   => string - (Optional) Finder page URL from ACF
+ *   'deals_page'    => string - (Optional) Deals page URL from ACF
  */
 
 // Prevent direct access
@@ -19,21 +20,17 @@ if ( ! defined( 'ABSPATH' ) ) {
 
 // Get arguments
 $product_type  = $args['product_type'] ?? '';
-$category_slug = $args['category_slug'] ?? '';
 $category_name = $args['category_name'] ?? '';
+$finder_url    = $args['finder_page'] ?? '';
+$deals_url     = $args['deals_page'] ?? '';
+$compare_url   = home_url( '/compare/' );
 
 // Bail if no category info
-if ( empty( $category_slug ) ) {
+if ( empty( $category_name ) ) {
     return;
 }
 
-// $category_name comes in as singular (e.g., "E-Scooter" from erh_get_product_type_short_name)
 $singular_name = $category_name;
-
-// Build tool URLs
-$finder_url  = home_url( '/' . $category_slug . '/finder/' );
-$deals_url   = home_url( '/' . $category_slug . '/deals/' );
-$compare_url = home_url( '/' . $category_slug . '/compare/' );
 
 // Get dynamic product count for this category
 $product_count = 0;
@@ -96,30 +93,34 @@ if ( $deals_count > 0 ) {
 <div class="sidebar-section">
     <h3 class="sidebar-title">Tools</h3>
     <div class="sidebar-tools">
-        <a href="<?php echo esc_url( $finder_url ); ?>" class="sidebar-tool-link">
-            <span class="sidebar-tool-icon">
-                <?php erh_the_icon( 'search' ); ?>
-            </span>
-            <span class="sidebar-tool-text">
-                <strong><?php echo esc_html( $singular_name ); ?> finder</strong>
-                <span><?php echo esc_html( $finder_description ); ?></span>
-            </span>
-        </a>
-        <a href="<?php echo esc_url( $deals_url ); ?>" class="sidebar-tool-link">
-            <span class="sidebar-tool-icon">
-                <?php erh_the_icon( 'percent' ); ?>
-            </span>
-            <span class="sidebar-tool-text">
-                <strong><?php echo esc_html( $singular_name ); ?> deals</strong>
-                <span><?php echo esc_html( $deals_description ); ?></span>
-            </span>
-        </a>
+        <?php if ( $finder_url ) : ?>
+            <a href="<?php echo esc_url( $finder_url ); ?>" class="sidebar-tool-link">
+                <span class="sidebar-tool-icon">
+                    <?php erh_the_icon( 'search' ); ?>
+                </span>
+                <span class="sidebar-tool-text">
+                    <strong><?php echo esc_html( $singular_name ); ?> finder</strong>
+                    <span><?php echo esc_html( $finder_description ); ?></span>
+                </span>
+            </a>
+        <?php endif; ?>
+        <?php if ( $deals_url ) : ?>
+            <a href="<?php echo esc_url( $deals_url ); ?>" class="sidebar-tool-link">
+                <span class="sidebar-tool-icon">
+                    <?php erh_the_icon( 'percent' ); ?>
+                </span>
+                <span class="sidebar-tool-text">
+                    <strong><?php echo esc_html( $singular_name ); ?> deals</strong>
+                    <span><?php echo esc_html( $deals_description ); ?></span>
+                </span>
+            </a>
+        <?php endif; ?>
         <a href="<?php echo esc_url( $compare_url ); ?>" class="sidebar-tool-link">
             <span class="sidebar-tool-icon">
                 <?php erh_the_icon( 'grid' ); ?>
             </span>
             <span class="sidebar-tool-text">
-                <strong><?php echo esc_html( $singular_name ); ?> compare</strong>
+                <strong>Compare</strong>
                 <span>Head-to-head specs</span>
             </span>
         </a>

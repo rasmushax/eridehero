@@ -456,16 +456,61 @@ Browser Request
 
 ---
 
-## Phase 6E: Deals Page - PENDING
+## Phase 6E: Deals Hub Page - COMPLETE ✅
 
 ### Template Files
-- [ ] Create `page-deals.php` - Dedicated deals page
-  - Full deals listing (not just homepage preview)
-  - Category filtering
+- [x] Create `page-deals.php` - Deals hub page
+  - Hub header with title/subtitle
+  - Top deals carousel (best across all categories)
+  - Per-category carousels with counts
+  - Info cards explaining deal methodology
+  - Skeleton loading states
   - Geo-aware pricing
-  - Price alert integration
+  - Price alert integration (bell icon on cards)
 
-**Note:** Homepage deals section exists (`template-parts/home/deals.php`) but no dedicated deals page yet.
+### JavaScript
+- [x] Create `assets/js/components/deals-hub.js` - Hub page component
+- [x] Create `assets/js/utils/deals-utils.js` - Shared utilities (DRY with homepage deals)
+  - `fetchDeals()`, `createDealCard()`, `handleTrackClick()`, `groupByCategory()`
+
+### Mobile Select Drawer - COMPLETE ✅
+- [x] Create `assets/js/components/select-drawer.js` - Bottom sheet for mobile selects
+- [x] Create `assets/css/_select-drawer.css` - Drawer styles
+- [x] Modify `custom-select.js` - Mobile detection + drawer handoff
+
+---
+
+## Phase 6F: Articles & Buying Guides - COMPLETE ✅
+
+### Architecture Decision
+**Option B: Separate templates with shared partials**
+
+Routes in `single.php`:
+- `review` tag → `single-review.php` (product reviews)
+- `buying-guide` tag → `single-guide.php` (buying guides)
+- else → `single-article.php` (articles)
+
+### Template Files
+- [x] Create `template-parts/single-article.php` - Article template
+- [x] Create `template-parts/single-guide.php` - Buying guide template
+- [x] Update `single.php` router for tag-based routing
+
+### New Components
+- [x] Create `components/article-hero.php` - Featured image hero
+- [x] Create `components/related-posts.php` - Flexible related posts grid (articles/guides)
+- [x] Create `sidebar/comparison-open.php` - Comparison widget without locked product
+
+### JavaScript Updates
+- [x] Update `comparison.js` - Added `allowedCategories` support for multi-category filtering
+- [x] Update `app.js` - Added initialization for open comparison widgets
+
+### CSS
+- [x] Update `_articles.css` - Styles for article/guide pages, related posts grid
+
+### Features
+- Articles: Hero image, byline, content, tags, author box, related articles, TOC sidebar, comparison widget
+- Guides: Same as articles + tools sidebar (finder/deals/compare links for category)
+- Comparison widget filters by post categories (e.g., e-scooters + e-bikes), locks to selected category on first pick
 
 ---
 

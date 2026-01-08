@@ -160,7 +160,7 @@ import './components/toast.js'; // Toast notifications (auto-init container)
         });
     }
 
-    // Sidebar comparison widget (review pages)
+    // Sidebar comparison widget (review pages - locked product)
     if (document.getElementById('sidebar-comparison')) {
         import('./components/comparison.js').then(module => {
             const container = document.getElementById('sidebar-comparison');
@@ -175,6 +175,23 @@ import './components/toast.js'; // Toast notifications (auto-init container)
                 categoryFilter: categoryFilter,
                 showCategoryInResults: false,
                 allowDynamicInputs: true
+            });
+        });
+    }
+
+    // Open comparison widgets (article/guide pages - no locked product)
+    const openComparisonWidgets = document.querySelectorAll('.sidebar-comparison--open');
+    if (openComparisonWidgets.length > 0) {
+        import('./components/comparison.js').then(module => {
+            openComparisonWidgets.forEach(container => {
+                module.initComparison({
+                    containerId: container.id,
+                    submitBtnSelector: '.sidebar-comparison-btn',
+                    announcerSelector: '[aria-live="polite"]',
+                    wrapperClass: 'comparison-input-wrapper',
+                    showCategoryInResults: true, // Show category since multiple may be available
+                    allowDynamicInputs: false // Fixed 2-product comparison
+                });
             });
         });
     }

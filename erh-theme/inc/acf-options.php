@@ -643,14 +643,34 @@ function erh_register_acf_fields(): void {
         'title'    => __( 'Product Type Settings', 'erh' ),
         'fields'   => array(
             array(
-                'key'           => 'field_product_type_finder_page',
-                'label'         => __( 'Finder Page', 'erh' ),
-                'name'          => 'finder_page',
-                'type'          => 'page_link',
-                'post_type'     => array( 'page' ),
-                'allow_null'    => 1,
+                'key'           => 'field_product_type_short_name',
+                'label'         => __( 'Short Name', 'erh' ),
+                'name'          => 'short_name',
+                'type'          => 'text',
+                'instructions'  => __( 'Short display name (e.g., "E-Scooter", "E-Bike"). Used in tool labels.', 'erh' ),
+                'placeholder'   => 'e.g., E-Scooter',
+            ),
+            array(
+                'key'            => 'field_product_type_finder_page',
+                'label'          => __( 'Finder Page', 'erh' ),
+                'name'           => 'finder_page',
+                'type'           => 'page_link',
+                'post_type'      => array( 'page' ),
+                'allow_null'     => 1,
                 'allow_archives' => 0,
-                'instructions'  => __( 'Select the finder page for this product type. Used in breadcrumbs on product pages.', 'erh' ),
+                'instructions'   => __( 'Select the finder page for this product type.', 'erh' ),
+                'wrapper'        => array( 'width' => '50' ),
+            ),
+            array(
+                'key'            => 'field_product_type_deals_page',
+                'label'          => __( 'Deals Page', 'erh' ),
+                'name'           => 'deals_page',
+                'type'           => 'page_link',
+                'post_type'      => array( 'page' ),
+                'allow_null'     => 1,
+                'allow_archives' => 0,
+                'instructions'   => __( 'Select the deals page for this product type.', 'erh' ),
+                'wrapper'        => array( 'width' => '50' ),
             ),
         ),
         'location' => array(
@@ -659,6 +679,35 @@ function erh_register_acf_fields(): void {
                     'param'    => 'taxonomy',
                     'operator' => '==',
                     'value'    => 'product_type',
+                ),
+            ),
+        ),
+        'menu_order' => 0,
+    ) );
+
+    // Post Category Taxonomy Fields (links to Product Type)
+    acf_add_local_field_group( array(
+        'key'      => 'group_post_category_taxonomy',
+        'title'    => __( 'Category Settings', 'erh' ),
+        'fields'   => array(
+            array(
+                'key'           => 'field_category_product_type',
+                'label'         => __( 'Related Product Type', 'erh' ),
+                'name'          => 'related_product_type',
+                'type'          => 'taxonomy',
+                'taxonomy'      => 'product_type',
+                'field_type'    => 'select',
+                'allow_null'    => 1,
+                'return_format' => 'id',
+                'instructions'  => __( 'Link this category to a product type to show finder/deals/compare tools in the sidebar.', 'erh' ),
+            ),
+        ),
+        'location' => array(
+            array(
+                array(
+                    'param'    => 'taxonomy',
+                    'operator' => '==',
+                    'value'    => 'category',
                 ),
             ),
         ),

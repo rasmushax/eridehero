@@ -28,7 +28,8 @@ export async function initComparison(options = {}) {
         categoryClearId: 'comparison-category-clear',
         announcerId: 'comparison-announcer',
         announcerSelector: null, // Alternative to announcerId - use CSS selector
-        categoryFilter: null, // e.g., 'escooter' to filter products
+        categoryFilter: null, // e.g., 'escooter' to filter products (single category)
+        allowedCategories: null, // e.g., ['escooter', 'ebike'] to allow multiple categories initially
         wrapperClass: 'comparison-input-wrapper', // Additional classes for new wrappers
         showCategoryInResults: true,
         lockedProduct: null, // Pre-selected product that can't be removed (e.g., current review page product)
@@ -77,7 +78,13 @@ export async function initComparison(options = {}) {
     let products = [];
     const selectedProducts = new Map();
     let nextSlot = 2;
-    let activeCategory = config.categoryFilter; // Pre-set if filtered
+    let activeCategory = config.categoryFilter; // Pre-set if filtered (locks to single category)
+
+    // Read allowedCategories from data attribute if not in config
+    let allowedCategories = config.allowedCategories;
+    if (!allowedCategories && container?.dataset.allowedCategories) {
+        allowedCategories = container.dataset.allowedCategories.split(',').map(c => c.trim()).filter(Boolean);
+    }
     let highlightedIndex = -1;
     let currentResults = [];
     let activeDropdown = null;
@@ -347,9 +354,16 @@ export async function initComparison(options = {}) {
         query = query.toLowerCase().trim();
 
         return products.filter(product => {
-            // Filter by active category (set dynamically on first selection)
-            if (activeCategory && !config.categoryFilter && product.category !== activeCategory) {
+            // If activeCategory is set (after first selection), filter strictly to that category
+            if (activeCategory && product.category !== activeCategory) {
                 return false;
+            }
+
+            // If no activeCategory but we have allowedCategories, filter to those
+            if (!activeCategory && allowedCategories && allowedCategories.length > 0) {
+                if (!allowedCategories.includes(product.category)) {
+                    return false;
+                }
             }
 
             // Filter by query if provided

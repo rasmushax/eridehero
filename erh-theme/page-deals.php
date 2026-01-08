@@ -77,7 +77,7 @@ $categories = [
                                 <div class="skeleton skeleton-img"></div>
                             </div>
                             <div class="deal-card-content">
-                                <div class="skeleton skeleton-text"></div>
+                                <div class="skeleton skeleton-text" style="height: 11px;"></div>
                             </div>
                         </div>
                     <?php endfor; ?>
@@ -115,9 +115,7 @@ $categories = [
                 <div class="section-header">
                     <h2>
                         <?php echo esc_html( $cat['label'] ); ?>
-                        <span class="deals-hub-category-count" data-category-count="<?php echo esc_attr( $slug ); ?>">
-                            <span class="skeleton skeleton-text" style="width: 24px; height: 16px;"></span>
-                        </span>
+                        <span class="deals-hub-category-count" data-category-count="<?php echo esc_attr( $slug ); ?>" hidden></span>
                     </h2>
                     <a href="<?php echo esc_url( $cat['url'] ); ?>" class="btn btn-secondary">
                         <?php esc_html_e( 'View all', 'erh' ); ?>
@@ -140,7 +138,7 @@ $categories = [
                                     <div class="skeleton skeleton-img"></div>
                                 </div>
                                 <div class="deal-card-content">
-                                    <div class="skeleton skeleton-text"></div>
+                                    <div class="skeleton skeleton-text" style="height: 11px;"></div>
                                 </div>
                             </div>
                         <?php endfor; ?>

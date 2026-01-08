@@ -49,9 +49,24 @@ if ( empty( $product_type ) ) {
     $product_type = 'Electric Scooter';
 }
 
-// Get product category for breadcrumb
+// Get product category info for breadcrumb and tools
 $category_slug = erh_product_type_slug( $product_type );
 $category_name = erh_get_product_type_short_name( $product_type );
+
+// Get finder/deals pages from product_type taxonomy term
+$finder_page = '';
+$deals_page  = '';
+$product_type_terms = get_the_terms( $product_id, 'product_type' );
+if ( ! empty( $product_type_terms ) && ! is_wp_error( $product_type_terms ) ) {
+    $term_id     = $product_type_terms[0]->term_id;
+    $finder_page = get_field( 'finder_page', 'product_type_' . $term_id );
+    $deals_page  = get_field( 'deals_page', 'product_type_' . $term_id );
+    // Also get short_name from ACF if available
+    $acf_short_name = get_field( 'short_name', 'product_type_' . $term_id );
+    if ( $acf_short_name ) {
+        $category_name = $acf_short_name;
+    }
+}
 
 // Check if product has price data and performance data (used for TOC + conditional rendering)
 $has_prices      = erh_product_has_prices( $product_id );
@@ -163,8 +178,9 @@ $toc_items = erh_get_toc_items( $product_id, array(
                     // Tools section (Finder, Deals, Compare)
                     get_template_part( 'template-parts/sidebar/tools', null, array(
                         'product_type'  => $product_type,
-                        'category_slug' => $category_slug,
                         'category_name' => $category_name,
+                        'finder_page'   => $finder_page,
+                        'deals_page'    => $deals_page,
                     ) );
                     ?>
 

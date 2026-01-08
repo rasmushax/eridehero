@@ -2798,3 +2798,135 @@ function erh_get_inline_product_data( int $product_id ): ?array {
 		'specs'      => is_array( $specs ) ? $specs : array(),
 	);
 }
+
+/**
+ * Get product info from a post category via ACF relationship.
+ *
+ * Follows the relationship: Post Category -> related_product_type -> Product Type term
+ * and returns all the product type info needed for tools sidebar.
+ *
+ * @param WP_Term $category The post category term object.
+ * @return array|null Product info array or null if no relationship exists.
+ */
+function erh_get_product_info_from_category( WP_Term $category ): ?array {
+	// Get the related product_type term ID from the category.
+	$product_type_id = get_field( 'related_product_type', 'category_' . $category->term_id );
+
+	if ( ! $product_type_id ) {
+		return null;
+	}
+
+	// Get the product_type term.
+	$term = get_term( $product_type_id, 'product_type' );
+
+	if ( ! $term || is_wp_error( $term ) ) {
+		return null;
+	}
+
+	// Get ACF fields from the product_type term.
+	$term_prefix = 'product_type_' . $product_type_id;
+	$short_name  = get_field( 'short_name', $term_prefix );
+	$finder_page = get_field( 'finder_page', $term_prefix );
+	$deals_page  = get_field( 'deals_page', $term_prefix );
+
+	return array(
+		'product_type'  => $term->name,
+		'category_name' => $short_name ?: $term->name,
+		'finder_page'   => $finder_page,
+		'deals_page'    => $deals_page,
+	);
+}
+
+/**
+ * Get product info for a post by checking its categories.
+ *
+ * Iterates through the post's categories and returns info for the first
+ * category that has a related product type configured.
+ *
+ * @param int|null $post_id Post ID (optional, uses current post if null).
+ * @return array|null Product info array or null if no related product type found.
+ */
+function erh_get_product_info_for_post( ?int $post_id = null ): ?array {
+	$post_id    = $post_id ?? get_the_ID();
+	$categories = get_the_category( $post_id );
+
+	if ( empty( $categories ) ) {
+		return null;
+	}
+
+	// Check each category for a related product type.
+	foreach ( $categories as $category ) {
+		$product_info = erh_get_product_info_from_category( $category );
+		if ( $product_info ) {
+			return $product_info;
+		}
+	}
+
+	return null;
+}
+
+/**
+ * Extract ToC items from post content by parsing headings.
+ *
+ * Scans post content for h2 and h3 headings and builds a nested ToC structure.
+ * Headings must have IDs for linking (WordPress block editor adds them automatically).
+ *
+ * @param int|null $post_id Post ID (optional, uses current post if null).
+ * @return array ToC items array compatible with sidebar/toc.php component.
+ */
+function erh_get_toc_from_content( ?int $post_id = null ): array {
+	$post_id = $post_id ?? get_the_ID();
+	$post    = get_post( $post_id );
+
+	if ( ! $post || empty( $post->post_content ) ) {
+		return array();
+	}
+
+	$content = apply_filters( 'the_content', $post->post_content );
+	$items   = array();
+
+	// Match h2 and h3 headings with IDs.
+	if ( ! preg_match_all( '/<h([23])[^>]*\bid=["\']([^"\']+)["\'][^>]*>(.*?)<\/h\1>/is', $content, $matches, PREG_SET_ORDER ) ) {
+		return array();
+	}
+
+	$current_h2 = null;
+
+	foreach ( $matches as $match ) {
+		$level = (int) $match[1];
+		$id    = $match[2];
+		$label = wp_strip_all_tags( $match[3] );
+
+		// Skip empty labels.
+		if ( empty( trim( $label ) ) ) {
+			continue;
+		}
+
+		$item = array(
+			'id'    => $id,
+			'label' => $label,
+		);
+
+		if ( $level === 2 ) {
+			// H2 - top level item.
+			$item['children'] = array();
+			$items[]          = $item;
+			$current_h2       = count( $items ) - 1;
+		} elseif ( $level === 3 && $current_h2 !== null ) {
+			// H3 - child of current H2.
+			$items[ $current_h2 ]['children'][] = $item;
+		} else {
+			// H3 without a parent H2 - add as top level.
+			$items[] = $item;
+		}
+	}
+
+	// Clean up empty children arrays.
+	foreach ( $items as &$item ) {
+		if ( isset( $item['children'] ) && empty( $item['children'] ) ) {
+			unset( $item['children'] );
+		}
+	}
+
+	return $items;
+}
