@@ -121,6 +121,13 @@ import './components/toast.js'; // Toast notifications (auto-init container)
         });
     }
 
+    // Deals hub - main deals portal with stats and carousels
+    if (document.querySelector('[data-deals-hub]')) {
+        import('./components/deals-hub.js').then(module => {
+            module.initDealsHub();
+        });
+    }
+
     // Comparison tools - only if containers exist
     if (document.getElementById('comparison-container')) {
         import('./components/comparison.js').then(module => {

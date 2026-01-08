@@ -78,6 +78,19 @@
     margin: 0;
 }
 
+.hub-subtitle {
+    font-size: var(--text-lg);
+    color: var(--color-body);
+    margin: var(--space-4) 0 0;
+    max-width: 700px;
+}
+
+@media (max-width: 768px) {
+    .hub-subtitle {
+        font-size: var(--text-base);
+    }
+}
+
 
 /* ===== HUB BUYING GUIDES ===== */
 
