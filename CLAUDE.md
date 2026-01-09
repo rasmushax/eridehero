@@ -34,12 +34,16 @@ eridehero/
 ├── erh-core/                    # Main plugin (PSR-4 autoloading)
 │   ├── includes/
 │   │   ├── api/                 # REST endpoints
+│   │   ├── blocks/              # ACF block templates
 │   │   ├── cron/                # Scheduled jobs
 │   │   ├── database/            # Table operations
 │   │   ├── email/               # Email templates
 │   │   ├── pricing/             # Price fetching, deals
 │   │   ├── reviews/             # User reviews
-│   │   └── user/                # Auth, preferences, trackers
+│   │   ├── scoring/             # Product scoring
+│   │   ├── user/                # Auth, preferences, trackers
+│   │   ├── class-cache-keys.php # Centralized cache key management
+│   │   └── class-core.php       # Main orchestrator
 │   └── vendor/                  # Composer autoload
 │
 ├── erh-theme/                   # WordPress theme
@@ -48,7 +52,7 @@ eridehero/
 │   │   ├── js/
 │   │   │   ├── components/      # UI components
 │   │   │   ├── services/        # geo-price.js, geo-config.js
-│   │   │   └── utils/           # Shared utilities
+│   │   │   └── utils/           # Shared utilities (pricing-ui.js, dom.js, etc.)
 │   │   └── images/logos/        # Retailer logos
 │   ├── inc/                     # PHP includes
 │   └── template-parts/          # Component templates
@@ -145,6 +149,38 @@ register_rest_route('erh/v1', '/endpoint', [
 if (document.querySelector('[data-gallery]')) {
     import('./components/gallery.js').then(m => m.initGallery());
 }
+```
+
+### Cache Keys (ERH\CacheKeys)
+```php
+// All transient cache keys go through CacheKeys class for consistency
+use ERH\CacheKeys;
+
+// Generate keys
+$key = CacheKeys::priceIntel($product_id, $geo);      // erh_price_intel_{id}_{geo}
+$key = CacheKeys::priceHistory($product_id, $geo);    // erh_price_history_{id}_{geo}
+$key = CacheKeys::listicleSpecs($product_id, $cat);   // erh_listicle_specs_{id}_{cat}
+$key = CacheKeys::productSpecs($product_id, $cat);    // erh_product_specs_{id}_{cat}
+$key = CacheKeys::similarProducts($id, $limit, $geo); // erh_similar_{id}_{limit}_{geo}
+$key = CacheKeys::deals($cat, $limit, $geo, $period, $threshold);
+$key = CacheKeys::dealCounts($geo, $period, $threshold);
+$key = CacheKeys::productHasPricing($product_id);     // erh_has_pricing_{id}
+
+// Invalidation (called on ACF save, HFT price updates)
+CacheKeys::clearPriceCaches($product_id);    // All geo variants
+CacheKeys::clearListicleSpecs($product_id);  // All category variants
+CacheKeys::clearProductSpecs($product_id);   // All category variants
+CacheKeys::clearProduct($product_id);        // Everything for a product
+```
+
+### Shared Pricing UI (JavaScript)
+```javascript
+// erh-theme/assets/js/utils/pricing-ui.js
+import { calculatePriceVerdict, renderRetailerRow, renderVerdictBadge } from '../utils/pricing-ui.js';
+
+// Verdict thresholds: +/-3% is neutral zone
+const verdict = calculatePriceVerdict(currentPrice, avgPrice);
+// Returns: { percent, type: 'below'|'above'|'neutral', text, shouldShow }
 ```
 
 ---

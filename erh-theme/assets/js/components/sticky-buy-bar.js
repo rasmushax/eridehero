@@ -8,8 +8,9 @@
  * @module components/sticky-buy-bar
  */
 
-import { getUserGeo, formatPrice, getProductPrices } from '../services/geo-price.js';
+import { getUserGeo, formatPrice, getProductPrices, filterOffersForGeo } from '../services/geo-price.js';
 import { PriceAlertModal } from './price-alert.js';
+import { calculatePriceVerdict } from '../utils/pricing-ui.js';
 
 const SELECTORS = {
     bar: '#sticky-buy-bar',
@@ -89,17 +90,15 @@ async function loadPriceData() {
 
     try {
         // Get user's geo
-        const { geo, currency } = await getUserGeo();
+        const userGeo = await getUserGeo();
+        const { geo, currency } = userGeo;
 
         // Fetch price data using shared cached function
         const data = await getProductPrices(parseInt(productId, 10), geo);
         if (!data || !data.offers || data.offers.length === 0) return;
 
-        // Filter offers to user's currency (same logic as price-intel)
-        const filteredOffers = data.offers.filter(offer => {
-            const offerCurrency = offer.currency || 'USD';
-            return offerCurrency === currency;
-        });
+        // Filter offers using shared utility (handles EU special case)
+        const filteredOffers = filterOffersForGeo(data.offers, userGeo);
 
         if (filteredOffers.length === 0) return;
 
@@ -117,22 +116,14 @@ async function loadPriceData() {
         const verdictTextEl = stickyBar.querySelector(SELECTORS.verdictText);
         const verdictIconEl = stickyBar.querySelector(SELECTORS.verdictIcon);
         if (verdictEl && verdictTextEl && data.history?.statistics?.average) {
-            const avgPrice = data.history.statistics.average;
-            const pctDiff = ((bestOffer.price - avgPrice) / avgPrice) * 100;
-            if (pctDiff < -3) {
-                // Below average - good deal
-                verdictTextEl.textContent = `${Math.abs(Math.round(pctDiff))}% below avg`;
-                verdictEl.setAttribute('data-verdict-type', 'below');
+            const verdict = calculatePriceVerdict(bestOffer.price, data.history.statistics.average);
+
+            if (verdict && verdict.shouldShow) {
+                verdictTextEl.textContent = verdict.text;
+                verdictEl.setAttribute('data-verdict-type', verdict.type);
                 if (verdictIconEl) {
-                    verdictIconEl.querySelector('use')?.setAttribute('href', '#icon-arrow-down');
-                }
-                verdictEl.style.display = '';
-            } else if (pctDiff > 5) {
-                // Above average - not great
-                verdictTextEl.textContent = `${Math.round(pctDiff)}% above avg`;
-                verdictEl.setAttribute('data-verdict-type', 'above');
-                if (verdictIconEl) {
-                    verdictIconEl.querySelector('use')?.setAttribute('href', '#icon-arrow-up');
+                    const icon = verdict.type === 'below' ? 'arrow-down' : 'arrow-up';
+                    verdictIconEl.querySelector('use')?.setAttribute('href', `#icon-${icon}`);
                 }
                 verdictEl.style.display = '';
             }

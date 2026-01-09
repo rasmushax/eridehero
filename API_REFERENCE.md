@@ -76,6 +76,17 @@ REST API endpoints provided by erh-core plugin.
 |--------|----------|-------------|
 | GET | `/erh/v1/products` | List products with filtering |
 | GET | `/erh/v1/products/{id}` | Single product details |
+| GET | `/erh/v1/products/{id}/similar?limit=10&geo=US` | Similar products (cached 2hr) |
+
+---
+
+## Listicle (`class-rest-listicle.php`)
+
+| Method | Endpoint | Description | Cache |
+|--------|----------|-------------|-------|
+| GET | `/erh/v1/listicle/specs?product_id={id}&category_key=escooter` | Specs HTML for listicle item | 6hr |
+
+**Cache Invalidation**: Via `acf/save_post` hook when product is updated in admin.
 
 ---
 

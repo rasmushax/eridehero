@@ -6,6 +6,7 @@
 
 import { formatPrice } from '../services/geo-price.js';
 import { PriceAlertModal } from '../components/price-alert.js';
+import { calculateDiscountIndicator } from './pricing-ui.js';
 
 /**
  * Get REST URL base from WordPress localized data
@@ -79,25 +80,16 @@ export function createDealCard(template, deal, userGeo, options = {}) {
         }
     }
 
-    // Discount indicator
+    // Discount indicator using shared utility
     if (indicator && indicatorValue) {
-        const discountPercent = Math.abs(Math.round(deal.discount_percent || 0));
+        const discountInfo = calculateDiscountIndicator(deal.discount_percent);
 
-        if (discountPercent > 0) {
-            indicatorValue.textContent = `${discountPercent}%`;
-
+        if (discountInfo) {
+            indicatorValue.textContent = discountInfo.text;
             const iconUse = indicator.querySelector('use');
-
-            // Positive discount_percent = below average (good deal)
-            if (deal.discount_percent > 0) {
-                indicator.classList.remove('deal-card-indicator--above');
-                indicator.classList.add('deal-card-indicator--below');
-                if (iconUse) iconUse.setAttribute('href', '#icon-arrow-down');
-            } else {
-                indicator.classList.remove('deal-card-indicator--below');
-                indicator.classList.add('deal-card-indicator--above');
-                if (iconUse) iconUse.setAttribute('href', '#icon-arrow-up');
-            }
+            indicator.classList.remove('deal-card-indicator--above', 'deal-card-indicator--below');
+            indicator.classList.add(`deal-card-indicator--${discountInfo.type}`);
+            if (iconUse) iconUse.setAttribute('href', `#icon-${discountInfo.icon}`);
         } else {
             indicator.style.display = 'none';
         }

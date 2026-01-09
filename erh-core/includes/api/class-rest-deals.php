@@ -12,6 +12,7 @@ declare(strict_types=1);
 namespace ERH\Api;
 
 use ERH\Pricing\DealsFinder;
+use ERH\CacheKeys;
 use WP_REST_Controller;
 use WP_REST_Server;
 use WP_REST_Request;
@@ -157,7 +158,7 @@ class RestDeals extends WP_REST_Controller {
         // Check transient cache (1 hour - deals only change when cron runs every 2 hours).
         // Use integer threshold (multiply by 10) for clean cache key, matching DealsFinder pattern.
         $threshold_int = (int) ($threshold * 10);
-        $cache_key = "erh_deals_api_{$category}_{$limit}_{$geo}_{$period}_{$threshold_int}";
+        $cache_key = CacheKeys::deals($category, $limit, $geo, $period, $threshold_int);
         $cached = get_transient($cache_key);
         if ($cached !== false) {
             $response = new WP_REST_Response($cached, 200);

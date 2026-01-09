@@ -11,6 +11,7 @@ declare(strict_types=1);
 
 namespace ERH\Api;
 
+use ERH\CacheKeys;
 use WP_REST_Controller;
 use WP_REST_Server;
 use WP_REST_Request;
@@ -114,7 +115,7 @@ class RestProducts extends WP_REST_Controller {
         }
 
         // Check transient cache (2 hours - aligned with finder JSON rebuild).
-        $cache_key = "erh_similar_{$product_id}_{$limit}_{$geo}";
+        $cache_key = CacheKeys::similarProducts($product_id, $limit, $geo);
         $cached = get_transient($cache_key);
         if ($cached !== false) {
             $response = new WP_REST_Response($cached, 200);

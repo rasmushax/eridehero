@@ -11,6 +11,8 @@ declare(strict_types=1);
 
 namespace ERH\Cron;
 
+use ERH\CacheKeys;
+
 /**
  * Syncs YouTube videos from a channel.
  */
@@ -18,6 +20,8 @@ class YouTubeSyncJob implements CronJobInterface {
 
     /**
      * Transient key for cached videos.
+     *
+     * @deprecated Use CacheKeys::youtubeVideos() instead.
      */
     public const CACHE_KEY = 'erh_youtube_videos';
 
@@ -129,8 +133,8 @@ class YouTubeSyncJob implements CronJobInterface {
             return;
         }
 
-        // Cache the videos.
-        set_transient(self::CACHE_KEY, $videos, self::CACHE_DURATION);
+        // Cache the videos using centralized cache key.
+        set_transient(CacheKeys::youtubeVideos(), $videos, self::CACHE_DURATION);
 
         error_log(sprintf(
             '[ERH Cron] YouTube sync completed. Videos cached: %d',
@@ -266,7 +270,7 @@ class YouTubeSyncJob implements CronJobInterface {
      * @return array Array of videos (may be empty).
      */
     public static function get_cached_videos(): array {
-        $videos = get_transient(self::CACHE_KEY);
+        $videos = get_transient(CacheKeys::youtubeVideos());
         return is_array($videos) ? $videos : [];
     }
 
@@ -289,7 +293,7 @@ class YouTubeSyncJob implements CronJobInterface {
             return false;
         }
 
-        set_transient(self::CACHE_KEY, $videos, self::CACHE_DURATION);
+        set_transient(CacheKeys::youtubeVideos(), $videos, self::CACHE_DURATION);
         return true;
     }
 }

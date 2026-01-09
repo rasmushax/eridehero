@@ -218,6 +218,14 @@ function erh_is_product_obsolete( ?int $post_id = null ): bool {
  * @return bool True if product has pricing, false otherwise.
  */
 function erh_product_has_pricing( int $product_id ): bool {
+    // Check transient cache first (2 hour TTL).
+    $cache_key = \ERH\CacheKeys::productHasPricing( $product_id );
+    $cached = get_transient( $cache_key );
+
+    if ( $cached !== false ) {
+        return $cached === '1';
+    }
+
     global $wpdb;
 
     $table_name = $wpdb->prefix . 'product_data';
@@ -230,22 +238,26 @@ function erh_product_has_pricing( int $product_id ): bool {
     );
 
     if ( ! $row || empty( $row['price_history'] ) ) {
+        set_transient( $cache_key, '0', 2 * HOUR_IN_SECONDS );
         return false;
     }
 
     $price_history = maybe_unserialize( $row['price_history'] );
 
     if ( ! is_array( $price_history ) || empty( $price_history ) ) {
+        set_transient( $cache_key, '0', 2 * HOUR_IN_SECONDS );
         return false;
     }
 
     // Check if any region has a current price.
     foreach ( $price_history as $region => $data ) {
         if ( ! empty( $data['current_price'] ) && $data['current_price'] > 0 ) {
+            set_transient( $cache_key, '1', 2 * HOUR_IN_SECONDS );
             return true;
         }
     }
 
+    set_transient( $cache_key, '0', 2 * HOUR_IN_SECONDS );
     return false;
 }
 
@@ -1120,24 +1132,48 @@ function erh_get_score_attr( float $score ): string {
  * @return array Array of spec groups with 'label' and 'specs' arrays.
  */
 function erh_get_spec_groups( int $product_id, string $product_type ): array {
-    $groups = array();
-
-    // Normalize product type
+    // Normalize product type to category key.
     $type_key = strtolower( str_replace( array( ' ', '-' ), '_', $product_type ) );
+    $category = match ( $type_key ) {
+        'electric_scooter' => 'escooter',
+        'electric_bike'    => 'ebike',
+        'electric_skateboard' => 'eskateboard',
+        'electric_unicycle'   => 'euc',
+        'hoverboard'       => 'hoverboard',
+        default            => 'escooter',
+    };
 
-    if ( $type_key === 'electric_scooter' ) {
-        $groups = erh_get_escooter_spec_groups( $product_id );
-    } elseif ( $type_key === 'electric_bike' ) {
-        $groups = erh_get_ebike_spec_groups( $product_id );
-    } else {
-        // Default fallback - try e-scooter structure
-        $groups = erh_get_escooter_spec_groups( $product_id );
+    // Check transient cache first (6 hour TTL).
+    $cache_key = \ERH\CacheKeys::productSpecs( $product_id, $category );
+    $cached = get_transient( $cache_key );
+
+    if ( $cached !== false ) {
+        return $cached;
     }
 
-    // Filter out empty groups
-    return array_filter( $groups, function( $group ) {
+    // Try to get from wp_product_data cache table (single source of truth).
+    $groups = erh_build_spec_groups_from_cache( $product_id, $category );
+
+    // Fall back to ACF if cache not available (during cache rebuild).
+    if ( empty( $groups ) ) {
+        if ( $category === 'escooter' ) {
+            $groups = erh_get_escooter_spec_groups( $product_id );
+        } elseif ( $category === 'ebike' ) {
+            $groups = erh_get_ebike_spec_groups( $product_id );
+        } else {
+            $groups = erh_get_escooter_spec_groups( $product_id );
+        }
+    }
+
+    // Filter out empty groups.
+    $groups = array_filter( $groups, function( $group ) {
         return ! empty( $group['specs'] );
     } );
+
+    // Cache for 6 hours (aligned with listicle specs cache).
+    set_transient( $cache_key, $groups, 6 * HOUR_IN_SECONDS );
+
+    return $groups;
 }
 
 /**
@@ -1332,6 +1368,101 @@ function erh_get_ebike_spec_groups( int $product_id ): array {
     );
 
     // Add more e-bike groups as needed...
+
+    return $groups;
+}
+
+/**
+ * Build spec groups from wp_product_data cache table.
+ *
+ * Uses the same source of truth as listicle items, ensuring consistency
+ * between product pages and listicle blocks.
+ *
+ * @param int    $product_id Product ID.
+ * @param string $category   Category key ('escooter', 'ebike', etc.).
+ * @return array Array of spec groups with 'label' and 'specs' arrays.
+ */
+function erh_build_spec_groups_from_cache( int $product_id, string $category ): array {
+    // Get product data from wp_product_data cache table.
+    $product_data = erh_get_product_cache_data( $product_id );
+
+    if ( ! $product_data || empty( $product_data['specs'] ) ) {
+        return array();
+    }
+
+    $specs = $product_data['specs'];
+    if ( ! is_array( $specs ) ) {
+        return array();
+    }
+
+    // Get spec groups configuration.
+    $spec_config = erh_get_spec_groups_config( $category );
+    if ( empty( $spec_config ) ) {
+        return array();
+    }
+
+    // Get the wrapper key for nested specs (e.g., 'e-scooters' for escooter).
+    $nested_wrapper = erh_get_specs_wrapper_key( $category );
+
+    $groups = array();
+    $group_index = 0;
+
+    foreach ( $spec_config as $group_name => $group_config ) {
+        // Skip Value Analysis section on product page.
+        if ( ! empty( $group_config['is_value_section'] ) ) {
+            continue;
+        }
+
+        $spec_defs = $group_config['specs'] ?? array();
+        $group_specs = array();
+
+        foreach ( $spec_defs as $spec_def ) {
+            // Special handling for feature_check format - show as Yes/No.
+            if ( ( $spec_def['format'] ?? '' ) === 'feature_check' ) {
+                $features_array = erh_get_spec_from_cache( $specs, $spec_def['key'], $nested_wrapper );
+                $has_feature = is_array( $features_array ) && in_array( $spec_def['feature_value'], $features_array, true );
+                // Only show "Yes" features to match erh_filter_specs behavior.
+                if ( $has_feature ) {
+                    $group_specs[] = array(
+                        'label' => $spec_def['label'],
+                        'value' => 'Yes',
+                    );
+                }
+                continue;
+            }
+
+            // Get value from cache.
+            $value = erh_get_spec_from_cache( $specs, $spec_def['key'], $nested_wrapper );
+
+            // Skip empty values.
+            if ( $value === null || $value === '' ) {
+                continue;
+            }
+
+            // Format the value.
+            $formatted = erh_format_spec_value( $value, $spec_def );
+
+            // Skip empty or "No" formatted values (matches erh_filter_specs behavior).
+            if ( $formatted === '' || $formatted === 'No' ) {
+                continue;
+            }
+
+            $group_specs[] = array(
+                'label' => $spec_def['label'],
+                'value' => $formatted,
+            );
+        }
+
+        // Only add groups with specs.
+        if ( ! empty( $group_specs ) ) {
+            $group_key = 'group_' . $group_index;
+            $groups[ $group_key ] = array(
+                'label' => $group_name,
+                'specs' => $group_specs,
+            );
+            $group_index++;
+        }
+    }
 
     return $groups;
 }

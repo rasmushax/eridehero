@@ -10,6 +10,7 @@ declare(strict_types=1);
 namespace ERH\Pricing;
 
 use ERH\Database\ProductCache;
+use ERH\CacheKeys;
 
 /**
  * Finds products that are currently priced below their historical average.
@@ -364,13 +365,9 @@ class DealsFinder {
         string $geo = self::DEFAULT_GEO,
         string $period = self::DEFAULT_PERIOD
     ): array {
-        // Build cache key.
-        $cache_key = sprintf(
-            'erh_deal_counts_%s_%s_%d',
-            $geo,
-            $period,
-            (int)($price_difference_threshold * 10)
-        );
+        // Build cache key using centralized CacheKeys.
+        $threshold_int = (int) ($price_difference_threshold * 10);
+        $cache_key = CacheKeys::dealCounts($geo, $period, $threshold_int);
 
         // Check transient cache.
         $cached = get_transient($cache_key);

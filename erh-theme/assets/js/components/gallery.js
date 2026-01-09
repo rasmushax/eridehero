@@ -425,4 +425,7 @@ export function autoInit() {
 // Auto-init by default
 autoInit();
 
+// Export the video lightbox singleton for use by other components
+export { lightbox as videoLightbox };
+
 export default Gallery;

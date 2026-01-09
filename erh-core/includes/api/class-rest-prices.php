@@ -14,6 +14,7 @@ namespace ERH\Api;
 use ERH\Pricing\PriceFetcher;
 use ERH\Pricing\ExchangeRateService;
 use ERH\Database\PriceHistory;
+use ERH\CacheKeys;
 use WP_REST_Controller;
 use WP_REST_Server;
 use WP_REST_Request;
@@ -255,7 +256,7 @@ class RestPrices extends WP_REST_Controller {
         $geo_normalized = $geo ? strtoupper($geo) : 'US';
 
         // Check transient cache (6 hours per product+geo, invalidated by HFT on price update).
-        $cache_key = "erh_price_intel_{$product_id}_{$geo_normalized}";
+        $cache_key = CacheKeys::priceIntel($product_id, $geo_normalized);
         $cached = get_transient($cache_key);
 
         if ($cached !== false && !$convert_to) {
@@ -504,7 +505,7 @@ class RestPrices extends WP_REST_Controller {
         }
 
         // Check transient cache (6 hours per product+geo, invalidated by HFT on price update).
-        $cache_key = "erh_price_history_{$product_id}_{$geo}";
+        $cache_key = CacheKeys::priceHistory($product_id, $geo);
         $cached = get_transient($cache_key);
 
         if ($cached !== false) {

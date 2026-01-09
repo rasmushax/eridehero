@@ -8,6 +8,7 @@
 import { getUserGeo, formatPrice, getCurrencySymbol, getProductPrices, filterOffersForGeo } from '../services/geo-price.js';
 import { createChart } from './chart.js';
 import { PriceAlertModal } from './price-alert.js';
+import { calculatePriceVerdict, renderRetailerRow } from '../utils/pricing-ui.js';
 
 // Period labels for stats display
 const PERIOD_LABELS = {
@@ -275,39 +276,11 @@ class PriceIntelComponent {
         const currency = best.currency || 'USD';
 
         const html = this.prices.map((offer, index) => {
-            const isBest = index === 0;
-            const bestClass = isBest ? 'price-intel-retailer-row--best' : '';
-            const stockClass = offer.in_stock ? 'price-intel-retailer-stock--in' : 'price-intel-retailer-stock--out';
-            const stockIcon = offer.in_stock ? 'check' : 'x';
-            const stockText = offer.in_stock ? 'In stock' : 'Out of stock';
-
-            // Logo or text fallback
-            const logoHtml = offer.logo_url
-                ? `<img src="${offer.logo_url}" alt="${offer.retailer}" class="price-intel-retailer-logo">`
-                : `<span class="price-intel-retailer-logo-text">${offer.retailer}</span>`;
-
-            // Badge for best price
-            const badgeHtml = isBest
-                ? '<span class="price-intel-retailer-badge">Best price</span>'
-                : '';
-
-            return `
-                <a href="${offer.url || '#'}" class="price-intel-retailer-row ${bestClass}" target="_blank" rel="nofollow noopener">
-                    ${logoHtml}
-                    <div class="price-intel-retailer-info">
-                        <span class="price-intel-retailer-name">${offer.retailer}</span>
-                        <span class="price-intel-retailer-stock ${stockClass}">
-                            <svg class="icon" aria-hidden="true"><use href="#icon-${stockIcon}"></use></svg>
-                            ${stockText}
-                        </span>
-                    </div>
-                    <div class="price-intel-retailer-price">
-                        <span class="price-intel-retailer-amount">${formatPrice(offer.price, currency)}</span>
-                        ${badgeHtml}
-                    </div>
-                    <svg class="icon price-intel-retailer-arrow" aria-hidden="true"><use href="#icon-external-link"></use></svg>
-                </a>
-            `;
+            return renderRetailerRow(offer, {
+                isBest: index === 0,
+                currency: currency,
+                classPrefix: 'price-intel'
+            });
         }).join('');
 
         this.retailerList.innerHTML = html;
@@ -531,27 +504,18 @@ class PriceIntelComponent {
         if (!this.priceVerdict || this.prices.length === 0) return;
 
         const currentPrice = this.prices[0].price;
-        const diff = ((currentPrice - avgPrice) / avgPrice) * 100;
+        const verdict = calculatePriceVerdict(currentPrice, avgPrice);
 
-        if (Math.abs(diff) < 1) {
-            // Within 1% of average
+        if (!verdict || !verdict.shouldShow) {
             this.priceVerdict.style.display = 'none';
             return;
         }
 
+        const icon = verdict.type === 'below' ? 'arrow-down' : 'arrow-up';
         this.priceVerdict.style.display = '';
-
-        if (diff < 0) {
-            // Below average (good)
-            this.priceVerdict.innerHTML = `<svg class="icon price-intel-verdict-icon" aria-hidden="true"><use href="#icon-arrow-down"></use></svg> ${Math.abs(Math.round(diff))}% below avg`;
-            this.priceVerdict.classList.remove('price-intel-verdict--high');
-            this.priceVerdict.classList.add('price-intel-verdict--low');
-        } else {
-            // Above average (not great)
-            this.priceVerdict.innerHTML = `<svg class="icon price-intel-verdict-icon" aria-hidden="true"><use href="#icon-arrow-up"></use></svg> ${Math.round(diff)}% above avg`;
-            this.priceVerdict.classList.remove('price-intel-verdict--low');
-            this.priceVerdict.classList.add('price-intel-verdict--high');
-        }
+        this.priceVerdict.innerHTML = `<svg class="icon price-intel-verdict-icon" aria-hidden="true"><use href="#icon-${icon}"></use></svg> ${verdict.text}`;
+        this.priceVerdict.classList.remove('price-intel-verdict--high', 'price-intel-verdict--low');
+        this.priceVerdict.classList.add(`price-intel-verdict--${verdict.type === 'below' ? 'low' : 'high'}`);
     }
 
     /**

@@ -47,6 +47,7 @@ use ERH\Api\RestProducts;
 use ERH\Api\RestListicle;
 use ERH\Api\ContactHandler;
 use ERH\Blocks\BlockManager;
+use ERH\CacheKeys;
 
 /**
  * Core plugin class that initializes all components.
@@ -282,6 +283,9 @@ class Core {
         // Invalidate ERH price caches when HFT updates prices.
         // This allows us to use longer cache TTLs (6 hours) with on-demand invalidation.
         add_action('hft_price_updated', [$this, 'invalidate_price_caches'], 10, 2);
+
+        // Invalidate specs cache when product is updated in admin.
+        add_action('acf/save_post', [$this, 'invalidate_product_caches'], 20);
     }
 
     /**
@@ -294,13 +298,30 @@ class Core {
      * @return void
      */
     public function invalidate_price_caches(int $tracked_link_id, int $product_id): void {
-        // Supported geo regions.
-        $geos = ['US', 'GB', 'EU', 'CA', 'AU'];
+        CacheKeys::clearPriceCaches($product_id);
+    }
 
-        foreach ($geos as $geo) {
-            delete_transient("erh_price_intel_{$product_id}_{$geo}");
-            delete_transient("erh_price_history_{$product_id}_{$geo}");
+    /**
+     * Invalidate product caches when ACF fields are saved.
+     *
+     * Called via acf/save_post action when product is updated.
+     *
+     * @param int|string $post_id The post ID.
+     * @return void
+     */
+    public function invalidate_product_caches($post_id): void {
+        // Skip autosaves, revisions, and non-products.
+        if (wp_is_post_autosave($post_id) || wp_is_post_revision($post_id)) {
+            return;
         }
+
+        if (get_post_type($post_id) !== 'products') {
+            return;
+        }
+
+        // Clear specs caches (specs may have changed).
+        CacheKeys::clearListicleSpecs((int) $post_id);
+        CacheKeys::clearProductSpecs((int) $post_id);
     }
 
     /**

@@ -14,6 +14,8 @@ import { getUserGeo, formatPrice, getProductPrices, filterOffersForGeo, getCurre
 import { createChart } from './chart.js';
 import { PriceAlertModal } from './price-alert.js';
 import { initPopovers } from './popover.js';
+import { calculatePriceVerdict } from '../utils/pricing-ui.js';
+import { videoLightbox } from './gallery.js';
 
 // Period labels for stats
 const PERIOD_LABELS = {
@@ -235,22 +237,17 @@ class ListicleItemComponent {
             this.currentPrice = bestOffer.price;
             this.currentCurrency = currency;
 
-            // Build verdict HTML
+            // Build verdict HTML using shared utility
             let verdictHtml = '';
             const avg6m = data.history?.statistics?.average;
-            if (avg6m && bestOffer.price) {
-                const diff = ((bestOffer.price - avg6m) / avg6m) * 100;
-                if (diff < 0) {
-                    verdictHtml = `<span class="listicle-item-verdict listicle-item-verdict--good">
-                        <svg class="icon" aria-hidden="true"><use href="#icon-arrow-down"></use></svg>
-                        ${Math.abs(Math.round(diff))}% below avg
-                    </span>`;
-                } else if (diff > 2) {
-                    verdictHtml = `<span class="listicle-item-verdict listicle-item-verdict--high">
-                        <svg class="icon" aria-hidden="true"><use href="#icon-arrow-up"></use></svg>
-                        ${Math.round(diff)}% above avg
-                    </span>`;
-                }
+            const verdict = calculatePriceVerdict(bestOffer.price, avg6m);
+            if (verdict && verdict.shouldShow) {
+                const icon = verdict.type === 'below' ? 'arrow-down' : 'arrow-up';
+                const verdictClass = verdict.type === 'below' ? 'good' : 'high';
+                verdictHtml = `<span class="listicle-item-verdict listicle-item-verdict--${verdictClass}">
+                    <svg class="icon" aria-hidden="true"><use href="#icon-${icon}"></use></svg>
+                    ${verdict.text}
+                </span>`;
             }
 
             // Build retailer display
@@ -622,6 +619,7 @@ class ListicleItemComponent {
 
     /**
      * Set up YouTube video lightbox
+     * Uses shared videoLightbox singleton from gallery.js
      */
     setupVideoLightbox() {
         const videoCard = this.el.querySelector('.listicle-item-video-card');
@@ -631,62 +629,8 @@ class ListicleItemComponent {
             const videoId = videoCard.dataset.video;
             if (!videoId) return;
 
-            this.openVideoLightbox(videoId);
+            videoLightbox.open(videoId);
         });
-    }
-
-    /**
-     * Open YouTube video lightbox
-     */
-    openVideoLightbox(videoId) {
-        // Check if lightbox already exists
-        let lightbox = document.querySelector('.gallery-lightbox');
-
-        if (!lightbox) {
-            // Create lightbox
-            lightbox = document.createElement('div');
-            lightbox.className = 'gallery-lightbox';
-            lightbox.innerHTML = `
-                <div class="gallery-lightbox-backdrop"></div>
-                <div class="gallery-lightbox-content">
-                    <button class="gallery-lightbox-close" aria-label="Close video">
-                        <svg class="icon"><use href="#icon-x"></use></svg>
-                    </button>
-                    <div class="gallery-lightbox-video"></div>
-                </div>
-            `;
-            document.body.appendChild(lightbox);
-
-            // Close handlers
-            const close = () => {
-                lightbox.classList.remove('is-visible');
-                document.body.classList.remove('lightbox-open');
-                // Clear iframe
-                lightbox.querySelector('.gallery-lightbox-video').innerHTML = '';
-            };
-
-            lightbox.querySelector('.gallery-lightbox-backdrop').addEventListener('click', close);
-            lightbox.querySelector('.gallery-lightbox-close').addEventListener('click', close);
-            document.addEventListener('keydown', (e) => {
-                if (e.key === 'Escape' && lightbox.classList.contains('is-visible')) {
-                    close();
-                }
-            });
-        }
-
-        // Insert iframe and show
-        const videoContainer = lightbox.querySelector('.gallery-lightbox-video');
-        videoContainer.innerHTML = `
-            <iframe
-                src="https://www.youtube.com/embed/${videoId}?autoplay=1&rel=0"
-                frameborder="0"
-                allow="accelerometer; autoplay; clipboard-write; encrypted-media; gyroscope; picture-in-picture"
-                allowfullscreen
-            ></iframe>
-        `;
-
-        lightbox.classList.add('is-visible');
-        document.body.classList.add('lightbox-open');
     }
 }
 

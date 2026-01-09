@@ -397,6 +397,46 @@ Browser Request
 
 ---
 
+## Listicle & Caching Optimizations - COMPLETE ✅
+
+### Shared Pricing UI (`pricing-ui.js`)
+- [x] Created `erh-theme/assets/js/utils/pricing-ui.js` with shared functions
+- [x] `calculatePriceVerdict()` - Standardized +/-3% threshold
+- [x] `renderRetailerRow()` - Shared retailer list rendering
+- [x] `renderVerdictBadge()` - Consistent verdict badges
+- [x] `calculateDiscountIndicator()` - Deal discount indicators
+- [x] Updated `price-intel.js`, `sticky-buy-bar.js`, `listicle-item.js`, `deals-utils.js`
+
+### Geo Offer Filtering Fix
+- [x] Updated `sticky-buy-bar.js` to use shared `filterOffersForGeo()` from geo-price.js
+- [x] Fixes EU special-case handling (was filtering by currency only)
+
+### Centralized Cache Keys (`class-cache-keys.php`)
+- [x] Created `ERH\CacheKeys` class for all transient key generation
+- [x] Methods: `priceIntel`, `priceHistory`, `listicleSpecs`, `productSpecs`, `similarProducts`, `deals`, `dealCounts`, `youtubeVideos`, `productHasPricing`
+- [x] Invalidation: `clearPriceCaches`, `clearListicleSpecs`, `clearProductSpecs`, `clearSimilarProducts`, `clearProduct`
+- [x] Updated all REST endpoints to use CacheKeys
+- [x] Updated `DealsFinder` and `YouTubeSyncJob` to use CacheKeys
+
+### Cache Invalidation Hooks
+- [x] ACF save hook clears specs caches when product updated
+- [x] HFT price update hook clears price caches (existing)
+
+### VideoLightbox Singleton Sharing
+- [x] Exported `videoLightbox` from `gallery.js`
+- [x] Updated `listicle-item.js` to use shared singleton (~55 lines removed)
+
+### Product Page Specs - Single Source of Truth
+- [x] Updated `erh_get_spec_groups()` to read from `wp_product_data` table
+- [x] Created `erh_build_spec_groups_from_cache()` helper
+- [x] Product pages and listicle items now use same data source
+- [x] Added transient caching (6hr TTL) with proper invalidation
+
+### Additional Caching
+- [x] Cached `erh_product_has_pricing()` function (2hr TTL)
+
+---
+
 ## Phase 6B: Product Page (single-products.php) - COMPLETE ✅
 
 ### Product Page Structure

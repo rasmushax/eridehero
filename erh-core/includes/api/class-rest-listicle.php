@@ -11,6 +11,7 @@ declare(strict_types=1);
 
 namespace ERH\Api;
 
+use ERH\CacheKeys;
 use WP_REST_Controller;
 use WP_REST_Server;
 use WP_REST_Request;
@@ -85,7 +86,7 @@ class RestListicle extends WP_REST_Controller {
         }
 
         // Cache key based on product and category.
-        $cache_key = "erh_listicle_specs_{$product_id}_{$category_key}";
+        $cache_key = CacheKeys::listicleSpecs($product_id, $category_key);
         $cached = get_transient($cache_key);
 
         if ($cached !== false) {
