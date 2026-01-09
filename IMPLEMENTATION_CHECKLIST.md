@@ -514,25 +514,27 @@ Routes in `single.php`:
 
 ---
 
-## Phase 7: Shortcodes (Days 17-18) - PENDING
+## Phase 7: ACF Blocks - IN PROGRESS
 
-- [ ] Create `shortcodes/class-shortcode-base.php`
-- [ ] Migrate shortcodes (prioritize by usage):
-  - [ ] `accordion`
-  - [ ] `top3`
-  - [ ] `toppicks`
-  - [ ] `buying-guide-table`
-  - [ ] `listicle-item`
-  - [ ] `relatedproducts`
-  - [ ] `bgoverview`
-  - [ ] `thisprodprice`
-  - [ ] `simplebgitem`
-  - [ ] `super-accordion`
-  - [ ] `video`
-  - [ ] `checklist`
-  - [ ] `jumplinks`
-  - [ ] `bfdeal`
-- [ ] Test: Each shortcode renders correctly
+### Completed Blocks
+- [x] `accordion` - Collapsible accordion sections
+- [x] `jumplinks` - Jump link navigation
+- [x] `listicle-item` - Product display for buying guides (3 tabs, geo-pricing, price tracking)
+- [x] `video` - YouTube video embed
+- [x] `checklist` - Checklist items
+
+### Pending Blocks
+- [ ] `top3`
+- [ ] `toppicks`
+- [ ] `buying-guide-table`
+- [ ] `relatedproducts`
+- [ ] `bgoverview`
+- [ ] `thisprodprice`
+- [ ] `simplebgitem`
+- [ ] `super-accordion`
+- [ ] `bfdeal`
+
+- [ ] Test: Each block renders correctly
 
 ---
 

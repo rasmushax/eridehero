@@ -138,6 +138,67 @@ const price = product.pricing[geo]?.current_price ?? product.pricing['US']?.curr
 const displayCurrency = product.pricing[geo] ? currency : 'USD';
 ```
 
+### 5-Region Architecture
+
+The pricing system uses a **5-region model** for simplicity and practical coverage.
+
+**Supported Regions**:
+| Region | Currency | Countries Mapped |
+|--------|----------|------------------|
+| US | USD | United States |
+| GB | GBP | United Kingdom |
+| EU | EUR | DE, FR, IT, ES, NL, BE, AT, IE, PT, FI, GR, + more |
+| CA | CAD | Canada |
+| AU | AUD | Australia, New Zealand |
+
+**Data Flow**:
+```
+┌─────────────┐     ┌──────────────────┐     ┌─────────────────┐
+│ HFT Plugin  │     │ CacheRebuildJob  │     │ Frontend        │
+│ (granular)  │────▶│ (groups regions) │────▶│ (detects/shows) │
+└─────────────┘     └──────────────────┘     └─────────────────┘
+     │                      │                        │
+ Per-country          5 Regions              Country → Region
+ DE, FR, IT...    US, GB, EU, CA, AU       IPInfo → mapping
+```
+
+1. **HFT Plugin** scrapes prices per-country (DE, FR, IT, ES, etc.)
+2. **CacheRebuildJob** groups into 5 regions (EU aggregates DE/FR/IT/ES/etc.)
+3. **JSON Generators** output region-keyed pricing data
+4. **Frontend** detects user's country via IPInfo, maps to region, displays prices
+
+**Region Validation** (`CacheRebuildJob::is_genuine_region_price()`):
+- US: Accept USD prices with geo=US or null
+- EU: Accept EUR prices from any EU country (DE, FR, IT, etc.)
+- GB/CA/AU: Accept matching currency with geo match
+- US fallbacks are NOT stored under other region keys
+
+**Currency Consistency Rule**:
+- All components show prices in user's region currency ONLY
+- Products without regional pricing show "no price" (not USD fallback)
+- Unmapped countries (JP, BR, MX, etc.) default to US at detection level
+- This ensures no mixed currencies in comparisons, finder, or deals
+
+**Frontend Service** (`geo-price.js` + `geo-config.js`):
+```javascript
+import { getUserGeo, formatPrice, setUserRegion } from './services/geo-price.js';
+
+// Detect user's region (country → region mapping, cached 24h in localStorage)
+const { geo, region, currency, country } = await getUserGeo();
+// French user: { geo: 'EU', region: 'EU', currency: 'EUR', country: 'FR' }
+// Japanese user: { geo: 'US', region: 'US', currency: 'USD', country: 'JP' }
+
+// Get price for user's region (NO fallback to US at product level!)
+const prices = product.pricing || {};
+const price = prices[region]?.current_price ?? null;
+
+// Format with proper symbol
+formatPrice(price, currency); // "$499" or "€399"
+
+// Manual region override (for region selector)
+setUserRegion('GB'); // User can switch to see UK prices
+```
+
 ---
 
 ## Database Schema

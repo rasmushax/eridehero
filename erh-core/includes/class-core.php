@@ -44,7 +44,9 @@ use ERH\Migration\MigrationAdmin;
 use ERH\Api\RestPrices;
 use ERH\Api\RestDeals;
 use ERH\Api\RestProducts;
+use ERH\Api\RestListicle;
 use ERH\Api\ContactHandler;
+use ERH\Blocks\BlockManager;
 
 /**
  * Core plugin class that initializes all components.
@@ -199,6 +201,13 @@ class Core {
     private ContactHandler $contact_handler;
 
     /**
+     * Block manager instance.
+     *
+     * @var BlockManager
+     */
+    private BlockManager $block_manager;
+
+    /**
      * Initialize all plugin components.
      *
      * @return void
@@ -209,6 +218,9 @@ class Core {
 
         // Initialize shared services.
         $this->init_services();
+
+        // Initialize ACF blocks.
+        $this->init_blocks();
 
         // Initialize post types.
         $this->init_post_types();
@@ -289,6 +301,16 @@ class Core {
             delete_transient("erh_price_intel_{$product_id}_{$geo}");
             delete_transient("erh_price_history_{$product_id}_{$geo}");
         }
+    }
+
+    /**
+     * Initialize ACF blocks.
+     *
+     * @return void
+     */
+    private function init_blocks(): void {
+        $this->block_manager = new BlockManager();
+        $this->block_manager->register();
     }
 
     /**
@@ -557,6 +579,10 @@ class Core {
         // Initialize and register REST Products API.
         $rest_products = new RestProducts();
         $rest_products->register_routes();
+
+        // Initialize and register REST Listicle API.
+        $rest_listicle = new RestListicle();
+        $rest_listicle->register_routes();
     }
 
     /**
@@ -710,5 +736,14 @@ class Core {
      */
     public function get_exchange_rate_service(): ExchangeRateService {
         return $this->exchange_rate_service;
+    }
+
+    /**
+     * Get the block manager instance.
+     *
+     * @return BlockManager
+     */
+    public function get_block_manager(): BlockManager {
+        return $this->block_manager;
     }
 }

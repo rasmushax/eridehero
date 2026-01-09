@@ -309,10 +309,15 @@ class RestPrices extends WP_REST_Controller {
         // Get available geos.
         $available_geos = $this->price_history->get_available_geos($product_id);
 
+        // Get product image.
+        $product_image_id  = get_post_thumbnail_id($product_id);
+        $product_image_url = $product_image_id ? wp_get_attachment_image_url($product_image_id, 'medium') : '';
+
         $response_data = [
-            'product_id' => $product_id,
-            'geo'        => $geo_normalized,
-            'currency'   => $currency,
+            'product_id'    => $product_id,
+            'product_image' => $product_image_url,
+            'geo'           => $geo_normalized,
+            'currency'      => $currency,
             'currency_symbol' => $currency_symbol,
             // Retailers.
             'best'       => $best,

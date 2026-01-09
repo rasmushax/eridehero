@@ -118,7 +118,19 @@
 .guide-body ul,
 .guide-body ol {
     margin: 0 0 var(--space-4);
-    padding-left: var(--space-6);
+    padding-left: var(--space-8);
+    list-style: revert;
+}
+
+.article-body li:last-child,
+.guide-body li:last-child {
+    margin-bottom: 0;
+}
+
+ul.spacing li,
+ol.spacing li {
+    padding-top: var(--space-1);
+    padding-bottom: var(--space-1);
 }
 
 .article-body li,
@@ -139,8 +151,22 @@
 .guide-body img {
     max-width: 100%;
     height: auto;
-    border-radius: var(--radius-lg);
+}
+
+.article-body .wp-block-image,
+.guide-body .wp-block-image {
     margin: var(--space-6) 0;
+}
+
+.article-body .wp-block-image img,
+.guide-body .wp-block-image img {
+    border-radius: var(--radius-lg);
+    box-shadow: var(--shadow-md);
+}
+
+.article-body .wp-block-image.noshadow img,
+.guide-body .wp-block-image.noshadow img {
+    box-shadow: none;
 }
 
 .article-body figure,
@@ -285,6 +311,78 @@
 
 .sidebar-comparison--open .sidebar-comparison-inputs:last-of-type {
     margin-bottom: var(--space-4);
+}
+
+/* ===== CONTENT BOXES ===== */
+
+.greybox {
+    border: 1px solid var(--color-border);
+    border-radius: var(--radius-lg);
+    padding: var(--space-10);
+    margin: var(--space-4) 0;
+}
+
+.greybox h1,
+.greybox h2,
+.greybox h3 {
+    margin-top: 0;
+}
+
+.greybox ul,
+.greybox ol {
+    margin-bottom: 0;
+}
+
+.greybox > *:last-child,
+.greybox > * > *:last-child {
+    margin-bottom: 0;
+}
+
+@media (max-width: 768px) {
+    .greybox {
+        padding: var(--space-8);
+    }
+}
+
+/* First element in article body should have no top margin */
+.article-body > *:first-child,
+.guide-body > *:first-child {
+    margin-top: 0 !important;
+}
+
+/* ===== DATA TABLES ===== */
+
+figure.minimalistic {
+    border: 2px solid var(--color-primary);
+    border-radius: var(--radius-lg);
+    margin: var(--space-4) 0;
+    font-size: var(--text-base);
+    overflow: hidden;
+}
+
+figure.minimalistic table {
+    width: 100%;
+    border-collapse: collapse;
+}
+
+figure.minimalistic thead {
+    color: var(--color-white);
+    text-align: left;
+    background: var(--color-primary);
+}
+
+figure.minimalistic th,
+figure.minimalistic td {
+    padding: var(--space-3) var(--space-4);
+    border: none;
+}
+
+figure.minimalistic tbody tr:nth-child(odd) {
+    background: var(--color-light);
+}
+
+figure.product table tr > td:first-child {
+    font-weight: var(--font-semibold);
 }
 
 /* ===== RESPONSIVE ===== */

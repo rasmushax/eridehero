@@ -131,11 +131,11 @@
 
     /* ===== SHADOWS ===== */
 
-    /* Primary colored shadows */
-    --shadow-sm: 0 2px 8px rgba(94, 44, 237, 0.25);
-    --shadow-md: 0 4px 12px rgba(94, 44, 237, 0.35);
-    --shadow-lg: 0 4px 20px rgba(94, 44, 237, 0.3);
-    --shadow-xl: 0 8px 30px rgba(94, 44, 237, 0.4);
+    /* Size-based shadows */
+    --shadow-sm: 0 2px 8px rgb(104 102 110 / 25%);
+    --shadow-md: 0 4px 12px rgb(104 102 110 / 38%);
+    --shadow-lg: 0 4px 20px rgb(104 102 110 / 35%);
+    --shadow-xl: 0 8px 30px rgb(104 102 110 / 40%);
 
     /* Neutral shadows */
     --shadow-subtle: 0 2px 8px rgba(33, 39, 58, 0.05), 0 8px 24px rgba(33, 39, 58, 0.05);

@@ -236,6 +236,13 @@ import './components/toast.js'; // Toast notifications (auto-init container)
         });
     }
 
+    // Listicle Item blocks - advanced product display for buying guides
+    if (document.querySelector('[data-listicle-item]')) {
+        import('./components/listicle-item.js').then(module => {
+            module.initListicleItems();
+        });
+    }
+
     // Account page - tabs, settings, and trackers
     if (document.querySelector('.account-page')) {
         import('./components/account-tabs.js');
