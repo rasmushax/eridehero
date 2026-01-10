@@ -14,7 +14,6 @@ use ERH\Database\ProductCache;
 use ERH\Database\PriceHistory;
 use ERH\Database\PriceTracker;
 use ERH\Database\ViewTracker;
-use ERH\Reviews\ReviewQuery;
 use ERH\Scoring\ProductScorer;
 
 /**
@@ -113,13 +112,6 @@ class CacheRebuildJob implements CronJobInterface {
     private ViewTracker $view_tracker;
 
     /**
-     * Review query instance.
-     *
-     * @var ReviewQuery
-     */
-    private ReviewQuery $review_query;
-
-    /**
      * Cron manager reference for locking.
      *
      * @var CronManager
@@ -141,7 +133,6 @@ class CacheRebuildJob implements CronJobInterface {
      * @param PriceHistory  $price_history  Price history instance.
      * @param PriceTracker  $price_tracker  Price tracker instance.
      * @param ViewTracker   $view_tracker   View tracker instance.
-     * @param ReviewQuery   $review_query   Review query instance.
      * @param CronManager   $cron_manager   Cron manager instance.
      * @param ProductScorer $product_scorer Product scorer instance.
      */
@@ -151,7 +142,6 @@ class CacheRebuildJob implements CronJobInterface {
         PriceHistory $price_history,
         PriceTracker $price_tracker,
         ViewTracker $view_tracker,
-        ReviewQuery $review_query,
         CronManager $cron_manager,
         ProductScorer $product_scorer
     ) {
@@ -160,7 +150,6 @@ class CacheRebuildJob implements CronJobInterface {
         $this->price_history  = $price_history;
         $this->price_tracker  = $price_tracker;
         $this->view_tracker   = $view_tracker;
-        $this->review_query   = $review_query;
         $this->cron_manager   = $cron_manager;
         $this->product_scorer = $product_scorer;
     }
@@ -379,19 +368,6 @@ class CacheRebuildJob implements CronJobInterface {
         // Popularity boost for in-stock items.
         if ($has_instock) {
             $product_data['popularity_score'] += 5;
-        }
-
-        // Get review rating and count.
-        $reviews = $this->review_query->get_product_reviews($product_id);
-        $ratings = $reviews['ratings_distribution'];
-
-        if ($ratings['ratings_count'] > 0) {
-            $avg_rating = (float) $ratings['average_rating'];
-            $product_data['rating'] = $avg_rating > 0 ? $avg_rating : null;
-
-            // Popularity boost from ratings and review count.
-            $product_data['popularity_score'] += $avg_rating;
-            $product_data['popularity_score'] += $ratings['ratings_count'] * 2;
         }
 
         // Popularity boost from tracker count.

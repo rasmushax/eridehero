@@ -10,7 +10,6 @@ declare(strict_types=1);
 namespace ERH;
 
 use ERH\PostTypes\Product;
-use ERH\PostTypes\Review;
 use ERH\PostTypes\Taxonomies;
 use ERH\Database\Schema;
 use ERH\Database\ProductCache;
@@ -26,8 +25,6 @@ use ERH\User\SocialAuth;
 use ERH\Email\MailchimpSync;
 use ERH\Email\EmailTemplate;
 use ERH\Email\EmailSender;
-use ERH\Reviews\ReviewQuery;
-use ERH\Reviews\ReviewHandler;
 use ERH\Pricing\PriceFetcher;
 use ERH\Pricing\ExchangeRateService;
 use ERH\Cron\CronManager;
@@ -60,13 +57,6 @@ class Core {
      * @var Product
      */
     private Product $product_post_type;
-
-    /**
-     * Review post type handler.
-     *
-     * @var Review
-     */
-    private Review $review_post_type;
 
     /**
      * Taxonomies handler.
@@ -144,20 +134,6 @@ class Core {
      * @var MigrationAdmin
      */
     private MigrationAdmin $migration_admin;
-
-    /**
-     * Review query instance.
-     *
-     * @var ReviewQuery
-     */
-    private ReviewQuery $review_query;
-
-    /**
-     * Review handler instance.
-     *
-     * @var ReviewHandler
-     */
-    private ReviewHandler $review_handler;
 
     /**
      * Email template instance.
@@ -238,9 +214,6 @@ class Core {
 
         // Initialize email system.
         $this->init_email();
-
-        // Initialize review system.
-        $this->init_reviews();
 
         // Initialize cron jobs (before admin, since settings page needs cron_manager).
         $this->init_cron();
@@ -383,9 +356,6 @@ class Core {
         $this->product_post_type = new Product();
         $this->product_post_type->register();
 
-        $this->review_post_type = new Review();
-        $this->review_post_type->register();
-
         $this->taxonomies = new Taxonomies();
         $this->taxonomies->register();
     }
@@ -501,17 +471,6 @@ class Core {
     }
 
     /**
-     * Initialize review system.
-     *
-     * @return void
-     */
-    private function init_reviews(): void {
-        $this->review_query = new ReviewQuery();
-        $this->review_handler = new ReviewHandler($this->rate_limiter, $this->review_query);
-        $this->review_handler->register();
-    }
-
-    /**
      * Initialize cron jobs.
      *
      * @return void
@@ -541,7 +500,6 @@ class Core {
                 $price_history,
                 $price_tracker_db,
                 $view_tracker,
-                $this->review_query,
                 $this->cron_manager,
                 new ProductScorer()
             )
@@ -613,15 +571,6 @@ class Core {
      */
     public function get_product_post_type(): Product {
         return $this->product_post_type;
-    }
-
-    /**
-     * Get the Review post type handler.
-     *
-     * @return Review
-     */
-    public function get_review_post_type(): Review {
-        return $this->review_post_type;
     }
 
     /**
@@ -703,24 +652,6 @@ class Core {
      */
     public function get_settings_page(): SettingsPage {
         return $this->settings_page;
-    }
-
-    /**
-     * Get the review query instance.
-     *
-     * @return ReviewQuery
-     */
-    public function get_review_query(): ReviewQuery {
-        return $this->review_query;
-    }
-
-    /**
-     * Get the review handler instance.
-     *
-     * @return ReviewHandler
-     */
-    public function get_review_handler(): ReviewHandler {
-        return $this->review_handler;
     }
 
     /**

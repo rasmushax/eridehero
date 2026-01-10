@@ -90,17 +90,6 @@ REST API endpoints provided by erh-core plugin.
 
 ---
 
-## Reviews (`class-review-handler.php`)
-
-| Method | Endpoint | Description |
-|--------|----------|-------------|
-| POST | `/erh/v1/reviews` | Submit review (with image upload) |
-| GET | `/erh/v1/products/{id}/reviews` | Get product reviews |
-| GET | `/erh/v1/user/reviews` | Get user's reviews |
-| DELETE | `/erh/v1/reviews/{id}` | Delete own review |
-
----
-
 ## Webhooks
 
 | Method | Endpoint | Description |

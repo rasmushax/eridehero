@@ -15,7 +15,6 @@ Use this file alongside CLAUDE.md to track progress.
 
 ### Day 2: Foundation
 - [x] Create `includes/post-types/class-product.php`
-- [x] Create `includes/post-types/class-review.php`
 - [x] Create `includes/database/class-schema.php` (all table creation)
 - [x] Register activation hook for schema creation
 - [x] Test: Plugin activates without errors
@@ -129,29 +128,12 @@ Use this file alongside CLAUDE.md to track progress.
 
 ---
 
-## Phase 4: Reviews, Cron & Email (Days 9-11) - COMPLETE
+## Phase 4: Cron & Email (Days 9-11) - COMPLETE
 
 **Key Decisions:**
 - Email system pulled forward from Phase 5 (used by notification job)
-- Reviews use REST API (consistent with user system)
 - Notifications run every 6 hours (not daily)
 - Admin "Run Now" buttons for cron jobs (in Settings > ERideHero > Cron Jobs)
-
-### Reviews
-- [x] Create `includes/reviews/class-review-query.php`
-  - Get reviews by product or user
-  - Calculate ratings distribution
-  - Check if user has reviewed product
-- [x] Create `includes/reviews/class-review-handler.php`
-  - REST API for review submission with image upload
-  - Admin notification when new review submitted
-  - Reviews always pending (require moderation)
-
-**REST Endpoints:**
-- `POST /erh/v1/reviews` - Submit review
-- `GET /erh/v1/products/{id}/reviews` - Get product reviews
-- `GET /erh/v1/user/reviews` - Get user's reviews
-- `DELETE /erh/v1/reviews/{id}` - Delete own review
 
 ### Email System
 - [x] Create `includes/email/class-email-template.php`
@@ -582,8 +564,6 @@ Routes in `single.php`:
 
 - [ ] Bundle all JS into `dist/main.min.js`
 - [ ] Create `assets/js/src/search.js` (JSON-based search)
-- [ ] Create `assets/js/src/price-tracker.js` (modal)
-- [ ] Create `assets/js/src/reviews.js` (submission)
 - [ ] Test: All interactive features work
 
 ---
@@ -597,7 +577,6 @@ Routes in `single.php`:
 - [ ] User registration flow
 - [ ] User login flow
 - [ ] Password reset flow
-- [ ] Review submission
 - [ ] Email notifications (test mode)
 - [ ] Search functionality
 - [ ] Mobile responsive (test 3 breakpoints)
@@ -652,8 +631,7 @@ erh-core/
 │   │   └── class-settings-page.php  # Settings > ERideHero (incl. Cron Jobs tab)
 │   │
 │   ├── post-types/
-│   │   ├── class-product.php
-│   │   └── class-review.php
+│   │   └── class-product.php
 │   │
 │   ├── database/
 │   │   ├── class-schema.php
@@ -680,10 +658,6 @@ erh-core/
 │   │   ├── class-oauth-facebook.php
 │   │   ├── class-oauth-reddit.php
 │   │   └── class-social-auth.php
-│   │
-│   ├── reviews/
-│   │   ├── class-review-query.php
-│   │   └── class-review-handler.php
 │   │
 │   ├── email/
 │   │   ├── class-mailchimp-sync.php
