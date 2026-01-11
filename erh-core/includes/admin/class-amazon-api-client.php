@@ -28,12 +28,16 @@ class AmazonApiClient {
     private const TIMEOUT = 15;
 
     /**
-     * Minimum resources needed to get ASIN and title.
+     * Resources to request from PA-API for product verification.
+     * See: https://webservices.amazon.com/paapi5/documentation/search-items.html#resources-parameter
      */
     private const SEARCH_RESOURCES = [
         'ItemInfo.Title',
         'ItemInfo.ByLineInfo',
+        'Images.Primary.Small',
         'Offers.Listings.Price',
+        'Offers.Listings.Availability.Message',
+        'Offers.Listings.DeliveryInfo.IsPrimeEligible',
     ];
 
     /**
@@ -223,7 +227,6 @@ class AmazonApiClient {
         // Return the first (best matching) item.
         $item = $items[0];
         $asin = $item['ASIN'] ?? null;
-        $title = $item['ItemInfo']['Title']['DisplayValue'] ?? null;
 
         if (!$asin) {
             $default_response['success'] = true;
@@ -231,12 +234,37 @@ class AmazonApiClient {
             return $default_response;
         }
 
+        // Extract product details for verification.
+        $title = $item['ItemInfo']['Title']['DisplayValue'] ?? null;
+        $brand = $item['ItemInfo']['ByLineInfo']['Brand']['DisplayValue'] ?? null;
+        $image = $item['Images']['Primary']['Small']['URL'] ?? null;
+
+        // Extract offer/price details.
+        $listing = $item['Offers']['Listings'][0] ?? null;
+        $price = null;
+        $price_display = null;
+        $is_prime = false;
+        $availability = null;
+
+        if ($listing) {
+            $price = $listing['Price']['Amount'] ?? null;
+            $price_display = $listing['Price']['DisplayAmount'] ?? null;
+            $is_prime = $listing['DeliveryInfo']['IsPrimeEligible'] ?? false;
+            $availability = $listing['Availability']['Message'] ?? null;
+        }
+
         return [
-            'success' => true,
-            'asin'    => $asin,
-            'title'   => $title,
-            'url'     => "https://{$retail_host}/dp/{$asin}",
-            'error'   => null,
+            'success'       => true,
+            'asin'          => $asin,
+            'title'         => $title,
+            'brand'         => $brand,
+            'image'         => $image,
+            'price'         => $price,
+            'price_display' => $price_display,
+            'is_prime'      => $is_prime,
+            'availability'  => $availability,
+            'url'           => "https://{$retail_host}/dp/{$asin}",
+            'error'         => null,
         ];
     }
 

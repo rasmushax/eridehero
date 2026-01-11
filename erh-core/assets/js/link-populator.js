@@ -534,7 +534,14 @@
                         product_id: product.id,
                         product_name: product.name,
                         asin: result.asin,
-                        url: result.url, // Full Amazon URL for preview
+                        url: result.url,
+                        title: result.title,
+                        brand: result.brand,
+                        image: result.image,
+                        price: result.price,
+                        price_display: result.price_display,
+                        is_prime: result.is_prime,
+                        availability: result.availability,
                         error: result.error,
                         link_id: product.link_id || null,
                         has_link: product.has_link,
@@ -638,22 +645,49 @@
     }
 
     /**
-     * Render an Amazon result row.
+     * Render an Amazon result row with product details for verification.
      */
     function renderAmazonResultRow(result) {
         const hasAsin = result.asin && !result.error;
         const statusClass = hasAsin ? 'success' : 'error';
-        const statusText = hasAsin ? 'ASIN Found' : (result.error || 'NOT_FOUND');
         const overwriteIndicator = result.has_link
             ? '<span class="erh-lp-overwrite-badge" title="Will overwrite existing ASIN">UPDATE</span>'
             : '';
 
         const editUrl = `${adminUrl}post.php?post=${result.product_id}&action=edit`;
         const domain = amazonLocales[selectedLocale] || 'www.amazon.com';
-        const amazonUrl = hasAsin ? `https://${domain}/dp/${result.asin}` : (result.url || '');
+        const amazonUrl = hasAsin ? `https://${domain}/dp/${result.asin}` : '';
 
-        // Show Amazon's title as tooltip if available
-        const amazonTitle = result.title ? `title="${escapeHtml(result.title)}"` : '';
+        // Build Amazon product info display
+        let amazonInfo = '';
+        if (hasAsin) {
+            const image = result.image ? `<img src="${result.image}" alt="" class="erh-lp-amazon-thumb">` : '';
+            const brand = result.brand ? `<span class="erh-lp-amazon-brand">${escapeHtml(result.brand)}</span>` : '';
+            const price = result.price_display || '';
+            const prime = result.is_prime ? '<span class="erh-lp-prime-badge" title="Prime eligible">Prime</span>' : '';
+            const title = result.title ? escapeHtml(result.title.substring(0, 60) + (result.title.length > 60 ? '...' : '')) : '';
+
+            amazonInfo = `
+                <div class="erh-lp-amazon-preview">
+                    ${image}
+                    <div class="erh-lp-amazon-details">
+                        <div class="erh-lp-amazon-title" title="${escapeHtml(result.title || '')}">${title}</div>
+                        <div class="erh-lp-amazon-meta">
+                            ${brand} ${price ? `<span class="erh-lp-amazon-price">${price}</span>` : ''} ${prime}
+                        </div>
+                    </div>
+                </div>
+            `;
+        }
+
+        // Status column - show availability or match status
+        let statusHtml = '';
+        if (hasAsin) {
+            const availability = result.availability || 'Available';
+            statusHtml = `<span class="erh-lp-status erh-lp-status-success">&#10003; ${availability}</span>`;
+        } else {
+            statusHtml = `<span class="erh-lp-status erh-lp-status-error">&#10007; Not Found</span>`;
+        }
 
         return `
             <tr class="status-${statusClass}${result.has_link ? ' is-overwrite' : ''}">
@@ -665,20 +699,21 @@
                            data-asin="${result.asin || ''}"
                            data-link-id="${result.link_id || ''}">
                 </td>
-                <td>
+                <td class="erh-lp-product-cell">
                     <a href="${editUrl}" target="_blank" class="erh-lp-edit-link" title="Edit product">&#9998;</a>
-                    ${escapeHtml(result.product_name)} ${overwriteIndicator}
+                    <strong>${escapeHtml(result.product_name)}</strong> ${overwriteIndicator}
                 </td>
-                <td class="url-cell">
+                <td class="erh-lp-amazon-cell">
                     ${hasAsin
-                        ? `<input type="text" class="erh-lp-asin-input" value="${escapeHtml(result.asin)}" data-product-id="${result.product_id}" style="width: 120px; font-family: monospace;" ${amazonTitle}>
-                           <a href="${amazonUrl}" target="_blank" class="erh-lp-url-open" title="Open on Amazon">&#8599;</a>`
-                        : '<span class="erh-lp-not-found">--</span>'}
+                        ? `${amazonInfo}
+                           <div class="erh-lp-asin-row">
+                               <input type="text" class="erh-lp-asin-input" value="${escapeHtml(result.asin)}" data-product-id="${result.product_id}">
+                               <a href="${amazonUrl}" target="_blank" class="erh-lp-url-open" title="Open on Amazon">&#8599;</a>
+                           </div>`
+                        : `<span class="erh-lp-not-found">${result.error || 'Not found'}</span>`}
                 </td>
                 <td class="status-cell">
-                    <span class="erh-lp-status erh-lp-status-${statusClass}">
-                        ${hasAsin ? '&#10003;' : '&#10007;'} ${statusText}
-                    </span>
+                    ${statusHtml}
                 </td>
             </tr>
         `;
