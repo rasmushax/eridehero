@@ -84,6 +84,9 @@ class SettingsPage {
 
         // General Settings.
         $this->register_general_settings();
+
+        // API Settings.
+        $this->register_api_settings();
     }
 
     /**
@@ -161,6 +164,19 @@ class SettingsPage {
     }
 
     /**
+     * Register API settings.
+     *
+     * @return void
+     */
+    private function register_api_settings(): void {
+        register_setting(self::OPTION_GROUP, 'erh_perplexity_api_key', [
+            'type'              => 'string',
+            'sanitize_callback' => 'sanitize_text_field',
+            'default'           => '',
+        ]);
+    }
+
+    /**
      * Render the settings page.
      *
      * @return void
@@ -194,6 +210,10 @@ class SettingsPage {
                    class="nav-tab <?php echo $current_tab === 'cron' ? 'nav-tab-active' : ''; ?>">
                     <?php esc_html_e('Cron Jobs', 'erh-core'); ?>
                 </a>
+                <a href="<?php echo esc_url(admin_url('options-general.php?page=' . self::PAGE_SLUG . '&tab=apis')); ?>"
+                   class="nav-tab <?php echo $current_tab === 'apis' ? 'nav-tab-active' : ''; ?>">
+                    <?php esc_html_e('APIs', 'erh-core'); ?>
+                </a>
             </nav>
 
             <form action="options.php" method="post">
@@ -213,6 +233,10 @@ class SettingsPage {
                         echo '</form>'; // Close the form early for cron tab.
                         $this->render_cron_tab();
                         return; // Skip the submit button for cron tab.
+                    case 'apis':
+                        $this->render_apis_tab();
+                        submit_button();
+                        break;
                     default:
                         $this->render_social_tab();
                         submit_button();
@@ -586,6 +610,65 @@ class SettingsPage {
                     </td>
                 </tr>
             </tbody>
+        </table>
+        <?php
+    }
+
+    /**
+     * Render the APIs tab.
+     *
+     * @return void
+     */
+    private function render_apis_tab(): void {
+        $api_key = get_option('erh_perplexity_api_key', '');
+        $is_configured = !empty($api_key);
+
+        ?>
+        <h2><?php esc_html_e('API Configuration', 'erh-core'); ?></h2>
+        <p class="description">
+            <?php esc_html_e('Configure external API integrations used by ERideHero tools.', 'erh-core'); ?>
+        </p>
+
+        <table class="form-table" role="presentation">
+            <tr>
+                <th scope="row" colspan="2">
+                    <h3 style="margin-bottom: 0;"><?php esc_html_e('Perplexity AI', 'erh-core'); ?></h3>
+                    <p class="description" style="font-weight: normal;">
+                        <?php esc_html_e('Used by the Link Populator tool to find product URLs on retailer websites.', 'erh-core'); ?>
+                    </p>
+                </th>
+            </tr>
+            <tr>
+                <th scope="row">
+                    <label for="erh_perplexity_api_key"><?php esc_html_e('API Key', 'erh-core'); ?></label>
+                </th>
+                <td>
+                    <input type="password"
+                           id="erh_perplexity_api_key"
+                           name="erh_perplexity_api_key"
+                           value="<?php echo esc_attr($api_key); ?>"
+                           class="regular-text">
+                    <p class="description">
+                        <?php
+                        printf(
+                            /* translators: %s: Perplexity API URL */
+                            esc_html__('Get your API key from %s', 'erh-core'),
+                            '<a href="https://www.perplexity.ai/settings/api" target="_blank">Perplexity API Settings</a>'
+                        );
+                        ?>
+                    </p>
+                </td>
+            </tr>
+            <tr>
+                <th scope="row"><?php esc_html_e('Status', 'erh-core'); ?></th>
+                <td>
+                    <?php if ($is_configured) : ?>
+                        <span style="color: #46b450;">&#10003; <?php esc_html_e('Configured', 'erh-core'); ?></span>
+                    <?php else : ?>
+                        <span style="color: #dc3232;">&#10007; <?php esc_html_e('Not configured', 'erh-core'); ?></span>
+                    <?php endif; ?>
+                </td>
+            </tr>
         </table>
         <?php
     }

@@ -8,7 +8,13 @@ $baseDir = dirname($vendorDir);
 return array(
     'Composer\\InstalledVersions' => $vendorDir . '/composer/InstalledVersions.php',
     'ERH\\API\\ContactHandler' => $baseDir . '/includes/api/class-contact-handler.php',
+    'ERH\\Admin\\AmazonApiClient' => $baseDir . '/includes/admin/class-amazon-api-client.php',
+    'ERH\\Amazon\\AmazonLocales' => $baseDir . '/includes/amazon/class-amazon-locales.php',
+    'ERH\\Amazon\\AwsV4Signer' => $baseDir . '/includes/amazon/class-aws-v4-signer.php',
+    'ERH\\Admin\\LinkPopulator' => $baseDir . '/includes/admin/class-link-populator.php',
+    'ERH\\Admin\\PerplexityClient' => $baseDir . '/includes/admin/class-perplexity-client.php',
     'ERH\\Admin\\SettingsPage' => $baseDir . '/includes/admin/class-settings-page.php',
+    'ERH\\Admin\\UrlVerifier' => $baseDir . '/includes/admin/class-url-verifier.php',
     'ERH\\Api\\RestDeals' => $baseDir . '/includes/api/class-rest-deals.php',
     'ERH\\Api\\RestListicle' => $baseDir . '/includes/api/class-rest-listicle.php',
     'ERH\\Api\\RestPrices' => $baseDir . '/includes/api/class-rest-prices.php',

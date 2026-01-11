@@ -9,7 +9,13 @@ class ComposerStaticInitb5e889746c5280811e87a72c161db6db
     public static $classMap = array (
         'Composer\\InstalledVersions' => __DIR__ . '/..' . '/composer/InstalledVersions.php',
         'ERH\\API\\ContactHandler' => __DIR__ . '/../..' . '/includes/api/class-contact-handler.php',
+        'ERH\\Admin\\AmazonApiClient' => __DIR__ . '/../..' . '/includes/admin/class-amazon-api-client.php',
+        'ERH\\Amazon\\AmazonLocales' => __DIR__ . '/../..' . '/includes/amazon/class-amazon-locales.php',
+        'ERH\\Amazon\\AwsV4Signer' => __DIR__ . '/../..' . '/includes/amazon/class-aws-v4-signer.php',
+        'ERH\\Admin\\LinkPopulator' => __DIR__ . '/../..' . '/includes/admin/class-link-populator.php',
+        'ERH\\Admin\\PerplexityClient' => __DIR__ . '/../..' . '/includes/admin/class-perplexity-client.php',
         'ERH\\Admin\\SettingsPage' => __DIR__ . '/../..' . '/includes/admin/class-settings-page.php',
+        'ERH\\Admin\\UrlVerifier' => __DIR__ . '/../..' . '/includes/admin/class-url-verifier.php',
         'ERH\\Api\\RestDeals' => __DIR__ . '/../..' . '/includes/api/class-rest-deals.php',
         'ERH\\Api\\RestListicle' => __DIR__ . '/../..' . '/includes/api/class-rest-listicle.php',
         'ERH\\Api\\RestPrices' => __DIR__ . '/../..' . '/includes/api/class-rest-prices.php',

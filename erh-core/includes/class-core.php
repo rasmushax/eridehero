@@ -37,6 +37,7 @@ use ERH\Cron\NotificationJob;
 use ERH\Cron\YouTubeSyncJob;
 use ERH\Scoring\ProductScorer;
 use ERH\Admin\SettingsPage;
+use ERH\Admin\LinkPopulator;
 use ERH\Migration\MigrationAdmin;
 use ERH\Api\RestPrices;
 use ERH\Api\RestDeals;
@@ -134,6 +135,13 @@ class Core {
      * @var MigrationAdmin
      */
     private MigrationAdmin $migration_admin;
+
+    /**
+     * Link populator admin instance.
+     *
+     * @var LinkPopulator
+     */
+    private LinkPopulator $link_populator;
 
     /**
      * Email template instance.
@@ -393,6 +401,10 @@ class Core {
         // Initialize migration admin.
         $this->migration_admin = new MigrationAdmin();
         $this->migration_admin->register();
+
+        // Initialize link populator (requires HFT plugin).
+        $this->link_populator = new LinkPopulator();
+        $this->link_populator->register();
     }
 
     /**
