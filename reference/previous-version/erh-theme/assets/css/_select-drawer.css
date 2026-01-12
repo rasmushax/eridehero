@@ -1,0 +1,255 @@
+/* =============================================
+   Select Drawer - Mobile Bottom Sheet for Selects
+   ============================================= */
+
+/* ===== DRAWER BACKDROP ===== */
+
+.select-drawer-backdrop {
+    position: fixed;
+    inset: 0;
+    z-index: var(--z-modal-backdrop);
+    background: rgba(33, 39, 58, 0.6);
+    backdrop-filter: blur(4px);
+    -webkit-backdrop-filter: blur(4px);
+    opacity: 0;
+    visibility: hidden;
+    transition: opacity 0.2s ease, visibility 0.2s ease;
+}
+
+.select-drawer-backdrop.is-visible {
+    opacity: 1;
+    visibility: visible;
+}
+
+
+/* ===== DRAWER CONTAINER ===== */
+
+.select-drawer {
+    position: fixed;
+    bottom: 0;
+    left: 0;
+    right: 0;
+    z-index: var(--z-modal);
+    max-height: 85vh;
+    background: var(--color-white);
+    border-radius: var(--radius-2xl) var(--radius-2xl) 0 0;
+    box-shadow: 0 -10px 40px rgba(33, 39, 58, 0.15);
+    display: flex;
+    flex-direction: column;
+    transform: translateY(100%);
+    transition: transform 0.3s cubic-bezier(0.32, 0.72, 0, 1);
+}
+
+.select-drawer.is-visible {
+    transform: translateY(0);
+}
+
+
+/* ===== DRAWER HANDLE (swipe indicator) ===== */
+
+.select-drawer-handle {
+    flex-shrink: 0;
+    display: flex;
+    justify-content: center;
+    padding: var(--space-4) 0 var(--space-2);
+    cursor: grab;
+    touch-action: pan-y;
+}
+
+.select-drawer-handle::before {
+    content: '';
+    width: 36px;
+    height: 4px;
+    background: var(--color-border-hover);
+    border-radius: 2px;
+}
+
+
+/* ===== DRAWER HEADER ===== */
+
+.select-drawer-header {
+    flex-shrink: 0;
+    display: flex;
+    align-items: center;
+    justify-content: space-between;
+    padding: var(--space-1) var(--space-6) var(--space-5);
+}
+
+.select-drawer-title {
+    font-size: var(--text-lg);
+    font-weight: var(--font-semibold);
+    color: var(--color-dark);
+    margin: 0;
+}
+
+.select-drawer-close {
+    display: flex;
+    align-items: center;
+    justify-content: center;
+    width: 36px;
+    height: 36px;
+    background: var(--color-background);
+    border: none;
+    border-radius: var(--radius-md);
+    color: var(--color-muted);
+    cursor: pointer;
+    transition: all var(--transition-fast);
+}
+
+.select-drawer-close:hover {
+    background: var(--color-border);
+    color: var(--color-dark);
+}
+
+.select-drawer-close .icon {
+    width: 20px;
+    height: 20px;
+}
+
+
+/* ===== DRAWER SEARCH ===== */
+
+.select-drawer-search {
+    flex-shrink: 0;
+    display: none;
+    align-items: center;
+    gap: var(--space-3);
+    margin: 0 var(--space-6) var(--space-4);
+    padding: var(--space-4) var(--space-5);
+    background: var(--color-background);
+    border: var(--border-width) solid transparent;
+    border-radius: var(--radius-lg);
+    transition: all var(--transition-fast);
+}
+
+.select-drawer.has-search .select-drawer-search {
+    display: flex;
+}
+
+.select-drawer-search:focus-within {
+    background: var(--color-white);
+    border-color: var(--color-primary);
+}
+
+.select-drawer-search .icon {
+    width: 18px;
+    height: 18px;
+    color: var(--color-muted);
+    flex-shrink: 0;
+}
+
+.select-drawer-search input {
+    flex: 1;
+    border: none;
+    background: transparent;
+    font-family: var(--font-family);
+    font-size: var(--text-base);
+    color: var(--color-dark);
+    outline: none;
+    min-width: 0;
+}
+
+.select-drawer-search input::placeholder {
+    color: var(--color-muted);
+}
+
+
+/* ===== DRAWER OPTIONS LIST ===== */
+
+.select-drawer-options {
+    flex: 1;
+    overflow-y: auto;
+    overscroll-behavior: contain;
+    padding: 0 var(--space-3) var(--space-6);
+    -webkit-overflow-scrolling: touch;
+}
+
+.select-drawer-options::-webkit-scrollbar {
+    width: 6px;
+}
+
+.select-drawer-options::-webkit-scrollbar-track {
+    background: transparent;
+}
+
+.select-drawer-options::-webkit-scrollbar-thumb {
+    background: var(--color-border-hover);
+    border-radius: 3px;
+}
+
+
+/* ===== DRAWER OPTION ===== */
+
+.select-drawer-option {
+    display: flex;
+    align-items: center;
+    justify-content: space-between;
+    width: 100%;
+    min-height: 48px;
+    padding: var(--space-4) var(--space-4);
+    font-family: var(--font-family);
+    font-size: var(--text-base);
+    color: var(--color-body);
+    background: transparent;
+    border: none;
+    border-radius: var(--radius-md);
+    cursor: pointer;
+    text-align: left;
+    transition: background var(--transition-fast);
+}
+
+.select-drawer-option:active {
+    background: var(--color-background);
+}
+
+.select-drawer-option.is-focused {
+    background: var(--color-background);
+}
+
+.select-drawer-option.is-selected {
+    color: var(--color-primary);
+    font-weight: var(--font-medium);
+}
+
+.select-drawer-option.is-selected::after {
+    content: '';
+    width: 20px;
+    height: 20px;
+    background-image: url("data:image/svg+xml,%3Csvg xmlns='http://www.w3.org/2000/svg' width='20' height='20' viewBox='0 0 24 24' fill='none' stroke='%235e2ced' stroke-width='2.5' stroke-linecap='round' stroke-linejoin='round'%3E%3Cpolyline points='20 6 9 17 4 12'/%3E%3C/svg%3E");
+    background-size: contain;
+    background-repeat: no-repeat;
+    flex-shrink: 0;
+}
+
+.select-drawer-option.is-disabled {
+    color: var(--color-muted);
+    cursor: not-allowed;
+}
+
+.select-drawer-option[hidden] {
+    display: none;
+}
+
+
+/* ===== DRAWER EMPTY STATE ===== */
+
+.select-drawer-empty {
+    display: none;
+    padding: var(--space-8) var(--space-4);
+    text-align: center;
+    color: var(--color-muted);
+    font-size: var(--text-sm);
+}
+
+.select-drawer-empty.is-visible {
+    display: block;
+}
+
+
+/* ===== SAFE AREA FOR IPHONE ===== */
+
+@supports (padding-bottom: env(safe-area-inset-bottom)) {
+    .select-drawer {
+        padding-bottom: env(safe-area-inset-bottom);
+    }
+}

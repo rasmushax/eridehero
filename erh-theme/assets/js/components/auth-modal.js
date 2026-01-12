@@ -406,8 +406,8 @@ class AuthModalManager {
             if (formType === 'forgot') {
                 this.renderState('forgot-sent');
             } else {
-                // Login or register success - reload page
-                this.handleAuthSuccess(formType);
+                // Login or register success
+                this.handleAuthSuccess(formType, result.needsOnboarding || false);
             }
 
         } catch (error) {
@@ -445,7 +445,7 @@ class AuthModalManager {
             if (event.data?.type === 'auth-success') {
                 window.removeEventListener('message', handleMessage);
                 popup?.close();
-                this.handleAuthSuccess('social');
+                this.handleAuthSuccess('social', event.data.needsOnboarding);
             } else if (event.data?.type === 'auth-error') {
                 window.removeEventListener('message', handleMessage);
                 popup?.close();
@@ -466,16 +466,25 @@ class AuthModalManager {
 
     /**
      * Handle successful authentication
+     * @param {string} method - 'signin', 'signup', or 'social'
+     * @param {boolean} needsOnboarding - Whether user needs to set email preferences
      */
-    handleAuthSuccess(method) {
+    handleAuthSuccess(method, needsOnboarding = false) {
         this.close();
 
         // Show success toast
         Toast.success(method === 'signup' ? 'Account created!' : 'Signed in successfully');
 
-        // Reload page after brief delay to show toast
+        // Redirect to onboarding or reload after brief delay
         setTimeout(() => {
-            window.location.reload();
+            if (needsOnboarding) {
+                // Redirect to email preferences with current URL as return destination
+                const siteUrl = window.erhData?.siteUrl || '';
+                const returnUrl = encodeURIComponent(window.location.href);
+                window.location.href = `${siteUrl}/email-preferences/?redirect=${returnUrl}`;
+            } else {
+                window.location.reload();
+            }
         }, 500);
     }
 

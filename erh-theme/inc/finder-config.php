@@ -1015,7 +1015,7 @@ function erh_process_finder_products( array $products, string $user_geo = 'US' )
         $product['current_price']    = $current_price;
         $product['price_formatted']  = $current_price ? erh_format_price( $current_price, $pricing['currency'] ?? 'USD' ) : null;
         $product['in_stock']         = $pricing['instock'] ?? false;
-        $product['best_link']        = $pricing['bestlink'] ?? null;
+        $product['best_link']        = $pricing['tracked_url'] ?? null;
 
         // Calculate price indicator (% vs 3-month average).
         $avg_price                 = $pricing['avg_3m'] ?? null;

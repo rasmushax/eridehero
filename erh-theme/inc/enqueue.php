@@ -104,6 +104,35 @@ function erh_enqueue_assets(): void {
     // Localize script with data the JS might need.
     wp_localize_script( 'erh-app', 'erhData', $erh_data );
 
+    // Add erhConfig with IPInfo token for geo detection.
+    $hft_settings = get_option( 'hft_settings', array() );
+    $ipinfo_token = $hft_settings['ipinfo_api_token'] ?? '';
+    if ( ! empty( $ipinfo_token ) ) {
+        wp_add_inline_script(
+            'erh-app',
+            'window.erhConfig = window.erhConfig || {}; window.erhConfig.ipinfoToken = ' . wp_json_encode( $ipinfo_token ) . ';',
+            'before'
+        );
+    }
+
+    // OAuth popup handler: If we're in a popup and user is logged in, notify parent
+    if ( is_user_logged_in() && class_exists( '\ERH\User\UserRepository' ) ) {
+        $user_repo = new \ERH\User\UserRepository();
+        $needs_onboarding = ! $user_repo->has_preferences_set( get_current_user_id() );
+
+        wp_add_inline_script(
+            'erh-app',
+            'if (window.opener && !window.opener.closed) {
+                window.opener.postMessage({
+                    type: "auth-success",
+                    needsOnboarding: ' . ( $needs_onboarding ? 'true' : 'false' ) . '
+                }, window.location.origin);
+                window.close();
+            }',
+            'after'
+        );
+    }
+
     // Comment reply script (only on singular with comments)
     if ( is_singular() && comments_open() && get_option( 'thread_comments' ) ) {
         wp_enqueue_script( 'comment-reply' );

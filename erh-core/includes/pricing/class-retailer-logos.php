@@ -29,6 +29,19 @@ class RetailerLogos {
     private array $cache = [];
 
     /**
+     * Special retailers not in HFT (like Amazon which uses PA-API).
+     * Maps identifier to display name and logo filename.
+     *
+     * @var array<string, array{name: string, logo: string}>
+     */
+    private const SPECIAL_RETAILERS = [
+        'amazon' => [
+            'name' => 'Amazon',
+            'logo' => 'amazon.svg',
+        ],
+    ];
+
+    /**
      * Constructor.
      */
     public function __construct() {
@@ -73,21 +86,36 @@ class RetailerLogos {
     }
 
     /**
-     * Get logo URL for a scraper by domain.
+     * Get logo URL for a scraper by domain or identifier.
      *
-     * @param string $domain The retailer domain.
+     * @param string $domain The retailer domain or special identifier (e.g., 'amazon').
      * @param string $size   Image size (thumbnail, medium, large, full).
      * @return string|null Logo URL or null if not found.
      */
     public function get_logo_by_domain(string $domain, string $size = 'thumbnail'): ?string {
-        if (!$this->is_available()) {
-            return null;
-        }
-
         // Check cache first.
         $cache_key = $domain . '_' . $size;
         if (array_key_exists($cache_key, $this->cache)) {
             return $this->cache[$cache_key];
+        }
+
+        // Check for special retailers (like Amazon).
+        $identifier = strtolower($domain);
+        if (isset(self::SPECIAL_RETAILERS[$identifier])) {
+            $logo_url = $this->get_special_retailer_logo($identifier);
+            $this->cache[$cache_key] = $logo_url;
+            return $logo_url;
+        }
+
+        // Check if it's an Amazon domain.
+        if (strpos($domain, 'amazon.') !== false) {
+            $logo_url = $this->get_special_retailer_logo('amazon');
+            $this->cache[$cache_key] = $logo_url;
+            return $logo_url;
+        }
+
+        if (!$this->is_available()) {
+            return null;
         }
 
         // Normalize domain (remove www prefix).
@@ -129,12 +157,23 @@ class RetailerLogos {
     }
 
     /**
-     * Get retailer name from scraper.
+     * Get retailer name from scraper or special retailers.
      *
-     * @param string $domain The retailer domain.
+     * @param string $domain The retailer domain or special identifier.
      * @return string Retailer name or formatted domain.
      */
     public function get_retailer_name(string $domain): string {
+        // Check for special retailers (like Amazon).
+        $identifier = strtolower($domain);
+        if (isset(self::SPECIAL_RETAILERS[$identifier])) {
+            return self::SPECIAL_RETAILERS[$identifier]['name'];
+        }
+
+        // Check if it's an Amazon domain.
+        if (strpos($domain, 'amazon.') !== false) {
+            return self::SPECIAL_RETAILERS['amazon']['name'];
+        }
+
         if (!$this->is_available()) {
             return $this->format_domain_as_name($domain);
         }
@@ -185,6 +224,34 @@ class RetailerLogos {
         }
 
         return $url ?: null;
+    }
+
+    /**
+     * Get logo URL for a special retailer (stored in theme assets).
+     *
+     * @param string $identifier The retailer identifier (e.g., 'amazon').
+     * @return string|null Logo URL or null if not found.
+     */
+    private function get_special_retailer_logo(string $identifier): ?string {
+        if (!isset(self::SPECIAL_RETAILERS[$identifier])) {
+            return null;
+        }
+
+        $logo_file = self::SPECIAL_RETAILERS[$identifier]['logo'];
+
+        // Try theme directory first.
+        $theme_logo_path = get_stylesheet_directory() . '/assets/images/logos/' . $logo_file;
+        if (file_exists($theme_logo_path)) {
+            return get_stylesheet_directory_uri() . '/assets/images/logos/' . $logo_file;
+        }
+
+        // Fall back to parent theme.
+        $parent_logo_path = get_template_directory() . '/assets/images/logos/' . $logo_file;
+        if (file_exists($parent_logo_path)) {
+            return get_template_directory_uri() . '/assets/images/logos/' . $logo_file;
+        }
+
+        return null;
     }
 
     /**

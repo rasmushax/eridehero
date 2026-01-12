@@ -1,0 +1,76 @@
+/* =============================================
+   ERideHero Design System - Page Section Patterns
+   Shared section styles for content pages (reviews, products, etc.)
+   ============================================= */
+
+/* ===== CONTENT SECTIONS ===== */
+
+.content-section {
+    margin-bottom: var(--space-12);
+}
+
+.content-section:last-child {
+    margin-bottom: 0;
+}
+
+/* ===== SECTION TITLE ===== */
+
+.section-title {
+    display: flex;
+    align-items: center;
+    gap: var(--space-3);
+    font-size: var(--text-3xl);
+    font-weight: var(--font-bold);
+    color: var(--color-dark);
+    margin: 0 0 var(--space-6);
+}
+
+/* ===== SECTION HEADER (title + link/popover) ===== */
+
+.section-header {
+    display: flex;
+    align-items: center;
+    justify-content: space-between;
+    flex-wrap: wrap;
+    gap: var(--space-3) var(--space-4);
+    margin-bottom: var(--space-6);
+}
+
+.section-header .section-title {
+    margin: 0;
+}
+
+.section-header .popover-wrapper {
+    flex-shrink: 0;
+}
+
+/* ===== SECTION LINK ===== */
+
+.section-link {
+    display: inline-flex;
+    align-items: center;
+    gap: var(--space-2);
+    font-size: var(--text-sm);
+    font-weight: var(--font-medium);
+    color: var(--color-primary);
+    text-decoration: none;
+    white-space: nowrap;
+    transition: gap var(--transition-fast);
+}
+
+.section-link:hover {
+    gap: var(--space-3);
+}
+
+.section-link .icon {
+    width: 16px;
+    height: 16px;
+}
+
+/* ===== RESPONSIVE ===== */
+
+@media (max-width: 480px) {
+    .section-title {
+        flex-wrap: wrap;
+    }
+}

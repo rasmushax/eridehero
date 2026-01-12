@@ -9,6 +9,7 @@ declare(strict_types=1);
 
 namespace ERH\Cron;
 
+use ERH\GeoConfig;
 use ERH\Pricing\PriceFetcher;
 use ERH\Database\PriceHistory;
 
@@ -17,31 +18,6 @@ use ERH\Database\PriceHistory;
  * Records best price per product per geo per currency.
  */
 class PriceUpdateJob implements CronJobInterface {
-
-    /**
-     * The 5 primary regions we track prices for.
-     */
-    private const REGIONS = ['US', 'GB', 'EU', 'CA', 'AU'];
-
-    /**
-     * EU country codes that map to the EU region.
-     */
-    private const EU_COUNTRIES = [
-        'DE', 'FR', 'IT', 'ES', 'NL', 'BE', 'AT', 'IE', 'PT', 'FI',
-        'GR', 'LU', 'SK', 'SI', 'EE', 'LV', 'LT', 'CY', 'MT',
-        'PL', 'CZ', 'HU', 'RO', 'BG', 'HR', 'DK', 'SE', 'NO', 'CH', 'EU',
-    ];
-
-    /**
-     * Region to currency mapping.
-     */
-    private const REGION_CURRENCIES = [
-        'US' => 'USD',
-        'GB' => 'GBP',
-        'EU' => 'EUR',
-        'CA' => 'CAD',
-        'AU' => 'AUD',
-    ];
 
     /**
      * Price fetcher instance.
@@ -230,7 +206,7 @@ class PriceUpdateJob implements CronJobInterface {
             }
 
             // Verify currency matches expected for this region.
-            $expected_currency = self::REGION_CURRENCIES[$region] ?? 'USD';
+            $expected_currency = GeoConfig::get_currency($region);
             if ($currency !== $expected_currency) {
                 continue;
             }
@@ -282,12 +258,12 @@ class PriceUpdateJob implements CronJobInterface {
      */
     private function map_to_region(string $geo, string $currency): ?string {
         // Direct region matches.
-        if (in_array($geo, self::REGIONS, true)) {
+        if (in_array($geo, GeoConfig::REGIONS, true)) {
             return $geo;
         }
 
         // EU country codes map to EU region.
-        if (in_array($geo, self::EU_COUNTRIES, true)) {
+        if (GeoConfig::is_eu_country($geo)) {
             return 'EU';
         }
 

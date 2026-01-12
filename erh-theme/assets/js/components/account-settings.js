@@ -8,12 +8,14 @@ import { Toast } from './toast.js';
 // Use erhData.restUrl which includes correct site path (e.g., /eridehero/wp-json/erh/v1/)
 const getApiBase = () => (window.erhData?.restUrl || '/wp-json/erh/v1/').replace(/\/$/, '');
 const getNonce = () => window.erhData?.nonce || '';
+const getSiteUrl = () => window.erhData?.siteUrl || '/';
 
 export function initAccountSettings() {
     initPasswordToggles();
     initEmailForm();
     initPasswordForm();
     initPreferencesForm();
+    initConnectedAccounts();
     initLogout();
     loadPreferences();
 }
@@ -211,6 +213,60 @@ async function loadPreferences() {
 }
 
 /**
+ * Fetch user's active tracker count
+ */
+async function fetchTrackerCount() {
+    try {
+        const response = await fetch(`${getApiBase()}/user/trackers`, {
+            headers: {
+                'X-WP-Nonce': getNonce()
+            },
+            credentials: 'same-origin'
+        });
+
+        if (!response.ok) return 0;
+
+        const data = await response.json();
+        return data.trackers?.length || 0;
+    } catch {
+        return 0;
+    }
+}
+
+/**
+ * Handle tracker emails toggle - show warning if disabling with active trackers
+ */
+function handleTrackerEmailsToggle(checkbox, trackerCount) {
+    // Remove any existing warning
+    document.querySelector('[data-tracker-warning]')?.remove();
+
+    // Show warning if unchecking and has active trackers
+    if (!checkbox.checked && trackerCount > 0) {
+        const warning = document.createElement('div');
+        warning.className = 'settings-inline-warning';
+        warning.setAttribute('data-tracker-warning', '');
+        warning.innerHTML = `
+            <svg class="settings-warning-icon" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round">
+                <path d="M10.29 3.86L1.82 18a2 2 0 0 0 1.71 3h16.94a2 2 0 0 0 1.71-3L13.71 3.86a2 2 0 0 0-3.42 0z"></path>
+                <line x1="12" y1="9" x2="12" y2="13"></line>
+                <line x1="12" y1="17" x2="12.01" y2="17"></line>
+            </svg>
+            <span>
+                You have <strong>${trackerCount} active tracker${trackerCount > 1 ? 's' : ''}</strong>.
+                Disabling emails means you won't be notified when prices drop.
+                Your trackers will remain visible in your account.
+            </span>
+        `;
+
+        // Insert warning after the preference container
+        const preferenceEl = checkbox.closest('.settings-preference');
+        if (preferenceEl) {
+            preferenceEl.after(warning);
+        }
+    }
+}
+
+/**
  * Email preferences form
  */
 function initPreferencesForm() {
@@ -221,11 +277,25 @@ function initPreferencesForm() {
     const submitBtn = form.querySelector('[data-preferences-submit]');
     const roundupCheckbox = form.querySelector('input[data-preference="sales_roundup_emails"]');
     const roundupWrapper = form.querySelector('[data-roundup-wrapper]');
+    const trackerCheckbox = form.querySelector('input[data-preference="price_trackers_emails"]');
+
+    // Track tracker count for warning display
+    let trackerCount = 0;
+    fetchTrackerCount().then(count => {
+        trackerCount = count;
+    });
 
     // Toggle roundup options visibility
     if (roundupCheckbox && roundupWrapper) {
         roundupCheckbox.addEventListener('change', () => {
             updateRoundupVisibility(roundupCheckbox.checked);
+        });
+    }
+
+    // Handle tracker emails toggle warning
+    if (trackerCheckbox) {
+        trackerCheckbox.addEventListener('change', () => {
+            handleTrackerEmailsToggle(trackerCheckbox, trackerCount);
         });
     }
 
@@ -287,6 +357,123 @@ function updateRoundupVisibility(show) {
 }
 
 /**
+ * Connected social accounts
+ */
+function initConnectedAccounts() {
+    const container = document.querySelector('[data-connected-accounts]');
+    if (!container) return;
+
+    loadConnectedAccounts(container);
+}
+
+/**
+ * Load and render connected accounts
+ */
+async function loadConnectedAccounts(container) {
+    const providers = [
+        { key: 'google', name: 'Google', icon: 'google' },
+        { key: 'facebook', name: 'Facebook', icon: 'facebook' },
+        { key: 'reddit', name: 'Reddit', icon: 'reddit' }
+    ];
+
+    try {
+        const response = await fetch(`${getApiBase()}/user/profile`, {
+            headers: {
+                'X-WP-Nonce': getNonce()
+            },
+            credentials: 'same-origin'
+        });
+
+        if (!response.ok) {
+            throw new Error('Failed to load profile');
+        }
+
+        const data = await response.json();
+        const linkedProviders = data.profile?.linked_providers || [];
+
+        // Only show linked providers (disconnect only, no "Connect" buttons)
+        const linkedItems = providers.filter(p => linkedProviders.includes(p.key));
+
+        if (linkedItems.length === 0) {
+            container.innerHTML = '<p class="connected-accounts-empty">No social accounts connected.</p>';
+            return;
+        }
+
+        container.innerHTML = linkedItems.map(p => `
+            <div class="connected-account" data-provider="${p.key}">
+                <div class="connected-account-info">
+                    <svg class="connected-account-icon" width="20" height="20">
+                        <use href="#icon-${p.icon}"></use>
+                    </svg>
+                    <span class="connected-account-name">${p.name}</span>
+                    <span class="connected-account-status">Connected</span>
+                </div>
+                <button
+                    type="button"
+                    class="btn btn-sm btn-outline connected-account-disconnect"
+                    data-disconnect="${p.key}"
+                >
+                    Disconnect
+                </button>
+            </div>
+        `).join('');
+
+        // Handle disconnect clicks
+        container.querySelectorAll('[data-disconnect]').forEach(btn => {
+            btn.addEventListener('click', () => handleDisconnect(btn, container));
+        });
+
+    } catch (error) {
+        console.error('Failed to load connected accounts:', error);
+        container.innerHTML = '<p class="connected-accounts-error">Failed to load connected accounts.</p>';
+    }
+}
+
+/**
+ * Handle disconnecting a social account
+ */
+async function handleDisconnect(btn, container) {
+    const provider = btn.dataset.disconnect;
+    const providerName = provider.charAt(0).toUpperCase() + provider.slice(1);
+
+    // Confirm before disconnecting
+    if (!confirm(`Are you sure you want to disconnect your ${providerName} account?`)) {
+        return;
+    }
+
+    btn.disabled = true;
+    btn.textContent = 'Disconnecting...';
+
+    try {
+        const response = await fetch(`${getApiBase()}/user/unlink-social`, {
+            method: 'POST',
+            headers: {
+                'Content-Type': 'application/json',
+                'X-WP-Nonce': getNonce()
+            },
+            credentials: 'same-origin',
+            body: JSON.stringify({ provider })
+        });
+
+        const result = await response.json();
+
+        if (!response.ok) {
+            throw new Error(result.message || 'Failed to disconnect');
+        }
+
+        Toast.success(result.message || `${providerName} account disconnected.`);
+
+        // Re-render the connected accounts
+        loadConnectedAccounts(container);
+
+    } catch (error) {
+        Toast.error(error.message);
+        btn.disabled = false;
+        btn.textContent = 'Disconnect';
+    }
+}
+
+/**
  * Logout button
  */
 function initLogout() {
@@ -306,11 +493,11 @@ function initLogout() {
             });
 
             // Redirect to home regardless of response
-            window.location.href = '/';
+            window.location.href = getSiteUrl();
 
         } catch (error) {
             // Still redirect on error
-            window.location.href = '/';
+            window.location.href = getSiteUrl();
         }
     });
 }

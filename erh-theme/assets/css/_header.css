@@ -398,7 +398,8 @@
 /* ===== HEADER AUTH BUTTONS ===== */
 /* These are header-specific compact button styles */
 
-.header-right .btn-login {
+.header-right .btn-login,
+.header-right .btn-account {
     display: flex;
     align-items: center;
     gap: var(--space-3);
@@ -414,12 +415,15 @@
 }
 
 .header-right .btn-login:hover,
-.header-right .btn-login:focus {
+.header-right .btn-login:focus,
+.header-right .btn-account:hover,
+.header-right .btn-account:focus {
     background: var(--color-white);
     border-color: var(--color-border);
 }
 
-.header-right .btn-login svg {
+.header-right .btn-login svg,
+.header-right .btn-account svg {
     width: 18px;
     height: 18px;
     color: var(--color-muted);
@@ -1054,7 +1058,8 @@
         font-size: 13px;
     }
 
-    .header-right .btn-login {
+    .header-right .btn-login,
+    .header-right .btn-account {
         padding: var(--space-4) var(--space-5);
         font-size: 13px;
     }
@@ -1079,7 +1084,8 @@
         padding: var(--space-3) var(--space-4);
     }
 
-    .header-right .btn-login {
+    .header-right .btn-login,
+    .header-right .btn-account {
         padding: var(--space-3) var(--space-5);
     }
 
@@ -1099,7 +1105,8 @@
         display: none;
     }
 
-    .header-right .btn-login {
+    .header-right .btn-login,
+    .header-right .btn-account {
         display: none;
     }
 

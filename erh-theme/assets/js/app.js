@@ -15,6 +15,7 @@ import './components/popover.js'; // Auto-initializes popovers
 import './components/modal.js'; // Auto-initializes modals
 import './components/tooltip.js'; // Auto-initializes tooltips
 import './components/toast.js'; // Toast notifications (auto-init container)
+import { Toast } from './components/toast.js'; // For programmatic toasts
 
 // Note: auth-modal.js and price-alert.js are imported by components that need them
 // (e.g., price-intel.js imports price-alert.js) - no need to import here
@@ -28,6 +29,21 @@ import './components/toast.js'; // Toast notifications (auto-init container)
     const dropdowns = initDropdowns();
     const customSelects = initCustomSelects();
     const headerScroll = initHeaderScroll();
+
+    // ===========================================
+    // URL PARAM HANDLERS
+    // Handle query params that trigger UI feedback
+    // ===========================================
+
+    // Show toast when social account was auto-linked (?linked=google)
+    const linkedProvider = new URLSearchParams(window.location.search).get('linked');
+    if (linkedProvider) {
+        const providerName = linkedProvider.charAt(0).toUpperCase() + linkedProvider.slice(1);
+        Toast.success(`Your ${providerName} account has been linked.`);
+        // Clean URL
+        const cleanUrl = window.location.pathname + window.location.hash;
+        window.history.replaceState({}, '', cleanUrl);
+    }
 
     // ===========================================
     // CONDITIONAL COMPONENT LOADING
@@ -248,6 +264,16 @@ import './components/toast.js'; // Toast notifications (auto-init container)
         import('./components/account-tabs.js');
         import('./components/account-settings.js');
         import('./components/account-trackers.js');
+    }
+
+    // Onboarding page - email preferences setup
+    if (document.querySelector('[data-onboarding]')) {
+        import('./components/onboarding.js');
+    }
+
+    // Complete profile page - social auth email collection (Reddit)
+    if (document.querySelector('[data-complete-profile]')) {
+        import('./components/complete-profile.js');
     }
 
     // Global keyboard handling

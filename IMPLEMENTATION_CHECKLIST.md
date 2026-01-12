@@ -60,11 +60,13 @@ Use this file alongside CLAUDE.md to track progress.
 - [x] Logout handler
 - [x] Status check endpoint
 - [x] wp-login.php redirect for non-admin users (bypass: `?wpadmin=true`)
+- [x] Email-based login (accepts `email` parameter, looks up username)
+- [x] Auto-generate username from email on registration (if not provided)
 
 **REST Endpoints:**
-- `POST /erh/v1/auth/login`
-- `POST /erh/v1/auth/register`
-- `POST /erh/v1/auth/forgot-password`
+- `POST /erh/v1/auth/login` - Accepts `email` OR `username` + `password`
+- `POST /erh/v1/auth/register` - Accepts `email` + `password` (username auto-generated)
+- `POST /erh/v1/auth/forgot-password` - Accepts `email` OR `user_login`
 - `POST /erh/v1/auth/reset-password`
 - `POST /erh/v1/auth/logout`
 - `GET /erh/v1/auth/status`
@@ -184,7 +186,9 @@ Use this file alongside CLAUDE.md to track progress.
 ### Cache Rebuild Job Enhancements
 - [x] Add `is_genuine_geo_price()` validation (prevents US fallbacks bleeding into other geos)
 - [x] Expand `price_history` to store per-geo pricing data:
-  - Current price, currency, stock status, retailer, best link
+  - Current price, currency, stock status, retailer
+  - `tracked_url` - Click-tracked URL (e.g., `/go/product-slug/123/`)
+  - `link_id` - HFT tracked link ID
   - Period averages: 3m, 6m, 12m, all-time
   - Period lows: 3m, 6m, 12m, all-time
   - Period highs: 3m, 6m, 12m, all-time
@@ -229,6 +233,23 @@ Use this file alongside CLAUDE.md to track progress.
   - Removed US fallback (was mixing currencies in comparisons)
   - Now matches finder.js behavior: show user's region price only, null if unavailable
   - Comment: "Users from unmapped countries already default to US at geo-detection level"
+
+### Geo System Consolidation (Session 2025-01-12)
+- [x] Created `class-geo-config.php` - Single source of truth for geo constants
+  - REGIONS, EU_COUNTRIES, CURRENCIES, CURRENCY_SYMBOLS constants
+  - Helper methods: get_region(), get_currency(), get_symbol(), is_eu_country(), is_valid_region()
+- [x] Updated `geo-price.js` to set both cookies:
+  - `erh_geo` - Region code (for pricing)
+  - `erh_country` - Specific country code (for analytics)
+- [x] Removed `bestlink` field from cache (replaced with `tracked_url`)
+  - Updated: class-cache-rebuild-job.php, class-deals-finder.php, class-rest-deals.php
+  - Updated: finder.js, compare-results.js, finder-config.php
+- [x] Removed deprecated methods from CacheRebuildJob (~200 lines):
+  - rebuild_product(), build_region_pricing_data() (old version)
+  - get_best_price_for_region(), get_history_for_region()
+- [x] Updated PHP files to use GeoConfig class:
+  - class-cache-rebuild-job.php - uses GeoConfig::REGIONS, GeoConfig::EU_COUNTRIES
+  - class-price-update-job.php - uses GeoConfig for region/currency lookups
 
 ### 5-Region Architecture
 - **Regions**: US, GB, EU, CA, AU
@@ -626,6 +647,8 @@ erh-core/
 ├── composer.json                     # PSR-4 autoloading
 ├── includes/
 │   ├── class-core.php               # Main orchestrator
+│   ├── class-cache-keys.php         # Centralized cache key management
+│   ├── class-geo-config.php         # Geo constants (regions, currencies, EU countries)
 │   │
 │   ├── admin/
 │   │   └── class-settings-page.php  # Settings > ERideHero (incl. Cron Jobs tab)

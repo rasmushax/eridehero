@@ -291,7 +291,7 @@ class RestDeals extends WP_REST_Controller {
             'current_price'    => $analysis['current_price'] ?? 0,
             'currency'         => $analysis['currency'] ?? 'USD',
             'retailer'         => $analysis['retailer'] ?? null,
-            'bestlink'         => $analysis['bestlink'] ?? null,
+            'tracked_url'      => $analysis['tracked_url'] ?? null,
             'instock'          => $analysis['instock'] ?? false,
             // Deal analysis.
             'discount_percent' => abs($analysis['discount_percent'] ?? 0),

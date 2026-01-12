@@ -137,3 +137,14 @@ function erh_excerpt_more( string $more ): string {
     return '&hellip;';
 }
 add_filter( 'excerpt_more', 'erh_excerpt_more' );
+
+/**
+ * Hide admin bar for regular users (subscribers).
+ * Only show for editors, administrators, and above.
+ */
+function erh_hide_admin_bar_for_subscribers(): void {
+    if ( ! current_user_can( 'edit_posts' ) ) {
+        show_admin_bar( false );
+    }
+}
+add_action( 'after_setup_theme', 'erh_hide_admin_bar_for_subscribers' );

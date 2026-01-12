@@ -35,6 +35,7 @@ define('ERH_TABLE_PRODUCT_DATA', 'product_data');
 define('ERH_TABLE_PRICE_HISTORY', 'product_daily_prices');
 define('ERH_TABLE_PRICE_TRACKERS', 'price_trackers');
 define('ERH_TABLE_PRODUCT_VIEWS', 'product_views');
+define('ERH_TABLE_CLICKS', 'erh_clicks');
 
 /**
  * Load Composer autoloader.
@@ -195,8 +196,9 @@ function erh_activate(): void {
     $schema = new ERH\Database\Schema();
     $schema->create_tables();
 
-    // Flush rewrite rules for CPTs.
-    flush_rewrite_rules();
+    // Add click tracking rewrite rules.
+    require_once ERH_PLUGIN_DIR . 'includes/tracking/class-click-redirector.php';
+    ERH\Tracking\ClickRedirector::flush_rules();
 
     // Set plugin version in options.
     update_option('erh_version', ERH_VERSION);

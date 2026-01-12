@@ -51,6 +51,7 @@ class Schema {
         $this->create_price_history_table();
         $this->create_price_trackers_table();
         $this->create_product_views_table();
+        $this->create_clicks_table();
     }
 
     /**
@@ -78,8 +79,54 @@ class Schema {
             update_option('erh_db_version', '1.3.0');
         }
 
+        // Upgrade to add is_bot column to clicks table.
+        if (version_compare($current_version, '1.4.0', '<')) {
+            $this->upgrade_clicks_add_is_bot();
+            update_option('erh_db_version', '1.4.0');
+        }
+
         // Re-run table creation to ensure all tables and columns exist.
         $this->create_tables();
+    }
+
+    /**
+     * Upgrade clicks table to add is_bot column.
+     *
+     * @return void
+     */
+    private function upgrade_clicks_add_is_bot(): void {
+        $table_name = $this->get_table_name(ERH_TABLE_CLICKS);
+
+        // Check if table exists.
+        $table_exists = $this->wpdb->get_var(
+            $this->wpdb->prepare('SHOW TABLES LIKE %s', $table_name)
+        );
+
+        if (!$table_exists) {
+            return; // Table will be created by create_tables().
+        }
+
+        // Add is_bot column if missing.
+        $is_bot_exists = $this->wpdb->get_var(
+            "SHOW COLUMNS FROM {$table_name} LIKE 'is_bot'"
+        );
+        if (!$is_bot_exists) {
+            $this->wpdb->query(
+                "ALTER TABLE {$table_name} ADD COLUMN is_bot tinyint(1) NOT NULL DEFAULT 0 AFTER device_type"
+            );
+            error_log('[ERH Schema] Added is_bot column to clicks table');
+        }
+
+        // Add is_bot index if missing.
+        $is_bot_index = $this->wpdb->get_var(
+            "SHOW INDEX FROM {$table_name} WHERE Key_name = 'is_bot'"
+        );
+        if (!$is_bot_index) {
+            $this->wpdb->query("ALTER TABLE {$table_name} ADD KEY is_bot (is_bot)");
+            error_log('[ERH Schema] Added is_bot index to clicks table');
+        }
+
+        error_log('[ERH Schema] Clicks table upgraded with is_bot column');
     }
 
     /**
@@ -419,6 +466,41 @@ class Schema {
     }
 
     /**
+     * Create the clicks table.
+     *
+     * This table stores affiliate link click tracking data for analytics.
+     * Tracks which pages drive clicks, geo distribution, and device types.
+     *
+     * @return void
+     */
+    private function create_clicks_table(): void {
+        $table_name = $this->get_table_name(ERH_TABLE_CLICKS);
+        $charset_collate = $this->wpdb->get_charset_collate();
+
+        $sql = "CREATE TABLE {$table_name} (
+            id bigint(20) unsigned NOT NULL AUTO_INCREMENT,
+            tracked_link_id bigint(20) unsigned NOT NULL,
+            product_id bigint(20) unsigned NOT NULL,
+            referrer_url varchar(500) DEFAULT NULL,
+            referrer_path varchar(255) DEFAULT NULL,
+            user_geo char(2) DEFAULT NULL,
+            user_id bigint(20) unsigned DEFAULT NULL,
+            device_type enum('desktop','mobile','tablet') DEFAULT 'desktop',
+            is_bot tinyint(1) NOT NULL DEFAULT 0,
+            clicked_at datetime NOT NULL,
+            PRIMARY KEY  (id),
+            KEY tracked_link_id (tracked_link_id),
+            KEY product_id (product_id),
+            KEY referrer_path (referrer_path),
+            KEY clicked_at (clicked_at),
+            KEY user_geo (user_geo),
+            KEY is_bot (is_bot)
+        ) {$charset_collate};";
+
+        dbDelta($sql);
+    }
+
+    /**
      * Check if a table exists.
      *
      * @param string $table_name The table name (without prefix).
@@ -448,6 +530,7 @@ class Schema {
             ERH_TABLE_PRICE_HISTORY,
             ERH_TABLE_PRICE_TRACKERS,
             ERH_TABLE_PRODUCT_VIEWS,
+            ERH_TABLE_CLICKS,
         ];
 
         foreach ($tables as $table) {

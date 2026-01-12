@@ -259,7 +259,7 @@ class ListicleItemComponent {
             const bestPriceEl = priceBar.querySelector('[data-best-price]');
             if (bestPriceEl) {
                 bestPriceEl.innerHTML = `
-                    <a href="${bestOffer.url}" class="listicle-item-price-link" target="_blank" rel="nofollow noopener">
+                    <a href="${bestOffer.tracked_url || bestOffer.url}" class="listicle-item-price-link" target="_blank" rel="nofollow noopener">
                         <span class="listicle-item-price-amount">${formatPrice(bestOffer.price, currency)}</span>
                         <span class="listicle-item-price-at">at</span>
                         ${retailerHtml}
@@ -271,7 +271,7 @@ class ListicleItemComponent {
             // Hydrate buy button
             const buyBtn = priceBar.querySelector('[data-buy-btn]');
             if (buyBtn) {
-                buyBtn.href = bestOffer.url;
+                buyBtn.href = bestOffer.tracked_url || bestOffer.url;
                 const buyText = buyBtn.querySelector('[data-buy-text]');
                 const buyIcon = buyBtn.querySelector('[data-buy-icon]');
                 const buySpinner = buyBtn.querySelector('[data-buy-spinner]');
@@ -350,7 +350,7 @@ class ListicleItemComponent {
             const badgeHtml = isBest ? '<span class="listicle-item-retailer-badge">Best price</span>' : '';
 
             return `
-                <a href="${offer.url}" class="${rowClass}" target="_blank" rel="nofollow noopener">
+                <a href="${offer.tracked_url || offer.url}" class="${rowClass}" target="_blank" rel="nofollow noopener">
                     ${logoHtml}
                     <div class="listicle-item-retailer-info">
                         <span class="listicle-item-retailer-name">${offer.retailer}</span>

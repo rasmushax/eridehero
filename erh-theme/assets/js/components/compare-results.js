@@ -260,7 +260,7 @@ function enrichProduct(product) {
         currency: pricing[geo] ? userGeo.currency : 'USD',
         priceData: regionPricing,
         inStock: regionPricing.instock !== false,
-        buyLink: regionPricing.bestlink || product.url,
+        buyLink: regionPricing.tracked_url || product.url,
     };
 }
 

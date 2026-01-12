@@ -91,7 +91,7 @@ export function renderRetailerRow(offer, options = {}) {
         : '';
 
     return `
-        <a href="${offer.url || '#'}" class="${classPrefix}-retailer-row ${bestClass}" target="_blank" rel="nofollow noopener">
+        <a href="${offer.tracked_url || offer.url || '#'}" class="${classPrefix}-retailer-row ${bestClass}" target="_blank" rel="nofollow noopener">
             ${logoHtml}
             <div class="${classPrefix}-retailer-info">
                 <span class="${classPrefix}-retailer-name">${offer.retailer}</span>

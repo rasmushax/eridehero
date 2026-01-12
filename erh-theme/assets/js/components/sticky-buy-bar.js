@@ -132,8 +132,8 @@ async function loadPriceData() {
         // Populate buy link
         const buyLink = stickyBar.querySelector(SELECTORS.buyLink);
         const retailerEl = stickyBar.querySelector(SELECTORS.retailer);
-        if (buyLink && bestOffer.url) {
-            buyLink.href = bestOffer.url;
+        if (buyLink && (bestOffer.tracked_url || bestOffer.url)) {
+            buyLink.href = bestOffer.tracked_url || bestOffer.url;
             if (retailerEl && bestOffer.retailer) {
                 retailerEl.textContent = `Buy at ${bestOffer.retailer}`;
             }

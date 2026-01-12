@@ -43,6 +43,7 @@ eridehero/
 │   │   ├── scoring/             # Product scoring
 │   │   ├── user/                # Auth, preferences, trackers
 │   │   ├── class-cache-keys.php # Centralized cache key management
+│   │   ├── class-geo-config.php # Geo constants (regions, currencies, EU countries)
 │   │   └── class-core.php       # Main orchestrator
 │   └── vendor/                  # Composer autoload
 │
@@ -215,11 +216,32 @@ HFT plugin tables: `wp_hft_tracked_links`, `wp_hft_price_history`, `wp_hft_scrap
 |--------|----------|-------|
 | US | USD | Default for unmapped countries |
 | GB | GBP | United Kingdom |
-| EU | EUR | Aggregates DE/FR/IT/ES/etc. |
+| EU | EUR | Aggregates DE/FR/IT/ES/etc. (27 countries) |
 | CA | CAD | Canada |
 | AU | AUD | Australia, New Zealand |
 
 **Rule**: No currency mixing. Products without regional pricing show "no price" (not USD fallback).
+
+### GeoConfig Class (Single Source of Truth)
+```php
+use ERH\GeoConfig;
+
+// Constants
+GeoConfig::REGIONS        // ['US', 'GB', 'EU', 'CA', 'AU']
+GeoConfig::EU_COUNTRIES   // ['AT', 'BE', 'BG', ...] (27 countries)
+GeoConfig::CURRENCIES     // ['US' => 'USD', 'GB' => 'GBP', ...]
+
+// Methods
+GeoConfig::get_region('DK')      // Returns 'EU'
+GeoConfig::get_currency('EU')    // Returns 'EUR'
+GeoConfig::get_symbol('EUR')     // Returns '€'
+GeoConfig::is_eu_country('FR')   // Returns true
+GeoConfig::is_valid_region('US') // Returns true
+```
+
+### Cookies Set by geo-price.js
+- `erh_geo` - Region code (US, GB, EU, CA, AU) - 1 year TTL
+- `erh_country` - Specific country code (DK, FR, DE, etc.) - 1 year TTL
 
 See `HFT_INTEGRATION.md` for full geo architecture.
 

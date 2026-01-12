@@ -220,14 +220,36 @@ class SocialAuth {
         $result = $this->authenticate_user($provider_name, $profile);
 
         if (is_wp_error($result)) {
+            // Check for special redirect case (no email, need to collect it).
+            if ($result->get_error_code() === 'email_required_redirect') {
+                // Clear the OAuth state (we have a new pending state now).
+                $this->clear_state($state);
+
+                // Redirect to complete-profile page (URL is in error message).
+                wp_redirect($result->get_error_message());
+                exit;
+            }
+
             return $this->redirect_with_error($result->get_error_message());
         }
 
         // Clear state.
         $this->clear_state($state);
 
-        // Redirect to success URL.
+        // Build redirect URL.
         $redirect_url = $state_data['redirect'] ?: home_url('/');
+
+        // If a social account was auto-linked to existing account, add toast param.
+        if (!empty($result['linked']) && !empty($result['provider'])) {
+            $redirect_url = add_query_arg('linked', $result['provider'], $redirect_url);
+        }
+
+        // If new user, redirect to email preferences onboarding.
+        if (!empty($result['new_user'])) {
+            $return_url = rawurlencode($redirect_url);
+            $redirect_url = home_url('/email-preferences/?redirect=' . $return_url);
+        }
+
         wp_redirect($redirect_url);
         exit;
     }
@@ -305,7 +327,7 @@ class SocialAuth {
      *
      * @param string               $provider_name The provider name.
      * @param array<string, mixed> $profile       The user profile from provider.
-     * @return int|\WP_Error User ID on success, WP_Error on failure.
+     * @return array{user_id: int, linked: bool}|\WP_Error Result array or error.
      */
     private function authenticate_user(string $provider_name, array $profile) {
         $provider_id = $profile['id'];
@@ -318,7 +340,7 @@ class SocialAuth {
         if ($existing_user) {
             // Log in the existing user.
             $this->login_user($existing_user->ID);
-            return $existing_user->ID;
+            return ['user_id' => $existing_user->ID, 'linked' => false];
         }
 
         // Check if we have an email and if a user exists with that email.
@@ -329,12 +351,19 @@ class SocialAuth {
                 // Link the social account to this existing user.
                 $this->user_repo->link_social_account($user_by_email->ID, $provider_name, $provider_id);
                 $this->login_user($user_by_email->ID);
-                return $user_by_email->ID;
+                // Return with linked=true to show toast notification.
+                return ['user_id' => $user_by_email->ID, 'linked' => true, 'provider' => $provider_name];
             }
         }
 
         // No existing user found, create a new one.
-        return $this->create_user_from_profile($provider_name, $profile);
+        $result = $this->create_user_from_profile($provider_name, $profile);
+
+        if (is_wp_error($result)) {
+            return $result;
+        }
+
+        return ['user_id' => $result, 'linked' => false, 'new_user' => true];
     }
 
     /**
@@ -350,17 +379,22 @@ class SocialAuth {
         $name = $profile['name'] ?? '';
         $username = $profile['username'] ?? '';
 
-        // For Reddit (no email), we require special handling.
-        if (empty($email) && $provider_name === 'reddit') {
-            // Use a placeholder email that will need to be updated.
-            $email = 'reddit_' . $provider_id . '@placeholder.eridehero.com';
-        }
-
+        // If no email (Reddit), redirect to complete-profile page to collect email.
         if (empty($email)) {
+            // Store pending OAuth data in transient.
+            $pending_state = wp_generate_password(32, false);
+            set_transient('erh_oauth_pending_' . $pending_state, [
+                'provider'    => $provider_name,
+                'provider_id' => $provider_id,
+                'name'        => $name,
+                'username'    => $username,
+            ], 600); // 10 minutes.
+
+            // Return special error code to trigger redirect.
             return new \WP_Error(
-                'no_email',
-                'Email address is required. Please ensure you grant email permission.',
-                ['status' => 400]
+                'email_required_redirect',
+                home_url('/complete-profile/?provider=' . $provider_name . '&state=' . $pending_state),
+                ['status' => 302]
             );
         }
 

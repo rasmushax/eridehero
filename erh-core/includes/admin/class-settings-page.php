@@ -24,9 +24,11 @@ class SettingsPage {
     private ?CronManager $cron_manager = null;
 
     /**
-     * Option group name.
+     * Option group names (separate per tab to prevent cross-tab overwrites).
      */
-    public const OPTION_GROUP = 'erh_settings';
+    public const OPTION_GROUP_SOCIAL = 'erh_settings_social';
+    public const OPTION_GROUP_GENERAL = 'erh_settings_general';
+    public const OPTION_GROUP_APIS = 'erh_settings_apis';
 
     /**
      * Settings page slug.
@@ -51,7 +53,6 @@ class SettingsPage {
     public function register(): void {
         add_action('admin_menu', [$this, 'add_menu_page']);
         add_action('admin_init', [$this, 'register_settings']);
-        add_action('wp_ajax_erh_test_mailchimp', [$this, 'ajax_test_mailchimp']);
         add_action('wp_ajax_erh_run_cron_job', [$this, 'ajax_run_cron_job']);
     }
 
@@ -79,9 +80,6 @@ class SettingsPage {
         // Social Login Settings.
         $this->register_social_settings();
 
-        // Mailchimp Settings.
-        $this->register_mailchimp_settings();
-
         // General Settings.
         $this->register_general_settings();
 
@@ -96,54 +94,36 @@ class SettingsPage {
      */
     private function register_social_settings(): void {
         // Google OAuth.
-        register_setting(self::OPTION_GROUP, 'erh_google_client_id', [
+        register_setting(self::OPTION_GROUP_SOCIAL, 'erh_google_client_id', [
             'type'              => 'string',
             'sanitize_callback' => 'sanitize_text_field',
             'default'           => '',
         ]);
-        register_setting(self::OPTION_GROUP, 'erh_google_client_secret', [
+        register_setting(self::OPTION_GROUP_SOCIAL, 'erh_google_client_secret', [
             'type'              => 'string',
             'sanitize_callback' => 'sanitize_text_field',
             'default'           => '',
         ]);
 
         // Facebook OAuth.
-        register_setting(self::OPTION_GROUP, 'erh_facebook_app_id', [
+        register_setting(self::OPTION_GROUP_SOCIAL, 'erh_facebook_app_id', [
             'type'              => 'string',
             'sanitize_callback' => 'sanitize_text_field',
             'default'           => '',
         ]);
-        register_setting(self::OPTION_GROUP, 'erh_facebook_app_secret', [
+        register_setting(self::OPTION_GROUP_SOCIAL, 'erh_facebook_app_secret', [
             'type'              => 'string',
             'sanitize_callback' => 'sanitize_text_field',
             'default'           => '',
         ]);
 
         // Reddit OAuth.
-        register_setting(self::OPTION_GROUP, 'erh_reddit_client_id', [
+        register_setting(self::OPTION_GROUP_SOCIAL, 'erh_reddit_client_id', [
             'type'              => 'string',
             'sanitize_callback' => 'sanitize_text_field',
             'default'           => '',
         ]);
-        register_setting(self::OPTION_GROUP, 'erh_reddit_client_secret', [
-            'type'              => 'string',
-            'sanitize_callback' => 'sanitize_text_field',
-            'default'           => '',
-        ]);
-    }
-
-    /**
-     * Register Mailchimp settings.
-     *
-     * @return void
-     */
-    private function register_mailchimp_settings(): void {
-        register_setting(self::OPTION_GROUP, 'erh_mailchimp_api_key', [
-            'type'              => 'string',
-            'sanitize_callback' => 'sanitize_text_field',
-            'default'           => '',
-        ]);
-        register_setting(self::OPTION_GROUP, 'erh_mailchimp_list_id', [
+        register_setting(self::OPTION_GROUP_SOCIAL, 'erh_reddit_client_secret', [
             'type'              => 'string',
             'sanitize_callback' => 'sanitize_text_field',
             'default'           => '',
@@ -156,7 +136,7 @@ class SettingsPage {
      * @return void
      */
     private function register_general_settings(): void {
-        register_setting(self::OPTION_GROUP, 'erh_email_preferences_page_id', [
+        register_setting(self::OPTION_GROUP_GENERAL, 'erh_email_preferences_page_id', [
             'type'              => 'integer',
             'sanitize_callback' => 'absint',
             'default'           => 0,
@@ -169,7 +149,7 @@ class SettingsPage {
      * @return void
      */
     private function register_api_settings(): void {
-        register_setting(self::OPTION_GROUP, 'erh_perplexity_api_key', [
+        register_setting(self::OPTION_GROUP_APIS, 'erh_perplexity_api_key', [
             'type'              => 'string',
             'sanitize_callback' => 'sanitize_text_field',
             'default'           => '',
@@ -198,10 +178,6 @@ class SettingsPage {
                    class="nav-tab <?php echo $current_tab === 'social' ? 'nav-tab-active' : ''; ?>">
                     <?php esc_html_e('Social Login', 'erh-core'); ?>
                 </a>
-                <a href="<?php echo esc_url(admin_url('options-general.php?page=' . self::PAGE_SLUG . '&tab=mailchimp')); ?>"
-                   class="nav-tab <?php echo $current_tab === 'mailchimp' ? 'nav-tab-active' : ''; ?>">
-                    <?php esc_html_e('Mailchimp', 'erh-core'); ?>
-                </a>
                 <a href="<?php echo esc_url(admin_url('options-general.php?page=' . self::PAGE_SLUG . '&tab=general')); ?>"
                    class="nav-tab <?php echo $current_tab === 'general' ? 'nav-tab-active' : ''; ?>">
                     <?php esc_html_e('General', 'erh-core'); ?>
@@ -218,14 +194,10 @@ class SettingsPage {
 
             <form action="options.php" method="post">
                 <?php
-                settings_fields(self::OPTION_GROUP);
-
+                // Use separate option groups per tab to prevent cross-tab overwrites.
                 switch ($current_tab) {
-                    case 'mailchimp':
-                        $this->render_mailchimp_tab();
-                        submit_button();
-                        break;
                     case 'general':
+                        settings_fields(self::OPTION_GROUP_GENERAL);
                         $this->render_general_tab();
                         submit_button();
                         break;
@@ -234,10 +206,12 @@ class SettingsPage {
                         $this->render_cron_tab();
                         return; // Skip the submit button for cron tab.
                     case 'apis':
+                        settings_fields(self::OPTION_GROUP_APIS);
                         $this->render_apis_tab();
                         submit_button();
                         break;
                     default:
+                        settings_fields(self::OPTION_GROUP_SOCIAL);
                         $this->render_social_tab();
                         submit_button();
                         break;
@@ -439,125 +413,6 @@ class SettingsPage {
     }
 
     /**
-     * Render the Mailchimp tab.
-     *
-     * @return void
-     */
-    private function render_mailchimp_tab(): void {
-        $api_key = get_option('erh_mailchimp_api_key', '');
-        $list_id = get_option('erh_mailchimp_list_id', '');
-        $is_configured = !empty($api_key) && !empty($list_id);
-
-        ?>
-        <h2><?php esc_html_e('Mailchimp Configuration', 'erh-core'); ?></h2>
-        <p class="description">
-            <?php esc_html_e('Connect your Mailchimp account to sync newsletter subscriptions.', 'erh-core'); ?>
-        </p>
-
-        <table class="form-table" role="presentation">
-            <tr>
-                <th scope="row">
-                    <label for="erh_mailchimp_api_key"><?php esc_html_e('API Key', 'erh-core'); ?></label>
-                </th>
-                <td>
-                    <input type="password"
-                           id="erh_mailchimp_api_key"
-                           name="erh_mailchimp_api_key"
-                           value="<?php echo esc_attr($api_key); ?>"
-                           class="regular-text">
-                    <p class="description">
-                        <?php
-                        printf(
-                            /* translators: %s: Mailchimp API keys URL */
-                            esc_html__('Get your API key from %s', 'erh-core'),
-                            '<a href="https://admin.mailchimp.com/account/api/" target="_blank">Mailchimp Account &rarr; API Keys</a>'
-                        );
-                        ?>
-                    </p>
-                </td>
-            </tr>
-            <tr>
-                <th scope="row">
-                    <label for="erh_mailchimp_list_id"><?php esc_html_e('Audience/List ID', 'erh-core'); ?></label>
-                </th>
-                <td>
-                    <input type="text"
-                           id="erh_mailchimp_list_id"
-                           name="erh_mailchimp_list_id"
-                           value="<?php echo esc_attr($list_id); ?>"
-                           class="regular-text">
-                    <p class="description">
-                        <?php esc_html_e('Find this in Mailchimp: Audience &rarr; Settings &rarr; Audience name and defaults.', 'erh-core'); ?>
-                    </p>
-                </td>
-            </tr>
-            <tr>
-                <th scope="row"><?php esc_html_e('Webhook URL', 'erh-core'); ?></th>
-                <td>
-                    <code><?php echo esc_html(rest_url('erh/v1/webhooks/mailchimp')); ?></code>
-                    <p class="description">
-                        <?php esc_html_e('Add this webhook in Mailchimp: Audience &rarr; Settings &rarr; Webhooks. Enable "Unsubscribes" and "Email Changed" events.', 'erh-core'); ?>
-                    </p>
-                </td>
-            </tr>
-            <tr>
-                <th scope="row"><?php esc_html_e('Connection Status', 'erh-core'); ?></th>
-                <td>
-                    <div id="erh-mailchimp-status">
-                        <?php if ($is_configured) : ?>
-                            <button type="button" class="button" id="erh-test-mailchimp">
-                                <?php esc_html_e('Test Connection', 'erh-core'); ?>
-                            </button>
-                            <span id="erh-mailchimp-result" style="margin-left: 10px;"></span>
-                        <?php else : ?>
-                            <span style="color: #dc3232;">
-                                <?php esc_html_e('Enter API key and List ID, then save to enable testing.', 'erh-core'); ?>
-                            </span>
-                        <?php endif; ?>
-                    </div>
-                </td>
-            </tr>
-        </table>
-
-        <?php if ($is_configured) : ?>
-        <script>
-        jQuery(document).ready(function($) {
-            $('#erh-test-mailchimp').on('click', function() {
-                var $btn = $(this);
-                var $result = $('#erh-mailchimp-result');
-
-                $btn.prop('disabled', true).text('<?php esc_html_e('Testing...', 'erh-core'); ?>');
-                $result.html('');
-
-                $.ajax({
-                    url: ajaxurl,
-                    type: 'POST',
-                    data: {
-                        action: 'erh_test_mailchimp',
-                        _wpnonce: '<?php echo wp_create_nonce('erh_test_mailchimp'); ?>'
-                    },
-                    success: function(response) {
-                        if (response.success) {
-                            $result.html('<span style="color: #46b450;">&#10003; ' + response.data.message + '</span>');
-                        } else {
-                            $result.html('<span style="color: #dc3232;">&#10007; ' + response.data.message + '</span>');
-                        }
-                    },
-                    error: function() {
-                        $result.html('<span style="color: #dc3232;">&#10007; <?php esc_html_e('Connection failed', 'erh-core'); ?></span>');
-                    },
-                    complete: function() {
-                        $btn.prop('disabled', false).text('<?php esc_html_e('Test Connection', 'erh-core'); ?>');
-                    }
-                });
-            });
-        });
-        </script>
-        <?php endif; ?>
-        <?php
-    }
-
-    /**
      * Render the general tab.
      *
      * @return void
@@ -671,61 +526,6 @@ class SettingsPage {
             </tr>
         </table>
         <?php
-    }
-
-    /**
-     * AJAX handler to test Mailchimp connection.
-     *
-     * @return void
-     */
-    public function ajax_test_mailchimp(): void {
-        check_ajax_referer('erh_test_mailchimp');
-
-        if (!current_user_can('manage_options')) {
-            wp_send_json_error(['message' => __('Permission denied.', 'erh-core')]);
-        }
-
-        $api_key = get_option('erh_mailchimp_api_key', '');
-        $list_id = get_option('erh_mailchimp_list_id', '');
-
-        if (empty($api_key) || empty($list_id)) {
-            wp_send_json_error(['message' => __('API key or List ID not configured.', 'erh-core')]);
-        }
-
-        // Extract datacenter from API key.
-        $dc = substr($api_key, strpos($api_key, '-') + 1);
-        $url = "https://{$dc}.api.mailchimp.com/3.0/lists/{$list_id}";
-
-        $response = wp_remote_get($url, [
-            'headers' => [
-                'Authorization' => 'Basic ' . base64_encode('anystring:' . $api_key),
-            ],
-            'timeout' => 15,
-        ]);
-
-        if (is_wp_error($response)) {
-            wp_send_json_error(['message' => $response->get_error_message()]);
-        }
-
-        $code = wp_remote_retrieve_response_code($response);
-        $body = json_decode(wp_remote_retrieve_body($response), true);
-
-        if ($code === 200 && !empty($body['name'])) {
-            wp_send_json_success([
-                'message' => sprintf(
-                    /* translators: %1$s: list name, %2$d: subscriber count */
-                    __('Connected to "%1$s" (%2$d subscribers)', 'erh-core'),
-                    $body['name'],
-                    $body['stats']['member_count'] ?? 0
-                ),
-            ]);
-        } elseif ($code === 401) {
-            wp_send_json_error(['message' => __('Invalid API key.', 'erh-core')]);
-        } elseif ($code === 404) {
-            wp_send_json_error(['message' => __('List/Audience not found. Check your List ID.', 'erh-core')]);
-        } else {
-            wp_send_json_error(['message' => $body['detail'] ?? __('Unknown error.', 'erh-core')]);
-        }
     }
 
     /**

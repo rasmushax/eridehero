@@ -284,4 +284,18 @@ $user = $args['user'] ?? wp_get_current_user();
 			</button>
 		</form>
 	</section>
+
+	<!-- Connected Accounts -->
+	<section class="settings-card" data-settings-connected>
+		<h2 class="settings-card-title">Connected Accounts</h2>
+		<p class="settings-description">Social accounts linked to your ERideHero account for quick sign-in.</p>
+
+		<div class="connected-accounts" data-connected-accounts>
+			<div class="connected-accounts-loading">
+				<svg class="spinner" viewBox="0 0 24 24" width="24" height="24">
+					<circle cx="12" cy="12" r="10" stroke="currentColor" stroke-width="3" fill="none" stroke-dasharray="31.4" stroke-linecap="round"/>
+				</svg>
+			</div>
+		</div>
+	</section>
 </div>

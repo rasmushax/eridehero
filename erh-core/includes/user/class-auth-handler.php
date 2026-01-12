@@ -71,8 +71,11 @@ class AuthHandler {
             'callback'            => [$this, 'handle_login'],
             'permission_callback' => '__return_true',
             'args'                => [
+                'email' => [
+                    'type'              => 'string',
+                    'sanitize_callback' => 'sanitize_email',
+                ],
                 'username' => [
-                    'required'          => true,
                     'type'              => 'string',
                     'sanitize_callback' => 'sanitize_user',
                 ],
@@ -93,7 +96,6 @@ class AuthHandler {
             'permission_callback' => '__return_true',
             'args'                => [
                 'username' => [
-                    'required'          => true,
                     'type'              => 'string',
                     'sanitize_callback' => 'sanitize_user',
                 ],
@@ -118,8 +120,11 @@ class AuthHandler {
             'callback'            => [$this, 'handle_forgot_password'],
             'permission_callback' => '__return_true',
             'args'                => [
+                'email' => [
+                    'type'              => 'string',
+                    'sanitize_callback' => 'sanitize_email',
+                ],
                 'user_login' => [
-                    'required'          => true,
                     'type'              => 'string',
                     'sanitize_callback' => 'sanitize_text_field',
                 ],
@@ -163,6 +168,48 @@ class AuthHandler {
             'callback'            => [$this, 'get_auth_status'],
             'permission_callback' => '__return_true',
         ]);
+
+        // Check if email exists (for social auth flow).
+        register_rest_route(self::REST_NAMESPACE, '/auth/check-email', [
+            'methods'             => 'POST',
+            'callback'            => [$this, 'check_email_exists'],
+            'permission_callback' => '__return_true',
+            'args'                => [
+                'email' => [
+                    'required'          => true,
+                    'type'              => 'string',
+                    'sanitize_callback' => 'sanitize_email',
+                ],
+            ],
+        ]);
+
+        // Complete social auth (when provider doesn't return email).
+        register_rest_route(self::REST_NAMESPACE, '/auth/social/complete', [
+            'methods'             => 'POST',
+            'callback'            => [$this, 'handle_social_complete'],
+            'permission_callback' => '__return_true',
+            'args'                => [
+                'state' => [
+                    'required'          => true,
+                    'type'              => 'string',
+                    'sanitize_callback' => 'sanitize_text_field',
+                ],
+                'provider' => [
+                    'required'          => true,
+                    'type'              => 'string',
+                    'sanitize_callback' => 'sanitize_text_field',
+                ],
+                'email' => [
+                    'required'          => true,
+                    'type'              => 'string',
+                    'sanitize_callback' => 'sanitize_email',
+                ],
+                'password' => [
+                    'type'              => 'string',
+                    'default'           => '',
+                ],
+            ],
+        ]);
     }
 
     /**
@@ -193,13 +240,32 @@ class AuthHandler {
             );
         }
 
+        $email = $request->get_param('email');
         $username = $request->get_param('username');
         $password = $request->get_param('password');
         $remember = (bool) $request->get_param('remember');
 
+        // Accept either email or username for login.
+        $login = $username ?: $email;
+        if (empty($login)) {
+            return new \WP_Error(
+                'missing_credentials',
+                'Please enter your email or username.',
+                ['status' => 400]
+            );
+        }
+
+        // If email provided, look up the username.
+        if ($email && is_email($email)) {
+            $user_by_email = get_user_by('email', $email);
+            if ($user_by_email) {
+                $login = $user_by_email->user_login;
+            }
+        }
+
         // Attempt login.
         $user = wp_signon([
-            'user_login'    => $username,
+            'user_login'    => $login,
             'user_password' => $password,
             'remember'      => $remember,
         ], is_ssl());
@@ -271,6 +337,11 @@ class AuthHandler {
         $username = $request->get_param('username');
         $email = $request->get_param('email');
         $password = $request->get_param('password');
+
+        // Auto-generate username from email if not provided.
+        if (empty($username)) {
+            $username = $this->generate_username_from_email($email);
+        }
 
         // Validate username format.
         if (!preg_match('/^[a-zA-Z0-9_]+$/', $username)) {
@@ -352,9 +423,10 @@ class AuthHandler {
         do_action('erh_user_registered', $user_id, $user);
 
         return new \WP_REST_Response([
-            'success' => true,
-            'message' => 'Registration successful. You are now logged in.',
-            'user'    => [
+            'success'         => true,
+            'message'         => 'Registration successful. You are now logged in.',
+            'needsOnboarding' => true, // New users always need onboarding
+            'user'            => [
                 'id'           => $user_id,
                 'username'     => $username,
                 'email'        => $email,
@@ -390,12 +462,23 @@ class AuthHandler {
             );
         }
 
+        $email = $request->get_param('email');
         $user_login = $request->get_param('user_login');
 
+        // Accept either email or user_login parameter.
+        $identifier = $user_login ?: $email;
+        if (empty($identifier)) {
+            return new \WP_Error(
+                'missing_email',
+                'Please enter your email address.',
+                ['status' => 400]
+            );
+        }
+
         // Find user by login or email.
-        $user = $this->user_repo->get_by_login($user_login);
+        $user = $this->user_repo->get_by_login($identifier);
         if (!$user) {
-            $user = $this->user_repo->get_by_email($user_login);
+            $user = $this->user_repo->get_by_email($identifier);
         }
 
         if (!$user) {
@@ -552,6 +635,220 @@ class AuthHandler {
     }
 
     /**
+     * Check if an email address exists.
+     *
+     * Used by social auth flow to determine if password is needed for linking.
+     *
+     * @param \WP_REST_Request $request The request object.
+     * @return \WP_REST_Response Response.
+     */
+    public function check_email_exists(\WP_REST_Request $request): \WP_REST_Response {
+        $email = $request->get_param('email');
+
+        if (!is_email($email)) {
+            return new \WP_REST_Response([
+                'exists' => false,
+            ], 200);
+        }
+
+        $exists = email_exists($email) !== false;
+
+        return new \WP_REST_Response([
+            'exists' => $exists,
+        ], 200);
+    }
+
+    /**
+     * Complete social auth when provider didn't return email.
+     *
+     * @param \WP_REST_Request $request The request object.
+     * @return \WP_REST_Response|\WP_Error Response or error.
+     */
+    public function handle_social_complete(\WP_REST_Request $request) {
+        $state = $request->get_param('state');
+        $provider = $request->get_param('provider');
+        $email = $request->get_param('email');
+        $password = $request->get_param('password');
+
+        // Verify pending OAuth state.
+        $pending_data = get_transient('erh_oauth_pending_' . $state);
+        if (!$pending_data) {
+            return new \WP_Error(
+                'invalid_state',
+                'Session expired. Please try logging in again.',
+                ['status' => 400]
+            );
+        }
+
+        // Verify provider matches.
+        if ($pending_data['provider'] !== $provider) {
+            return new \WP_Error(
+                'provider_mismatch',
+                'Invalid request.',
+                ['status' => 400]
+            );
+        }
+
+        // Validate email.
+        if (!is_email($email)) {
+            return new \WP_Error(
+                'invalid_email',
+                'Please enter a valid email address.',
+                ['status' => 400]
+            );
+        }
+
+        // DNS/MX validation.
+        if (!$this->validate_email_domain($email)) {
+            return new \WP_Error(
+                'invalid_email_domain',
+                'Please enter an email address with a valid domain.',
+                ['status' => 400]
+            );
+        }
+
+        $provider_id = $pending_data['provider_id'];
+        $name = $pending_data['name'] ?? '';
+        $username = $pending_data['username'] ?? '';
+
+        // Check if email already exists.
+        $existing_user = get_user_by('email', $email);
+
+        if ($existing_user) {
+            // Email exists - need to verify password to link.
+            if (empty($password)) {
+                return new \WP_Error(
+                    'password_required',
+                    'An account with this email exists. Please enter your password to link your ' . ucfirst($provider) . ' account.',
+                    ['status' => 400]
+                );
+            }
+
+            // Verify password.
+            if (!wp_check_password($password, $existing_user->user_pass, $existing_user->ID)) {
+                return new \WP_Error(
+                    'invalid_password',
+                    'Incorrect password.',
+                    ['status' => 401]
+                );
+            }
+
+            // Link the social account.
+            $this->user_repo->link_social_account($existing_user->ID, $provider, $provider_id);
+
+            // Log in.
+            wp_set_current_user($existing_user->ID);
+            wp_set_auth_cookie($existing_user->ID, true);
+
+            // Clear pending state.
+            delete_transient('erh_oauth_pending_' . $state);
+
+            return new \WP_REST_Response([
+                'success'         => true,
+                'message'         => ucfirst($provider) . ' account linked successfully.',
+                'needsOnboarding' => !$this->user_repo->has_preferences_set($existing_user->ID),
+                'redirect'        => home_url('/'),
+            ], 200);
+        }
+
+        // No existing user - create new account.
+        $base_username = $this->generate_username_from_profile($name, $username, $email);
+        $final_username = $this->ensure_unique_username($base_username);
+        $random_password = wp_generate_password(24, true, true);
+
+        $user_id = wp_create_user($final_username, $random_password, $email);
+
+        if (is_wp_error($user_id)) {
+            return new \WP_Error(
+                'registration_failed',
+                $user_id->get_error_message(),
+                ['status' => 500]
+            );
+        }
+
+        // Set role.
+        $user = new \WP_User($user_id);
+        $user->set_role('subscriber');
+
+        // Update display name.
+        if (!empty($name)) {
+            wp_update_user([
+                'ID'           => $user_id,
+                'display_name' => $name,
+            ]);
+        }
+
+        // Link social account.
+        $this->user_repo->link_social_account($user_id, $provider, $provider_id);
+
+        // Store registration IP.
+        $this->user_repo->set_registration_ip($user_id, RateLimiter::get_client_ip());
+
+        // Trigger welcome email.
+        do_action('erh_user_registered', $user_id, $user);
+
+        // Log in.
+        wp_set_current_user($user_id);
+        wp_set_auth_cookie($user_id, true);
+
+        // Clear pending state.
+        delete_transient('erh_oauth_pending_' . $state);
+
+        return new \WP_REST_Response([
+            'success'         => true,
+            'message'         => 'Account created successfully.',
+            'needsOnboarding' => true,
+            'redirect'        => home_url('/'),
+        ], 201);
+    }
+
+    /**
+     * Generate username from profile data.
+     *
+     * @param string $name     Display name.
+     * @param string $username Provider username.
+     * @param string $email    Email address.
+     * @return string Generated username.
+     */
+    private function generate_username_from_profile(string $name, string $username, string $email): string {
+        // Try username first.
+        if (!empty($username) && preg_match('/^[a-zA-Z0-9_]+$/', $username)) {
+            return sanitize_user($username, true);
+        }
+
+        // Try name.
+        if (!empty($name)) {
+            $name_username = preg_replace('/[^a-zA-Z0-9]/', '', $name);
+            if (!empty($name_username)) {
+                return strtolower($name_username);
+            }
+        }
+
+        // Fall back to email prefix.
+        $email_parts = explode('@', $email);
+        return sanitize_user($email_parts[0], true);
+    }
+
+    /**
+     * Ensure username is unique.
+     *
+     * @param string $username Base username.
+     * @return string Unique username.
+     */
+    private function ensure_unique_username(string $username): string {
+        if (!username_exists($username)) {
+            return $username;
+        }
+
+        $counter = 1;
+        while (username_exists($username . $counter)) {
+            $counter++;
+        }
+
+        return $username . $counter;
+    }
+
+    /**
      * Redirect wp-login.php for non-admin users.
      *
      * @return void
@@ -637,6 +934,48 @@ class AuthHandler {
         $email['headers'] = ['Content-Type: text/html; charset=UTF-8'];
 
         return $email;
+    }
+
+    /**
+     * Generate a unique username from an email address.
+     *
+     * @param string $email The email address.
+     * @return string Generated username.
+     */
+    private function generate_username_from_email(string $email): string {
+        // Extract local part of email.
+        $parts = explode('@', $email);
+        $base = $parts[0] ?? 'user';
+
+        // Clean up: remove dots, plus-aliases, and non-alphanumeric chars.
+        $base = preg_replace('/\+.*$/', '', $base); // Remove +alias part.
+        $base = preg_replace('/[^a-zA-Z0-9]/', '', $base);
+        $base = strtolower($base);
+
+        // Ensure minimum length.
+        if (strlen($base) < 3) {
+            $base = 'user' . $base;
+        }
+
+        // Truncate if too long.
+        $base = substr($base, 0, 20);
+
+        // Check if username exists, add random suffix if so.
+        $username = $base;
+        $counter = 1;
+        while (username_exists($username)) {
+            $suffix = $counter < 10 ? random_int(100, 999) : random_int(1000, 9999);
+            $username = $base . $suffix;
+            $counter++;
+
+            // Safety limit.
+            if ($counter > 20) {
+                $username = $base . bin2hex(random_bytes(4));
+                break;
+            }
+        }
+
+        return $username;
     }
 
     /**

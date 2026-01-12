@@ -842,8 +842,8 @@ function erh_get_hero_key_specs( int $product_id, string $product_type ): array 
 /**
  * Format price for display
  *
- * Shows cents only when they exist (e.g., $999.99), otherwise whole number (e.g., $500).
- * This preserves psychological pricing like .99 endings.
+ * Always shows 2 decimal places for consistency across the application
+ * (e.g., $499.99, $500.00).
  *
  * @param float  $price Price value
  * @param string $currency Currency code
@@ -860,14 +860,8 @@ function erh_format_price( float $price, string $currency = 'USD' ): string {
 
     $symbol = $symbols[ $currency ] ?? '$';
 
-    // Check if price has meaningful cents (not .00)
-    $has_cents = ( $price - floor( $price ) ) >= 0.005;
-
-    if ( $has_cents ) {
-        return $symbol . number_format( $price, 2 );
-    }
-
-    return $symbol . number_format( $price, 0 );
+    // Always show 2 decimal places for consistency
+    return $symbol . number_format( $price, 2 );
 }
 
 /**

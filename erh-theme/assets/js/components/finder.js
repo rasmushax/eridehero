@@ -12,6 +12,20 @@ import { FinderTable } from './finder-table.js';
 import { PriceAlertModal } from './price-alert.js';
 import { ComparisonBar } from './comparison-bar.js';
 
+// Debug logging (enabled via localStorage or URL param)
+const DEBUG = localStorage.getItem('erh_geo_debug') === 'true' ||
+              new URLSearchParams(window.location.search).has('geo_debug');
+
+function log(message, data = null) {
+    if (!DEBUG) return;
+    const prefix = '[Finder]';
+    if (data) {
+        console.log(prefix, message, data);
+    } else {
+        console.log(prefix, message);
+    }
+}
+
 class Finder {
     constructor() {
         this.container = document.querySelector('[data-finder-page]');
@@ -432,12 +446,19 @@ class Finder {
      * Detect user's geo region via IPInfo
      */
     async detectUserGeo() {
+        log('Detecting user geo...');
         try {
             const geoData = await getUserGeo();
             this.userGeo = geoData.geo;
             this.userCurrency = geoData.currency;
             this.currencySymbol = geoData.symbol;
+            log('Geo detected', {
+                geo: this.userGeo,
+                currency: this.userCurrency,
+                country: geoData.country
+            });
         } catch (e) {
+            log('Geo detection failed, using default US', { error: e.message });
             // Default to US on error (already set in constructor)
         }
     }
@@ -450,18 +471,31 @@ class Finder {
         // Get the raw products from PHP and extract geo-specific pricing
         const rawProducts = window.erhData?.finderProducts || [];
 
+        log('Processing products for geo', {
+            userGeo: this.userGeo,
+            totalProducts: rawProducts.length
+        });
+
+        let productsWithPrice = 0;
+        let productsWithTrackedUrl = 0;
+
         this.products = rawProducts.map(product => {
             const pricing = product.pricing || {};
             // Get pricing for user's region ONLY - no fallback to US
             // (Users from unmapped countries already default to US at geo-detection level)
             const geoPricing = pricing[this.userGeo] || {};
 
+            if (geoPricing.current_price) productsWithPrice++;
+            if (geoPricing.tracked_url) productsWithTrackedUrl++;
+
             return {
                 ...product,
                 price: geoPricing.current_price ?? null,
                 current_price: geoPricing.current_price ?? null,
                 in_stock: geoPricing.instock ?? false,
-                best_link: geoPricing.bestlink ?? null,
+                best_link: geoPricing.tracked_url ?? null,
+                tracked_url: geoPricing.tracked_url ?? null,
+                retailer: geoPricing.retailer ?? null,
                 avg_3m: geoPricing.avg_3m ?? null,
                 avg_6m: geoPricing.avg_6m ?? null,
                 price_indicator: this.calculatePriceIndicator(
@@ -469,6 +503,13 @@ class Finder {
                     geoPricing.avg_6m  // Use 6-month average for better deal detection
                 ),
             };
+        });
+
+        log('Products processed', {
+            userGeo: this.userGeo,
+            productsWithPrice,
+            productsWithTrackedUrl,
+            totalProducts: this.products.length
         });
 
         // Reset filtered products

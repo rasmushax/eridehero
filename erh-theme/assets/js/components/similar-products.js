@@ -15,6 +15,20 @@ import { getUserGeo } from '../services/geo-price.js';
 import { createProductCard } from '../utils/product-card.js';
 import { initCarousel } from '../utils/carousel.js';
 
+// Debug logging (enabled via localStorage or URL param)
+const DEBUG = localStorage.getItem('erh_geo_debug') === 'true' ||
+              new URLSearchParams(window.location.search).has('geo_debug');
+
+function log(message, data = null) {
+    if (!DEBUG) return;
+    const prefix = '[SimilarProducts]';
+    if (data) {
+        console.log(prefix, message, data);
+    } else {
+        console.log(prefix, message);
+    }
+}
+
 /**
  * Get REST URL base from WordPress localized data.
  *
@@ -58,15 +72,20 @@ export async function initSimilarProducts(container = null) {
     let userGeo = { geo: 'US', currency: 'USD' };
     let carouselInstance = null;
 
+    log('Initializing', { productId, limit });
+
     // Get user geo.
     try {
         userGeo = await getUserGeo();
+        log('Got user geo', { geo: userGeo.geo, currency: userGeo.currency, country: userGeo.country });
     } catch (e) {
+        log('Geo detection failed, using defaults', { error: e.message });
         // Use defaults.
     }
 
     // Load similar products.
     const apiUrl = `${getRestUrl()}products/${productId}/similar?limit=${limit}&geo=${userGeo.geo}`;
+    log('Fetching similar products', { url: apiUrl });
 
     try {
         const response = await fetch(apiUrl);
@@ -77,8 +96,19 @@ export async function initSimilarProducts(container = null) {
 
         const data = await response.json();
         products = data.products || [];
+
+        // Log pricing info
+        const withPrice = products.filter(p => p.price).length;
+        const withTrackedUrl = products.filter(p => p.tracked_url).length;
+        log('Products loaded', {
+            count: products.length,
+            withPrice,
+            withTrackedUrl,
+            geo: data.geo
+        });
     } catch (error) {
         console.error('[SimilarProducts] Failed to load:', error);
+        log('Failed to load products', { error: error.message });
         showEmptyState();
         return null;
     }

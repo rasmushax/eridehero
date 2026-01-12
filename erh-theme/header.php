@@ -53,7 +53,7 @@ if ( ! defined( 'ABSPATH' ) ) {
             <?php get_template_part( 'template-parts/header/search' ); ?>
 
             <?php if ( is_user_logged_in() ) : ?>
-                <a href="<?php echo esc_url( home_url( '/account/' ) ); ?>" class="btn-login">
+                <a href="<?php echo esc_url( home_url( '/account/' ) ); ?>" class="btn-account">
                     <?php erh_the_icon( 'user' ); ?>
                     <?php esc_html_e( 'Account', 'erh' ); ?>
                 </a>

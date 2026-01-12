@@ -33,6 +33,7 @@ class PriceAlertModalManager {
         this.isDeleting = false;
         this.alertType = 'target'; // 'target' or 'drop'
         this.userGeo = null; // { geo, currency, symbol }
+        this.emailAlertsEnabled = false; // Whether user has price tracker emails enabled
     }
 
     /**
@@ -81,7 +82,7 @@ class PriceAlertModalManager {
         this.renderLoading();
         this.modal.open();
 
-        // Fetch existing tracker
+        // Fetch existing tracker and email preference status
         try {
             const response = await fetch(`${REST_URL}products/${productId}/tracker`, {
                 headers: {
@@ -92,16 +93,24 @@ class PriceAlertModalManager {
             if (response.ok) {
                 const result = await response.json();
                 this.existingTracker = result.tracker || null;
+                this.emailAlertsEnabled = result.email_alerts_enabled ?? false;
             } else if (response.status === 404) {
                 this.existingTracker = null;
+                this.emailAlertsEnabled = false;
             }
         } catch (error) {
             console.error('[PriceAlert] Failed to fetch tracker:', error);
             this.existingTracker = null;
+            this.emailAlertsEnabled = false;
         }
 
-        // Render the form
-        this.renderForm();
+        // Check if user needs to enable email notifications first
+        // This applies to BOTH new trackers AND editing existing ones
+        if (!this.emailAlertsEnabled) {
+            this.renderPermissionRequest();
+        } else {
+            this.renderForm();
+        }
     }
 
     /**
@@ -169,6 +178,23 @@ class PriceAlertModalManager {
             if (cancelDeleteBtn) {
                 this.renderForm();
             }
+
+            // Continue to form after enabling permissions
+            const continueBtn = e.target.closest('[data-continue-to-form]');
+            if (continueBtn && !continueBtn.disabled) {
+                this.handleEnableAlerts(continueBtn);
+            }
+        });
+
+        // Handle permission checkbox change
+        modalEl.addEventListener('change', (e) => {
+            const checkbox = e.target.closest('[data-enable-alerts]');
+            if (checkbox) {
+                const continueBtn = modalEl.querySelector('[data-continue-to-form]');
+                if (continueBtn) {
+                    continueBtn.disabled = !checkbox.checked;
+                }
+            }
         });
 
         // Form submission
@@ -189,6 +215,99 @@ class PriceAlertModalManager {
                 </svg>
             </div>
         `;
+    }
+
+    /**
+     * Render permission request when email alerts are not enabled
+     * User must opt-in to email notifications before creating/editing trackers
+     */
+    renderPermissionRequest() {
+        const { productName, productImage, currentPrice, symbol } = this.productData;
+        const isEdit = !!this.existingTracker;
+
+        this.bodyEl.innerHTML = `
+            <div class="price-alert-header">
+                <h2 class="price-alert-title">Enable price alerts</h2>
+            </div>
+
+            <div class="price-alert-product">
+                ${productImage ? `<img src="${productImage}" alt="" class="price-alert-product-img">` : ''}
+                <div class="price-alert-product-info">
+                    <span class="price-alert-product-name">${escapeHtml(productName || 'Product')}</span>
+                    <span class="price-alert-product-price">
+                        Current price: ${symbol}${this.formatPriceValue(currentPrice)}
+                    </span>
+                </div>
+            </div>
+
+            <div class="price-alert-permission">
+                <p class="price-alert-permission-text">
+                    ${isEdit
+                        ? 'You\'ve disabled price alert emails in your settings. Re-enable them to continue receiving notifications for this tracker.'
+                        : 'To track prices and get notified when they drop, enable email notifications.'
+                    }
+                </p>
+
+                <label class="price-alert-permission-toggle">
+                    <input type="checkbox" data-enable-alerts>
+                    <span class="price-alert-permission-checkbox">
+                        <svg class="icon" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2">
+                            <polyline points="20 6 9 17 4 12"></polyline>
+                        </svg>
+                    </span>
+                    <span class="price-alert-permission-label">
+                        <strong>I want to receive price alert emails</strong>
+                        <span>We'll notify you when this product's price drops.</span>
+                    </span>
+                </label>
+
+                <div class="price-alert-permission-actions">
+                    <button type="button" class="btn btn-primary btn-block" data-continue-to-form disabled>
+                        <span class="price-alert-permission-btn-text">Continue</span>
+                        <span class="price-alert-permission-btn-loading" hidden>
+                            <svg class="spinner" viewBox="0 0 24 24"><circle cx="12" cy="12" r="10" stroke="currentColor" stroke-width="3" fill="none" stroke-dasharray="31.4" stroke-linecap="round"/></svg>
+                        </span>
+                    </button>
+                </div>
+            </div>
+        `;
+    }
+
+    /**
+     * Handle enabling email alerts preference
+     */
+    async handleEnableAlerts(btn) {
+        const textEl = btn.querySelector('.price-alert-permission-btn-text');
+        const loadingEl = btn.querySelector('.price-alert-permission-btn-loading');
+
+        btn.disabled = true;
+        if (textEl) textEl.style.visibility = 'hidden';
+        if (loadingEl) loadingEl.hidden = false;
+
+        try {
+            const response = await fetch(`${REST_URL}user/preferences`, {
+                method: 'PUT',
+                headers: {
+                    'Content-Type': 'application/json',
+                    'X-WP-Nonce': window.erhData?.nonce || ''
+                },
+                body: JSON.stringify({ price_tracker_emails: true })
+            });
+
+            if (!response.ok) {
+                throw new Error('Failed to enable notifications');
+            }
+
+            // Success - update state and show form
+            this.emailAlertsEnabled = true;
+            this.renderForm();
+
+        } catch (error) {
+            Toast.error(error.message);
+            btn.disabled = false;
+            if (textEl) textEl.style.visibility = '';
+            if (loadingEl) loadingEl.hidden = true;
+        }
     }
 
     /**

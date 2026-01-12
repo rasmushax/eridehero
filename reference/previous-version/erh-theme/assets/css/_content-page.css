@@ -1,0 +1,110 @@
+/* =============================================
+   Content Page Styles
+   Simple text-heavy pages like privacy, terms, etc.
+   ============================================= */
+
+.content-page {
+    padding-top: var(--space-8);
+    padding-bottom: var(--space-8);
+}
+
+.content-page-header {
+    margin-bottom: var(--space-10);
+    padding-bottom: var(--space-8);
+    border-bottom: var(--border-width) solid var(--color-border);
+}
+
+.content-page-title {
+    font-size: var(--text-4xl);
+    font-weight: var(--font-bold);
+    color: var(--color-dark);
+    margin: 0 0 var(--space-3);
+}
+
+.content-page-meta {
+    font-size: var(--text-sm);
+    color: var(--color-muted);
+    margin: 0;
+}
+
+/* ===== CONTENT BODY ===== */
+
+.content-body {
+    max-width: 720px;
+    font-size: var(--text-base);
+    color: var(--color-body);
+    line-height: var(--leading-relaxed);
+    padding-bottom: var(--space-16);
+}
+
+.content-body .lead {
+    font-size: var(--text-lg);
+    color: var(--color-dark);
+    margin-bottom: var(--space-8);
+}
+
+.content-body h2 {
+    font-size: var(--text-xl);
+    font-weight: var(--font-bold);
+    color: var(--color-dark);
+    margin: var(--space-10) 0 var(--space-4);
+}
+
+.content-body h2:first-of-type {
+    margin-top: 0;
+}
+
+.content-body h3 {
+    font-size: var(--text-lg);
+    font-weight: var(--font-semibold);
+    color: var(--color-dark);
+    margin: var(--space-8) 0 var(--space-3);
+}
+
+.content-body p {
+    margin: 0 0 var(--space-4);
+}
+
+.content-body ul,
+.content-body ol {
+    margin: 0 0 var(--space-4);
+    padding-left: var(--space-6);
+}
+
+.content-body li {
+    margin-bottom: var(--space-2);
+}
+
+.content-body a {
+    color: var(--color-primary);
+    text-decoration: none;
+}
+
+.content-body a:hover {
+    text-decoration: underline;
+}
+
+.content-body strong {
+    font-weight: var(--font-semibold);
+    color: var(--color-dark);
+}
+
+/* ===== RESPONSIVE ===== */
+
+@media (max-width: 600px) {
+    .content-page-title {
+        font-size: var(--text-3xl);
+    }
+
+    .content-body {
+        font-size: var(--text-sm);
+    }
+
+    .content-body .lead {
+        font-size: var(--text-base);
+    }
+
+    .content-body h2 {
+        font-size: var(--text-lg);
+    }
+}

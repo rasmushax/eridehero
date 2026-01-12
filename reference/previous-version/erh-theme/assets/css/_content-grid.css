@@ -1,0 +1,56 @@
+/* =============================================
+   Content Grid Component
+   Reusable grid layouts for related content cards
+   ============================================= */
+
+/* ===== RELATED CONTENT GRID ===== */
+/* 3-column grid for related items (reviews, articles, guides) */
+
+.related-grid {
+    display: grid;
+    grid-template-columns: repeat(3, 1fr);
+    gap: var(--space-5);
+}
+
+.related-grid .content-card-img {
+    position: relative;
+}
+
+.related-grid .content-card-meta {
+    font-size: var(--text-sm);
+    color: var(--color-muted);
+}
+
+/* Score badge overlay on cards */
+.card-score {
+    position: absolute;
+    top: var(--space-3);
+    right: var(--space-3);
+    min-width: 40px;
+    height: 40px;
+    padding: 0 var(--space-2);
+    background: var(--color-primary);
+    color: var(--color-white);
+    font-size: var(--text-sm);
+    font-weight: var(--font-bold);
+    border-radius: var(--radius-md);
+    display: flex;
+    align-items: center;
+    justify-content: center;
+    box-shadow: var(--shadow-md);
+}
+
+/* Score color variants using rating colors */
+.card-score[data-score="excellent"] { background: var(--color-rating-excellent); }
+.card-score[data-score="great"] { background: var(--color-rating-great); }
+.card-score[data-score="good"] { background: var(--color-rating-good); }
+.card-score[data-score="average"] { background: var(--color-rating-average); }
+.card-score[data-score="poor"] { background: var(--color-rating-poor); }
+
+/* ===== RESPONSIVE ===== */
+
+@media (max-width: 768px) {
+    .related-grid {
+        grid-template-columns: 1fr;
+    }
+}

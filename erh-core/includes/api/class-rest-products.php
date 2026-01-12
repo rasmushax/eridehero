@@ -24,6 +24,13 @@ use WP_Error;
 class RestProducts extends WP_REST_Controller {
 
     /**
+     * Debug mode flag.
+     *
+     * @var bool
+     */
+    private bool $debug = false;
+
+    /**
      * Namespace for the REST API.
      *
      * @var string
@@ -56,6 +63,32 @@ class RestProducts extends WP_REST_Controller {
         'euc'        => 'Electric Unicycle',
         'hoverboard' => 'Hoverboard',
     ];
+
+    /**
+     * Constructor.
+     */
+    public function __construct() {
+        // Enable debug via constant or query param.
+        $this->debug = defined('ERH_GEO_DEBUG') && ERH_GEO_DEBUG;
+    }
+
+    /**
+     * Log debug message.
+     *
+     * @param string $message Log message.
+     * @param array  $context Optional context data.
+     * @return void
+     */
+    private function log(string $message, array $context = []): void {
+        if (!$this->debug) {
+            return;
+        }
+        $log_entry = '[RestProducts] ' . $message;
+        if (!empty($context)) {
+            $log_entry .= ' | ' . wp_json_encode($context);
+        }
+        error_log($log_entry);
+    }
 
     /**
      * Register REST routes.
@@ -104,9 +137,16 @@ class RestProducts extends WP_REST_Controller {
         $limit = (int) $request->get_param('limit');
         $geo = strtoupper($request->get_param('geo'));
 
+        $this->log('get_similar_products called', [
+            'product_id' => $product_id,
+            'limit'      => $limit,
+            'geo'        => $geo,
+        ]);
+
         // Validate product exists.
         $product = get_post($product_id);
         if (!$product || $product->post_type !== 'products') {
+            $this->log('Product not found', ['product_id' => $product_id]);
             return new WP_Error(
                 'product_not_found',
                 __('Product not found.', 'erh-core'),
@@ -118,13 +158,17 @@ class RestProducts extends WP_REST_Controller {
         $cache_key = CacheKeys::similarProducts($product_id, $limit, $geo);
         $cached = get_transient($cache_key);
         if ($cached !== false) {
+            $this->log('Cache HIT', ['cache_key' => $cache_key]);
             $response = new WP_REST_Response($cached, 200);
             $response->header('X-ERH-Cache', 'HIT');
             return $response;
         }
 
+        $this->log('Cache MISS, fetching similar products', ['cache_key' => $cache_key]);
+
         // Get similar products using existing theme function.
         if (!function_exists('erh_get_similar_products')) {
+            $this->log('erh_get_similar_products function not available');
             return new WP_Error(
                 'function_not_found',
                 __('Similar products function not available.', 'erh-core'),
@@ -133,11 +177,22 @@ class RestProducts extends WP_REST_Controller {
         }
 
         $similar = erh_get_similar_products($product_id, $limit, true);
+        $this->log('Got raw similar products', ['count' => count($similar)]);
 
         // Transform for frontend with geo-specific pricing.
         $transformed = array_map(function ($item) use ($geo) {
             return $this->transform_product($item, $geo);
         }, $similar);
+
+        // Log pricing summary.
+        $with_price = count(array_filter($transformed, fn($p) => $p['price'] !== null));
+        $with_tracked = count(array_filter($transformed, fn($p) => $p['tracked_url'] !== null));
+        $this->log('Transformed products', [
+            'total'        => count($transformed),
+            'with_price'   => $with_price,
+            'with_tracked' => $with_tracked,
+            'geo'          => $geo,
+        ]);
 
         $response_data = [
             'products'   => $transformed,
@@ -166,14 +221,32 @@ class RestProducts extends WP_REST_Controller {
         $geo_pricing = $pricing[$geo] ?? [];
         $us_pricing = $pricing['US'] ?? [];
 
-        // Use geo pricing if available, fallback to US.
-        $current_price = $geo_pricing['current_price'] ?? $us_pricing['current_price'] ?? null;
-        $currency = $this->get_currency_for_geo($geo_pricing ? $geo : 'US');
-        $avg_6m = $geo_pricing['avg_6m'] ?? $us_pricing['avg_6m'] ?? null;
-        $instock = $geo_pricing['instock'] ?? $us_pricing['instock'] ?? false;
-        $bestlink = $geo_pricing['bestlink'] ?? $us_pricing['bestlink'] ?? null;
+        $product_name = $product['name'] ?? 'Unknown';
 
-        // Calculate price indicator (% vs 6-month average).
+        // Determine which pricing to use (geo-specific or US fallback).
+        $using_geo = !empty($geo_pricing) && isset($geo_pricing['current_price']);
+        $active_pricing = $using_geo ? $geo_pricing : $us_pricing;
+        $active_region = $using_geo ? $geo : 'US';
+
+        // Log raw pricing data for this product.
+        $this->log("transform_product: {$product_name}", [
+            'requested_geo' => $geo,
+            'using_geo'     => $using_geo,
+            'active_region' => $active_region,
+            'price'         => $active_pricing['current_price'] ?? null,
+            'avg_6m'        => $active_pricing['avg_6m'] ?? null,
+            'tracked_url'   => $active_pricing['tracked_url'] ?? null,
+        ]);
+
+        // Extract values from active pricing (NO cross-region fallbacks for averages).
+        $current_price = $active_pricing['current_price'] ?? null;
+        $currency = $this->get_currency_for_geo($active_region);
+        $avg_6m = $active_pricing['avg_6m'] ?? null;
+        $instock = $active_pricing['instock'] ?? false;
+        $tracked_url = $active_pricing['tracked_url'] ?? null;
+
+        // Calculate price indicator ONLY if we have same-region average.
+        // Never compare geo price to US average (different currencies).
         $price_indicator = null;
         if ($current_price && $avg_6m && $avg_6m > 0) {
             $price_indicator = round((($current_price - $avg_6m) / $avg_6m) * 100);
@@ -198,15 +271,15 @@ class RestProducts extends WP_REST_Controller {
             'popularity'      => $product['popularity_score'] ?? 0,
             'similarity'      => round($product['similarity_score'] ?? 0, 2),
             'specs_line'      => $specs_line,
-            // Pricing (geo-aware with fallback).
+            // Pricing (geo-aware, no cross-region fallbacks for averages).
             'price'           => $current_price,
             'currency'        => $currency,
             'instock'         => $instock,
-            'bestlink'        => $bestlink,
+            'tracked_url'     => $tracked_url,
             'price_indicator' => $price_indicator,
             'avg_6m'          => $avg_6m,
-            // Flag if using fallback pricing.
-            'price_is_fallback' => empty($geo_pricing) && !empty($us_pricing),
+            // Flag if using fallback region pricing.
+            'price_is_fallback' => !$using_geo && !empty($us_pricing),
         ];
     }
 

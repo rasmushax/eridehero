@@ -10,6 +10,14 @@ import { createChart } from './chart.js';
 import { PriceAlertModal } from './price-alert.js';
 import { calculatePriceVerdict, renderRetailerRow } from '../utils/pricing-ui.js';
 
+// Debug logging
+const DEBUG = localStorage.getItem('erh_geo_debug') === 'true' ||
+              new URLSearchParams(window.location.search).has('geo_debug');
+function log(msg, data = null) {
+    if (!DEBUG) return;
+    console.log('[PriceIntel]', msg, data || '');
+}
+
 // Period labels for stats display
 const PERIOD_LABELS = {
     '3m': '3-month',
@@ -77,6 +85,8 @@ class PriceIntelComponent {
 
     async init() {
         try {
+            log('Initializing', { productId: this.productId });
+
             // Get product info from the page (for price alert modal)
             this.extractProductInfo();
 
@@ -85,6 +95,7 @@ class PriceIntelComponent {
 
             // Detect user's geo
             this.userGeo = await getUserGeo();
+            log('Got user geo', this.userGeo);
 
             // Fetch all data (retailers + price history) in one call
             await this.fetchPriceData();
@@ -92,7 +103,10 @@ class PriceIntelComponent {
             // Set up period button listeners
             this.setupPeriodButtons();
 
+            log('Init complete');
+
         } catch (error) {
+            log('Init error', { error: error.message, stack: error.stack });
             this.showNoPrices();
         }
     }
@@ -160,32 +174,41 @@ class PriceIntelComponent {
      */
     async fetchPriceData() {
         try {
+            log('Fetching price data', { productId: this.productId, geo: this.userGeo.geo });
             const data = await getProductPrices(parseInt(this.productId, 10), this.userGeo.geo);
 
             if (!data) {
+                log('No data returned from API');
                 throw new Error('No data returned');
             }
 
+            log('API response', { offers: data.offers?.length, hasHistory: !!data.history });
             this.data = data;
 
             // Handle retailers - filter to only show geo-appropriate offers
             if (!data.offers || data.offers.length === 0) {
+                log('No offers in response');
                 this.showNoPrices();
                 return;
             }
 
             // Filter offers to only show those matching user's currency/geo
+            log('Filtering offers', { totalOffers: data.offers.length, userGeo: this.userGeo });
             this.prices = filterOffersForGeo(data.offers, this.userGeo);
+            log('Filtered offers', { count: this.prices.length, offers: this.prices });
 
             if (this.prices.length === 0) {
+                log('No offers after geo filtering');
                 this.showNoPrices();
                 return;
             }
 
+            log('Rendering prices');
             this.renderPrices();
 
             // Handle price history - DON'T show fallback US data, show "no history" instead
             if (data.history && data.history.data && data.history.data.length > 0 && !data.history.used_fallback) {
+                log('Rendering price history', { points: data.history.data.length });
                 this.priceHistory = {
                     history: data.history.data,
                     currency_symbol: data.history.currency_symbol,
@@ -195,11 +218,13 @@ class PriceIntelComponent {
                 };
                 this.renderPriceHistory();
             } else {
+                log('No local price history', { usedFallback: data.history?.used_fallback });
                 // No local price history (don't use US fallback)
                 this.showNoPriceHistory();
             }
 
         } catch (error) {
+            log('fetchPriceData error', { error: error.message, stack: error.stack });
             this.showNoPrices();
         }
     }
@@ -230,7 +255,7 @@ class PriceIntelComponent {
         }
 
         if (this.bestPriceLink) {
-            this.bestPriceLink.href = best.url || '#';
+            this.bestPriceLink.href = best.tracked_url || best.url || '#';
         }
 
         // Update retailer logo
@@ -244,7 +269,7 @@ class PriceIntelComponent {
 
         // Update buy CTA
         if (this.buyCta) {
-            this.buyCta.href = best.url || '#';
+            this.buyCta.href = best.tracked_url || best.url || '#';
         }
         if (this.buyCtaText) {
             this.buyCtaText.textContent = `Buy at ${best.retailer}`;

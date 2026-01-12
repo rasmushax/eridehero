@@ -22,7 +22,6 @@ use ERH\User\UserTracker;
 use ERH\User\RateLimiter;
 use ERH\User\UserRepository;
 use ERH\User\SocialAuth;
-use ERH\Email\MailchimpSync;
 use ERH\Email\EmailTemplate;
 use ERH\Email\EmailSender;
 use ERH\Pricing\PriceFetcher;
@@ -38,6 +37,7 @@ use ERH\Cron\YouTubeSyncJob;
 use ERH\Scoring\ProductScorer;
 use ERH\Admin\SettingsPage;
 use ERH\Admin\LinkPopulator;
+use ERH\Admin\ClickStatsPage;
 use ERH\Migration\MigrationAdmin;
 use ERH\Api\RestPrices;
 use ERH\Api\RestDeals;
@@ -45,6 +45,7 @@ use ERH\Api\RestProducts;
 use ERH\Api\RestListicle;
 use ERH\Api\ContactHandler;
 use ERH\Blocks\BlockManager;
+use ERH\Tracking\ClickRedirector;
 use ERH\CacheKeys;
 
 /**
@@ -116,13 +117,6 @@ class Core {
     private SocialAuth $social_auth;
 
     /**
-     * Mailchimp sync handler.
-     *
-     * @var MailchimpSync
-     */
-    private MailchimpSync $mailchimp_sync;
-
-    /**
      * Settings page handler.
      *
      * @var SettingsPage
@@ -142,6 +136,13 @@ class Core {
      * @var LinkPopulator
      */
     private LinkPopulator $link_populator;
+
+    /**
+     * Click stats admin page instance.
+     *
+     * @var ClickStatsPage
+     */
+    private ClickStatsPage $click_stats_page;
 
     /**
      * Email template instance.
@@ -191,6 +192,13 @@ class Core {
      * @var BlockManager
      */
     private BlockManager $block_manager;
+
+    /**
+     * Click redirector instance.
+     *
+     * @var ClickRedirector
+     */
+    private ClickRedirector $click_redirector;
 
     /**
      * Initialize all plugin components.
@@ -267,6 +275,10 @@ class Core {
 
         // Invalidate specs cache when product is updated in admin.
         add_action('acf/save_post', [$this, 'invalidate_product_caches'], 20);
+
+        // Initialize click tracking redirector (handles /go/ URLs).
+        $this->click_redirector = new ClickRedirector();
+        $this->click_redirector->register();
     }
 
     /**
@@ -337,9 +349,31 @@ class Core {
         $this->social_auth = new SocialAuth($this->user_repo);
         $this->social_auth->register();
 
-        // Initialize Mailchimp sync.
-        $this->mailchimp_sync = new MailchimpSync($this->user_repo);
-        $this->mailchimp_sync->register();
+        // Clean up user data when user is deleted from WP admin.
+        // Note: User meta is automatically deleted by WordPress.
+        add_action('delete_user', [$this, 'cleanup_user_data']);
+    }
+
+    /**
+     * Clean up custom table data when a user is deleted.
+     *
+     * WordPress automatically deletes user meta, but custom tables need manual cleanup.
+     *
+     * @param int $user_id The ID of the user being deleted.
+     * @return void
+     */
+    public function cleanup_user_data(int $user_id): void {
+        // Delete all price trackers for this user.
+        $tracker_db = new Database\PriceTracker();
+        $deleted_count = $tracker_db->delete_for_user($user_id);
+
+        if ($deleted_count > 0) {
+            error_log(sprintf(
+                '[ERH] Cleaned up %d price tracker(s) for deleted user #%d',
+                $deleted_count,
+                $user_id
+            ));
+        }
     }
 
     /**
@@ -405,6 +439,10 @@ class Core {
         // Initialize link populator (requires HFT plugin).
         $this->link_populator = new LinkPopulator();
         $this->link_populator->register();
+
+        // Initialize click stats page.
+        $this->click_stats_page = new ClickStatsPage();
+        $this->click_stats_page->register();
     }
 
     /**
@@ -480,6 +518,23 @@ class Core {
     private function init_email(): void {
         $this->email_template = new EmailTemplate();
         $this->email_sender = new EmailSender($this->email_template);
+
+        // Send welcome email on user registration.
+        add_action('erh_user_registered', [$this, 'send_welcome_email'], 10, 2);
+    }
+
+    /**
+     * Send welcome email to newly registered user.
+     *
+     * @param int      $user_id The user ID.
+     * @param \WP_User $user    The user object.
+     * @return void
+     */
+    public function send_welcome_email(int $user_id, \WP_User $user): void {
+        $this->email_sender->send_welcome(
+            $user->user_email,
+            $user->display_name ?: $user->user_login
+        );
     }
 
     /**
@@ -649,15 +704,6 @@ class Core {
     }
 
     /**
-     * Get the Mailchimp sync handler.
-     *
-     * @return MailchimpSync
-     */
-    public function get_mailchimp_sync(): MailchimpSync {
-        return $this->mailchimp_sync;
-    }
-
-    /**
      * Get the settings page handler.
      *
      * @return SettingsPage
@@ -709,5 +755,14 @@ class Core {
      */
     public function get_block_manager(): BlockManager {
         return $this->block_manager;
+    }
+
+    /**
+     * Get the click redirector instance.
+     *
+     * @return ClickRedirector
+     */
+    public function get_click_redirector(): ClickRedirector {
+        return $this->click_redirector;
     }
 }

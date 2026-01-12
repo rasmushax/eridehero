@@ -93,7 +93,10 @@ export function createProductCard(product, options = {}) {
 
     if (priceValue && product.price > 0) {
         const symbol = getCurrencySymbol(product.currency || 'USD');
-        const formatted = Math.round(product.price).toLocaleString();
+        const formatted = product.price.toLocaleString('en-US', {
+            minimumFractionDigits: 2,
+            maximumFractionDigits: 2
+        });
 
         // Check if price element expects split format or full format.
         if (priceCurrency) {

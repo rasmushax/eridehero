@@ -128,6 +128,20 @@ class UserPreferences {
             'callback'            => [$this, 'get_profile'],
             'permission_callback' => 'is_user_logged_in',
         ]);
+
+        // Unlink social provider.
+        register_rest_route(self::REST_NAMESPACE, '/user/unlink-social', [
+            'methods'             => 'POST',
+            'callback'            => [$this, 'unlink_social_provider'],
+            'permission_callback' => 'is_user_logged_in',
+            'args'                => [
+                'provider' => [
+                    'required' => true,
+                    'type'     => 'string',
+                    'enum'     => ['google', 'facebook', 'reddit'],
+                ],
+            ],
+        ]);
     }
 
     /**
@@ -176,15 +190,7 @@ class UserPreferences {
         }
 
         if (isset($params['newsletter_subscription'])) {
-            $old_status = $this->user_repo->get_preferences($user_id)['newsletter_subscription'];
-            $new_status = (bool) $params['newsletter_subscription'];
-
-            // Trigger Mailchimp sync if status changed.
-            if ($old_status !== $new_status) {
-                do_action('erh_newsletter_subscription_changed', $user_id, $new_status);
-            }
-
-            $preferences['newsletter_subscription'] = $new_status;
+            $preferences['newsletter_subscription'] = (bool) $params['newsletter_subscription'];
         }
 
         $this->user_repo->update_preferences($user_id, $preferences);
@@ -353,6 +359,60 @@ class UserPreferences {
                 'linked_providers' => array_keys(array_filter($linked_providers)),
                 'preferences'      => $this->user_repo->get_preferences($user_id),
             ],
+        ], 200);
+    }
+
+    /**
+     * Unlink a social provider from the current user's account.
+     *
+     * @param \WP_REST_Request $request The request object.
+     * @return \WP_REST_Response|\WP_Error Response or error.
+     */
+    public function unlink_social_provider(\WP_REST_Request $request) {
+        $user = wp_get_current_user();
+        $user_id = $user->ID;
+        $provider = strtolower($request->get_param('provider'));
+
+        // Get current linked providers.
+        $linked = $this->user_repo->get_linked_providers($user_id);
+        $linked_count = count(array_filter($linked));
+
+        // Check if this provider is actually linked.
+        if (empty($linked[$provider])) {
+            return new \WP_Error(
+                'not_linked',
+                'This account is not linked.',
+                ['status' => 400]
+            );
+        }
+
+        // Check if user has a password set (has_password returns false for empty string hash).
+        $has_password = !empty($user->user_pass) && $user->user_pass !== '';
+
+        // If this is the only linked provider and user has no password, prevent unlinking.
+        if ($linked_count === 1 && !$has_password) {
+            return new \WP_Error(
+                'cannot_unlink',
+                'You must set a password before disconnecting your only login method.',
+                ['status' => 400]
+            );
+        }
+
+        // Unlink the provider.
+        $result = $this->user_repo->unlink_social_account($user_id, $provider);
+
+        if (!$result) {
+            return new \WP_Error(
+                'unlink_failed',
+                'Failed to disconnect account.',
+                ['status' => 500]
+            );
+        }
+
+        return new \WP_REST_Response([
+            'success'          => true,
+            'message'          => ucfirst($provider) . ' account disconnected.',
+            'linked_providers' => array_keys(array_filter($this->user_repo->get_linked_providers($user_id))),
         ], 200);
     }
 

@@ -30,7 +30,7 @@ use ERH\CacheKeys;
  *         'high_all' => 699.99,
  *         'instock' => true,
  *         'retailer' => 'Amazon',
- *         'bestlink' => 'https://...',
+ *         'tracked_url' => '/go/product-slug/123/',
  *         'updated_at' => '2025-12-17 10:00:00',
  *     ],
  *     'GB' => [...],
@@ -199,7 +199,7 @@ class DealsFinder {
                     'lowest_price'     => $geo_data['low_all'] ?? null,
                     'highest_price'    => $geo_data['high_all'] ?? null,
                     'retailer'         => $geo_data['retailer'] ?? null,
-                    'bestlink'         => $geo_data['bestlink'] ?? null,
+                    'tracked_url'      => $geo_data['tracked_url'] ?? null,
                     'instock'          => true,
                 ];
                 $product['geo'] = $geo;
@@ -347,7 +347,7 @@ class DealsFinder {
             'lowest_price'     => $geo_data['low_all'] ?? null,
             'highest_price'    => $geo_data['high_all'] ?? null,
             'retailer'         => $geo_data['retailer'] ?? null,
-            'bestlink'         => $geo_data['bestlink'] ?? null,
+            'tracked_url'      => $geo_data['tracked_url'] ?? null,
             'instock'          => !empty($geo_data['instock']),
         ];
     }
@@ -438,7 +438,7 @@ class DealsFinder {
             'lowest_price'     => $geo_data['low_all'] ?? null,
             'highest_price'    => $geo_data['high_all'] ?? null,
             'retailer'         => $geo_data['retailer'] ?? null,
-            'bestlink'         => $geo_data['bestlink'] ?? null,
+            'tracked_url'      => $geo_data['tracked_url'] ?? null,
             'instock'          => !empty($geo_data['instock']),
             'updated_at'       => $geo_data['updated_at'] ?? null,
         ];

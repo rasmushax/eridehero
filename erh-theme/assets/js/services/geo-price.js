@@ -34,6 +34,25 @@ const REGION_STORAGE_KEY = 'erh_user_region';
 const REGION_EXPIRY_KEY = 'erh_user_region_expiry';
 const REGION_OVERRIDE_KEY = 'erh_region_override'; // Manual override (no expiry)
 
+// Debug logging (enabled via localStorage or URL param)
+const DEBUG = localStorage.getItem('erh_geo_debug') === 'true' ||
+              new URLSearchParams(window.location.search).has('geo_debug');
+
+/**
+ * Log debug message if debugging is enabled
+ * @param {string} message
+ * @param {Object} [data]
+ */
+function log(message, data = null) {
+    if (!DEBUG) return;
+    const prefix = '[GeoPriceService]';
+    if (data) {
+        console.log(prefix, message, data);
+    } else {
+        console.log(prefix, message);
+    }
+}
+
 // Price cache (in-memory)
 const priceCache = new Map();
 
@@ -106,10 +125,13 @@ export async function getUserGeo() {
  * @returns {Promise<{geo: string, currency: string, symbol: string, region: string, country: string|null}>}
  */
 async function detectUserGeo() {
+    const startTime = performance.now();
+
     // Check for manual override first (user selected a different region)
     const override = getRegionOverride();
     if (override) {
         const config = getRegionConfig(override);
+        log('Using manual override', { region: override, time_ms: (performance.now() - startTime).toFixed(2) });
         return {
             geo: override,
             region: override,
@@ -122,6 +144,7 @@ async function detectUserGeo() {
     // Check cached region
     const cached = getCachedRegion();
     if (cached) {
+        log('Using cached region', { region: cached.region, time_ms: (performance.now() - startTime).toFixed(2) });
         return cached;
     }
 
@@ -132,12 +155,20 @@ async function detectUserGeo() {
         const ipInfoToken = window.erhConfig?.ipinfoToken;
 
         if (ipInfoToken) {
+            log('Calling IPInfo API...');
+            const apiStart = performance.now();
             const response = await fetch(`https://ipinfo.io/json?token=${ipInfoToken}`);
+            const apiTime = (performance.now() - apiStart).toFixed(2);
 
             if (response.ok) {
                 const data = await response.json();
                 detectedCountry = data.country || null;
+                log('IPInfo response', { country: detectedCountry, ip: data.ip, bogon: data.bogon, time_ms: apiTime });
+            } else {
+                log('IPInfo request failed', { status: response.status, time_ms: apiTime });
             }
+        } else {
+            log('No IPInfo token configured');
         }
     } catch (error) {
         console.error('[GeoPriceService] IPInfo detection failed:', error.message);
@@ -157,6 +188,13 @@ async function detectUserGeo() {
 
     cacheRegion(regionData);
 
+    log('Geo detection complete', {
+        region,
+        country: detectedCountry,
+        source: detectedCountry ? 'ipinfo' : 'default',
+        total_time_ms: (performance.now() - startTime).toFixed(2)
+    });
+
     return regionData;
 }
 
@@ -170,17 +208,23 @@ function getCachedRegion() {
         if (expiry && Date.now() < parseInt(expiry, 10)) {
             const data = localStorage.getItem(REGION_STORAGE_KEY);
             if (data) {
-                return JSON.parse(data);
+                const parsed = JSON.parse(data);
+                log('Found valid cached region', { region: parsed.region, expires_in_hours: ((parseInt(expiry, 10) - Date.now()) / 3600000).toFixed(1) });
+                return parsed;
             }
+        } else if (expiry) {
+            log('Cached region expired', { expired_ago_hours: ((Date.now() - parseInt(expiry, 10)) / 3600000).toFixed(1) });
+        } else {
+            log('No cached region found');
         }
     } catch (e) {
-        // localStorage not available
+        log('localStorage error', { error: e.message });
     }
     return null;
 }
 
 /**
- * Cache region data to localStorage
+ * Cache region data to localStorage and set cookies for server-side access.
  * @param {{geo: string, region: string, currency: string, symbol: string, country: string|null}} data
  */
 function cacheRegion(data) {
@@ -188,9 +232,81 @@ function cacheRegion(data) {
         localStorage.setItem(REGION_STORAGE_KEY, JSON.stringify(data));
         // Cache for 24 hours
         localStorage.setItem(REGION_EXPIRY_KEY, String(Date.now() + 24 * 60 * 60 * 1000));
+        log('Cached region to localStorage', { region: data.region, ttl_hours: 24 });
     } catch (e) {
-        // localStorage not available
+        log('Failed to cache to localStorage', { error: e.message });
     }
+
+    // Set cookies for server-side click tracking.
+    setGeoCookie(data.geo);
+    if (data.country) {
+        setCountryCookie(data.country);
+    }
+}
+
+/**
+ * Set the erh_geo cookie for server-side geo detection.
+ * Used by click tracking to determine user's region.
+ * Only sets if cookie doesn't exist or has different value (optimization).
+ * @param {string} geo - Region code (US, GB, EU, CA, AU)
+ */
+function setGeoCookie(geo) {
+    // Check if cookie already exists with same value
+    const existingCookie = document.cookie
+        .split('; ')
+        .find(row => row.startsWith('erh_geo='));
+
+    if (existingCookie) {
+        const existingGeo = existingCookie.split('=')[1];
+        if (existingGeo === geo) {
+            log('Cookie already set with correct value', { geo, action: 'skipped' });
+            return; // Cookie already set with correct value
+        }
+        log('Cookie exists with different value', { existing: existingGeo, new: geo, action: 'updating' });
+    } else {
+        log('No existing cookie found', { geo, action: 'creating' });
+    }
+
+    const expires = new Date();
+    expires.setFullYear(expires.getFullYear() + 1); // 1 year expiry
+
+    // Set cookie with SameSite=Lax for cross-site compatibility (YouTube links, etc.)
+    document.cookie = `erh_geo=${geo}; expires=${expires.toUTCString()}; path=/; SameSite=Lax`;
+
+    // Verify cookie was set
+    const verifyCookie = document.cookie.split('; ').find(row => row.startsWith('erh_geo='));
+    if (verifyCookie) {
+        log('Cookie set successfully', { geo, expires: expires.toUTCString() });
+    } else {
+        log('WARNING: Cookie may not have been set (check browser settings)', { geo });
+    }
+}
+
+/**
+ * Set the erh_country cookie for granular analytics.
+ * Stores the specific country code (DK, DE, FR, etc.) for detailed tracking.
+ * @param {string} country - Two-letter country code
+ */
+function setCountryCookie(country) {
+    if (!country) return;
+
+    // Check if cookie already exists with same value
+    const existingCookie = document.cookie
+        .split('; ')
+        .find(row => row.startsWith('erh_country='));
+
+    if (existingCookie) {
+        const existingCountry = existingCookie.split('=')[1];
+        if (existingCountry === country) {
+            return; // Cookie already set with correct value
+        }
+    }
+
+    const expires = new Date();
+    expires.setFullYear(expires.getFullYear() + 1); // 1 year expiry
+
+    document.cookie = `erh_country=${country}; expires=${expires.toUTCString()}; path=/; SameSite=Lax`;
+    log('Country cookie set', { country, expires: expires.toUTCString() });
 }
 
 /**
@@ -233,6 +349,12 @@ export function setUserRegion(regionCode) {
 
         // Clear price caches (they're geo-specific)
         priceCache.clear();
+
+        // Update cookie for server-side click tracking
+        setGeoCookie(regionCode);
+
+        // Clear country cookie since this is a manual override (we don't know their actual country)
+        document.cookie = 'erh_country=; expires=Thu, 01 Jan 1970 00:00:00 UTC; path=/;';
 
         // Dispatch event for components to update
         const config = getRegionConfig(regionCode);
@@ -362,11 +484,13 @@ export async function getProductPrices(productId, geo, convertTo = null) {
     // Check cache first
     const cached = priceCache.get(cacheKey);
     if (cached && Date.now() < cached.expiry) {
+        log('getProductPrices: cache hit', { productId, geo });
         return cached.data;
     }
 
     // Check if request is already in flight (deduplication)
     if (pendingRequests.has(cacheKey)) {
+        log('getProductPrices: request in flight, waiting', { productId, geo });
         return pendingRequests.get(cacheKey);
     }
 
@@ -378,12 +502,20 @@ export async function getProductPrices(productId, geo, convertTo = null) {
                 params.append('convert_to', convertTo);
             }
 
-            const response = await fetch(`${getRestUrl()}prices/${productId}?${params}`);
+            const url = `${getRestUrl()}prices/${productId}?${params}`;
+            log('getProductPrices: fetching', { url });
+
+            const startTime = performance.now();
+            const response = await fetch(url);
+            const fetchTime = (performance.now() - startTime).toFixed(2);
+
             if (!response.ok) {
+                log('getProductPrices: HTTP error', { status: response.status, fetchTime });
                 throw new Error(`HTTP ${response.status}`);
             }
 
             const result = await response.json();
+            log('getProductPrices: success', { fetchTime, offersCount: result.offers?.length });
 
             // Cache the result
             priceCache.set(cacheKey, {
@@ -393,6 +525,7 @@ export async function getProductPrices(productId, geo, convertTo = null) {
 
             return result;
         } catch (error) {
+            log('getProductPrices: error', { error: error.message });
             console.error('[GeoPriceService] Failed to fetch product prices:', error);
             return null;
         } finally {
@@ -460,17 +593,18 @@ export function getCurrencySymbol(currency) {
  * Filter offers to show only those matching user's geo/currency.
  *
  * @param {Array} offers - Array of price offers from API
- * @param {{geo: string, currency: string}} userGeo - User's geo info
+ * @param {{geo: string, currency: string, country: string}} userGeo - User's geo info
  * @returns {Array} Filtered offers matching user's region
  */
 export function filterOffersForGeo(offers, userGeo) {
     if (!offers || !userGeo) return [];
 
     const userCurrency = userGeo.currency;
-    const userGeoCode = userGeo.geo;
+    const userGeoCode = userGeo.geo; // Region: US, GB, EU, CA, AU
+    const userCountry = userGeo.country; // Country code: DK, DE, FR, etc.
 
-    // EU countries that should be treated as EU
-    const euCountries = ['DE', 'FR', 'IT', 'ES', 'NL', 'BE', 'AT', 'IE', 'PT', 'FI', 'GR', 'LU', 'SK', 'SI', 'EE', 'LV', 'LT', 'CY', 'MT'];
+    // EU countries that should be treated as EU region
+    const euCountries = ['DE', 'FR', 'IT', 'ES', 'NL', 'BE', 'AT', 'IE', 'PT', 'FI', 'GR', 'LU', 'SK', 'SI', 'EE', 'LV', 'LT', 'CY', 'MT', 'BG', 'HR', 'CZ', 'DK', 'HU', 'PL', 'RO', 'SE', 'NO', 'CH'];
 
     return offers.filter(offer => {
         const offerCurrency = offer.currency || 'USD';
@@ -478,22 +612,60 @@ export function filterOffersForGeo(offers, userGeo) {
 
         // Primary filter: currency must match user's currency
         if (offerCurrency !== userCurrency) {
+            log('Offer rejected: currency mismatch', {
+                retailer: offer.retailer,
+                offerCurrency,
+                userCurrency
+            });
             return false;
         }
 
-        // If offer has explicit geo, it must match user's region
+        // If offer has explicit geo, check if it matches user's region or country
         if (offerGeo) {
-            // Direct match
-            if (offerGeo === userGeoCode) return true;
-            // EU: accept EU-tagged or EU country-tagged offers
-            if (userGeoCode === 'EU' && (offerGeo === 'EU' || euCountries.includes(offerGeo))) return true;
-            // User in EU country: accept EU offers
-            if (euCountries.includes(userGeoCode) && offerGeo === 'EU') return true;
+            // Handle comma-separated geo codes (e.g., "AT,BE,DE,DK,FR,...")
+            const offerGeoCodes = offerGeo.includes(',')
+                ? offerGeo.split(',').map(g => g.trim().toUpperCase())
+                : [offerGeo.toUpperCase()];
+
+            // Direct match with user's region code
+            if (offerGeoCodes.includes(userGeoCode)) {
+                log('Offer accepted: direct geo match', { retailer: offer.retailer, offerGeo });
+                return true;
+            }
+
+            // Match user's specific country code (e.g., DK in "AT,BE,DK,...")
+            if (userCountry && offerGeoCodes.includes(userCountry.toUpperCase())) {
+                log('Offer accepted: country code match', { retailer: offer.retailer, userCountry, offerGeo });
+                return true;
+            }
+
+            // EU region: accept if offer has any EU country code
+            if (userGeoCode === 'EU') {
+                const hasEuCountry = offerGeoCodes.some(code => euCountries.includes(code) || code === 'EU');
+                if (hasEuCountry) {
+                    log('Offer accepted: EU geo match', { retailer: offer.retailer, offerGeo });
+                    return true;
+                }
+            }
+
+            // User in EU country: accept EU-tagged offers
+            if (euCountries.includes(userGeoCode) && offerGeoCodes.includes('EU')) {
+                log('Offer accepted: EU country accepts EU offer', { retailer: offer.retailer, offerGeo });
+                return true;
+            }
+
             // No match
+            log('Offer rejected: geo mismatch', {
+                retailer: offer.retailer,
+                offerGeo,
+                userGeoCode,
+                userCountry
+            });
             return false;
         }
 
         // Offer has no explicit geo (global) - accept if currency matches
+        log('Offer accepted: no geo restriction, currency matched', { retailer: offer.retailer });
         return true;
     });
 }
@@ -546,8 +718,8 @@ export async function updatePriceElements(selector, geo, convertTo = null) {
 
             // Update link
             const linkEl = el.querySelector('[data-buy-link]');
-            if (linkEl && priceData.url) {
-                linkEl.href = priceData.url;
+            if (linkEl && (priceData.tracked_url || priceData.url)) {
+                linkEl.href = priceData.tracked_url || priceData.url;
             }
 
             // Update stock status

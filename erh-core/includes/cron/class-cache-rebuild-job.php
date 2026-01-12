@@ -9,6 +9,7 @@ declare(strict_types=1);
 
 namespace ERH\Cron;
 
+use ERH\GeoConfig;
 use ERH\Pricing\PriceFetcher;
 use ERH\Database\ProductCache;
 use ERH\Database\PriceHistory;
@@ -31,7 +32,8 @@ use ERH\Scoring\ProductScorer;
  *         'currency' => 'USD',
  *         'instock' => true,
  *         'retailer' => 'Amazon',
- *         'bestlink' => 'https://...',
+ *         'tracked_url' => '/go/product-slug/123/',
+ *         'link_id' => 123,
  *         // Period averages
  *         'avg_3m' => 549.99, 'avg_6m' => 579.99, 'avg_12m' => 599.99, 'avg_all' => 589.99,
  *         // Period lows
@@ -57,23 +59,6 @@ class CacheRebuildJob implements CronJobInterface {
         'Electric Skateboard',
         'Electric Unicycle',
         'Hoverboard',
-    ];
-
-    /**
-     * Regions to build price data for.
-     * These are the 5 primary regions we track prices for.
-     * HFT stores per-country (DE, FR, etc.), we group into regions here.
-     */
-    private const REGIONS = ['US', 'GB', 'EU', 'CA', 'AU'];
-
-    /**
-     * EU country codes that map to the EU region.
-     * Prices from these countries are grouped under 'EU' in the cache.
-     */
-    private const EU_COUNTRIES = [
-        'DE', 'FR', 'IT', 'ES', 'NL', 'BE', 'AT', 'IE', 'PT', 'FI',
-        'GR', 'LU', 'SK', 'SI', 'EE', 'LV', 'LT', 'CY', 'MT',
-        'PL', 'CZ', 'HU', 'RO', 'BG', 'HR', 'DK', 'SE', 'NO', 'CH', 'EU',
     ];
 
     /**
@@ -211,6 +196,25 @@ class CacheRebuildJob implements CronJobInterface {
     }
 
     /**
+     * Debug logging flag. Enable via WP_DEBUG or ERH_CACHE_DEBUG constant.
+     *
+     * @var bool
+     */
+    private bool $debug = false;
+
+    /**
+     * Stats tracking for logging.
+     *
+     * @var array
+     */
+    private array $stats = [
+        'products_with_eu' => 0,
+        'products_with_us' => 0,
+        'eu_prices_found'  => 0,
+        'tracked_urls'     => 0,
+    ];
+
+    /**
      * Run the cache rebuild logic.
      *
      * Uses batch processing to minimize database queries.
@@ -221,6 +225,13 @@ class CacheRebuildJob implements CronJobInterface {
         $start_time = microtime(true);
         $processed_count = 0;
         $query_stats = ['hft_queries' => 0, 'history_queries' => 0];
+
+        // Enable debug logging if WP_DEBUG or ERH_CACHE_DEBUG is set.
+        $this->debug = defined('WP_DEBUG') && WP_DEBUG || defined('ERH_CACHE_DEBUG') && ERH_CACHE_DEBUG;
+
+        if ($this->debug) {
+            error_log('[ERH Cache Rebuild] === Starting cache rebuild with debug logging ===');
+        }
 
         foreach (self::PRODUCT_TYPES as $product_type) {
             $products = $this->get_products_by_type($product_type);
@@ -271,6 +282,15 @@ class CacheRebuildJob implements CronJobInterface {
             $query_stats['history_queries']
         ));
 
+        // Log geo pricing stats.
+        error_log(sprintf(
+            '[ERH Cron] Geo stats: %d products with US pricing, %d with EU pricing, %d EU prices matched, %d tracked URLs generated',
+            $this->stats['products_with_us'],
+            $this->stats['products_with_eu'],
+            $this->stats['eu_prices_found'],
+            $this->stats['tracked_urls']
+        ));
+
         // Update post modified dates for specific finder pages (for cache invalidation).
         $this->touch_finder_pages();
     }
@@ -298,22 +318,6 @@ class CacheRebuildJob implements CronJobInterface {
                 ],
             ],
         ]);
-    }
-
-    /**
-     * Rebuild cache data for a single product.
-     *
-     * @deprecated Use rebuild_product_with_data() for bulk processing.
-     * @param int $product_id The product post ID.
-     * @param string $product_type The product type.
-     * @return void
-     */
-    private function rebuild_product(int $product_id, string $product_type): void {
-        // Fallback to individual queries (not used in normal flow).
-        $prices = $this->price_fetcher->get_prices($product_id);
-        $history = $this->price_history->get_history($product_id, 0, null, null, 'DESC');
-
-        $this->rebuild_product_with_data($product_id, $product_type, $prices, $history);
     }
 
     /**
@@ -346,8 +350,11 @@ class CacheRebuildJob implements CronJobInterface {
         $has_instock = false;
         $best_price_for_computed_specs = null;
 
-        foreach (self::REGIONS as $region) {
-            $region_data = $this->build_region_pricing_data_from_arrays($prices, $history, $region);
+        // Get product slug for tracked URLs.
+        $product_slug = get_post_field('post_name', $product_id);
+
+        foreach (GeoConfig::REGIONS as $region) {
+            $region_data = $this->build_region_pricing_data_from_arrays($prices, $history, $region, $product_slug);
             if ($region_data !== null) {
                 $price_history[$region] = $region_data;
 
@@ -524,96 +531,18 @@ class CacheRebuildJob implements CronJobInterface {
     }
 
     /**
-     * Build region-specific pricing data for a product.
-     *
-     * Returns pricing data structure for a single region with current price,
-     * stock status, and period statistics (avg/low/high for 3m/6m/12m/all).
-     *
-     * For the EU region, this queries multiple EU country codes and picks the best price.
-     *
-     * @param int    $product_id The product ID.
-     * @param string $region     The region code (e.g., 'US', 'GB', 'EU').
-     * @return array|null Region pricing data or null if no genuine data for this region.
-     */
-    private function build_region_pricing_data(int $product_id, string $region): ?array {
-        // Get best current price for this region.
-        $best_price = $this->get_best_price_for_region($product_id, $region);
-
-        // Get price history for this region.
-        $history = $this->get_history_for_region($product_id, $region);
-
-        // Need at least current price OR historical data to return anything.
-        if ($best_price === null && empty($history)) {
-            return null;
-        }
-
-        $region_data = [
-            'current_price' => null,
-            'currency'      => $this->get_currency_for_region($region),
-            'instock'       => false,
-            'retailer'      => null,
-            'bestlink'      => null,
-            // Averages
-            'avg_3m'        => null,
-            'avg_6m'        => null,
-            'avg_12m'       => null,
-            'avg_all'       => null,
-            // Lows
-            'low_3m'        => null,
-            'low_6m'        => null,
-            'low_12m'       => null,
-            'low_all'       => null,
-            // Highs
-            'high_3m'       => null,
-            'high_6m'       => null,
-            'high_12m'      => null,
-            'high_all'      => null,
-            'updated_at'    => current_time('mysql'),
-        ];
-
-        // Populate current price data from best price.
-        if ($best_price !== null) {
-            $region_data['current_price'] = (float) $best_price['price'];
-            $region_data['currency'] = $best_price['currency'] ?? $this->get_currency_for_region($region);
-            $region_data['instock'] = !empty($best_price['in_stock']);
-            $region_data['retailer'] = $best_price['retailer'] ?? null;
-            $region_data['bestlink'] = $best_price['url'] ?? null;
-        }
-
-        // Calculate period statistics from historical data.
-        if (!empty($history)) {
-            $stats = $this->calculate_period_stats($history);
-
-            // Merge all stats into region_data.
-            $region_data['avg_3m']   = $stats['avg_3m'];
-            $region_data['avg_6m']   = $stats['avg_6m'];
-            $region_data['avg_12m']  = $stats['avg_12m'];
-            $region_data['avg_all']  = $stats['avg_all'];
-            $region_data['low_3m']   = $stats['low_3m'];
-            $region_data['low_6m']   = $stats['low_6m'];
-            $region_data['low_12m']  = $stats['low_12m'];
-            $region_data['low_all']  = $stats['low_all'];
-            $region_data['high_3m']  = $stats['high_3m'];
-            $region_data['high_6m']  = $stats['high_6m'];
-            $region_data['high_12m'] = $stats['high_12m'];
-            $region_data['high_all'] = $stats['high_all'];
-        }
-
-        return $region_data;
-    }
-
-    /**
      * Build region-specific pricing data from pre-fetched arrays.
      *
      * This is the optimized version that works with bulk-fetched data
      * instead of making individual database queries.
      *
-     * @param array  $prices  All current prices for this product.
-     * @param array  $history All historical prices for this product.
-     * @param string $region  The region code (e.g., 'US', 'GB', 'EU').
+     * @param array  $prices       All current prices for this product.
+     * @param array  $history      All historical prices for this product.
+     * @param string $region       The region code (e.g., 'US', 'GB', 'EU').
+     * @param string $product_slug The product post slug for tracked URLs.
      * @return array|null Region pricing data or null if no genuine data for this region.
      */
-    private function build_region_pricing_data_from_arrays(array $prices, array $history, string $region): ?array {
+    private function build_region_pricing_data_from_arrays(array $prices, array $history, string $region, string $product_slug = ''): ?array {
         // Get best current price for this region from pre-fetched array.
         $best_price = $this->get_best_price_for_region_from_array($prices, $region);
 
@@ -630,7 +559,8 @@ class CacheRebuildJob implements CronJobInterface {
             'currency'      => $this->get_currency_for_region($region),
             'instock'       => false,
             'retailer'      => null,
-            'bestlink'      => null,
+            'tracked_url'   => null,
+            'link_id'       => null,
             // Averages
             'avg_3m'        => null,
             'avg_6m'        => null,
@@ -655,7 +585,34 @@ class CacheRebuildJob implements CronJobInterface {
             $region_data['currency'] = $best_price['currency'] ?? $this->get_currency_for_region($region);
             $region_data['instock'] = !empty($best_price['in_stock']);
             $region_data['retailer'] = $best_price['retailer'] ?? null;
-            $region_data['bestlink'] = $best_price['url'] ?? null;
+
+            // Build tracked URL: /go/{product-slug}/{link-id}/
+            $link_id = $best_price['id'] ?? null;
+            if ($link_id && $product_slug) {
+                $region_data['tracked_url'] = "/go/{$product_slug}/{$link_id}/";
+                $region_data['link_id'] = (int) $link_id;
+                $this->stats['tracked_urls']++;
+            }
+
+            // Track stats for logging.
+            if ($region === 'US') {
+                $this->stats['products_with_us']++;
+            } elseif ($region === 'EU') {
+                $this->stats['products_with_eu']++;
+
+                // Debug log for EU price matching.
+                if ($this->debug) {
+                    error_log(sprintf(
+                        '[ERH Cache Rebuild] EU price found for %s: %s %.2f from %s (geo: %s, link_id: %d)',
+                        $product_slug,
+                        $region_data['currency'],
+                        $region_data['current_price'],
+                        $region_data['retailer'],
+                        $best_price['geo'] ?? 'null',
+                        $link_id ?? 0
+                    ));
+                }
+            }
         }
 
         // Calculate period statistics from historical data.
@@ -742,6 +699,7 @@ class CacheRebuildJob implements CronJobInterface {
      *
      * For EU region, accepts any EU country code.
      * For other regions, requires exact geo match or null geo.
+     * Handles comma-separated geo values (e.g., "AT,BE,DE,DK,FR").
      *
      * @param array  $price  The price data.
      * @param string $region The region code.
@@ -749,20 +707,61 @@ class CacheRebuildJob implements CronJobInterface {
      */
     private function price_matches_region(array $price, string $region): bool {
         $price_geo = $price['geo'] ?? null;
+        $retailer = $price['retailer'] ?? 'unknown';
+
+        // Parse comma-separated geo values into array.
+        $geo_codes = $this->parse_geo_codes($price_geo);
 
         if ($region === 'EU') {
             // For EU, accept any EU country code, 'EU', or null with EUR currency.
-            if (in_array($price_geo, self::EU_COUNTRIES, true)) {
-                return true;
+            foreach ($geo_codes as $code) {
+                if (in_array($code, GeoConfig::EU_COUNTRIES, true)) {
+                    $this->stats['eu_prices_found']++;
+                    if ($this->debug) {
+                        error_log(sprintf(
+                            '[ERH Cache Rebuild] EU match: %s geo=%s matched via country code %s',
+                            $retailer,
+                            $price_geo,
+                            $code
+                        ));
+                    }
+                    return true;
+                }
             }
             if ($price_geo === 'EU' || $price_geo === null || $price_geo === '') {
-                return ($price['currency'] ?? '') === 'EUR';
+                $is_eur = ($price['currency'] ?? '') === 'EUR';
+                if ($is_eur) {
+                    $this->stats['eu_prices_found']++;
+                }
+                return $is_eur;
             }
             return false;
         }
 
         // For non-EU regions, accept exact match or null geo.
-        return $price_geo === $region || $price_geo === null || $price_geo === '';
+        if ($price_geo === null || $price_geo === '') {
+            return true;
+        }
+        return in_array($region, $geo_codes, true);
+    }
+
+    /**
+     * Parse geo codes from a string that may be comma-separated.
+     *
+     * @param string|null $geo_string The geo string (e.g., "AT,BE,DE" or "US" or null).
+     * @return array Array of geo codes.
+     */
+    private function parse_geo_codes(?string $geo_string): array {
+        if ($geo_string === null || $geo_string === '') {
+            return [];
+        }
+
+        // Handle comma-separated values.
+        if (strpos($geo_string, ',') !== false) {
+            return array_map('trim', array_map('strtoupper', explode(',', $geo_string)));
+        }
+
+        return [strtoupper(trim($geo_string))];
     }
 
     /**
@@ -792,7 +791,7 @@ class CacheRebuildJob implements CronJobInterface {
                 if ($entry_currency !== 'EUR') {
                     continue;
                 }
-                if (!in_array($entry_geo, self::EU_COUNTRIES, true) && $entry_geo !== 'EU') {
+                if (!in_array($entry_geo, GeoConfig::EU_COUNTRIES, true) && $entry_geo !== 'EU') {
                     continue;
                 }
             } else {
@@ -825,126 +824,6 @@ class CacheRebuildJob implements CronJobInterface {
         }
 
         return $deduped;
-    }
-
-    /**
-     * Get best price for a region.
-     *
-     * For EU region, queries all EU country codes and returns the best (lowest in-stock) price.
-     * For other regions, directly queries PriceFetcher.
-     *
-     * @deprecated Use get_best_price_for_region_from_array() with bulk data.
-     * @param int    $product_id The product ID.
-     * @param string $region     The region code.
-     * @return array|null Best price data or null.
-     */
-    private function get_best_price_for_region(int $product_id, string $region): ?array {
-        if ($region === 'EU') {
-            // For EU, try multiple country codes and find the best price
-            $best_price = null;
-            $best_price_value = PHP_FLOAT_MAX;
-
-            foreach (self::EU_COUNTRIES as $country) {
-                $price = $this->price_fetcher->get_best_price($product_id, $country);
-
-                if ($price === null) {
-                    continue;
-                }
-
-                // Verify it's a genuine EU price (EUR currency)
-                if (!$this->is_genuine_region_price($price, $region)) {
-                    continue;
-                }
-
-                // Prefer in-stock items, then lowest price
-                $is_in_stock = !empty($price['in_stock']);
-                $price_value = (float) ($price['price'] ?? PHP_FLOAT_MAX);
-
-                // If we don't have a price yet, take this one
-                if ($best_price === null) {
-                    $best_price = $price;
-                    $best_price_value = $price_value;
-                    continue;
-                }
-
-                // Prefer in-stock over out-of-stock
-                $best_is_in_stock = !empty($best_price['in_stock']);
-                if ($is_in_stock && !$best_is_in_stock) {
-                    $best_price = $price;
-                    $best_price_value = $price_value;
-                    continue;
-                }
-
-                // If both same stock status, prefer lower price
-                if ($is_in_stock === $best_is_in_stock && $price_value < $best_price_value) {
-                    $best_price = $price;
-                    $best_price_value = $price_value;
-                }
-            }
-
-            return $best_price;
-        }
-
-        // For non-EU regions, query directly
-        $price = $this->price_fetcher->get_best_price($product_id, $region);
-
-        // Verify it's genuine for this region
-        if ($price !== null && !$this->is_genuine_region_price($price, $region)) {
-            return null;
-        }
-
-        return $price;
-    }
-
-    /**
-     * Get price history for a region.
-     *
-     * For EU region, aggregates history from all EU country codes.
-     *
-     * @param int    $product_id The product ID.
-     * @param string $region     The region code.
-     * @return array Price history records.
-     */
-    private function get_history_for_region(int $product_id, string $region): array {
-        if ($region === 'EU') {
-            // For EU, aggregate history from all EU countries
-            $all_history = [];
-
-            foreach (self::EU_COUNTRIES as $country) {
-                $history = $this->price_history->get_history($product_id, 0, $country, 'EUR', 'DESC');
-                if (!empty($history)) {
-                    $all_history = array_merge($all_history, $history);
-                }
-            }
-
-            // Also try with 'EU' as geo directly
-            $eu_history = $this->price_history->get_history($product_id, 0, 'EU', 'EUR', 'DESC');
-            if (!empty($eu_history)) {
-                $all_history = array_merge($all_history, $eu_history);
-            }
-
-            // Sort by date descending and remove duplicates by date
-            usort($all_history, function ($a, $b) {
-                return strtotime($b['date']) - strtotime($a['date']);
-            });
-
-            // Deduplicate by date (keep first/lowest price per date)
-            $seen_dates = [];
-            $deduped = [];
-            foreach ($all_history as $entry) {
-                $date = $entry['date'] ?? '';
-                if (!isset($seen_dates[$date])) {
-                    $seen_dates[$date] = true;
-                    $deduped[] = $entry;
-                }
-            }
-
-            return $deduped;
-        }
-
-        // For non-EU regions, query directly
-        $currency = $this->get_currency_for_region($region);
-        return $this->price_history->get_history($product_id, 0, $region, $currency, 'DESC');
     }
 
     /**
@@ -1011,21 +890,14 @@ class CacheRebuildJob implements CronJobInterface {
      * @return string The currency code.
      */
     private function get_currency_for_region(string $region): string {
-        $region_currencies = [
-            'US' => 'USD',
-            'GB' => 'GBP',
-            'EU' => 'EUR',
-            'CA' => 'CAD',
-            'AU' => 'AUD',
-        ];
-
-        return $region_currencies[$region] ?? 'USD';
+        return GeoConfig::get_currency($region);
     }
 
     /**
      * Check if a price is genuinely for the requested region.
      *
      * This prevents US fallback prices from being stored under non-US regions.
+     * Handles comma-separated geo values (e.g., "AT,BE,DE,DK,FR").
      *
      * @param array  $price  The price data from PriceFetcher.
      * @param string $region The requested region code.
@@ -1035,10 +907,13 @@ class CacheRebuildJob implements CronJobInterface {
         $price_geo = $price['geo'] ?? null;
         $price_currency = $price['currency'] ?? 'USD';
 
+        // Parse comma-separated geo values into array.
+        $geo_codes = $this->parse_geo_codes($price_geo);
+
         // For US region
         if ($region === 'US') {
             // Accept if geo is US or null (global prices default to US)
-            if ($price_geo === 'US' || empty($price_geo)) {
+            if (in_array('US', $geo_codes, true) || empty($price_geo)) {
                 return $price_currency === 'USD';
             }
             return false;
@@ -1050,10 +925,13 @@ class CacheRebuildJob implements CronJobInterface {
             if ($price_currency !== 'EUR') {
                 return false;
             }
-            // Accept if geo is an EU country, 'EU', or null with EUR
-            if (in_array($price_geo, self::EU_COUNTRIES, true)) {
-                return true;
+            // Accept if any geo code is an EU country
+            foreach ($geo_codes as $code) {
+                if (in_array($code, GeoConfig::EU_COUNTRIES, true)) {
+                    return true;
+                }
             }
+            // Accept if geo is 'EU' or null with EUR
             if ($price_geo === 'EU' || (empty($price_geo) && $price_currency === 'EUR')) {
                 return true;
             }
@@ -1063,8 +941,8 @@ class CacheRebuildJob implements CronJobInterface {
         // For GB, CA, AU - must match geo and currency
         $expected_currency = $this->get_currency_for_region($region);
 
-        // Exact geo match
-        if ($price_geo === $region && $price_currency === $expected_currency) {
+        // Geo matches region (exact or in comma-separated list)
+        if (in_array($region, $geo_codes, true) && $price_currency === $expected_currency) {
             return true;
         }
 

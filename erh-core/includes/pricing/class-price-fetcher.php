@@ -114,18 +114,53 @@ class PriceFetcher {
         $params = [$product_id];
 
         // Add geo filter if specified.
+        // Links can have geo set in two places:
+        // 1. tl.geo_target - for API-based links (single code like "US") or scraper links (comma-separated like "AT,BE,DE")
+        // 2. s.geos - scraper's applicable geos (comma-separated like "AT,BE,DE" or single like "US")
+        // We filter by expected currency for the geo to avoid mixing currencies.
         if ($geo !== null) {
             $geo = strtoupper($geo);
+            $expected_currency = $this->get_currency_for_geo($geo);
 
-            // EU region needs to match EU + individual EU country codes.
+            // Filter by expected currency for this geo.
+            $sql .= " AND tl.current_currency = %s";
+            $params[] = $expected_currency;
+
+            // EU region needs to match EU or any individual EU country code.
             if ($geo === 'EU') {
-                $eu_countries = ['EU', 'DE', 'FR', 'IT', 'ES', 'NL', 'BE', 'AT', 'IE', 'PT', 'FI', 'GR', 'LU', 'SK', 'SI', 'EE', 'LV', 'LT', 'CY', 'MT'];
-                $placeholders = implode(',', array_fill(0, count($eu_countries), '%s'));
-                $sql .= " AND (tl.geo_target IS NULL OR tl.geo_target = '' OR tl.geo_target IN ({$placeholders}))";
-                $params = array_merge($params, $eu_countries);
+                $eu_countries = ['EU', 'DE', 'FR', 'IT', 'ES', 'NL', 'BE', 'AT', 'IE', 'PT', 'FI', 'GR', 'PL', 'SE', 'DK', 'NO', 'CH', 'CZ', 'RO', 'HU', 'LU', 'SK', 'SI', 'EE', 'LV', 'LT', 'CY', 'MT', 'BG', 'HR'];
+
+                // Build FIND_IN_SET conditions for comma-separated geo fields.
+                $find_in_set_geo_target = [];
+                $find_in_set_scraper_geos = [];
+                foreach ($eu_countries as $country) {
+                    $find_in_set_geo_target[] = "FIND_IN_SET(%s, tl.geo_target)";
+                    $find_in_set_scraper_geos[] = "FIND_IN_SET(%s, s.geos)";
+                }
+                $geo_target_clause = implode(' OR ', $find_in_set_geo_target);
+                $scraper_geos_clause = implode(' OR ', $find_in_set_scraper_geos);
+
+                // Match: geo_target contains EU country, scraper geos contains EU country, OR no geo restriction
+                $sql .= " AND (
+                    ({$geo_target_clause})
+                    OR ({$scraper_geos_clause})
+                    OR (tl.geo_target IS NULL AND (s.geos IS NULL OR s.geos = ''))
+                )";
+                // Add params: eu_countries for geo_target FIND_IN_SET, then eu_countries for scraper geos FIND_IN_SET
+                $params = array_merge($params, $eu_countries, $eu_countries);
             } else {
-                $sql .= " AND (tl.geo_target IS NULL OR tl.geo_target = '' OR tl.geo_target = %s)";
-                $params[] = $geo;
+                // Single geo: check if it's in the comma-separated list or matches exactly.
+                $sql .= " AND (
+                    tl.geo_target = %s
+                    OR FIND_IN_SET(%s, tl.geo_target)
+                    OR s.geos = %s
+                    OR FIND_IN_SET(%s, s.geos)
+                    OR (tl.geo_target IS NULL AND (s.geos IS NULL OR s.geos = ''))
+                )";
+                $params[] = $geo; // exact match geo_target
+                $params[] = $geo; // FIND_IN_SET geo_target
+                $params[] = $geo; // exact match s.geos
+                $params[] = $geo; // FIND_IN_SET s.geos
             }
         }
 
@@ -352,25 +387,51 @@ class PriceFetcher {
         // Build the affiliate URL.
         $url = $row['affiliate_link_override'] ?: $this->build_affiliate_url($row);
 
-        // Get retailer logo from HFT scraper (use 'erh-logo-small' - 48px height).
+        // Get retailer logo and name.
         $logo_url = null;
+        $retailer_name = null;
         $scraper_id = isset($row['scraper_id']) ? (int)$row['scraper_id'] : 0;
+        $parser_id = $row['parser_identifier'] ?? null;
+
         if ($scraper_id > 0) {
+            // Has a scraper - use scraper's logo and name.
             $logo_url = $this->logos->get_logo_by_id($scraper_id, 'erh-logo-small');
+            $retailer_name = $row['retailer_name'] ?: $row['retailer_domain'];
+        } elseif ($parser_id) {
+            // No scraper but has parser_identifier (e.g., 'amazon') - use special retailer handling.
+            $logo_url = $this->logos->get_logo_by_domain($parser_id, 'erh-logo-small');
+            $retailer_name = $this->logos->get_retailer_name($parser_id);
+
+            // For Amazon, append the geo (e.g., "Amazon US", "Amazon UK").
+            if ($parser_id === 'amazon' && !empty($row['geo_target'])) {
+                $retailer_name .= ' ' . strtoupper($row['geo_target']);
+            }
         }
 
+        // Final fallback for retailer name.
+        if (!$retailer_name) {
+            $retailer_name = $row['retailer_domain'] ?: 'Unknown';
+        }
+
+        // Build tracked URL for click tracking.
+        $link_id = (int)$row['id'];
+        $product_id = (int)$row['product_post_id'];
+        $product_slug = get_post_field('post_name', $product_id);
+        $tracked_url = $product_slug ? home_url("/go/{$product_slug}/{$link_id}/") : null;
+
         return [
-            'id'              => (int)$row['id'],
-            'product_id'      => (int)$row['product_post_id'],
+            'id'              => $link_id,
+            'product_id'      => $product_id,
             'url'             => $url,
+            'tracked_url'     => $tracked_url,
             'price'           => (float)$row['current_price'],
             'currency'        => $row['current_currency'] ?: 'USD',
             'currency_symbol' => $this->get_currency_symbol($row['current_currency'] ?: 'USD'),
             'status'          => $row['current_status'],
             'in_stock'        => $row['current_status'] === 'In Stock',
             'shipping'        => $row['current_shipping_info'],
-            'retailer'        => $row['retailer_name'] ?: $row['retailer_domain'] ?: 'Unknown',
-            'domain'          => $row['retailer_domain'],
+            'retailer'        => $retailer_name,
+            'domain'          => $row['retailer_domain'] ?: $parser_id,
             'logo_url'        => $logo_url,
             'geo'             => $row['geo_target'],
             'last_updated'    => $row['last_scraped_at'],
@@ -415,6 +476,41 @@ class PriceFetcher {
         }
 
         return '';
+    }
+
+    /**
+     * Get expected currency for a geo region.
+     *
+     * @param string $geo Geo region code.
+     * @return string Currency code.
+     */
+    private function get_currency_for_geo(string $geo): string {
+        $geo_currencies = [
+            'US' => 'USD',
+            'GB' => 'GBP',
+            'EU' => 'EUR',
+            'CA' => 'CAD',
+            'AU' => 'AUD',
+            // EU countries also map to EUR.
+            'DE' => 'EUR',
+            'FR' => 'EUR',
+            'IT' => 'EUR',
+            'ES' => 'EUR',
+            'NL' => 'EUR',
+            'DK' => 'EUR', // Uses EUR for pricing
+            'SE' => 'EUR',
+            'NO' => 'EUR',
+            'AT' => 'EUR',
+            'BE' => 'EUR',
+            'IE' => 'EUR',
+            'PT' => 'EUR',
+            'FI' => 'EUR',
+            'GR' => 'EUR',
+            'PL' => 'EUR',
+            'CZ' => 'EUR',
+        ];
+
+        return $geo_currencies[strtoupper($geo)] ?? 'USD';
     }
 
     /**

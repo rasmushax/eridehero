@@ -195,6 +195,12 @@
     position: relative;
 }
 
+/* Keep text in flow but invisible during loading to maintain button height */
+.auth-modal-submit .btn-text[hidden] {
+    display: block;
+    visibility: hidden;
+}
+
 .auth-modal-submit-loading {
     position: absolute;
     left: 50%;
@@ -203,8 +209,8 @@
 }
 
 .auth-modal-submit-loading .spinner {
-    width: 20px;
-    height: 20px;
+    width: 15px;
+    height: 15px;
 }
 
 /* Toggle link */

@@ -1,0 +1,302 @@
+/* =============================================
+   ERideHero Design System - Buttons
+
+   Usage:
+   - Base: .btn (required)
+   - Variants: .btn-primary, .btn-secondary, .btn-ghost, .btn-dark, .btn-outline, .btn-error, .btn-link
+   - Sizes: .btn-xs, .btn-sm, (default md), .btn-lg, .btn-xl
+   - Full width: .btn-block
+   - Icon only: .btn-icon (standalone, no .btn needed)
+
+   Examples:
+   <a class="btn btn-primary">Primary Button</a>
+   <button class="btn btn-secondary btn-sm">Small Secondary</button>
+   <button class="btn btn-ghost btn-lg">Large Ghost</button>
+   <button class="btn btn-link btn-sm">Link Style</button>
+   <button class="btn-icon"><svg>...</svg></button>
+   ============================================= */
+
+/* ===== BASE BUTTON ===== */
+
+.btn {
+    position: relative;
+    display: inline-flex;
+    align-items: center;
+    justify-content: center;
+    gap: var(--space-3);
+    padding: var(--space-5) var(--space-8);
+    font-family: var(--font-family);
+    font-size: var(--text-base);
+    font-weight: var(--font-semibold);
+    line-height: 1;
+    text-decoration: none;
+    border: var(--border-width-2) solid transparent;
+    border-radius: var(--radius-lg);
+    cursor: pointer;
+    transition: all var(--transition-fast);
+    white-space: nowrap;
+}
+
+.btn:disabled,
+.btn.is-disabled {
+    opacity: 0.5;
+    cursor: not-allowed;
+    pointer-events: none;
+}
+
+.btn svg {
+    width: 18px;
+    height: 18px;
+    flex-shrink: 0;
+}
+
+
+/* ===== BUTTON VARIANTS ===== */
+
+/* Primary - filled purple with glow */
+.btn-primary {
+    background: var(--color-primary);
+    color: var(--color-white);
+    box-shadow: var(--shadow-sm);
+}
+
+.btn-primary:hover,
+.btn-primary:focus {
+    background: var(--color-primary-hover);
+    box-shadow: var(--shadow-md);
+    transform: translateY(-1px);
+}
+
+.btn-primary:active {
+    transform: translateY(0);
+}
+
+/* Secondary - white with border */
+.btn-secondary {
+    background: var(--color-white);
+    color: var(--color-dark);
+    border-color: var(--color-border);
+}
+
+.btn-secondary:hover,
+.btn-secondary:focus {
+    border-color: var(--color-primary);
+    color: var(--color-primary);
+}
+
+/* Ghost - subtle background */
+.btn-ghost {
+    background: var(--color-background);
+    color: var(--color-dark);
+}
+
+.btn-ghost:hover,
+.btn-ghost:focus {
+    background: var(--color-white);
+    border-color: var(--color-border);
+}
+
+.btn-ghost svg {
+    color: var(--color-muted);
+}
+
+/* Dark - dark background */
+.btn-dark {
+    background: var(--color-dark);
+    color: var(--color-white);
+}
+
+.btn-dark:hover,
+.btn-dark:focus {
+    background: var(--color-primary);
+}
+
+/* Outline - transparent with border */
+.btn-outline {
+    background: transparent;
+    color: var(--color-primary);
+    border-color: var(--color-primary);
+}
+
+.btn-outline:hover,
+.btn-outline:focus {
+    background: var(--color-primary);
+    color: var(--color-white);
+}
+
+/* Error/Danger - red background for destructive actions */
+.btn-error {
+    background: var(--color-error);
+    color: var(--color-white);
+    border-color: var(--color-error);
+}
+
+.btn-error:hover,
+.btn-error:focus {
+    background: #c82333;
+    border-color: #bd2130;
+}
+
+/* Link - no padding, no background, just styled text */
+.btn.btn-link {
+    padding: 0;
+    background: transparent;
+    border-color: transparent;
+    color: var(--color-muted);
+    font-weight: var(--font-medium);
+}
+
+.btn.btn-link:hover,
+.btn.btn-link:focus {
+    color: var(--color-primary);
+    background: transparent;
+    border-color: transparent;
+}
+
+.btn.btn-link svg {
+    color: currentColor;
+}
+
+/* YouTube - red for YouTube subscribe */
+.btn-youtube {
+    background: var(--color-youtube);
+    color: var(--color-white);
+}
+
+.btn-youtube:hover,
+.btn-youtube:focus {
+    background: var(--color-youtube-hover);
+    transform: translateY(-1px);
+}
+
+.btn-youtube:active {
+    transform: translateY(0);
+}
+
+
+/* ===== BUTTON SIZES ===== */
+/* 5 sizes: xs, sm, md (default), lg, xl */
+
+/* Extra Small */
+.btn-xs {
+    gap: var(--space-1);
+    padding: var(--space-2) var(--space-3);
+    font-size: var(--text-xs);
+    border-radius: var(--radius-sm);
+}
+
+.btn-xs svg {
+    width: 12px;
+    height: 12px;
+}
+
+/* Small */
+.btn-sm {
+    gap: var(--space-2);
+    padding: var(--space-4) var(--space-6);
+    font-size: var(--text-sm);
+    border-radius: var(--radius-md);
+}
+
+.btn-sm svg {
+    width: 16px;
+    height: 16px;
+}
+
+/* Medium (default) - defined in .btn base: 20px 32px, text-base */
+
+/* Large */
+.btn-lg {
+    gap: var(--space-3);
+    padding: var(--space-6) var(--space-10);
+    font-size: var(--text-lg);
+    border-radius: var(--radius-lg);
+}
+
+.btn-lg svg {
+    width: 20px;
+    height: 20px;
+}
+
+/* Extra Large */
+.btn-xl {
+    gap: var(--space-4);
+    padding: var(--space-7) var(--space-12);
+    font-size: var(--text-xl);
+    border-radius: var(--radius-xl);
+}
+
+.btn-xl svg {
+    width: 24px;
+    height: 24px;
+}
+
+
+/* ===== BUTTON MODIFIERS ===== */
+
+/* Full width */
+.btn-block {
+    display: flex;
+    width: 100%;
+}
+
+/* Icon on right */
+.btn-icon-right {
+    flex-direction: row-reverse;
+}
+
+
+/* ===== ICON BUTTON ===== */
+/* Standalone square button for icons only */
+
+.btn-icon {
+    display: inline-flex;
+    align-items: center;
+    justify-content: center;
+    width: 40px;
+    height: 40px;
+    padding: 0;
+    background: transparent;
+    border: none;
+    border-radius: var(--radius-lg);
+    cursor: pointer;
+    transition: all var(--transition-fast);
+}
+
+.btn-icon:hover,
+.btn-icon:focus {
+    background: var(--color-background);
+}
+
+.btn-icon svg {
+    width: 20px;
+    height: 20px;
+    color: var(--color-muted);
+    transition: color var(--transition-fast);
+}
+
+.btn-icon:hover svg,
+.btn-icon:focus svg {
+    color: var(--color-primary);
+}
+
+/* Icon button sizes */
+.btn-icon.btn-sm {
+    width: 32px;
+    height: 32px;
+}
+
+.btn-icon.btn-sm svg {
+    width: 16px;
+    height: 16px;
+}
+
+.btn-icon.btn-lg {
+    width: 48px;
+    height: 48px;
+}
+
+.btn-icon.btn-lg svg {
+    width: 24px;
+    height: 24px;
+}
