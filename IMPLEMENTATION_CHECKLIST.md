@@ -97,6 +97,15 @@ Use this file alongside CLAUDE.md to track progress.
 - [x] Create `includes/user/class-social-auth.php` (orchestrator)
 - [x] CSRF protection via transient-based state tokens
 - [x] Auto-link accounts when email matches existing user
+- [x] Auto-link toast notification when social login links to existing account
+- [x] Reddit users without email handled (uses Reddit username as fallback identifier)
+- [x] Connected accounts UI in settings (connect/disconnect providers)
+- [x] Google icon added to SVG sprite
+
+**Status:**
+- Google: Working (tested)
+- Facebook: Needs testing once live (app in dev mode)
+- Reddit: Needs testing once live (app in dev mode)
 
 **REST Endpoints:**
 - `GET /erh/v1/auth/social/{provider}` - Initiate OAuth flow
@@ -258,6 +267,29 @@ Use this file alongside CLAUDE.md to track progress.
 - **Validation**: Currency match required (EU = EUR only)
 - **Frontend fallback**: Unmapped countries default to US at geo-detection level (NOT at product level)
 - **No currency mixing**: All components show prices in user's region currency only
+
+### Reference Pricing for Non-Regional Products (Session 2025-01-12)
+- [x] REST API (`class-rest-prices.php`) returns `fallback` field when user's geo has no pricing
+  - Contains up to 4 US offers with logo_url, price, tracked_url, in_stock
+- [x] `price-intel.js` handles fallback with `showReferencePricing()` method
+  - Shows "No [region] pricing available" message with info icon
+  - Displays US prices in clickable retailer cards (logo, price, stock status)
+  - Warning: "These retailers may not ship to your region"
+- [x] CSS styles for reference pricing cards (`.price-intel-reference-*`)
+- [x] Fixed similar products API to NOT return US fallback prices (currency mixing prevention)
+- [x] Fixed alternatives/successor sections in price-intel.js to not use US fallback
+
+### Price Alert Visibility (Session 2025-01-12)
+Price alert/track buttons hidden when product has no regional pricing:
+- [x] `finder.js` - Track button only shown when `product.price` exists
+- [x] `compare-results.js` - Track/Buy buttons only shown when pricing exists
+- [x] `listicle-item.js` - Track button hidden in error handler when no regional pricing
+- [x] `product-card.js` (utility) - Track button hidden when no `product.price`
+- [x] `deals-utils.js` - Track button hidden when no `deal.current_price`
+- [x] `deals-page.js` - Track button hidden when no `deal.current_price`
+
+### User Cleanup (Session 2025-01-12)
+- [x] Added `delete_user` hook in `class-core.php` to clean up price trackers when user deleted from WP admin
 
 ---
 
@@ -596,10 +628,16 @@ Routes in `single.php`:
 - [ ] Finder tool filters/sorts correctly
 - [ ] Price tracker create/update/delete
 - [ ] User registration flow
-- [ ] User login flow
+- [ ] User login flow (email/password)
 - [ ] Password reset flow
+- [ ] Social login - Google (working, tested)
+- [ ] Social login - Facebook (needs testing once live)
+- [ ] Social login - Reddit (needs testing once live)
+- [ ] Social auto-link toast notification
 - [ ] Email notifications (test mode)
 - [ ] Search functionality
+- [ ] Reference pricing for non-regional products
+- [ ] Price alert buttons hidden when no regional pricing
 - [ ] Mobile responsive (test 3 breakpoints)
 - [ ] No PHP errors in log
 - [ ] Performance < 3s LCP
@@ -829,6 +867,8 @@ erh-theme/
 | Geo Detection Cache | Window-level + Promise dedup | Single IPInfo call per page load |
 | Currency Consistency | No product-level US fallback | Unmapped countries default at detection level |
 | DRY Utilities | formatPrice/getCurrencySymbol in geo-price.js | All components import from single source |
+| Reference Pricing | Show US prices as reference when no regional data | Users can still see pricing context, click to buy if they want |
+| Price Alert Visibility | Hide track buttons when no regional pricing | Can't alert on prices user can't actually buy |
 
 ---
 

@@ -220,7 +220,15 @@ HFT plugin tables: `wp_hft_tracked_links`, `wp_hft_price_history`, `wp_hft_scrap
 | CA | CAD | Canada |
 | AU | AUD | Australia, New Zealand |
 
-**Rule**: No currency mixing. Products without regional pricing show "no price" (not USD fallback).
+**Rule**: No currency mixing. Products without regional pricing show "no price" for actionable UI (buy buttons, price alerts), but US prices shown as reference.
+
+### Reference Pricing (Non-Regional Products)
+When a user's region has no pricing data:
+- REST API returns `fallback` field with up to 4 US offers
+- UI shows "No [region] pricing available" message
+- Displays US prices in clickable reference cards (logo, price, stock)
+- Price alert buttons hidden (can't track prices you can't buy)
+- Warning: "These retailers may not ship to your region"
 
 ### GeoConfig Class (Single Source of Truth)
 ```php

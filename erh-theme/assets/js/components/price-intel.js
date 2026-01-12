@@ -187,8 +187,13 @@ class PriceIntelComponent {
 
             // Handle retailers - filter to only show geo-appropriate offers
             if (!data.offers || data.offers.length === 0) {
-                log('No offers in response');
-                this.showNoPrices();
+                log('No offers in response', { hasFallback: !!data.fallback });
+                // Check for fallback (US prices as reference)
+                if (data.fallback && data.fallback.offers?.length > 0) {
+                    this.showReferencePricing(data.fallback);
+                } else {
+                    this.showNoPrices();
+                }
                 return;
             }
 
@@ -198,8 +203,13 @@ class PriceIntelComponent {
             log('Filtered offers', { count: this.prices.length, offers: this.prices });
 
             if (this.prices.length === 0) {
-                log('No offers after geo filtering');
-                this.showNoPrices();
+                log('No offers after geo filtering', { hasFallback: !!data.fallback });
+                // Check for fallback (US prices as reference)
+                if (data.fallback && data.fallback.offers?.length > 0) {
+                    this.showReferencePricing(data.fallback);
+                } else {
+                    this.showNoPrices();
+                }
                 return;
             }
 
@@ -584,19 +594,145 @@ class PriceIntelComponent {
     }
 
     /**
-     * Show no prices state
+     * Show no prices state - hide all pricing UI and show helpful message
      */
     showNoPrices() {
-        if (this.noPricesEl) {
-            this.noPricesEl.style.display = '';
-        }
-
-        // Hide other sections
+        // Hide pricing sections
         const header = this.el.querySelector('.price-intel-header');
         const retailers = this.el.querySelector('.price-intel-retailers');
+        const historySection = this.el.querySelector('[data-price-history]');
 
         if (header) header.style.display = 'none';
         if (retailers) retailers.style.display = 'none';
+        if (historySection) historySection.style.display = 'none';
+
+        // Update hero price to show "no pricing" state
+        this.updateHeroPriceNoData();
+
+        // Show improved empty state
+        if (this.noPricesEl) {
+            this.noPricesEl.innerHTML = `
+                <div class="price-intel-no-data">
+                    <div class="price-intel-no-data-icon">
+                        <svg class="icon" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2">
+                            <circle cx="12" cy="12" r="10"></circle>
+                            <path d="M9.09 9a3 3 0 0 1 5.83 1c0 2-3 3-3 3"></path>
+                            <line x1="12" y1="17" x2="12.01" y2="17"></line>
+                        </svg>
+                    </div>
+                    <h3 class="price-intel-no-data-title">No pricing available for your region</h3>
+                    <p class="price-intel-no-data-text">We don't track retailers for this product in your region yet.</p>
+                </div>
+            `;
+            this.noPricesEl.style.display = '';
+        }
+    }
+
+    /**
+     * Update hero price element when no pricing data available
+     */
+    updateHeroPriceNoData() {
+        const heroPrice = document.querySelector('[data-hero-price]');
+        if (!heroPrice) return;
+
+        // Hide the entire hero price link since there's nothing to show
+        heroPrice.style.display = 'none';
+    }
+
+    /**
+     * Show reference pricing from another region (e.g., US prices for EU users).
+     * Displayed as clickable cards so users can still purchase if they want.
+     */
+    showReferencePricing(fallback) {
+        log('Showing reference pricing', fallback);
+
+        // Hide normal pricing sections
+        const header = this.el.querySelector('.price-intel-header');
+        const retailers = this.el.querySelector('.price-intel-retailers');
+        const historySection = this.el.querySelector('[data-price-history]');
+
+        if (header) header.style.display = 'none';
+        if (retailers) retailers.style.display = 'none';
+        if (historySection) historySection.style.display = 'none';
+
+        // Hide hero price
+        this.updateHeroPriceNoData();
+
+        const regionName = this.getRegionName();
+        const fallbackRegionName = this.getRegionNameForGeo(fallback.geo);
+
+        // Build retailer cards (up to 4)
+        const cardsHtml = fallback.offers.slice(0, 4).map(offer => {
+            const price = formatPrice(offer.price, fallback.currency);
+            const url = offer.tracked_url || offer.url || '#';
+            const logoHtml = offer.logo_url
+                ? `<img src="${offer.logo_url}" alt="${offer.retailer}" class="price-intel-reference-card-logo">`
+                : `<span class="price-intel-reference-card-name">${offer.retailer}</span>`;
+
+            const inStock = offer.in_stock !== false;
+            const stockClass = inStock ? 'price-intel-reference-card-stock--in' : 'price-intel-reference-card-stock--out';
+            const stockIcon = inStock ? 'check' : 'x';
+            const stockText = inStock ? 'In stock' : 'Out of stock';
+
+            return `
+                <a href="${url}" class="price-intel-reference-card" target="_blank" rel="noopener noreferrer nofollow">
+                    ${logoHtml}
+                    <span class="price-intel-reference-card-price">${price}</span>
+                    <span class="price-intel-reference-card-stock ${stockClass}">
+                        <svg class="icon" aria-hidden="true"><use href="#icon-${stockIcon}"></use></svg>
+                        ${stockText}
+                    </span>
+                </a>
+            `;
+        }).join('');
+
+        // Show reference pricing UI
+        if (this.noPricesEl) {
+            this.noPricesEl.innerHTML = `
+                <div class="price-intel-no-data">
+                    <div class="price-intel-no-data-icon">
+                        <svg class="icon" aria-hidden="true"><use href="#icon-info"></use></svg>
+                    </div>
+                    <h3 class="price-intel-no-data-title">No ${regionName} pricing available</h3>
+                    <p class="price-intel-no-data-text">We don't track retailers for this product in your region yet.</p>
+
+                    <div class="price-intel-reference">
+                        <div class="price-intel-reference-header">
+                            <span class="price-intel-reference-title">${fallbackRegionName} Prices</span>
+                            <span class="price-intel-reference-warning">
+                                <svg class="icon" aria-hidden="true"><use href="#icon-info"></use></svg>
+                                These retailers may not ship to your region
+                            </span>
+                        </div>
+                        <div class="price-intel-reference-cards">
+                            ${cardsHtml}
+                        </div>
+                    </div>
+                </div>
+            `;
+            this.noPricesEl.style.display = '';
+        }
+    }
+
+    /**
+     * Get human-readable region name for user's geo
+     */
+    getRegionName() {
+        return this.getRegionNameForGeo(this.userGeo?.geo);
+    }
+
+    /**
+     * Get human-readable region name for a geo code
+     */
+    getRegionNameForGeo(geo) {
+        const names = {
+            'US': 'US',
+            'GB': 'UK',
+            'EU': 'EU',
+            'CA': 'Canadian',
+            'AU': 'Australian'
+        };
+        return names[geo] || geo || 'regional';
     }
 
     /**
@@ -710,13 +846,13 @@ async function initAlternatives() {
             const grid = section.querySelector('.discontinued-alternatives-grid');
             if (!grid) return;
 
-            // Render the cards with geo-aware pricing
+            // Render the cards with geo-aware pricing (NO fallback to US)
             grid.innerHTML = data.map(product => {
                 const pricing = product.pricing || {};
-                const regionPricing = pricing[region] || pricing['US'] || {};
+                const regionPricing = pricing[region] || {};
                 const price = regionPricing.current_price;
                 const avg6m = regionPricing.avg_6m;
-                const displayCurrency = pricing[region] ? currency : 'USD';
+                const displayCurrency = currency;
 
                 // Calculate price indicator
                 let indicatorHtml = '';
@@ -792,9 +928,9 @@ async function initSuccessorPricing() {
             if (!priceEl) return;
 
             const pricing = data.pricing;
-            const regionPricing = pricing[region] || pricing['US'] || {};
+            const regionPricing = pricing[region] || {};
             const price = regionPricing.current_price;
-            const displayCurrency = pricing[region] ? currency : 'USD';
+            const displayCurrency = currency;
 
             if (price) {
                 priceEl.textContent = formatPrice(price, displayCurrency);

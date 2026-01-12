@@ -1707,9 +1707,9 @@ class Finder {
                 </span>
             </label>
 
-            <button class="product-card-track" data-track-price="${product.id}" aria-label="Track price">
+            ${product.price ? `<button class="product-card-track" data-track-price="${product.id}" aria-label="Track price">
                 <svg class="icon"><use href="#icon-bell"></use></svg>
-            </button>
+            </button>` : ''}
 
             <a href="${product.url}" class="product-card-link">
                 <div class="product-card-image">

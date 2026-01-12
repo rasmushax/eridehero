@@ -47,13 +47,17 @@ export function createDealCard(template, deal, userGeo, options = {}) {
         card.dataset.category = deal.category || '';
     }
 
-    // Track button data
+    // Track button data (only if deal has price)
     if (trackBtn) {
-        trackBtn.dataset.trackPrice = deal.id;
-        trackBtn.dataset.productName = deal.name || '';
-        trackBtn.dataset.productImage = deal.thumbnail || '';
-        trackBtn.dataset.currentPrice = deal.current_price || '';
-        trackBtn.dataset.currency = deal.currency || userGeo.currency;
+        if (!deal.current_price) {
+            trackBtn.style.display = 'none';
+        } else {
+            trackBtn.dataset.trackPrice = deal.id;
+            trackBtn.dataset.productName = deal.name || '';
+            trackBtn.dataset.productImage = deal.thumbnail || '';
+            trackBtn.dataset.currentPrice = deal.current_price;
+            trackBtn.dataset.currency = deal.currency || userGeo.currency;
+        }
     }
 
     // Image

@@ -308,9 +308,13 @@ export async function initDealsPage() {
             checkbox.checked = comparisonBar.isSelected(deal.id);
         }
 
-        // Track button
+        // Track button (only if deal has price)
         if (trackBtn) {
-            trackBtn.dataset.trackPrice = deal.id;
+            if (!deal.current_price) {
+                trackBtn.style.display = 'none';
+            } else {
+                trackBtn.dataset.trackPrice = deal.id;
+            }
         }
 
         // Links

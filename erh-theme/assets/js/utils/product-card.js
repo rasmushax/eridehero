@@ -140,21 +140,26 @@ export function createProductCard(product, options = {}) {
         discountEl.textContent = `${Math.round(product.discount_percent)}% below avg`;
     }
 
-    // Set up track/alert button.
+    // Set up track/alert button (only if product has price).
     const trackBtn = clone.querySelector('[data-track-price]');
     if (trackBtn) {
-        trackBtn.dataset.trackPrice = product.id;
-        trackBtn.dataset.productName = product.name || '';
-        trackBtn.dataset.productImage = product.thumbnail || '';
-        trackBtn.dataset.currentPrice = product.price || '';
-        trackBtn.dataset.currency = product.currency || 'USD';
+        if (!product.price) {
+            // Hide track button if no regional pricing
+            trackBtn.style.display = 'none';
+        } else {
+            trackBtn.dataset.trackPrice = product.id;
+            trackBtn.dataset.productName = product.name || '';
+            trackBtn.dataset.productImage = product.thumbnail || '';
+            trackBtn.dataset.currentPrice = product.price;
+            trackBtn.dataset.currency = product.currency || 'USD';
 
-        if (onTrackClick) {
-            trackBtn.addEventListener('click', (e) => {
-                e.preventDefault();
-                e.stopPropagation();
-                onTrackClick(product, trackBtn);
-            });
+            if (onTrackClick) {
+                trackBtn.addEventListener('click', (e) => {
+                    e.preventDefault();
+                    e.stopPropagation();
+                    onTrackClick(product, trackBtn);
+                });
+            }
         }
     }
 

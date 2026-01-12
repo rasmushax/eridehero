@@ -219,34 +219,30 @@ class RestProducts extends WP_REST_Controller {
     private function transform_product(array $product, string $geo): array {
         $pricing = $product['pricing'] ?? [];
         $geo_pricing = $pricing[$geo] ?? [];
-        $us_pricing = $pricing['US'] ?? [];
 
         $product_name = $product['name'] ?? 'Unknown';
 
-        // Determine which pricing to use (geo-specific or US fallback).
-        $using_geo = !empty($geo_pricing) && isset($geo_pricing['current_price']);
-        $active_pricing = $using_geo ? $geo_pricing : $us_pricing;
-        $active_region = $using_geo ? $geo : 'US';
+        // Only use geo-specific pricing - NO fallbacks to other regions.
+        // This prevents showing USD prices to EU users (currency mixing).
+        $has_geo_pricing = !empty($geo_pricing) && isset($geo_pricing['current_price']);
 
         // Log raw pricing data for this product.
         $this->log("transform_product: {$product_name}", [
-            'requested_geo' => $geo,
-            'using_geo'     => $using_geo,
-            'active_region' => $active_region,
-            'price'         => $active_pricing['current_price'] ?? null,
-            'avg_6m'        => $active_pricing['avg_6m'] ?? null,
-            'tracked_url'   => $active_pricing['tracked_url'] ?? null,
+            'requested_geo'   => $geo,
+            'has_geo_pricing' => $has_geo_pricing,
+            'price'           => $geo_pricing['current_price'] ?? null,
+            'avg_6m'          => $geo_pricing['avg_6m'] ?? null,
+            'tracked_url'     => $geo_pricing['tracked_url'] ?? null,
         ]);
 
-        // Extract values from active pricing (NO cross-region fallbacks for averages).
-        $current_price = $active_pricing['current_price'] ?? null;
-        $currency = $this->get_currency_for_geo($active_region);
-        $avg_6m = $active_pricing['avg_6m'] ?? null;
-        $instock = $active_pricing['instock'] ?? false;
-        $tracked_url = $active_pricing['tracked_url'] ?? null;
+        // Extract values ONLY from requested geo (no cross-region fallbacks).
+        $current_price = $has_geo_pricing ? ($geo_pricing['current_price'] ?? null) : null;
+        $currency = $this->get_currency_for_geo($geo);
+        $avg_6m = $has_geo_pricing ? ($geo_pricing['avg_6m'] ?? null) : null;
+        $instock = $has_geo_pricing ? ($geo_pricing['instock'] ?? false) : false;
+        $tracked_url = $has_geo_pricing ? ($geo_pricing['tracked_url'] ?? null) : null;
 
         // Calculate price indicator ONLY if we have same-region average.
-        // Never compare geo price to US average (different currencies).
         $price_indicator = null;
         if ($current_price && $avg_6m && $avg_6m > 0) {
             $price_indicator = round((($current_price - $avg_6m) / $avg_6m) * 100);
@@ -271,15 +267,13 @@ class RestProducts extends WP_REST_Controller {
             'popularity'      => $product['popularity_score'] ?? 0,
             'similarity'      => round($product['similarity_score'] ?? 0, 2),
             'specs_line'      => $specs_line,
-            // Pricing (geo-aware, no cross-region fallbacks for averages).
+            // Pricing (geo-aware, NO cross-region fallbacks).
             'price'           => $current_price,
             'currency'        => $currency,
             'instock'         => $instock,
             'tracked_url'     => $tracked_url,
             'price_indicator' => $price_indicator,
             'avg_6m'          => $avg_6m,
-            // Flag if using fallback region pricing.
-            'price_is_fallback' => !$using_geo && !empty($us_pricing),
         ];
     }
 

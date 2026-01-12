@@ -274,6 +274,20 @@ class RestPrices extends WP_REST_Controller {
         // Get best price.
         $best = !empty($prices) ? $prices[0] : null;
 
+        // If no offers for requested geo, get fallback offers from US for reference.
+        $fallback = null;
+        if (empty($prices) && $geo_normalized !== 'US') {
+            $us_prices = $this->price_fetcher->get_prices($product_id, 'US');
+            if (!empty($us_prices)) {
+                $fallback = [
+                    'geo'      => 'US',
+                    'currency' => 'USD',
+                    'symbol'   => '$',
+                    'offers'   => array_slice($us_prices, 0, 4), // Top 4 for reference grid.
+                ];
+            }
+        }
+
         // Get currency for geo.
         $currency = $this->get_currency_for_geo($geo_normalized);
         $currency_symbol = $this->exchange_service->get_symbol($currency);
@@ -324,6 +338,8 @@ class RestPrices extends WP_REST_Controller {
             'best'       => $best,
             'offers'     => $prices,
             'count'      => count($prices),
+            // Fallback pricing (US offers when requested geo has none).
+            'fallback'   => $fallback,
             // Price history.
             'history' => [
                 'geo'             => $history_geo,

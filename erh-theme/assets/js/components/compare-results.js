@@ -684,12 +684,12 @@ function renderPricing() {
             ${products.map(p => `
                 <td>
                     <div class="compare-pricing-btns">
-                        <button class="btn btn--ghost btn--sm" data-track="${p.id}" data-name="${escapeHtml(p.name)}"
-                            data-image="${p.thumbnail || ''}" data-price="${p.currentPrice || ''}" data-currency="${p.currency}">
+                        ${p.currentPrice ? `<button class="btn btn--ghost btn--sm" data-track="${p.id}" data-name="${escapeHtml(p.name)}"
+                            data-image="${p.thumbnail || ''}" data-price="${p.currentPrice}" data-currency="${p.currency}">
                             <svg class="icon" width="14" height="14"><use href="#icon-bell"></use></svg>
                             Track
-                        </button>
-                        <a href="${p.buyLink}" class="btn btn--primary btn--sm" target="_blank" rel="noopener">Buy</a>
+                        </button>` : ''}
+                        ${p.buyLink ? `<a href="${p.buyLink}" class="btn btn--primary btn--sm" target="_blank" rel="noopener">Buy</a>` : ''}
                     </div>
                 </td>
             `).join('')}

@@ -283,6 +283,10 @@ class ListicleItemComponent {
         } catch (error) {
             console.error('[ListicleItem] Failed to hydrate price bar:', error);
             priceBar.style.display = 'none';
+
+            // Also hide the track button since there's no regional pricing
+            const trackBtn = this.el.querySelector('.listicle-item-track-btn');
+            if (trackBtn) trackBtn.style.display = 'none';
         }
     }
 
