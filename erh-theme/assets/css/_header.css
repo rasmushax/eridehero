@@ -660,6 +660,145 @@
 }
 
 
+/* ===== SEARCH RESULTS ===== */
+
+.search-results-container {
+    display: none;
+}
+
+.search-results-container.active {
+    display: block;
+    margin-top: var(--space-2);
+}
+
+.search-results {
+    display: flex;
+    flex-direction: column;
+}
+
+.search-result {
+    display: flex;
+    align-items: center;
+    gap: var(--space-3);
+    padding: var(--space-3);
+    text-decoration: none;
+    border-radius: var(--radius-md);
+    transition: background var(--transition-fast);
+}
+
+.search-result:hover,
+.search-result:focus,
+.search-result.selected {
+    background: var(--color-background);
+}
+
+.search-result-thumb-wrap {
+    position: relative;
+    width: 54px;
+    height: 54px;
+    flex-shrink: 0;
+    display: flex;
+    align-items: center;
+    justify-content: center;
+    border-radius: var(--radius-sm);
+    overflow: hidden;
+}
+
+.search-result-thumb-wrap::after {
+    content: "";
+    position: absolute;
+    inset: 0;
+    background: var(--color-overlay-light);
+    border-radius: inherit;
+    pointer-events: none;
+}
+
+.search-result-thumb {
+    width: 100%;
+    height: 100%;
+    object-fit: cover;
+}
+
+/* Product thumbnails: contain with padding */
+.search-result-thumb-wrap--product .search-result-thumb {
+    object-fit: contain;
+    padding: var(--space-1);
+}
+
+.search-result-content {
+    display: flex;
+    flex-direction: column;
+    gap: 2px;
+    min-width: 0;
+}
+
+.search-result-title {
+    font-size: 14px;
+    font-weight: 500;
+    color: var(--color-dark);
+    white-space: nowrap;
+    overflow: hidden;
+    text-overflow: ellipsis;
+}
+
+.search-result-title mark {
+    background: var(--color-background);
+    color: var(--color-primary);
+    border-radius: 2px;
+}
+
+.search-result-meta {
+    display: flex;
+    align-items: center;
+    gap: var(--space-2);
+}
+
+.search-result-type {
+    font-size: var(--text-tiny);
+    font-weight: 500;
+    padding: var(--space-1) var(--space-3);
+    border-radius: var(--radius-sm);
+    background: var(--color-white);
+    border: 1px solid var(--color-border);
+    color: var(--color-muted);
+}
+
+.search-results-footer {
+    margin-top: var(--space-3);
+    width: 100%;
+}
+
+.search-loading {
+    display: flex;
+    align-items: center;
+    justify-content: center;
+    gap: var(--space-2);
+    padding: var(--space-5);
+    color: var(--color-muted);
+    font-size: 13px;
+}
+
+.search-loading-spinner {
+    width: 16px;
+    height: 16px;
+    border: 2px solid var(--color-border);
+    border-top-color: var(--color-primary);
+    border-radius: 50%;
+    animation: spin 0.8s linear infinite;
+}
+
+@keyframes spin {
+    to { transform: rotate(360deg); }
+}
+
+.search-no-results {
+    padding: var(--space-5);
+    text-align: center;
+    color: var(--color-muted);
+    font-size: 13px;
+}
+
+
 /* ===== HAMBURGER MENU BUTTON ===== */
 
 .menu-toggle {

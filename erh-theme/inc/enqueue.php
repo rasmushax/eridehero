@@ -82,15 +82,19 @@ function erh_enqueue_assets(): void {
     }
 
     // Build erhData object.
+    $upload_dir = wp_upload_dir();
+    $search_json_path = $upload_dir['basedir'] . '/search_items.json';
+    $search_json_version = file_exists( $search_json_path ) ? filemtime( $search_json_path ) : '';
     $erh_data = array(
-        'siteUrl'    => home_url(),
-        'ajaxUrl'    => admin_url( 'admin-ajax.php' ),
-        'restUrl'    => rest_url( 'erh/v1/' ),
-        'hftRestUrl' => rest_url( 'housefresh-tools/v1/' ),
-        'nonce'      => wp_create_nonce( 'wp_rest' ), // REST API nonce
-        'ajaxNonce'  => wp_create_nonce( 'erh_nonce' ), // Legacy AJAX nonce
-        'themeUrl'   => ERH_THEME_URI,
-        'isLoggedIn' => is_user_logged_in(),
+        'siteUrl'       => home_url(),
+        'ajaxUrl'       => admin_url( 'admin-ajax.php' ),
+        'restUrl'       => rest_url( 'erh/v1/' ),
+        'hftRestUrl'    => rest_url( 'housefresh-tools/v1/' ),
+        'nonce'         => wp_create_nonce( 'wp_rest' ), // REST API nonce
+        'ajaxNonce'     => wp_create_nonce( 'erh_nonce' ), // Legacy AJAX nonce
+        'themeUrl'      => ERH_THEME_URI,
+        'isLoggedIn'    => is_user_logged_in(),
+        'searchJsonUrl' => $upload_dir['baseurl'] . '/search_items.json' . ( $search_json_version ? '?v=' . $search_json_version : '' ),
     );
 
     // Add product data for single product pages (avoids loading finder JSON).

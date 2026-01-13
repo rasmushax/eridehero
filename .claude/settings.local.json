@@ -18,7 +18,8 @@
       "Bash(powershell.exe -Command \"Get-Command php\")",
       "Bash(/mnt/f/wamp64/bin/php/php8.3.28/php.exe:*)",
       "Bash(cmd.exe:*)",
-      "Bash(echo:*)"
+      "Bash(echo:*)",
+      "Bash(xargs:*)"
     ]
   }
 }

@@ -164,6 +164,7 @@ class SearchJsonJob implements CronJobInterface {
      */
     private function build_search_item(object $post): ?array {
         $thumbnail_url = self::DEFAULT_THUMBNAIL;
+        $card_image_url = self::DEFAULT_THUMBNAIL;
         $type = '';
         $product_type = '';
 
@@ -172,18 +173,22 @@ class SearchJsonJob implements CronJobInterface {
         switch ($post->post_type) {
             case 'products':
                 $type = 'Product';
-                $thumbnail_url = $this->get_product_thumbnail($post_id);
+                $thumbnail_url = $this->get_product_thumbnail($post_id, 'erh-product-sm');
+                // Use 'large' for products - proportionally scaled, not hard cropped
+                $card_image_url = $this->get_product_thumbnail($post_id, 'large');
                 $product_type = get_field('product_type', $post_id) ?: '';
                 break;
 
             case 'tool':
                 $type = 'Tool';
-                $thumbnail_url = $this->get_post_thumbnail($post_id);
+                $thumbnail_url = $this->get_post_thumbnail($post_id, 'erh-thumbnail');
+                $card_image_url = $this->get_post_thumbnail($post_id, 'erh-card');
                 break;
 
             case 'post':
                 $type = 'Article';
-                $thumbnail_url = $this->get_post_thumbnail($post_id);
+                $thumbnail_url = $this->get_post_thumbnail($post_id, 'erh-thumbnail');
+                $card_image_url = $this->get_post_thumbnail($post_id, 'erh-card');
                 break;
 
             default:
@@ -196,6 +201,7 @@ class SearchJsonJob implements CronJobInterface {
             'url'       => get_permalink($post_id),
             'type'      => $type,
             'thumbnail' => $thumbnail_url,
+            'image'     => $card_image_url,
         ];
 
         // Add product type for products.
@@ -208,15 +214,15 @@ class SearchJsonJob implements CronJobInterface {
 
     /**
      * Get the thumbnail URL for a product.
+     * Products use the WordPress featured image.
      *
-     * @param int $post_id The post ID.
+     * @param int    $post_id The post ID.
+     * @param string $size    The image size.
      * @return string The thumbnail URL.
      */
-    private function get_product_thumbnail(int $post_id): string {
-        $big_thumbnail = get_field('big_thumbnail', $post_id);
-
-        if ($big_thumbnail) {
-            $url = wp_get_attachment_image_url($big_thumbnail, [50, 50]);
+    private function get_product_thumbnail(int $post_id, string $size = 'thumbnail'): string {
+        if (has_post_thumbnail($post_id)) {
+            $url = get_the_post_thumbnail_url($post_id, $size);
             if ($url) {
                 return $url;
             }
@@ -228,12 +234,13 @@ class SearchJsonJob implements CronJobInterface {
     /**
      * Get the thumbnail URL for a regular post.
      *
-     * @param int $post_id The post ID.
+     * @param int    $post_id The post ID.
+     * @param string $size    The image size.
      * @return string The thumbnail URL.
      */
-    private function get_post_thumbnail(int $post_id): string {
+    private function get_post_thumbnail(int $post_id, string $size = 'thumbnail'): string {
         if (has_post_thumbnail($post_id)) {
-            $url = get_the_post_thumbnail_url($post_id, [50, 50]);
+            $url = get_the_post_thumbnail_url($post_id, $size);
             if ($url) {
                 return $url;
             }

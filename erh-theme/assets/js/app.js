@@ -89,6 +89,13 @@ import { Toast } from './components/toast.js'; // For programmatic toasts
         import('./components/archive-sort.js');
     }
 
+    // Search page - only on search page
+    if (document.querySelector('[data-search-page]')) {
+        import('./components/search-page.js').then(module => {
+            module.initSearchPage();
+        });
+    }
+
     // Contact form - only on contact page
     if (document.querySelector('[data-contact-form]')) {
         import('./components/contact.js').then(module => {

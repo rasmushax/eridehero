@@ -33,14 +33,16 @@ Electric mobility review platform (scooters, e-bikes, EUCs, skateboards, hoverbo
 eridehero/
 ├── erh-core/                    # Main plugin (PSR-4 autoloading)
 │   ├── includes/
+│   │   ├── admin/               # Admin pages (settings, click stats, link populator)
+│   │   ├── amazon/              # Amazon API integration (locales, AWS signer)
 │   │   ├── api/                 # REST endpoints
 │   │   ├── blocks/              # ACF block templates
 │   │   ├── cron/                # Scheduled jobs
 │   │   ├── database/            # Table operations
 │   │   ├── email/               # Email templates
 │   │   ├── pricing/             # Price fetching, deals
-│   │   ├── reviews/             # User reviews
 │   │   ├── scoring/             # Product scoring
+│   │   ├── tracking/            # Click tracking & stats
 │   │   ├── user/                # Auth, preferences, trackers
 │   │   ├── class-cache-keys.php # Centralized cache key management
 │   │   ├── class-geo-config.php # Geo constants (regions, currencies, EU countries)
@@ -52,7 +54,7 @@ eridehero/
 │   │   ├── css/                 # Modular CSS partials
 │   │   ├── js/
 │   │   │   ├── components/      # UI components
-│   │   │   ├── services/        # geo-price.js, geo-config.js
+│   │   │   ├── services/        # geo-price.js, geo-config.js, search-client.js
 │   │   │   └── utils/           # Shared utilities (pricing-ui.js, dom.js, etc.)
 │   │   └── images/logos/        # Retailer logos
 │   ├── inc/                     # PHP includes
@@ -93,13 +95,15 @@ eridehero/
 **Base config** (set in `inc/enqueue.php`):
 ```php
 wp_localize_script('erh-app', 'erhData', [
-    'siteUrl'    => home_url(),
-    'ajaxUrl'    => admin_url('admin-ajax.php'),
-    'restUrl'    => rest_url('erh/v1/'),
-    'hftRestUrl' => rest_url('housefresh-tools/v1/'),
-    'nonce'      => wp_create_nonce('wp_rest'),
-    'themeUrl'   => ERH_THEME_URI,
-    'isLoggedIn' => is_user_logged_in(),
+    'siteUrl'       => home_url(),
+    'ajaxUrl'       => admin_url('admin-ajax.php'),
+    'restUrl'       => rest_url('erh/v1/'),
+    'hftRestUrl'    => rest_url('housefresh-tools/v1/'),
+    'nonce'         => wp_create_nonce('wp_rest'),
+    'ajaxNonce'     => wp_create_nonce('erh_nonce'),
+    'themeUrl'      => ERH_THEME_URI,
+    'isLoggedIn'    => is_user_logged_in(),
+    'searchJsonUrl' => $upload_dir['baseurl'] . '/search_items.json?v=' . filemtime(...),
 ]);
 ```
 
@@ -188,12 +192,14 @@ const verdict = calculatePriceVerdict(currentPrice, avgPrice);
 
 ## Custom Post Types
 
-| CPT | Purpose |
-|-----|---------|
-| `products` | All product types (scooter, bike, etc.) |
-| `review` | User-submitted reviews |
+| CPT | Purpose | Registered By |
+|-----|---------|---------------|
+| `products` | All product types (scooter, bike, etc.) | erh-core |
+| `tool` | Tool pages (finder, compare, etc.) | Legacy (pre-existing) |
 
 Product type stored as ACF field `product_type` (values: Electric Scooter, Electric Bike, Electric Skateboard, Electric Unicycle, Hoverboard).
+
+**Note**: `tool` CPT exists from the legacy Oxygen Builder setup. Used for tool pages that appear in search.
 
 ---
 

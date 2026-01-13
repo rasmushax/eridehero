@@ -613,10 +613,51 @@ Routes in `single.php`:
 
 ---
 
+## Phase 7B: Search System - COMPLETE ✅
+
+### Backend (Cron)
+- [x] `class-search-json-job.php` generates `search_items.json` (twice daily)
+  - Indexes: posts, products, tools
+  - Dual image sizes: thumbnail (header), image (page cards)
+  - Product type labels for products
+
+### Frontend Components
+- [x] Create `services/search-client.js` - Search data service
+  - Lazy loading with caching (loads on first interaction, not page load)
+  - Promise deduplication prevents concurrent fetches
+  - Simple contains matching (all words must appear in title)
+- [x] Create `components/search.js` - Header/mobile search
+  - Dropdown with live results (max 6)
+  - Keyboard navigation (arrows, Enter, Escape)
+  - Ctrl+K shortcut
+  - "View all X results" link to search page
+- [x] Create `components/search-page.js` - Full search page
+  - Type filters (All, Products, Articles, Tools)
+  - URL state sync (`/search/?q=query`)
+  - Archive-style card grid
+  - Filters auto-hide when count is 0
+- [x] Create `utils/search-utils.js` - Shared utilities (DRY)
+  - `escapeHtml()`, `escapeRegex()`, `DEBOUNCE_MS`
+
+### Templates
+- [x] Create `page-search.php` - Search page template
+- [x] Update `template-parts/header/search.php` - Results container
+
+### Styles
+- [x] Header search styles in `_header.css`
+- [x] Search page styles in `_search-page.css`
+
+### Optimizations
+- [x] Cache busting: URL includes `?v={filemtime}` for fresh data after cron
+- [x] Lazy loading: JSON only fetched on first user interaction
+- [x] Accessibility: `aria-pressed` on filter buttons
+
+---
+
 ## Phase 8: JavaScript & Polish (Day 19) - PENDING
 
 - [ ] Bundle all JS into `dist/main.min.js`
-- [ ] Create `assets/js/src/search.js` (JSON-based search)
+- [x] ~~Create `assets/js/src/search.js` (JSON-based search)~~ (moved to Phase 7B)
 - [ ] Test: All interactive features work
 
 ---
@@ -635,7 +676,7 @@ Routes in `single.php`:
 - [ ] Social login - Reddit (needs testing once live)
 - [ ] Social auto-link toast notification
 - [ ] Email notifications (test mode)
-- [ ] Search functionality
+- [x] Search functionality (header dropdown + /search/ page)
 - [ ] Reference pricing for non-regional products
 - [ ] Price alert buttons hidden when no regional pricing
 - [ ] Mobile responsive (test 3 breakpoints)
@@ -689,10 +730,27 @@ erh-core/
 │   ├── class-geo-config.php         # Geo constants (regions, currencies, EU countries)
 │   │
 │   ├── admin/
-│   │   └── class-settings-page.php  # Settings > ERideHero (incl. Cron Jobs tab)
+│   │   ├── class-settings-page.php      # Settings > ERideHero (incl. Cron Jobs tab)
+│   │   ├── class-amazon-api-client.php  # Amazon PA-API client
+│   │   ├── class-click-stats-page.php   # Click statistics admin page
+│   │   ├── class-link-populator.php     # Bulk link population tool
+│   │   ├── class-perplexity-client.php  # Perplexity AI client
+│   │   └── class-url-verifier.php       # URL verification utility
+│   │
+│   ├── amazon/
+│   │   ├── class-amazon-locales.php     # Amazon locale/marketplace config
+│   │   └── class-aws-v4-signer.php      # AWS Signature V4 for PA-API
+│   │
+│   ├── api/
+│   │   ├── class-rest-prices.php        # Product pricing endpoints
+│   │   ├── class-rest-products.php      # Product data endpoints
+│   │   ├── class-rest-deals.php         # Deals endpoints
+│   │   ├── class-rest-listicle.php      # Listicle block endpoints
+│   │   └── class-contact-handler.php    # Contact form handler
 │   │
 │   ├── post-types/
-│   │   └── class-product.php
+│   │   ├── class-product.php            # Products CPT
+│   │   └── class-taxonomies.php         # Custom taxonomies
 │   │
 │   ├── database/
 │   │   ├── class-schema.php
@@ -707,6 +765,14 @@ erh-core/
 │   │   ├── class-retailer-registry.php
 │   │   ├── class-retailer-logos.php
 │   │   └── class-deals-finder.php
+│   │
+│   ├── scoring/
+│   │   └── class-product-scorer.php     # Product scoring algorithm
+│   │
+│   ├── tracking/
+│   │   ├── class-click-tracker.php      # Click event tracking
+│   │   ├── class-click-stats.php        # Click statistics queries
+│   │   └── class-click-redirector.php   # Affiliate redirect handler
 │   │
 │   ├── user/
 │   │   ├── class-rate-limiter.php
@@ -743,43 +809,72 @@ erh-core/
 ```
 erh-theme/
 ├── assets/
-│   ├── css/
+│   ├── css/                        # 50+ modular CSS partials
 │   │   ├── _variables.css          # Design tokens, colors, spacing
 │   │   ├── _base.css               # Reset, typography, global styles
-│   │   ├── _header.css             # Header, navigation, search
+│   │   ├── _header.css             # Header, navigation, search dropdown
 │   │   ├── _footer.css             # Footer styles
 │   │   ├── _buttons.css            # Button variants
 │   │   ├── _forms.css              # Form elements
 │   │   ├── _components.css         # Shared components (cards, badges, etc.)
 │   │   ├── _single-review.css      # Review page layout
+│   │   ├── _single-product.css     # Product page layout
 │   │   ├── _gallery.css            # Image gallery
 │   │   ├── _price-intel.css        # Price intelligence section
-│   │   ├── _pros-cons.css          # Pros/cons component
-│   │   ├── _author-box.css         # Author box
-│   │   ├── _content-grid.css       # Related content grids
-│   │   ├── _latest-reviews.css     # Review cards, sidebar cards
-│   │   └── style.css               # Main compiled stylesheet
+│   │   ├── _finder.css             # Finder tool styles
+│   │   ├── _finder-table.css       # Finder table view
+│   │   ├── _comparison.css         # Comparison widget
+│   │   ├── _compare-results.css    # H2H results page
+│   │   ├── _deals.css              # Deals sections/pages
+│   │   ├── _hub.css                # Hub page styles
+│   │   ├── _archive.css            # Archive/listing pages
+│   │   ├── _articles.css           # Article/guide pages
+│   │   ├── _buying-guides.css      # Buying guide specifics
+│   │   ├── _account.css            # Account pages
+│   │   ├── _auth.css               # Auth forms
+│   │   ├── _auth-modal.css         # Auth modal
+│   │   ├── _search-page.css        # Search results page
+│   │   ├── _select-drawer.css      # Mobile select drawer
+│   │   ├── _radar-chart.css        # Radar chart component
+│   │   ├── _onboarding.css         # Onboarding flow
+│   │   ├── _contact.css            # Contact page
+│   │   ├── _about.css              # About page
+│   │   └── style.css               # Main stylesheet (imports all partials)
 │   ├── js/
 │   │   ├── app.js                  # Main entry, dynamic imports
 │   │   ├── services/
 │   │   │   ├── geo-config.js       # 5-region config, country→region mapping
-│   │   │   └── geo-price.js        # Region detection, price formatting, caching
+│   │   │   ├── geo-price.js        # Region detection, price formatting, caching
+│   │   │   └── search-client.js    # Search data loading and filtering
 │   │   ├── utils/
-│   │   │   ├── dom.js              # DOM utilities (escapeHtml, etc.)
-│   │   │   ├── product-card.js     # Product card utilities (splitPrice, createProductCard)
-│   │   │   └── carousel.js         # Carousel navigation utility
-│   │   └── components/
+│   │   │   ├── dom.js              # DOM utilities
+│   │   │   ├── product-card.js     # Product card utilities
+│   │   │   ├── pricing-ui.js       # Shared pricing UI (verdict, retailer rows)
+│   │   │   ├── deals-utils.js      # Deals card utilities
+│   │   │   ├── carousel.js         # Carousel navigation utility
+│   │   │   └── search-utils.js     # Search utilities (escapeHtml, etc.)
+│   │   └── components/             # 40+ UI components
 │   │       ├── gallery.js          # Image gallery with lightbox
 │   │       ├── price-intel.js      # Price data loading (skeleton states)
 │   │       ├── mobile-menu.js      # Mobile navigation
-│   │       ├── search.js           # Search functionality
+│   │       ├── search.js           # Header/mobile search with dropdown
+│   │       ├── search-page.js      # Full search page with filters
 │   │       ├── dropdown.js         # Dropdown menus
+│   │       ├── custom-select.js    # Custom select dropdowns
+│   │       ├── select-drawer.js    # Mobile bottom sheet for selects
 │   │       ├── comparison.js       # H2H comparison widget (geo-aware)
-│   │       ├── deals.js            # Deals section (geo-aware)
+│   │       ├── comparison-bar.js   # Comparison bar
+│   │       ├── compare-results.js  # H2H results page
+│   │       ├── deals.js            # Homepage deals section
+│   │       ├── deals-hub.js        # Deals hub page
+│   │       ├── deals-page.js       # Category deals page
+│   │       ├── deals-tabs.js       # Deals tab switcher
 │   │       ├── finder.js           # Finder tool (geo-aware)
-│   │       ├── finder-table.js     # Finder table view (geo-aware)
+│   │       ├── finder-table.js     # Finder table view
+│   │       ├── finder-tabs.js      # Finder category tabs
 │   │       ├── chart.js            # Price history charts
 │   │       ├── price-chart.js      # Price chart component
+│   │       ├── radar-chart.js      # Performance radar chart
 │   │       ├── toc.js              # Table of contents
 │   │       ├── modal.js            # Modal dialogs
 │   │       ├── tooltip.js          # Tooltips
@@ -787,53 +882,85 @@ erh-theme/
 │   │       ├── toast.js            # Toast notifications
 │   │       ├── auth-modal.js       # Login/register modal
 │   │       ├── price-alert.js      # Price alert modal
+│   │       ├── account-tabs.js     # Account page tabs
+│   │       ├── account-settings.js # Account settings form
 │   │       ├── account-trackers.js # User tracker management
-│   │       └── ... (more components)
+│   │       ├── product-page.js     # Product page interactions
+│   │       ├── similar-products.js # Similar products carousel
+│   │       ├── listicle-item.js    # Listicle block component
+│   │       ├── onboarding.js       # Onboarding flow
+│   │       ├── complete-profile.js # Social auth profile completion
+│   │       ├── contact.js          # Contact form
+│   │       ├── archive-filter.js   # Archive filtering
+│   │       ├── archive-sort.js     # Archive sorting
+│   │       ├── header-scroll.js    # Header scroll behavior
+│   │       └── sticky-buy-bar.js   # Sticky purchase CTA
 │   └── images/
 │       └── logos/                  # Retailer logos
 ├── inc/
-│   ├── enqueue.php                 # Asset registration
+│   ├── enqueue.php                 # Asset registration + erhData
 │   ├── theme-setup.php             # Theme supports, menus
 │   ├── template-functions.php      # Helper functions (icons, scores, specs)
-│   ├── finder-config.php           # Finder tool configuration
-│   └── acf-options.php             # ACF options pages & user fields
+│   ├── finder-config.php           # Finder tool filter configuration
+│   ├── acf-options.php             # ACF options pages & user fields
+│   ├── archive-routes.php          # Archive page routing
+│   └── compare-routes.php          # Comparison page routing
 ├── template-parts/
 │   ├── header.php                  # Site header with mega menu
 │   ├── footer.php                  # Site footer
 │   ├── svg-sprite.php              # Inlined SVG sprite
 │   ├── single-review.php           # Review post template
-│   ├── components/
-│   │   ├── gallery.php             # Image gallery
-│   │   ├── byline.php              # Author & dates
-│   │   ├── quick-take.php          # Score + summary
-│   │   ├── pros-cons.php           # Pros/cons lists
-│   │   ├── price-intel.php         # Price intelligence
-│   │   ├── tested-performance.php  # Performance data
-│   │   ├── full-specs.php          # Specifications table
-│   │   ├── author-box.php          # Author bio with socials
-│   │   ├── related-reviews.php     # Related reviews grid
-│   │   └── sticky-buy-bar.php      # Sticky purchase CTA bar
-│   ├── product/                    # Product page components (IN PROGRESS)
-│   │   ├── hero.php                # Product hero section
-│   │   ├── performance-profile.php # Radar chart + highlights
-│   │   ├── comparison-widget.php   # H2H comparison (locked mode)
-│   │   ├── specs-grouped.php       # Grouped specifications
-│   │   └── related.php             # Related products
+│   ├── single-article.php          # Article post template
+│   ├── single-guide.php            # Buying guide template
+│   ├── components/                 # Shared components
+│   │   ├── gallery.php, byline.php, quick-take.php, pros-cons.php
+│   │   ├── price-intel.php, tested-performance.php, full-specs.php
+│   │   ├── author-box.php, related-reviews.php, related-posts.php
+│   │   ├── sticky-buy-bar.php, article-hero.php, comparison-bar.php
+│   │   └── product-card.php, breadcrumb.php
+│   ├── product/                    # Product page components
+│   │   ├── hero.php, performance-profile.php, comparison-widget.php
+│   │   └── specs-grouped.php
 │   ├── sidebar/
-│   │   ├── tools.php               # Finder, Deals, Compare links
-│   │   ├── comparison.php          # H2H comparison widget
-│   │   └── toc.php                 # Table of contents
-│   └── home/
-│       ├── hero.php                # Homepage hero
-│       ├── deals.php               # Deals section
-│       └── comparison.php          # Comparison widget
+│   │   ├── tools.php, comparison.php, comparison-open.php, toc.php
+│   ├── home/
+│   │   ├── hero.php, deals.php, comparison.php
+│   ├── hub/
+│   │   ├── header.php, layout.php, guides.php, tools.php
+│   ├── deals/
+│   │   └── hero.php
+│   ├── archive/
+│   │   ├── card.php, filters.php, pagination.php, standard.php
+│   ├── finder/
+│   │   ├── checkbox-filter.php, range-filter.php, tristate-filter.php
+│   │   └── group-filters.php
+│   ├── account/
+│   │   ├── sidebar.php, trackers.php, settings.php
+│   ├── onboarding/
+│   │   └── preferences.php
+│   └── header/
+│       └── search.php              # Header search dropdown
 ├── functions.php
 ├── header.php
 ├── footer.php
-├── single.php                      # Routes to single-review.php
+├── index.php                       # Fallback template
+├── category.php                    # Category archive
+├── single.php                      # Routes to review/article/guide
 ├── single-products.php             # Product database page
-├── page-finder.php                 # Finder tool
 ├── front-page.php                  # Homepage
+├── page-finder.php                 # Finder tool
+├── page-search.php                 # Search results
+├── page-compare.php                # H2H comparison results
+├── page-deals.php                  # Deals hub
+├── page-deals-category.php         # Category deals
+├── page-account.php                # User account
+├── page-reviews.php                # Reviews archive
+├── page-escooter-reviews.php       # E-scooter reviews
+├── page-articles.php               # Articles archive
+├── page-buying-guides.php          # Buying guides archive
+├── page-contact.php                # Contact page
+├── page-complete-profile.php       # Social auth profile completion
+├── page-email-preferences.php      # Email preferences
 └── style.css                       # Theme header
 ```
 
@@ -869,6 +996,8 @@ erh-theme/
 | DRY Utilities | formatPrice/getCurrencySymbol in geo-price.js | All components import from single source |
 | Reference Pricing | Show US prices as reference when no regional data | Users can still see pricing context, click to buy if they want |
 | Price Alert Visibility | Hide track buttons when no regional pricing | Can't alert on prices user can't actually buy |
+| Search | Client-side JSON with lazy loading | Fast UX, no server load per search, cache-busted via filemtime |
+| Search Matching | Simple contains (all words in title) | Good enough for ~500 items, no fuzzy complexity |
 
 ---
 

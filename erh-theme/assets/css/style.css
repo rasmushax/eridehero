@@ -62,6 +62,7 @@
 /* === PAGE TEMPLATES === */
 @import '_hub.css';
 @import '_archive.css';
+@import '_search-page.css';
 @import '_finder.css';
 @import '_finder-table.css';
 @import '_compare-results.css';
