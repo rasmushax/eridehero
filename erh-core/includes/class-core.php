@@ -10,6 +10,7 @@ declare(strict_types=1);
 namespace ERH;
 
 use ERH\PostTypes\Product;
+use ERH\PostTypes\Tool;
 use ERH\PostTypes\Taxonomies;
 use ERH\Database\Schema;
 use ERH\Database\ProductCache;
@@ -59,6 +60,13 @@ class Core {
      * @var Product
      */
     private Product $product_post_type;
+
+    /**
+     * Tool post type handler.
+     *
+     * @var Tool
+     */
+    private Tool $tool_post_type;
 
     /**
      * Taxonomies handler.
@@ -397,6 +405,9 @@ class Core {
     private function init_post_types(): void {
         $this->product_post_type = new Product();
         $this->product_post_type->register();
+
+        $this->tool_post_type = new Tool();
+        $this->tool_post_type->register();
 
         $this->taxonomies = new Taxonomies();
         $this->taxonomies->register();

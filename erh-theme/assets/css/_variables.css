@@ -12,6 +12,7 @@
     --color-primary-subtle: #f4f1fd;
     --color-primary-glow: rgba(94, 44, 237, 0.25);
     --color-primary-glow-strong: rgba(94, 44, 237, 0.35);
+    --color-primary-medium: rgba(94, 44, 237, 0.14);
 
     /* Neutrals */
     --color-dark: #21273a;

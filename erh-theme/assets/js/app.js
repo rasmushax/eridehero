@@ -96,6 +96,13 @@ import { Toast } from './components/toast.js'; // For programmatic toasts
         });
     }
 
+    // Calculator tools - only on tool pages
+    if (document.querySelector('[data-calculator]')) {
+        import('./components/calculator.js').then(module => {
+            module.initCalculator();
+        });
+    }
+
     // Contact form - only on contact page
     if (document.querySelector('[data-contact-form]')) {
         import('./components/contact.js').then(module => {
