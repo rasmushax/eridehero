@@ -654,6 +654,95 @@ Routes in `single.php`:
 
 ---
 
+## Phase 7C: Tools CPT & Calculators - COMPLETE ✅
+
+### CPT Registration
+- [x] Create `erh-core/includes/post-types/class-tool.php`
+  - Post type: `tool` with archive at `/tools/`
+  - Supports: title, editor, thumbnail, excerpt, custom-fields
+  - Menu icon: dashicons-calculator
+  - REST API enabled (`rest_base: tools`)
+
+### Tool Category Taxonomy
+- [x] Register `tool_category` taxonomy (hidden from frontend)
+  - Not publicly queryable (no archive pages)
+  - Shows in admin UI and tools list column
+  - No URL rewrites
+- [x] ACF field to link category to `product_type` taxonomy
+- [x] Helper methods: `get_tool_category()`, `get_tool_category_name()`
+
+### ACF Fields
+- [x] Tool description (textarea, max 160 chars)
+- [x] Tool icon select (battery-degradation, charging-time, battery-capacity, range, calculator, zap, battery-charging, dashboard, weight)
+
+### Templates
+- [x] Create `archive-tool.php` - Tools archive with category filters
+  - 3-column grid
+  - Category filter pills (reuses shared `archive/filters.php`)
+  - Multiple category pills per card
+  - `data-archive-grid` + `data-category` for JS filtering
+- [x] Create `single-tool.php` - Single tool layout
+  - Two-column layout (main + sidebar)
+  - Breadcrumbs: Home → Tools → [Tool Name]
+  - `data-calculator` container for JS initialization
+  - Sidebar with related tools
+
+### CSS
+- [x] Create `_tools.css` with calculator component styles
+  - `.calculator`, `.calculator-inputs`, `.calculator-results`
+  - `.calculator-tabs` for tab-based calculators
+  - `.calculator-unit-system` for standalone toggles
+  - `.form-hint` for input helper text
+  - `.result-card`, `.result-card--large` variants
+  - `.calculator-inputs--three-col` with responsive breakpoints
+
+### JavaScript - Calculator System
+- [x] Create `components/calculator.js` - Dispatcher
+  - Dynamic import based on `data-calculator` attribute
+  - Pattern: `import(`./calculators/${type}.js`)`
+- [x] Create `utils/calculator-utils.js` - Shared utilities
+  - `formatNumber()`, `formatPercent()`
+  - `debounceCalculation()`
+  - `parseInputs()`
+
+### Calculator Modules
+- [x] `calculators/battery-degradation.js`
+  - Projects battery health over years
+  - Multiple degradation rate options
+  - Result cards showing capacity per year
+- [x] `calculators/charging-time-calculator.js`
+  - Calculates charge time from Wh, charger amps, voltage
+  - Accounts for efficiency losses
+- [x] `calculators/battery-capacity-calculator.js`
+  - Tab-based: Calculate Wh, Ah, or Voltage
+  - Unit toggles (Wh/kWh, Ah/mAh)
+  - Supports broader devices (EVs, power stations)
+- [x] `calculators/electric-scooter-range-calculator.js`
+  - Multi-factor range estimation
+  - Based on 50+ real-world scooter tests
+  - Factors: efficiency, temperature, weight, speed, battery cycles
+  - Imperial/Metric toggle
+
+### Architecture Pattern
+```
+single-tool.php:
+  <div data-calculator="battery-degradation">
+    <div class="calculator-inputs">...</div>
+    <div class="calculator-results">...</div>
+  </div>
+
+app.js:
+  if (document.querySelector('[data-calculator]')) {
+      import('./components/calculator.js').then(m => m.initCalculator());
+  }
+
+calculator.js:
+  const type = container.dataset.calculator;
+  import(`./calculators/${type}.js`).then(m => m.init(container));
+```
+
+---
+
 ## Phase 8: JavaScript & Polish (Day 19) - PENDING
 
 - [ ] Bundle all JS into `dist/main.min.js`
@@ -750,6 +839,7 @@ erh-core/
 │   │
 │   ├── post-types/
 │   │   ├── class-product.php            # Products CPT
+│   │   ├── class-tool.php               # Tools CPT (calculators) + tool_category taxonomy
 │   │   └── class-taxonomies.php         # Custom taxonomies
 │   │
 │   ├── database/
@@ -836,6 +926,7 @@ erh-theme/
 │   │   ├── _search-page.css        # Search results page
 │   │   ├── _select-drawer.css      # Mobile select drawer
 │   │   ├── _radar-chart.css        # Radar chart component
+│   │   ├── _tools.css              # Calculator/tool page styles
 │   │   ├── _onboarding.css         # Onboarding flow
 │   │   ├── _contact.css            # Contact page
 │   │   ├── _about.css              # About page
@@ -852,8 +943,15 @@ erh-theme/
 │   │   │   ├── pricing-ui.js       # Shared pricing UI (verdict, retailer rows)
 │   │   │   ├── deals-utils.js      # Deals card utilities
 │   │   │   ├── carousel.js         # Carousel navigation utility
-│   │   │   └── search-utils.js     # Search utilities (escapeHtml, etc.)
+│   │   │   ├── search-utils.js     # Search utilities (escapeHtml, etc.)
+│   │   │   └── calculator-utils.js # Shared calculator utilities
 │   │   └── components/             # 40+ UI components
+│   │       ├── calculator.js       # Calculator dispatcher
+│   │       ├── calculators/        # Calculator modules
+│   │       │   ├── battery-degradation.js
+│   │       │   ├── charging-time-calculator.js
+│   │       │   ├── battery-capacity-calculator.js
+│   │       │   └── electric-scooter-range-calculator.js
 │   │       ├── gallery.js          # Image gallery with lightbox
 │   │       ├── price-intel.js      # Price data loading (skeleton states)
 │   │       ├── mobile-menu.js      # Mobile navigation
@@ -947,6 +1045,8 @@ erh-theme/
 ├── category.php                    # Category archive
 ├── single.php                      # Routes to review/article/guide
 ├── single-products.php             # Product database page
+├── single-tool.php                 # Tool/calculator single page
+├── archive-tool.php                # Tools archive with category filters
 ├── front-page.php                  # Homepage
 ├── page-finder.php                 # Finder tool
 ├── page-search.php                 # Search results

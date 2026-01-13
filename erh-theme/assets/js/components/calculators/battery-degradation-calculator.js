@@ -138,6 +138,15 @@ function cToF(c) {
     return (c * 9 / 5) + 32;
 }
 
+// Default values for reset
+const DEFAULTS = {
+    capacity: 500,
+    age: 0,
+    cycles: 0,
+    temp: 21,
+    dod: 'moderate',
+};
+
 /**
  * Initialize the battery degradation calculator.
  */
@@ -146,6 +155,7 @@ export function init(container) {
     const tempInput = container.querySelector('[data-input="temp"]');
     const tempUnitBtns = container.querySelectorAll('[data-temp-unit]');
     const tempUnitLabel = container.querySelector('[data-temp-unit-label]');
+    const resetBtn = container.querySelector('[data-calculator-reset]');
 
     function updateTempUnit(toCelsius) {
         if (useCelsius === toCelsius) return;
@@ -219,12 +229,80 @@ export function init(container) {
         if (statusEl) {
             statusEl.className = `result-value result-value--${status.class}`;
         }
+
+        // Announce result for screen readers (debounced)
+        announceResult(result.currentPercent, status.label);
+    }
+
+    // Debounced announcer to avoid spam during rapid input
+    let announceTimeout;
+    function announceResult(percent, statusLabel) {
+        clearTimeout(announceTimeout);
+        announceTimeout = setTimeout(() => {
+            const announcer = container.querySelector('[aria-live]');
+            if (announcer) {
+                announcer.textContent = `Battery health: ${Math.round(percent)}%, status ${statusLabel}.`;
+            }
+        }, 500);
+    }
+
+    function resetCalculator() {
+        // Reset all inputs to defaults
+        const capacityInput = container.querySelector('[data-input="capacity"]');
+        const ageInput = container.querySelector('[data-input="age"]');
+        const cyclesInput = container.querySelector('[data-input="cycles"]');
+        const dodSelect = container.querySelector('[data-input="dod"]');
+
+        if (capacityInput) capacityInput.value = DEFAULTS.capacity;
+        if (ageInput) ageInput.value = DEFAULTS.age;
+        if (cyclesInput) cyclesInput.value = DEFAULTS.cycles;
+        if (dodSelect) {
+            dodSelect.value = DEFAULTS.dod;
+            // Trigger custom select update if present
+            dodSelect.dispatchEvent(new Event('change', { bubbles: true }));
+        }
+
+        // Reset temperature to Celsius if not already
+        if (!useCelsius) {
+            updateTempUnit(true);
+        } else if (tempInput) {
+            tempInput.value = DEFAULTS.temp;
+        }
+
+        calculate();
+
+        // Announce reset for screen readers
+        const announcer = container.querySelector('[aria-live]');
+        if (announcer) {
+            announcer.textContent = 'Calculator reset to default values.';
+        }
+    }
+
+    // Bind reset button
+    if (resetBtn) {
+        resetBtn.addEventListener('click', resetCalculator);
     }
 
     // Bind temperature unit toggle
     tempUnitBtns.forEach(btn => {
         btn.addEventListener('click', () => {
             updateTempUnit(btn.dataset.tempUnit === 'c');
+        });
+
+        // Keyboard navigation for toggle buttons
+        btn.addEventListener('keydown', (e) => {
+            if (e.key === 'ArrowLeft' || e.key === 'ArrowRight') {
+                e.preventDefault();
+                const btnsArray = Array.from(tempUnitBtns);
+                const currentIndex = btnsArray.indexOf(btn);
+                const nextIndex = e.key === 'ArrowRight'
+                    ? (currentIndex + 1) % btnsArray.length
+                    : (currentIndex - 1 + btnsArray.length) % btnsArray.length;
+
+                const nextBtn = btnsArray[nextIndex];
+                nextBtn.focus();
+                updateTempUnit(nextBtn.dataset.tempUnit === 'c');
+            }
         });
     });
 

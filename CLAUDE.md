@@ -54,8 +54,9 @@ eridehero/
 │   │   ├── css/                 # Modular CSS partials
 │   │   ├── js/
 │   │   │   ├── components/      # UI components
+│   │   │   │   └── calculators/ # Calculator modules (battery-*, escooter-*)
 │   │   │   ├── services/        # geo-price.js, geo-config.js, search-client.js
-│   │   │   └── utils/           # Shared utilities (pricing-ui.js, dom.js, etc.)
+│   │   │   └── utils/           # Shared utilities (pricing-ui.js, calculator-utils.js, etc.)
 │   │   └── images/logos/        # Retailer logos
 │   ├── inc/                     # PHP includes
 │   └── template-parts/          # Component templates
@@ -195,11 +196,21 @@ const verdict = calculatePriceVerdict(currentPrice, avgPrice);
 | CPT | Purpose | Registered By |
 |-----|---------|---------------|
 | `products` | All product types (scooter, bike, etc.) | erh-core |
-| `tool` | Tool pages (finder, compare, etc.) | Legacy (pre-existing) |
+| `tool` | Calculator tools (range, battery, etc.) | erh-core |
 
 Product type stored as ACF field `product_type` (values: Electric Scooter, Electric Bike, Electric Skateboard, Electric Unicycle, Hoverboard).
 
-**Note**: `tool` CPT exists from the legacy Oxygen Builder setup. Used for tool pages that appear in search.
+### Tool CPT Details
+- **Archive**: `/tools/` - Grid of all calculators with category filters
+- **Single**: `/tools/{slug}/` - Two-column layout with calculator + sidebar
+- **Taxonomy**: `tool_category` (hidden, non-public) - For categorization and filtering
+- **ACF Fields**: `tool_icon` (select), `tool_description` (textarea)
+- **JS Pattern**: Dynamic import via `data-calculator="{slug}"` loads `/components/calculators/{slug}.js`
+
+### Tool Category Taxonomy
+- Non-public (no archive pages, no URLs)
+- Shows in admin with column
+- ACF field links to `product_type` taxonomy (for related content)
 
 ---
 

@@ -36,9 +36,11 @@ if ( empty( $tools ) ) {
 <div class="related-tools">
     <h4 class="related-tools-title"><?php esc_html_e( 'More Tools', 'erh' ); ?></h4>
     <div class="related-tools-list">
-        <?php foreach ( $tools as $tool ) : ?>
+        <?php foreach ( $tools as $tool ) :
+            $icon = \ERH\PostTypes\Tool::get_tool_icon( $tool->ID );
+        ?>
             <a href="<?php echo esc_url( get_permalink( $tool->ID ) ); ?>" class="related-tool-link">
-                <?php erh_the_icon( 'calculator' ); ?>
+                <?php erh_the_icon( $icon ); ?>
                 <span><?php echo esc_html( $tool->post_title ); ?></span>
             </a>
         <?php endforeach; ?>
