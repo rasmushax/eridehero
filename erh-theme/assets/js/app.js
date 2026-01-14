@@ -178,14 +178,35 @@ import { Toast } from './components/toast.js'; // For programmatic toasts
 
     if (document.getElementById('hub-comparison-container')) {
         import('./components/comparison.js').then(module => {
-            // Hub comparison (stacked layout, category-filtered)
+            // Hub comparison (centered hero, all categories)
             module.initComparison({
                 containerId: 'hub-comparison-container',
-                inputsContainerId: 'hub-compare-inputs',
+                rightColumnId: 'hub-comparison-right',
                 submitBtnId: 'hub-comparison-submit',
-                categoryFilter: 'escooter',
-                wrapperClass: 'comparison-input-wrapper comparison-light',
-                showCategoryInResults: false
+                categoryPillId: 'hub-category-pill',
+                categoryTextId: 'hub-category-text',
+                categoryClearId: 'hub-category-clear',
+                announcerId: 'hub-comparison-announcer',
+                showCategoryInResults: true,
+                allowDynamicInputs: true
+            });
+        });
+    }
+
+    // Category comparison widget (category landing pages - filtered to specific category)
+    if (document.getElementById('category-comparison-container')) {
+        import('./components/comparison.js').then(module => {
+            const container = document.getElementById('category-comparison-container');
+            const categoryFilter = container?.dataset.categoryFilter || null;
+
+            module.initComparison({
+                containerId: 'category-comparison-container',
+                rightColumnId: 'category-comparison-right',
+                submitBtnId: 'category-comparison-submit',
+                announcerId: 'category-comparison-announcer',
+                categoryFilter: categoryFilter,
+                showCategoryInResults: false,
+                allowDynamicInputs: true
             });
         });
     }

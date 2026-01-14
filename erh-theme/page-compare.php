@@ -2,8 +2,9 @@
 /**
  * Template Name: Product Comparison
  *
- * Head-to-head product comparison page.
- * All content rendered in single scrollable page with sticky section nav.
+ * Multi-purpose comparison page template:
+ * - Hub page (no products): Shows hero, categories, featured, popular
+ * - Comparison page (with products): Shows head-to-head comparison
  *
  * @package ERideHero
  */
@@ -15,6 +16,7 @@ get_header();
 // Parse product IDs from URL (SEO slugs or query string).
 $product_ids   = erh_get_compare_product_ids();
 $has_products  = count( $product_ids ) >= 2;
+$is_hub_page   = ! $has_products;
 
 // Detect category from first product.
 $category      = 'escooter';
@@ -38,35 +40,14 @@ $page_title    = $has_products
     : 'Compare Products';
 ?>
 
-<main class="compare-page" data-compare-page data-category="<?php echo esc_attr( $category ); ?>">
+<main class="compare-page<?php echo $is_hub_page ? ' compare-page--hub' : ''; ?>" data-compare-page data-category="<?php echo esc_attr( $category ); ?>">
 
-    <?php if ( ! $has_products ) : ?>
-        <!-- Empty State -->
-        <div class="container">
-            <?php
-            erh_breadcrumb( [
-                [ 'label' => $category_name, 'url' => home_url( '/' . $category_slug . '/' ) ],
-                [ 'label' => 'Compare' ],
-            ] );
-            ?>
-        </div>
-
-        <section class="compare-empty">
-            <div class="container">
-                <div class="compare-empty-content">
-                    <h1>Compare <?php echo esc_html( $category_name ); ?></h1>
-                    <p>Select products to compare specs, prices, and features side-by-side.</p>
-
-                    <div class="compare-selector" id="compare-selector">
-                        <div class="compare-selector-inputs" data-compare-inputs></div>
-                        <button type="button" class="btn btn--outline compare-selector-add" data-compare-add>
-                            <?php erh_the_icon( 'plus' ); ?>
-                            <span>Add Product</span>
-                        </button>
-                    </div>
-                </div>
-            </div>
-        </section>
+    <?php if ( $is_hub_page ) : ?>
+        <!-- Hub Page: Compare Center -->
+        <?php get_template_part( 'template-parts/compare/hub-hero' ); ?>
+        <?php get_template_part( 'template-parts/compare/hub-categories' ); ?>
+        <?php get_template_part( 'template-parts/compare/hub-featured' ); ?>
+        <?php get_template_part( 'template-parts/compare/hub-popular' ); ?>
 
     <?php else : ?>
         <!-- Comparison Content -->
@@ -211,10 +192,10 @@ function erh_get_compare_product_ids(): array {
 /**
  * Get category data from product type.
  *
- * @param string $product_type The product type field value.
+ * @param string|null $product_type The product type field value.
  * @return array{key: string, name: string, slug: string}
  */
-function erh_get_category_from_type( string $product_type ): array {
+function erh_get_category_from_type( ?string $product_type ): array {
     $types = [
         'Electric Scooter'    => [ 'key' => 'escooter', 'name' => 'E-Scooters', 'slug' => 'escooter' ],
         'Electric Bike'       => [ 'key' => 'ebike', 'name' => 'E-Bikes', 'slug' => 'ebike' ],
@@ -223,5 +204,5 @@ function erh_get_category_from_type( string $product_type ): array {
         'Hoverboard'          => [ 'key' => 'hoverboard', 'name' => 'Hoverboards', 'slug' => 'hoverboard' ],
     ];
 
-    return $types[ $product_type ] ?? [ 'key' => 'escooter', 'name' => 'E-Scooters', 'slug' => 'escooter' ];
+    return $types[ $product_type ?? '' ] ?? [ 'key' => 'escooter', 'name' => 'E-Scooters', 'slug' => 'escooter' ];
 }

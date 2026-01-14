@@ -52,6 +52,7 @@ class Schema {
         $this->create_price_trackers_table();
         $this->create_product_views_table();
         $this->create_clicks_table();
+        $this->create_comparison_views_table();
     }
 
     /**
@@ -501,6 +502,34 @@ class Schema {
     }
 
     /**
+     * Create the comparison_views table.
+     *
+     * This table stores comparison view tracking data for popularity rankings.
+     * Tracks which product pairs are most compared by users.
+     *
+     * @return void
+     */
+    private function create_comparison_views_table(): void {
+        $table_name = $this->get_table_name(ERH_TABLE_COMPARISON_VIEWS);
+        $charset_collate = $this->wpdb->get_charset_collate();
+
+        $sql = "CREATE TABLE {$table_name} (
+            id bigint(20) unsigned NOT NULL AUTO_INCREMENT,
+            product_1_id bigint(20) unsigned NOT NULL,
+            product_2_id bigint(20) unsigned NOT NULL,
+            view_count int(10) unsigned NOT NULL DEFAULT 1,
+            last_viewed datetime NOT NULL DEFAULT CURRENT_TIMESTAMP,
+            created_at datetime NOT NULL DEFAULT CURRENT_TIMESTAMP,
+            PRIMARY KEY  (id),
+            UNIQUE KEY pair (product_1_id, product_2_id),
+            KEY view_count (view_count),
+            KEY last_viewed (last_viewed)
+        ) {$charset_collate};";
+
+        dbDelta($sql);
+    }
+
+    /**
      * Check if a table exists.
      *
      * @param string $table_name The table name (without prefix).
@@ -531,6 +560,7 @@ class Schema {
             ERH_TABLE_PRICE_TRACKERS,
             ERH_TABLE_PRODUCT_VIEWS,
             ERH_TABLE_CLICKS,
+            ERH_TABLE_COMPARISON_VIEWS,
         ];
 
         foreach ($tables as $table) {

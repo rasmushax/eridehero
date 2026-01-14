@@ -151,6 +151,21 @@
 }
 
 
+/* Loading state for card */
+.comparison-card--loading .comparison-content {
+    display: flex;
+    align-items: center;
+    justify-content: center;
+    min-height: 200px;
+}
+
+.comparison-loading-msg {
+    font-size: var(--text-sm);
+    color: rgba(255, 255, 255, 0.75);
+    margin: 0;
+}
+
+
 /* ===== INPUT WRAPPER ===== */
 
 .comparison-input-wrapper {

@@ -11,6 +11,7 @@ namespace ERH;
 
 use ERH\PostTypes\Product;
 use ERH\PostTypes\Tool;
+use ERH\PostTypes\Comparison;
 use ERH\PostTypes\Taxonomies;
 use ERH\Database\Schema;
 use ERH\Database\ProductCache;
@@ -39,11 +40,14 @@ use ERH\Scoring\ProductScorer;
 use ERH\Admin\SettingsPage;
 use ERH\Admin\LinkPopulator;
 use ERH\Admin\ClickStatsPage;
+use ERH\Admin\ComparisonDashboardWidget;
+use ERH\Admin\PopularComparisonsPage;
 use ERH\Migration\MigrationAdmin;
 use ERH\Api\RestPrices;
 use ERH\Api\RestDeals;
 use ERH\Api\RestProducts;
 use ERH\Api\RestListicle;
+use ERH\Api\RestComparisonViews;
 use ERH\Api\ContactHandler;
 use ERH\Blocks\BlockManager;
 use ERH\Tracking\ClickRedirector;
@@ -67,6 +71,13 @@ class Core {
      * @var Tool
      */
     private Tool $tool_post_type;
+
+    /**
+     * Comparison post type handler.
+     *
+     * @var Comparison
+     */
+    private Comparison $comparison_post_type;
 
     /**
      * Taxonomies handler.
@@ -151,6 +162,20 @@ class Core {
      * @var ClickStatsPage
      */
     private ClickStatsPage $click_stats_page;
+
+    /**
+     * Comparison dashboard widget instance.
+     *
+     * @var ComparisonDashboardWidget
+     */
+    private ComparisonDashboardWidget $comparison_dashboard_widget;
+
+    /**
+     * Popular comparisons admin page instance.
+     *
+     * @var PopularComparisonsPage
+     */
+    private PopularComparisonsPage $popular_comparisons_page;
 
     /**
      * Email template instance.
@@ -409,6 +434,9 @@ class Core {
         $this->tool_post_type = new Tool();
         $this->tool_post_type->register();
 
+        $this->comparison_post_type = new Comparison();
+        $this->comparison_post_type->register();
+
         $this->taxonomies = new Taxonomies();
         $this->taxonomies->register();
     }
@@ -454,6 +482,14 @@ class Core {
         // Initialize click stats page.
         $this->click_stats_page = new ClickStatsPage();
         $this->click_stats_page->register();
+
+        // Initialize comparison dashboard widget.
+        $this->comparison_dashboard_widget = new ComparisonDashboardWidget();
+        $this->comparison_dashboard_widget->init();
+
+        // Initialize popular comparisons admin page.
+        $this->popular_comparisons_page = new PopularComparisonsPage();
+        $this->popular_comparisons_page->init();
     }
 
     /**
@@ -640,6 +676,10 @@ class Core {
         // Initialize and register REST Listicle API.
         $rest_listicle = new RestListicle();
         $rest_listicle->register_routes();
+
+        // Initialize and register REST Comparison Views API.
+        $rest_comparison_views = new RestComparisonViews();
+        $rest_comparison_views->register_routes();
     }
 
     /**

@@ -103,7 +103,16 @@ export async function init() {
     // Set up interactions
     setupScrollSpy();
     setupAddProduct();
-    setupStickyBehavior();
+    setupNavStuckState();
+    setupDiffToggle();
+
+    // Track comparison view (fire and forget).
+    trackComparisonView(config.productIds);
+
+    // Load related comparisons if curated.
+    if (config.isCurated) {
+        loadRelatedComparisons(config.productIds, category);
+    }
 }
 
 /**
@@ -253,15 +262,30 @@ function enrichProduct(product) {
     const geo = userGeo.geo || 'US';
     const pricing = product.pricing || {};
     const regionPricing = pricing[geo] || pricing.US || {};
+    const currentPrice = regionPricing.current_price || null;
+    const avg3m = regionPricing.avg_3m || null;
 
     return {
         ...product,
-        currentPrice: regionPricing.current_price || null,
+        currentPrice,
         currency: pricing[geo] ? userGeo.currency : 'USD',
         priceData: regionPricing,
         inStock: regionPricing.instock !== false,
         buyLink: regionPricing.tracked_url || product.url,
+        retailer: regionPricing.retailer || null,
+        priceIndicator: calculatePriceIndicator(currentPrice, avg3m),
     };
+}
+
+/**
+ * Calculate price indicator (% vs 3-month average).
+ * @param {number|null} currentPrice - Current price.
+ * @param {number|null} avg3m - 3-month average price.
+ * @returns {number|null} Percentage difference (negative = below avg).
+ */
+function calculatePriceIndicator(currentPrice, avg3m) {
+    if (!currentPrice || !avg3m || avg3m <= 0) return null;
+    return Math.round(((currentPrice - avg3m) / avg3m) * 100);
 }
 
 // =============================================================================
@@ -270,6 +294,7 @@ function enrichProduct(product) {
 
 /**
  * Render all sections.
+ * Note: Verdict section is rendered via PHP in single-comparison.php for curated comparisons.
  */
 function render() {
     renderProducts();
@@ -279,43 +304,112 @@ function render() {
 }
 
 /**
- * Render product header cards.
+ * Render product header cards (finder-style with score + geo-aware CTA).
+ * Handles both regular and curated comparisons with winner highlighting.
  */
 function renderProducts() {
     const container = document.querySelector(SELECTORS.products);
     if (!container) return;
 
-    const cards = products.map(p => {
+    const config = window.erhData?.compareConfig;
+    const verdictWinner = config?.verdictWinner;
+    const isCurated = config?.isCurated;
+
+    const cards = products.map((p, idx) => {
         const score = calculateProductScore(p);
-        const price = p.currentPrice ? formatPrice(p.currentPrice, p.currency) : '—';
+        const price = p.currentPrice ? formatPrice(p.currentPrice, p.currency) : null;
+        const isWinner = isCurated && verdictWinner === `product_${idx + 1}`;
+
+        // Price indicator badge (below/above avg)
+        const indicatorHtml = renderPriceIndicator(p.priceIndicator);
+
+        // CTA only if retailer exists
+        const hasCta = p.retailer && p.buyLink;
+
+        // Score ring calculation (0-100 scale, circumference = 2 * PI * radius)
+        const radius = 15;
+        const circumference = 2 * Math.PI * radius;
+        const scorePercent = Math.min(100, Math.max(0, score)); // Clamp 0-100
+        const offset = circumference - (scorePercent / 100) * circumference;
 
         return `
-            <div class="compare-product" data-product-id="${p.id}">
-                ${products.length > 2 ? `
-                    <button class="compare-product-remove" data-remove-product="${p.id}" aria-label="Remove">
+            <article class="compare-product" data-product-id="${p.id}">
+                <!-- Score ring (top-left) -->
+                <div class="compare-product-score" title="${score} points">
+                    <svg class="compare-product-score-ring" viewBox="0 0 36 36">
+                        <circle class="compare-product-score-track" cx="18" cy="18" r="${radius}" />
+                        <circle class="compare-product-score-progress" cx="18" cy="18" r="${radius}"
+                                style="stroke-dasharray: ${circumference}; stroke-dashoffset: ${offset};" />
+                    </svg>
+                    <span class="compare-product-score-value">${score}</span>
+                </div>
+
+                <div class="compare-product-actions">
+                    <button class="compare-product-remove" data-remove-product="${p.id}" aria-label="Remove from comparison">
                         <svg class="icon" width="14" height="14"><use href="#icon-x"></use></svg>
                     </button>
-                ` : ''}
-                <img src="${p.thumbnail || ''}" alt="" class="compare-product-img">
-                <h3 class="compare-product-name">${escapeHtml(p.name)}</h3>
-                <div class="compare-product-score">${score}<span>pts</span></div>
-                <div class="compare-product-price">${price}</div>
-                <div class="compare-product-actions">
-                    <a href="${p.url}" class="btn btn--ghost btn--xs">View</a>
-                    <a href="${p.buyLink}" class="btn btn--primary btn--xs" target="_blank" rel="noopener">Buy</a>
+                    ${p.currentPrice ? `
+                        <button class="compare-product-track" data-track="${p.id}"
+                                data-name="${escapeHtml(p.name)}"
+                                data-image="${p.thumbnail || ''}"
+                                data-price="${p.currentPrice}"
+                                data-currency="${p.currency}"
+                                aria-label="Track price">
+                            <svg class="icon" width="16" height="16"><use href="#icon-bell"></use></svg>
+                        </button>
+                    ` : ''}
                 </div>
-            </div>
+
+                <a href="${p.url}" class="compare-product-link">
+                    <div class="compare-product-image">
+                        <img src="${p.thumbnail || ''}" alt="${escapeHtml(p.name)}">
+                        ${price ? `
+                            <div class="compare-product-price-row">
+                                <span class="compare-product-price">${price}</span>
+                                ${indicatorHtml}
+                            </div>
+                        ` : ''}
+                    </div>
+                </a>
+
+                <div class="compare-product-content">
+                    <a href="${p.url}" class="compare-product-name">${escapeHtml(p.name)}</a>
+                    ${hasCta ? `
+                        <a href="${p.buyLink}" class="compare-product-cta btn btn-primary btn-sm" target="_blank" rel="noopener">
+                            Buy at ${p.retailer}
+                            <svg class="icon" width="14" height="14"><use href="#icon-external-link"></use></svg>
+                        </a>
+                    ` : ''}
+                </div>
+            </article>
         `;
     }).join('');
 
     const addCard = `
-        <button class="compare-product compare-product--add" data-open-add-modal>
-            <svg class="icon" width="24" height="24"><use href="#icon-plus"></use></svg>
-            <span>Add</span>
-        </button>
+        <div class="compare-product compare-product--add-wrap">
+            <button class="compare-product-add-btn" data-open-add-modal>
+                <svg class="icon" width="24" height="24"><use href="#icon-plus"></use></svg>
+                <span>Add</span>
+            </button>
+        </div>
     `;
 
     container.innerHTML = cards + addCard;
+
+    // Track button handlers
+    container.querySelectorAll('[data-track]').forEach(btn => {
+        btn.addEventListener('click', (e) => {
+            e.preventDefault();
+            e.stopPropagation();
+            PriceAlertModal.open({
+                productId: parseInt(btn.dataset.track, 10),
+                productName: btn.dataset.name,
+                productImage: btn.dataset.image,
+                currentPrice: parseFloat(btn.dataset.price) || 0,
+                currency: btn.dataset.currency || 'USD',
+            });
+        });
+    });
 
     // Remove handlers
     container.querySelectorAll('[data-remove-product]').forEach(btn => {
@@ -327,6 +421,30 @@ function renderProducts() {
         Modal.openById('compare-add-modal');
         setTimeout(() => document.querySelector(SELECTORS.searchInput)?.focus(), 100);
     });
+}
+
+/**
+ * Render price indicator badge.
+ * @param {number|null} indicator - Percentage difference from avg.
+ * @returns {string} HTML string for indicator badge.
+ */
+function renderPriceIndicator(indicator) {
+    if (indicator === null || indicator === undefined) return '';
+
+    // Only show if significant (< -5% below or > 10% above)
+    if (indicator >= -5 && indicator <= 10) return '';
+
+    const isBelow = indicator < 0;
+    const cls = isBelow ? 'compare-product-indicator--below' : 'compare-product-indicator--above';
+    const icon = isBelow ? 'trending-down' : 'trending-up';
+    const absPercent = Math.abs(indicator);
+
+    return `
+        <span class="compare-product-indicator ${cls}">
+            <svg class="compare-product-indicator-icon"><use href="#icon-${icon}"></use></svg>
+            ${absPercent}%
+        </span>
+    `;
 }
 
 /**
@@ -474,8 +592,68 @@ function renderAdvantageCard(product, advantages) {
 }
 
 /**
- * Render specs section with category score bars.
- * Each category shows its consumer question and score comparison.
+ * Render sticky mini-header for specs section.
+ * Shows product thumbnails, scores, names, and CTAs.
+ */
+function renderMiniHeader() {
+    const radius = 15;
+    const circumference = 2 * Math.PI * radius;
+
+    return `
+        <div class="compare-mini-header">
+            <table class="compare-mini-table">
+                <tr>
+                    <td class="compare-mini-label">
+                        <label class="compare-diff-toggle">
+                            <input type="checkbox" data-diff-toggle>
+                            <span class="compare-diff-toggle-switch"></span>
+                            <span class="compare-diff-toggle-label">Differences only</span>
+                        </label>
+                    </td>
+                    ${products.map(p => {
+                        const score = calculateProductScore(p);
+                        const scorePercent = Math.min(100, Math.max(0, score));
+                        const offset = circumference - (scorePercent / 100) * circumference;
+                        const price = p.currentPrice ? formatPrice(p.currentPrice, p.currency) : '';
+                        const hasRetailer = p.retailer && p.buyLink;
+
+                        return `
+                            <td>
+                                <div class="compare-mini-product">
+                                    <div class="compare-mini-thumb-wrap">
+                                        <img src="${p.thumbnail || ''}" alt="" class="compare-mini-thumb">
+                                    </div>
+                                    <div class="compare-mini-score" title="${score} points">
+                                        <svg class="compare-mini-score-ring" viewBox="0 0 36 36">
+                                            <circle class="compare-mini-score-track" cx="18" cy="18" r="${radius}" />
+                                            <circle class="compare-mini-score-progress" cx="18" cy="18" r="${radius}"
+                                                    style="stroke-dasharray: ${circumference}; stroke-dashoffset: ${offset};" />
+                                        </svg>
+                                        <span class="compare-mini-score-value">${score}</span>
+                                    </div>
+                                    <div class="compare-mini-info">
+                                        <span class="compare-mini-name">${escapeHtml(p.name)}</span>
+                                        ${hasRetailer ? `
+                                            <a href="${p.buyLink}" class="compare-mini-price" target="_blank" rel="noopener">
+                                                ${price} at ${p.retailer}
+                                                <svg class="icon" width="12" height="12"><use href="#icon-external-link"></use></svg>
+                                            </a>
+                                        ` : ''}
+                                    </div>
+                                </div>
+                            </td>
+                        `;
+                    }).join('')}
+                </tr>
+            </table>
+        </div>
+    `;
+}
+
+/**
+ * Render specs section (simplified layout).
+ * All categories expanded, no accordions, inline scores per category.
+ * Renders both desktop table and mobile stacked cards (CSS handles visibility).
  */
 function renderSpecs() {
     const container = document.querySelector(SELECTORS.specs);
@@ -484,98 +662,103 @@ function renderSpecs() {
     const groups = SPEC_GROUPS[category] || {};
     const sections = [];
 
+    // Add sticky mini-header at top of specs
+    sections.push(renderMiniHeader());
+
     for (const [name, group] of Object.entries(groups)) {
-        const rows = renderSpecRows(group.specs || []);
-        if (!rows.length) continue;
+        const specsWithValues = (group.specs || []).filter(spec => {
+            const values = products.map(p => getSpec(p, spec.key));
+            return !values.every(v => v == null || v === '');
+        });
 
-        // Calculate category scores for each product (if showScore is true).
-        // Uses pre-calculated backend scores when available via calculateCategoryScore.
-        const categoryScores = group.showScore
-            ? products.map(p => calculateCategoryScore(p, name))
-            : null;
+        if (!specsWithValues.length) continue;
 
-        // Find winner(s) for score comparison
+        // Calculate category scores for inline display
+        const categoryScores = products.map(p => calculateCategoryScore(p, name));
+
+        // Find winner(s)
         let scoreWinnerIdx = -1;
-        if (categoryScores && categoryScores.filter(s => s > 0).length >= 2) {
-            const maxScore = Math.max(...categoryScores.filter(s => s > 0));
+        const validScores = categoryScores.filter(s => s > 0);
+        if (validScores.length >= 2) {
+            const maxScore = Math.max(...validScores);
             const winners = categoryScores.map((s, i) => s === maxScore ? i : -1).filter(i => i >= 0);
-            // Only mark winner if there's one clear winner (not a tie)
             if (winners.length === 1) scoreWinnerIdx = winners[0];
         }
 
-        // Build score bars HTML
-        const scoreBarsHtml = categoryScores ? `
-            <div class="compare-category-scores">
-                ${products.map((p, i) => {
-                    const score = categoryScores[i];
-                    const isWinner = i === scoreWinnerIdx;
-                    const barWidth = Math.max(0, Math.min(100, score));
-                    return `
-                        <div class="compare-category-score${isWinner ? ' is-winner' : ''}">
-                            <span class="compare-category-score-name">${escapeHtml(p.name)}</span>
-                            <div class="compare-category-score-bar">
-                                <div class="compare-category-score-fill" style="width: ${barWidth}%"></div>
-                            </div>
-                            <span class="compare-category-score-value">${score}</span>
-                        </div>
-                    `;
-                }).join('')}
-            </div>
-        ` : '';
-
-        // Build value metric row if defined
+        // Build desktop table rows
+        const rows = renderSpecRows(specsWithValues);
         const valueMetricRow = group.valueMetric ? renderValueMetricRow(group.valueMetric) : '';
 
-        // Build context note if defined
-        const contextNoteHtml = group.contextNote
-            ? `<p class="compare-category-note"><svg class="icon" width="14" height="14"><use href="#icon-info"></use></svg>${escapeHtml(group.contextNote)}</p>`
-            : '';
+        // Build mobile stacked cards
+        const mobileCards = renderMobileSpecCards(specsWithValues);
 
-        // Build question subtitle
-        const questionHtml = group.question
-            ? `<span class="compare-spec-group-question">${escapeHtml(group.question)}</span>`
-            : '';
-
-        // Icon for category
-        const iconHtml = group.icon
-            ? `<svg class="icon compare-spec-group-icon" width="18" height="18"><use href="#icon-${group.icon}"></use></svg>`
-            : '';
+        // Build colgroup for consistent column widths
+        const colgroup = `
+            <colgroup>
+                <col class="compare-spec-col-label">
+                ${products.map(() => '<col>').join('')}
+            </colgroup>
+        `;
 
         sections.push(`
-            <div class="compare-spec-group${group.isValueSection ? ' compare-spec-group--value' : ''}" data-group>
-                <button class="compare-spec-group-header" data-toggle-group>
-                    <div class="compare-spec-group-header-text">
-                        ${iconHtml}
-                        <span class="compare-spec-group-title">${name}</span>
-                        ${questionHtml}
-                    </div>
-                    <svg class="icon compare-spec-group-chevron" width="16" height="16"><use href="#icon-chevron-down"></use></svg>
-                </button>
-                <div class="compare-spec-group-body">
-                    ${scoreBarsHtml}
-                    ${contextNoteHtml}
-                    <table class="compare-spec-table">
-                        <thead>
-                            <tr>
-                                <th></th>
-                                ${products.map(p => `<th>${escapeHtml(p.name)}</th>`).join('')}
-                            </tr>
-                        </thead>
-                        <tbody>${rows.join('')}${valueMetricRow}</tbody>
-                    </table>
+            <div class="compare-spec-category">
+                <h3 class="compare-spec-category-title">${name}</h3>
+                <!-- Desktop table -->
+                <table class="compare-spec-table">
+                    ${colgroup}
+                    <tbody>${rows.join('')}${valueMetricRow}</tbody>
+                </table>
+                <!-- Mobile stacked cards -->
+                <div class="compare-spec-cards">
+                    ${mobileCards}
                 </div>
             </div>
         `);
     }
 
     container.innerHTML = sections.join('');
+}
 
-    // Collapsible groups
-    container.querySelectorAll('[data-toggle-group]').forEach(btn => {
-        btn.addEventListener('click', () => {
-            btn.closest('[data-group]')?.classList.toggle('is-collapsed');
-        });
-    });
+/**
+ * Render mobile stacked cards for specs.
+ * Each spec becomes a card showing all products' values.
+ */
+function renderMobileSpecCards(specs) {
+    return specs.map(spec => {
+        const values = products.map(p => getSpec(p, spec.key));
+        const winners = findWinners(values, spec);
+
+        const tooltipHtml = spec.tooltip ? `
+            <span class="info-trigger" data-tooltip="${escapeHtml(spec.tooltip)}" data-tooltip-trigger="click">
+                <svg class="icon" width="14" height="14"><use href="#icon-info"></use></svg>
+            </span>
+        ` : '';
+
+        const productValues = products.map((p, i) => {
+            const formatted = formatSpecValue(values[i], spec);
+            const isWinner = winners.includes(i);
+            return `
+                <div class="compare-spec-card-value${isWinner ? ' is-winner' : ''}">
+                    <span class="compare-spec-card-product">
+                        <img src="${p.thumbnail || ''}" alt="">
+                        ${escapeHtml(p.name)}
+                    </span>
+                    <span class="compare-spec-card-data">${formatted}</span>
+                </div>
+            `;
+        }).join('');
+
+        return `
+            <div class="compare-spec-card">
+                <div class="compare-spec-card-label">
+                    ${spec.label}${tooltipHtml}
+                </div>
+                <div class="compare-spec-card-values">
+                    ${productValues}
+                </div>
+            </div>
+        `;
+    }).join('');
 }
 
 /**
@@ -613,30 +796,173 @@ function renderValueMetricRow(metric) {
         return `<td class="${cls}">${formatted}</td>`;
     }).join('');
 
-    return `<tr class="compare-spec-value-metric"><td>💰 ${metric.label}</td>${cells}</tr>`;
+    return `<tr><td>${metric.label}</td>${cells}</tr>`;
+}
+
+/**
+ * Render a boolean cell with green check or red X.
+ */
+function renderBooleanCell(value) {
+    const isTrue = value === true || value === 'Yes' || value === 'yes' || value === 1;
+    const statusClass = isTrue ? 'feature-yes' : 'feature-no';
+    const icon = isTrue ? 'check' : 'x';
+    const text = isTrue ? 'Yes' : 'No';
+
+    return `
+        <td class="${statusClass}">
+            <div class="compare-spec-value-inner">
+                <span class="compare-feature-badge">
+                    <svg class="icon" aria-hidden="true"><use href="#icon-${icon}"></use></svg>
+                </span>
+                <span class="compare-feature-text">${text}</span>
+            </div>
+        </td>
+    `;
+}
+
+/**
+ * Render feature array as individual rows.
+ * Each feature gets its own row with check/X for each product.
+ */
+function renderFeatureArrayRows(spec) {
+    const rows = [];
+    const values = products.map(p => getSpec(p, spec.key));
+
+    // Collect all unique features across all products
+    const allFeatures = new Set();
+    values.forEach(v => {
+        if (Array.isArray(v)) {
+            v.forEach(f => allFeatures.add(f));
+        }
+    });
+
+    if (allFeatures.size === 0) return rows;
+
+    // Render a row for each feature
+    for (const feature of allFeatures) {
+        const featureStatuses = products.map((p, i) => {
+            const productFeatures = values[i];
+            return Array.isArray(productFeatures) && productFeatures.includes(feature);
+        });
+
+        // Check if all products have the same status for this feature
+        const allSame = featureStatuses.every(s => s === featureStatuses[0]);
+        const sameAttr = allSame ? ' data-same-values' : '';
+
+        const cells = featureStatuses.map(hasFeature => renderBooleanCell(hasFeature)).join('');
+
+        rows.push(`
+            <tr${sameAttr}>
+                <td>
+                    <div class="compare-spec-label">${escapeHtml(feature)}</div>
+                </td>
+                ${cells}
+            </tr>
+        `);
+    }
+
+    return rows;
+}
+
+/**
+ * Check if all values in an array are the same (for diff toggle).
+ */
+function areValuesSame(values) {
+    const validValues = values.filter(v => v != null && v !== '');
+    if (validValues.length <= 1) return true;
+
+    // Normalize values for comparison
+    const normalize = (v) => {
+        if (Array.isArray(v)) return JSON.stringify(v.sort());
+        if (typeof v === 'boolean') return v.toString();
+        return String(v).toLowerCase().trim();
+    };
+
+    const first = normalize(validValues[0]);
+    return validValues.every(v => normalize(v) === first);
 }
 
 /**
  * Render spec table rows.
+ * Uses click-activated tooltips with info icon.
  */
 function renderSpecRows(specs) {
     const rows = [];
 
     for (const spec of specs) {
+        // Handle feature arrays specially - expand into individual rows
+        if (spec.format === 'featureArray') {
+            rows.push(...renderFeatureArrayRows(spec));
+            continue;
+        }
+
         const values = products.map(p => getSpec(p, spec.key));
         if (values.every(v => v == null || v === '')) continue;
 
+        // Check if all values are the same (for diff toggle)
+        const isSame = areValuesSame(values);
+        const sameAttr = isSame ? ' data-same-values' : '';
+
+        // Handle boolean specs with green/red badges
+        if (spec.format === 'boolean') {
+            const cells = values.map(v => {
+                if (v == null || v === '') return '<td>—</td>';
+                return renderBooleanCell(v);
+            }).join('');
+
+            const tooltipHtml = spec.tooltip ? `
+                <span class="info-trigger" data-tooltip="${escapeHtml(spec.tooltip)}" data-tooltip-trigger="click">
+                    <svg class="icon" width="14" height="14"><use href="#icon-info"></use></svg>
+                </span>
+            ` : '';
+
+            rows.push(`
+                <tr${sameAttr}>
+                    <td>
+                        <div class="compare-spec-label">${spec.label}${tooltipHtml}</div>
+                    </td>
+                    ${cells}
+                </tr>
+            `);
+            continue;
+        }
+
+        // Standard specs with winner highlighting
         const winners = findWinners(values, spec);
 
         const cells = values.map((v, i) => {
             const formatted = formatSpecValue(v, spec);
-            const cls = winners.includes(i) ? 'is-winner' : '';
-            return `<td class="${cls}">${formatted}</td>`;
+            const isWinner = winners.includes(i);
+            if (isWinner) {
+                return `
+                    <td class="is-winner">
+                        <div class="compare-spec-value-inner">
+                            <span class="compare-spec-badge">
+                                <svg class="icon" aria-hidden="true"><use href="#icon-check"></use></svg>
+                            </span>
+                            <span class="compare-spec-value-text">${formatted}</span>
+                        </div>
+                    </td>
+                `;
+            }
+            return `<td>${formatted}</td>`;
         }).join('');
 
-        const tooltip = spec.tooltip ? `<span class="compare-spec-tip" title="${escapeHtml(spec.tooltip)}">?</span>` : '';
+        // Click-activated tooltip with info circle icon
+        const tooltipHtml = spec.tooltip ? `
+            <span class="info-trigger" data-tooltip="${escapeHtml(spec.tooltip)}" data-tooltip-trigger="click">
+                <svg class="icon" width="14" height="14"><use href="#icon-info"></use></svg>
+            </span>
+        ` : '';
 
-        rows.push(`<tr><td>${spec.label}${tooltip}</td>${cells}</tr>`);
+        rows.push(`
+            <tr${sameAttr}>
+                <td>
+                    <div class="compare-spec-label">${spec.label}${tooltipHtml}</div>
+                </td>
+                ${cells}
+            </tr>
+        `);
     }
 
     return rows;
@@ -744,6 +1070,9 @@ function pricingRow(label, values, lowerWins = true, invertWinner = false) {
     return `<tr><td>${label}</td>${cells}</tr>`;
 }
 
+// Note: Verdict section is rendered via PHP in single-comparison.php for curated comparisons.
+// No JS rendering needed.
+
 // =============================================================================
 // Scoring
 // =============================================================================
@@ -848,21 +1177,43 @@ function setupScrollSpy() {
 }
 
 /**
- * Set up sticky header/nav behavior.
+ * Set up nav stuck state detection.
+ * Adds 'is-stuck' class when nav is stuck at top for shadow effect.
  */
-function setupStickyBehavior() {
-    const header = document.querySelector(SELECTORS.header);
+function setupNavStuckState() {
     const nav = document.querySelector(SELECTORS.nav);
-    if (!header || !nav) return;
+    if (!nav) return;
 
-    const updateSticky = () => {
-        const scrollY = window.scrollY;
-        header.classList.toggle('is-sticky', scrollY > 100);
-        nav.classList.toggle('is-sticky', scrollY > 200);
-    };
+    // Insert a sentinel element right before the nav
+    const sentinel = document.createElement('div');
+    sentinel.style.cssText = 'height: 1px; margin-bottom: -1px; pointer-events: none;';
+    nav.parentNode.insertBefore(sentinel, nav);
 
-    window.addEventListener('scroll', throttle(updateSticky, 50), { passive: true });
-    updateSticky();
+    const observer = new IntersectionObserver(
+        ([entry]) => {
+            // When sentinel scrolls out of view, nav is stuck
+            nav.classList.toggle('is-stuck', !entry.isIntersecting);
+        },
+        { threshold: 0, rootMargin: '0px' }
+    );
+
+    observer.observe(sentinel);
+}
+
+/**
+ * Set up differences toggle.
+ * Hides rows where values are the same across all products.
+ */
+function setupDiffToggle() {
+    const toggle = document.querySelector('[data-diff-toggle]');
+    if (!toggle) return;
+
+    toggle.addEventListener('change', () => {
+        const specsContainer = document.querySelector(SELECTORS.specs);
+        if (!specsContainer) return;
+
+        specsContainer.classList.toggle('show-diff-only', toggle.checked);
+    });
 }
 
 /**
@@ -1037,6 +1388,158 @@ function throttle(fn, wait) {
             fn.apply(this, args);
         }
     };
+}
+
+// =============================================================================
+// View Tracking
+// =============================================================================
+
+/**
+ * Track comparison view via REST API.
+ * Uses sessionStorage to deduplicate - only tracks once per session per unique pair.
+ *
+ * @param {number[]} productIds - Array of product IDs being compared.
+ */
+async function trackComparisonView(productIds) {
+    if (!productIds || productIds.length < 2) return;
+
+    // Generate all unique pairs from the product IDs.
+    const pairs = generatePairs(productIds);
+    if (!pairs.length) return;
+
+    // Filter to pairs not yet tracked this session.
+    const untracked = pairs.filter(pair => !isTrackedThisSession(pair));
+    if (!untracked.length) return;
+
+    try {
+        const restUrl = window.erhData?.restUrl || '/wp-json/erh/v1/';
+        const nonce = window.erhData?.nonce || '';
+
+        await fetch(`${restUrl}compare/track`, {
+            method: 'POST',
+            headers: {
+                'Content-Type': 'application/json',
+                'X-WP-Nonce': nonce,
+            },
+            body: JSON.stringify({ product_ids: productIds }),
+        });
+
+        // Mark all pairs as tracked for this session.
+        untracked.forEach(pair => markTrackedThisSession(pair));
+    } catch (e) {
+        // Silent fail - tracking is non-critical.
+        console.debug('Comparison tracking failed:', e);
+    }
+}
+
+/**
+ * Generate all unique pairs from an array of product IDs.
+ * Each pair is normalized with lower ID first.
+ *
+ * @param {number[]} ids - Array of product IDs.
+ * @returns {string[]} Array of pair keys like "123-456".
+ */
+function generatePairs(ids) {
+    const pairs = [];
+    for (let i = 0; i < ids.length; i++) {
+        for (let j = i + 1; j < ids.length; j++) {
+            // Canonical order: lower ID first.
+            const a = Math.min(ids[i], ids[j]);
+            const b = Math.max(ids[i], ids[j]);
+            pairs.push(`${a}-${b}`);
+        }
+    }
+    return pairs;
+}
+
+/**
+ * Check if a pair has been tracked this session.
+ *
+ * @param {string} pairKey - Pair key like "123-456".
+ * @returns {boolean} True if already tracked.
+ */
+function isTrackedThisSession(pairKey) {
+    try {
+        return sessionStorage.getItem(`erh_compared_${pairKey}`) === '1';
+    } catch {
+        // sessionStorage may be unavailable (private mode, etc.).
+        return false;
+    }
+}
+
+/**
+ * Mark a pair as tracked for this session.
+ *
+ * @param {string} pairKey - Pair key like "123-456".
+ */
+function markTrackedThisSession(pairKey) {
+    try {
+        sessionStorage.setItem(`erh_compared_${pairKey}`, '1');
+    } catch {
+        // Silent fail if sessionStorage unavailable.
+    }
+}
+
+// =============================================================================
+// Related Comparisons
+// =============================================================================
+
+/**
+ * Load related comparisons for curated pages.
+ *
+ * @param {number[]} productIds - Current product IDs.
+ * @param {string} categoryKey - Category key.
+ */
+async function loadRelatedComparisons(productIds, categoryKey) {
+    const container = document.querySelector('[data-related-comparisons]');
+    if (!container) return;
+
+    try {
+        const restUrl = window.erhData?.restUrl || '/wp-json/erh/v1/';
+        const params = new URLSearchParams({
+            products: productIds.join(','),
+            category: categoryKey,
+            limit: '4',
+        });
+
+        const res = await fetch(`${restUrl}compare/related?${params}`);
+        if (!res.ok) throw new Error(`HTTP ${res.status}`);
+
+        const json = await res.json();
+        if (!json.success || !json.data?.length) {
+            container.innerHTML = '<p class="compare-related-empty">No related comparisons found.</p>';
+            return;
+        }
+
+        container.innerHTML = json.data.map(item => {
+            const p1 = item.product_1;
+            const p2 = item.product_2;
+
+            return `
+                <a href="${item.url}" class="compare-popular-card">
+                    <div class="compare-popular-card-products">
+                        <div class="compare-popular-card-product">
+                            ${p1.thumbnail ? `<img src="${p1.thumbnail}" alt="" class="compare-popular-card-thumb">` : ''}
+                            <span class="compare-popular-card-name">${escapeHtml(p1.name)}</span>
+                        </div>
+                        <span class="compare-popular-card-vs">vs</span>
+                        <div class="compare-popular-card-product">
+                            ${p2.thumbnail ? `<img src="${p2.thumbnail}" alt="" class="compare-popular-card-thumb">` : ''}
+                            <span class="compare-popular-card-name">${escapeHtml(p2.name)}</span>
+                        </div>
+                    </div>
+                    ${item.view_count ? `
+                        <div class="compare-popular-card-meta">
+                            <span class="compare-popular-card-views">${item.view_count.toLocaleString()} views</span>
+                        </div>
+                    ` : ''}
+                </a>
+            `;
+        }).join('');
+    } catch (e) {
+        console.warn('Failed to load related comparisons:', e);
+        container.innerHTML = '';
+    }
 }
 
 export default { init };

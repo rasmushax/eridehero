@@ -8,6 +8,11 @@ export function initHeaderScroll() {
     const header = document.querySelector('.header');
     if (!header) return null;
 
+    // Skip smart-sticky on compare pages - header stays static
+    if (document.querySelector('[data-compare-page]')) {
+        return null;
+    }
+
     let lastScrollY = 0;
     let ticking = false;
 

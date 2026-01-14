@@ -307,6 +307,11 @@ if ( ! defined( 'ABSPATH' ) ) {
         <circle cx="12" cy="19" r="1"></circle>
     </symbol>
 
+    <!-- Crown (winner badge) -->
+    <symbol id="icon-crown" viewBox="0 0 24 24" fill="currentColor">
+        <path d="M5 16L3 5l5.5 5L12 4l3.5 6L21 5l-2 11H5zm14 3c0 .6-.4 1-1 1H6c-.6 0-1-.4-1-1v-1h14v1z"/>
+    </symbol>
+
     <!-- Eye (show password) -->
     <symbol id="icon-eye" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round">
         <path d="M2 12s3-7 10-7 10 7 10 7-3 7-10 7-10-7-10-7Z"></path>
