@@ -312,3 +312,125 @@ Key files in the current codebase:
 - `erh-theme/assets/js/config/compare-config.js` - Specs + scoring config (1,830 lines)
 - `erh-theme/assets/css/_compare-results.css` - Compare page styles
 - `erh-core/includes/api/class-rest-products.php` - Products API (has comparison endpoint)
+
+---
+
+## H2H Results Page Redesign
+
+**Status**: In Progress
+
+Redesign of the head-to-head comparison results page with improved UX, cleaner specs display, and better mobile experience.
+
+### Design Decisions
+
+| Area | Decision |
+|------|----------|
+| **Hero cards** | Finder-style cards + score ring + geo-aware CTA + remove button |
+| **Hero grid** | CSS Grid: 5 columns desktop → 4 → 3 → 2 on mobile |
+| **Sticky nav** | Disable header smart-sticky on compare pages, nav at top:0 |
+| **Mini-header** | Table structure (aligns with specs), thumb 40x40, score ring, "$X at Y" link |
+| **Differences toggle** | iOS-style toggle in mini-header to show only differing specs |
+| **Accordions** | Removed - all categories expanded with h3 titles |
+| **Spec tables** | `table-layout: fixed` with `<colgroup>`, no thead |
+| **Winner styling** | Purple badge for numeric winners |
+| **Boolean specs** | Green check (Yes) / red X (No) badges |
+| **Feature arrays** | Expanded into individual rows with green/red per product |
+| **Tooltips** | Click-activated, info circle icon |
+| **Share section** | Removed entirely |
+| **Verdict** | Own nav section at bottom (curated only) |
+| **Mobile specs** | Stacked card layout |
+
+### Completed Work
+
+#### Hero Section
+
+**Grid Layout**:
+```css
+.compare-header-products {
+    display: grid;
+    grid-template-columns: repeat(5, 1fr);
+    gap: var(--space-4);
+    justify-items: center;
+}
+/* Breakpoints: 5 → 4 (1000px) → 3 (768px) → 2 (600px) */
+```
+
+**Product Card Actions** (track + remove buttons stacked):
+```html
+<div class="compare-product-actions">
+    <button class="compare-product-track" data-track="123">...</button>
+    <button class="compare-product-remove" data-remove="123">...</button>
+</div>
+```
+
+#### Mini-Header (Sticky in Specs)
+
+Uses table structure to align columns with spec tables:
+- First `<td>` contains "Differences only" toggle
+- Product cells: thumb (40x40), score ring, name, "$X at Y" link with external icon
+- `top: 44px`, `padding: var(--space-6) 0`, border top + bottom
+- Hidden on mobile (< 768px)
+
+#### Differences Toggle
+
+**Purpose**: Hide spec rows where all products have identical values.
+
+**Implementation**:
+1. Rows with same values get `data-same-values` attribute
+2. Toggle adds `show-diff-only` class to `.compare-specs` container
+3. CSS: `.compare-specs.show-diff-only tr[data-same-values] { display: none; }`
+
+#### Specs Section
+
+**No Accordions** - All categories expanded with h3 titles:
+- `.compare-spec-category { margin-bottom: var(--space-14); }`
+- `.compare-spec-category-title { margin: var(--space-8) 0 var(--space-4); }`
+- `table-layout: fixed` for equal column widths
+- First column: `padding-left: 0` for alignment
+
+#### Winner & Feature Styling
+
+**Three types of highlighting**:
+
+1. **Numeric spec winners** (speed, range, weight) - Purple badge:
+   - `.compare-spec-badge` - 20x20px circle, primary-light bg, check icon
+
+2. **Boolean specs** (Regen Braking, Turn Signals) - Green/Red:
+   - `.feature-yes .compare-feature-badge` - success-light bg, check icon
+   - `.feature-no .compare-feature-badge` - error-light bg, x icon
+
+3. **Feature arrays** - Expanded into individual rows:
+   ```
+   App Control      ✓ Yes    ✗ No
+   Cruise Control   ✓ Yes    ✓ Yes
+   NFC Unlock       ✗ No     ✓ Yes
+   ```
+
+#### Removed Features
+
+- Share section (CSS and JS removed)
+- Value metric special styling and emojis
+
+### Remaining Work
+
+- **Overview Section**: Radar chart, advantage lists, score display
+- **Pricing Section**: Price table, history integration, track buttons
+- **Verdict Section** (Curated Only): Add to nav, winner badge, editor's text
+- **Mobile Optimization**: Stacked cards for specs, touch interactions
+- **Testing**: Multiple product counts (2, 3, 4+), different categories
+
+### Design Tokens Reference
+
+```css
+/* Spacing */
+--space-4: 16px   /* gaps, padding */
+--space-6: 24px   /* mini-header padding */
+--space-8: 32px   /* category title margin */
+--space-14: 56px  /* category bottom margin */
+
+/* Sizes */
+Mini-header thumb: 40x40px
+Score ring: 36x36px
+Toggle switch: 36x20px
+Badge circle: 20x20px, icon 12x12px
+```
