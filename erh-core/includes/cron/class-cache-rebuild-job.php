@@ -398,8 +398,11 @@ class CacheRebuildJob implements CronJobInterface {
             $product_data['popularity_score'] += 5;
         }
 
-        // Add computed comparisons to specs (using best price from any geo, prefer US).
-        $product_data['specs'] = $this->add_computed_specs($product_data['specs'], $best_price_for_computed_specs, $product_type);
+        // Add computed comparisons to specs (non-price efficiency metrics).
+        $product_data['specs'] = $this->add_computed_specs($product_data['specs'], $product_type);
+
+        // Add geo-aware value metrics (price-based calculations per region).
+        $product_data['specs']['value_metrics'] = $this->calculate_geo_value_metrics($product_id, $product_data['specs']);
 
         // Calculate and add absolute category scores for comparison tool.
         $scores = $this->product_scorer->calculate_scores($product_data['specs'], $product_type);
@@ -955,151 +958,40 @@ class CacheRebuildJob implements CronJobInterface {
     }
 
     /**
-     * Add computed price/spec comparisons to specs.
+     * Add computed non-price efficiency metrics to specs.
      *
-     * Calculates value metrics like price_per_lb, speed_per_lb, range_per_lb.
-     * Price-based metrics require a valid price, but weight-based metrics
-     * (speed_per_lb, range_per_lb) are calculated regardless of price availability.
+     * Calculates efficiency metrics like speed_per_lb, wh_per_lb, tested_range_per_lb.
+     * These don't vary by geo since they don't use price.
      *
      * @param array $specs The product specs.
-     * @param float|null $price The product price (null if unavailable).
      * @param string $product_type The product type.
      * @return array The specs with computed values.
      */
-    private function add_computed_specs(array $specs, ?float $price, string $product_type): array {
-        // Normalize price to null if invalid.
-        if ($price !== null && $price <= 0) {
-            $price = null;
-        }
-
+    private function add_computed_specs(array $specs, string $product_type): array {
         if ($product_type === 'Electric Bike' && isset($specs['e-bikes'])) {
-            return $this->add_ebike_computed_specs($specs, $price);
+            return $this->add_ebike_computed_specs($specs);
         }
 
-        return $this->add_scooter_computed_specs($specs, $price);
+        return $this->add_scooter_computed_specs($specs);
     }
 
     /**
-     * Add computed specs for e-bikes.
+     * Calculate geo-aware value metrics (price-based).
      *
-     * @param array $specs The product specs.
-     * @param float|null $price The product price (null if unavailable).
-     * @return array The specs with computed values.
+     * Returns nested structure keyed by region:
+     * [
+     *     'US' => ['price_per_tested_mile' => 25.50, 'price_per_mph' => 40.00, ...],
+     *     'GB' => ['price_per_tested_mile' => 20.00, ...],
+     *     'EU' => null,  // No EU pricing
+     *     ...
+     * ]
+     *
+     * @param int   $product_id The product post ID.
+     * @param array $specs      The product specs (for base values like tested_range, top_speed).
+     * @return array Geo-keyed value metrics.
      */
-    private function add_ebike_computed_specs(array $specs, ?float $price): array {
-        $ebike_data = $specs['e-bikes'];
-        $has_price = $price !== null;
-
-        // Extract common values.
-        $weight = null;
-        if (isset($ebike_data['weight_and_capacity']['weight']) && is_numeric($ebike_data['weight_and_capacity']['weight'])) {
-            $weight = (float) $ebike_data['weight_and_capacity']['weight'];
-        }
-
-        $range = null;
-        if (isset($ebike_data['battery']['range']) && is_numeric($ebike_data['battery']['range'])) {
-            $range = (float) $ebike_data['battery']['range'];
-        }
-
-        $capacity = null;
-        if (isset($ebike_data['battery']['battery_capacity']) && is_numeric($ebike_data['battery']['battery_capacity'])) {
-            $capacity = (float) $ebike_data['battery']['battery_capacity'];
-        }
-
-        $power_nominal = null;
-        if (isset($ebike_data['motor']['power_nominal']) && is_numeric($ebike_data['motor']['power_nominal'])) {
-            $power_nominal = (float) $ebike_data['motor']['power_nominal'];
-        }
-
-        // === Price-based metrics (require price) ===
-        if ($has_price) {
-            // Price vs Motor Power (Nominal).
-            if ($power_nominal !== null && $power_nominal > 0) {
-                $specs['price_per_watt_nominal'] = round($price / $power_nominal, 2);
-            }
-
-            // Price vs Motor Power (Peak).
-            if (isset($ebike_data['motor']['power_peak']) && is_numeric($ebike_data['motor']['power_peak'])) {
-                $power = (float) $ebike_data['motor']['power_peak'];
-                if ($power > 0) {
-                    $specs['price_per_watt_peak'] = round($price / $power, 2);
-                }
-            }
-
-            // Price vs Torque.
-            if (isset($ebike_data['motor']['torque']) && is_numeric($ebike_data['motor']['torque'])) {
-                $torque = (float) $ebike_data['motor']['torque'];
-                if ($torque > 0) {
-                    $specs['price_per_nm_torque'] = round($price / $torque, 2);
-                }
-            }
-
-            // Price vs Battery Capacity.
-            if ($capacity !== null && $capacity > 0) {
-                $specs['price_per_wh_battery'] = round($price / $capacity, 2);
-            }
-
-            // Price vs Range.
-            if ($range !== null && $range > 0) {
-                $specs['price_per_mile_range'] = round($price / $range, 2);
-            }
-
-            // Price vs Weight.
-            if ($weight !== null && $weight > 0) {
-                $specs['price_per_lb'] = round($price / $weight, 2);
-            }
-
-            // Price vs Weight Limit.
-            if (isset($ebike_data['weight_and_capacity']['weight_limit']) && is_numeric($ebike_data['weight_and_capacity']['weight_limit'])) {
-                $limit = (float) $ebike_data['weight_and_capacity']['weight_limit'];
-                if ($limit > 0) {
-                    $specs['price_per_lb_capacity'] = round($price / $limit, 2);
-                }
-            }
-
-            // Price vs Top Assist Speed.
-            if (isset($ebike_data['speed_and_class']['top_assist_speed']) && is_numeric($ebike_data['speed_and_class']['top_assist_speed'])) {
-                $speed = (float) $ebike_data['speed_and_class']['top_assist_speed'];
-                if ($speed > 0) {
-                    $specs['price_per_mph_assist'] = round($price / $speed, 2);
-                }
-            }
-        }
-
-        // === Non-price metrics (always calculated if data available) ===
-        if ($weight !== null && $weight > 0) {
-            // Range per pound.
-            if ($range !== null) {
-                $specs['range_per_lb'] = round($range / $weight, 2);
-            }
-
-            // Battery capacity per pound.
-            if ($capacity !== null) {
-                $specs['wh_per_lb'] = round($capacity / $weight, 2);
-            }
-
-            // Power per pound.
-            if ($power_nominal !== null) {
-                $specs['watts_per_lb'] = round($power_nominal / $weight, 2);
-            }
-        }
-
-        return $specs;
-    }
-
-    /**
-     * Add computed specs for e-scooters and other types.
-     *
-     * Handles both flat (legacy) and nested (new ACF structure) field locations.
-     * Price-based metrics require a valid price, but weight-based metrics
-     * (speed_per_lb, range_per_lb) are calculated regardless of price availability.
-     *
-     * @param array $specs The product specs.
-     * @param float|null $price The product price (null if unavailable).
-     * @return array The specs with computed values.
-     */
-    private function add_scooter_computed_specs(array $specs, ?float $price): array {
-        $has_price = $price !== null;
+    private function calculate_geo_value_metrics(int $product_id, array $specs): array {
+        $value_metrics = [];
 
         // Helper to get value from flat or nested e-scooters structure.
         $get_value = function (string ...$paths) use ($specs): ?float {
@@ -1126,32 +1018,188 @@ class CacheRebuildJob implements CronJobInterface {
             return null;
         };
 
-        // Get values from various possible locations.
-        $weight = $get_value('weight', 'e-scooters.dimensions.weight');
-        $top_speed = $get_value('manufacturer_top_speed');
-        $range = $get_value('manufacturer_range');
+        // Get base values for calculations.
         $tested_range = $get_value('tested_range_regular');
-        $tested_speed = $get_value('tested_top_speed');
-        $battery = $get_value('battery_capacity', 'e-scooters.battery.capacity');
-        $motor_power = $get_value('nominal_motor_wattage', 'e-scooters.motor.power_nominal');
-        $max_load = $get_value('max_load', 'e-scooters.dimensions.max_load');
-        $brake_distance = $get_value('brake_distance');
-        $hill_climbing = $get_value('hill_climbing');
-        $max_weight_capacity = $get_value('max_weight_capacity');
+        $top_speed = $get_value('tested_top_speed', 'manufacturer_top_speed');
+        $motor_power = $get_value('nominal_motor_wattage', 'e-scooters.motor.power_nominal', 'motor.power_nominal');
+        $battery_capacity = $get_value('battery_capacity', 'e-scooters.battery.capacity', 'battery.capacity');
 
-        // === Non-price metrics (always calculated if data available) ===
+        foreach (GeoConfig::REGIONS as $geo) {
+            $price = $this->get_price_for_geo($product_id, $geo);
+
+            if (!$price || $price <= 0) {
+                $value_metrics[$geo] = null;
+                continue;
+            }
+
+            $value_metrics[$geo] = [
+                'price_per_tested_mile' => $tested_range && $tested_range > 0 ? round($price / $tested_range, 2) : null,
+                'price_per_mph'         => $top_speed && $top_speed > 0 ? round($price / $top_speed, 2) : null,
+                'price_per_watt'        => $motor_power && $motor_power > 0 ? round($price / $motor_power, 2) : null,
+                'price_per_wh'          => $battery_capacity && $battery_capacity > 0 ? round($price / $battery_capacity, 2) : null,
+            ];
+        }
+
+        return $value_metrics;
+    }
+
+    /**
+     * Get price for a specific geo region.
+     *
+     * Looks up the current price from the product's price_history field
+     * which is populated earlier in the rebuild process.
+     *
+     * @param int    $product_id The product post ID.
+     * @param string $geo        The region code (US, GB, EU, CA, AU).
+     * @return float|null The price or null if not available.
+     */
+    private function get_price_for_geo(int $product_id, string $geo): ?float {
+        // Try ACF price_history field first (legacy).
+        $price_history = get_field('price_history', $product_id);
+        if (!empty($price_history) && is_array($price_history)) {
+            foreach ($price_history as $entry) {
+                if (($entry['geo'] ?? '') === $geo && !empty($entry['price'])) {
+                    return (float) $entry['price'];
+                }
+            }
+        }
+
+        // Try the cached price data we just built (price_history in product_data).
+        // This is more reliable as it's computed fresh.
+        $cached = $this->product_cache->get($product_id);
+        if (!empty($cached['price_history'][$geo]['current_price'])) {
+            return (float) $cached['price_history'][$geo]['current_price'];
+        }
+
+        return null;
+    }
+
+    /**
+     * Add computed specs for e-bikes (non-price efficiency metrics only).
+     *
+     * Price-based metrics are now calculated per-geo in calculate_geo_value_metrics().
+     *
+     * @param array $specs The product specs.
+     * @return array The specs with computed values.
+     */
+    private function add_ebike_computed_specs(array $specs): array {
+        $ebike_data = $specs['e-bikes'];
+
+        // Extract common values.
+        $weight = null;
+        if (isset($ebike_data['weight_and_capacity']['weight']) && is_numeric($ebike_data['weight_and_capacity']['weight'])) {
+            $weight = (float) $ebike_data['weight_and_capacity']['weight'];
+        }
+
+        $range = null;
+        if (isset($ebike_data['battery']['range']) && is_numeric($ebike_data['battery']['range'])) {
+            $range = (float) $ebike_data['battery']['range'];
+        }
+
+        $capacity = null;
+        if (isset($ebike_data['battery']['battery_capacity']) && is_numeric($ebike_data['battery']['battery_capacity'])) {
+            $capacity = (float) $ebike_data['battery']['battery_capacity'];
+        }
+
+        $power_nominal = null;
+        if (isset($ebike_data['motor']['power_nominal']) && is_numeric($ebike_data['motor']['power_nominal'])) {
+            $power_nominal = (float) $ebike_data['motor']['power_nominal'];
+        }
+
+        $top_speed = null;
+        if (isset($ebike_data['speed_and_class']['top_assist_speed']) && is_numeric($ebike_data['speed_and_class']['top_assist_speed'])) {
+            $top_speed = (float) $ebike_data['speed_and_class']['top_assist_speed'];
+        }
+
+        // === Non-price efficiency metrics ===
         if ($weight !== null && $weight > 0) {
-            // Speed per lb.
+            // Speed per pound.
             if ($top_speed !== null) {
                 $specs['speed_per_lb'] = round($top_speed / $weight, 2);
             }
-            // Range per lb.
+
+            // Range per pound.
             if ($range !== null) {
                 $specs['range_per_lb'] = round($range / $weight, 2);
             }
+
+            // Battery capacity per pound.
+            if ($capacity !== null) {
+                $specs['wh_per_lb'] = round($capacity / $weight, 2);
+            }
+
+            // Power per pound.
+            if ($power_nominal !== null) {
+                $specs['watts_per_lb'] = round($power_nominal / $weight, 2);
+            }
+        }
+
+        return $specs;
+    }
+
+    /**
+     * Add computed specs for e-scooters and other types (non-price efficiency metrics only).
+     *
+     * Handles both flat (legacy) and nested (new ACF structure) field locations.
+     * Price-based metrics are now calculated per-geo in calculate_geo_value_metrics().
+     *
+     * @param array $specs The product specs.
+     * @return array The specs with computed values.
+     */
+    private function add_scooter_computed_specs(array $specs): array {
+        // Helper to get value from flat or nested e-scooters structure.
+        $get_value = function (string ...$paths) use ($specs): ?float {
+            foreach ($paths as $path) {
+                // Check flat key first.
+                if (isset($specs[$path]) && is_numeric($specs[$path])) {
+                    return (float) $specs[$path];
+                }
+
+                // Check nested path (e.g., 'e-scooters.dimensions.weight').
+                $parts = explode('.', $path);
+                $value = $specs;
+                foreach ($parts as $part) {
+                    if (!is_array($value) || !isset($value[$part])) {
+                        $value = null;
+                        break;
+                    }
+                    $value = $value[$part];
+                }
+                if ($value !== null && is_numeric($value)) {
+                    return (float) $value;
+                }
+            }
+            return null;
+        };
+
+        // Get values from various possible locations.
+        $weight = $get_value('weight', 'e-scooters.dimensions.weight', 'dimensions.weight');
+        $top_speed = $get_value('tested_top_speed', 'manufacturer_top_speed');
+        $range = $get_value('manufacturer_range');
+        $tested_range = $get_value('tested_range_regular');
+        $battery = $get_value('battery_capacity', 'e-scooters.battery.capacity', 'battery.capacity');
+        $max_weight_capacity = $get_value('max_weight_capacity');
+
+        // === Non-price efficiency metrics ===
+        if ($weight !== null && $weight > 0) {
+            // Speed per lb (use tested speed if available, otherwise claimed).
+            if ($top_speed !== null) {
+                $specs['speed_per_lb'] = round($top_speed / $weight, 2);
+            }
+
+            // Range per lb (claimed).
+            if ($range !== null) {
+                $specs['range_per_lb'] = round($range / $weight, 2);
+            }
+
             // Tested range per lb.
             if ($tested_range !== null) {
                 $specs['tested_range_per_lb'] = round($tested_range / $weight, 2);
+            }
+
+            // Battery capacity per pound (Wh/lb).
+            if ($battery !== null) {
+                $specs['wh_per_lb'] = round($battery / $weight, 2);
             }
         }
 
@@ -1163,76 +1211,6 @@ class CacheRebuildJob implements CronJobInterface {
             if ($range !== null) {
                 $specs['range_per_lb_capacity'] = round($range / $max_weight_capacity, 2);
             }
-        }
-
-        // === Price-based metrics (require price) ===
-        if (!$has_price) {
-            return $specs;
-        }
-
-        // Price vs Weight.
-        if ($weight !== null && $weight > 0) {
-            $specs['price_per_lb'] = round($price / $weight, 2);
-        }
-
-        // Price vs Speed.
-        if ($top_speed !== null && $top_speed > 0) {
-            $specs['price_per_mph'] = round($price / $top_speed, 2);
-        }
-
-        // Price vs Range.
-        if ($range !== null && $range > 0) {
-            $specs['price_per_mile_range'] = round($price / $range, 2);
-        }
-
-        // Price vs Battery.
-        if ($battery !== null && $battery > 0) {
-            $specs['price_per_wh'] = round($price / $battery, 2);
-        }
-
-        // Price vs Motor Power.
-        if ($motor_power !== null && $motor_power > 0) {
-            $specs['price_per_watt'] = round($price / $motor_power, 2);
-        }
-
-        // Price vs Payload Capacity.
-        if ($max_load !== null && $max_load > 0) {
-            $specs['price_per_lb_capacity'] = round($price / $max_load, 2);
-        }
-
-        // Price vs Tested Range.
-        if ($tested_range !== null && $tested_range > 0) {
-            $specs['price_per_tested_mile'] = round($price / $tested_range, 2);
-        }
-
-        // Price vs Tested Top Speed.
-        if ($tested_speed !== null && $tested_speed > 0) {
-            $specs['price_per_tested_mph'] = round($price / $tested_speed, 2);
-        }
-
-        // Price vs Brake Distance.
-        if ($brake_distance !== null && $brake_distance > 0) {
-            $specs['price_per_brake_ft'] = round($price / $brake_distance, 2);
-        }
-
-        // Price vs Hill Climbing.
-        if ($hill_climbing !== null && $hill_climbing > 0) {
-            $specs['price_per_hill_degree'] = round($price / $hill_climbing, 2);
-        }
-
-        // Price vs Acceleration.
-        $acceleration_speeds = ['0-15', '0-20', '0-25', '0-30'];
-        foreach ($acceleration_speeds as $speed) {
-            $accel = $get_value("acceleration_{$speed}_mph");
-            if ($accel !== null && $accel > 0) {
-                $specs["price_per_acc_{$speed}_mph"] = round($price / $accel, 2);
-            }
-        }
-
-        // Acceleration 0-to-top.
-        $accel_top = $get_value('acceleration_0-to-top');
-        if ($accel_top !== null && $accel_top > 0) {
-            $specs['price_per_acc_0-to-top'] = round($price / $accel_top, 2);
         }
 
         return $specs;

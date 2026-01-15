@@ -3207,3 +3207,768 @@ function erh_get_listicle_key_specs( int $product_id, string $category_key ): ar
 	// Return max 6 specs.
 	return array_slice( $result, 0, 6 );
 }
+
+// =============================================================================
+// COMPARE PAGE SSR FUNCTIONS
+// =============================================================================
+
+/**
+ * Get compare spec groups config for SSR (mirrors JS compare-config.js).
+ *
+ * @param string $category Category key (escooter, ebike, etc.).
+ * @return array Spec groups with higherBetter, format, geoAware flags.
+ */
+function erh_get_compare_spec_groups( string $category ): array {
+	$configs = array(
+		'escooter' => array(
+			'Motor Performance' => array(
+				'icon'  => 'zap',
+				'specs' => array(
+					array( 'key' => 'tested_top_speed', 'label' => 'Top Speed (Tested)', 'unit' => 'mph', 'higherBetter' => true, 'tooltip' => 'Our real-world test result with a 175 lbs rider' ),
+					array( 'key' => 'manufacturer_top_speed', 'label' => 'Top Speed (Claimed)', 'unit' => 'mph', 'higherBetter' => true, 'tooltip' => 'What the manufacturer claims' ),
+					array( 'key' => 'motor.power_nominal', 'label' => 'Nominal Power', 'unit' => 'W', 'higherBetter' => true, 'tooltip' => 'Combined if dual motors' ),
+					array( 'key' => 'motor.power_peak', 'label' => 'Peak Power', 'unit' => 'W', 'higherBetter' => true, 'tooltip' => 'Maximum output under load' ),
+					array( 'key' => 'motor.voltage', 'label' => 'Voltage', 'unit' => 'V', 'higherBetter' => true ),
+					array( 'key' => 'motor.motor_position', 'label' => 'Motor Config', 'tooltip' => 'Single rear, dual, etc.' ),
+					array( 'key' => 'hill_climbing', 'label' => 'Hill Climb (Tested)', 'unit' => 's', 'higherBetter' => false, 'tooltip' => 'Time to climb our 250ft test hill at 8% average grade. 175 lbs rider' ),
+					array( 'key' => 'max_incline', 'label' => 'Hill Grade (Claimed)', 'unit' => '°', 'higherBetter' => true, 'tooltip' => 'Maximum incline the manufacturer claims' ),
+					array( 'key' => 'acceleration_0_15_mph', 'label' => '0-15 mph (Tested)', 'unit' => 's', 'higherBetter' => false, 'tooltip' => 'Average across 10+ test runs. 175 lbs rider' ),
+					array( 'key' => 'acceleration_0_20_mph', 'label' => '0-20 mph (Tested)', 'unit' => 's', 'higherBetter' => false, 'tooltip' => 'Average across 10+ test runs. 175 lbs rider' ),
+					array( 'key' => 'acceleration_0_25_mph', 'label' => '0-25 mph (Tested)', 'unit' => 's', 'higherBetter' => false, 'tooltip' => 'Average across 10+ test runs. 175 lbs rider' ),
+					array( 'key' => 'acceleration_0_30_mph', 'label' => '0-30 mph (Tested)', 'unit' => 's', 'higherBetter' => false, 'tooltip' => 'Average across 10+ test runs. 175 lbs rider' ),
+					array( 'key' => 'acceleration_0_to_top', 'label' => '0-Top Speed (Tested)', 'unit' => 's', 'higherBetter' => false, 'tooltip' => 'Average across 10+ test runs. 175 lbs rider' ),
+				),
+			),
+			'Range & Battery' => array(
+				'icon'  => 'battery',
+				'specs' => array(
+					array( 'key' => 'tested_range_fast', 'label' => 'Range - Fast (Tested)', 'unit' => 'mi', 'higherBetter' => true, 'tooltip' => 'Range at high speed riding. 175 lbs rider' ),
+					array( 'key' => 'tested_range_regular', 'label' => 'Range - Regular (Tested)', 'unit' => 'mi', 'higherBetter' => true, 'tooltip' => 'Range at normal riding pace. 175 lbs rider' ),
+					array( 'key' => 'tested_range_slow', 'label' => 'Range - Slow (Tested)', 'unit' => 'mi', 'higherBetter' => true, 'tooltip' => 'Range in eco mode, prioritizing distance over speed. 175 lbs rider' ),
+					array( 'key' => 'manufacturer_range', 'label' => 'Range (Claimed)', 'unit' => 'mi', 'higherBetter' => true, 'tooltip' => 'What the manufacturer claims. Wh is often a better comparison metric' ),
+					array( 'key' => 'battery.capacity', 'label' => 'Battery Capacity', 'unit' => 'Wh', 'higherBetter' => true, 'tooltip' => 'Watt-hours = Voltage × Amp-hours' ),
+					array( 'key' => 'battery.ah', 'label' => 'Amp Hours', 'unit' => 'Ah', 'higherBetter' => true, 'tooltip' => 'Battery capacity in amp-hours' ),
+					array( 'key' => 'battery.voltage', 'label' => 'Battery Voltage', 'unit' => 'V', 'higherBetter' => true ),
+					array( 'key' => 'battery.charging_time', 'label' => 'Charge Time', 'unit' => 'h', 'higherBetter' => false, 'tooltip' => 'Time to full charge with the included charger' ),
+					array( 'key' => 'battery.battery_type', 'label' => 'Battery Type' ),
+				),
+			),
+			'Ride Quality' => array(
+				'icon'  => 'smile',
+				'specs' => array(
+					array( 'key' => 'suspension.type', 'label' => 'Suspension', 'format' => 'suspensionArray', 'higherBetter' => true, 'tooltip' => 'Dual suspension wins, then hydraulic, spring, rubber' ),
+					array( 'key' => 'suspension.adjustable', 'label' => 'Adjustable Suspension', 'format' => 'boolean', 'higherBetter' => true ),
+					array( 'key' => 'wheels.tire_type', 'label' => 'Tire Type', 'format' => 'tire' ),
+					array( 'key' => 'wheels.tire_size_front', 'label' => 'Front Tire Size', 'unit' => '"', 'higherBetter' => true ),
+					array( 'key' => 'wheels.tire_size_rear', 'label' => 'Rear Tire Size', 'unit' => '"', 'higherBetter' => true ),
+					array( 'key' => 'wheels.tire_width', 'label' => 'Tire Width', 'unit' => '"', 'higherBetter' => true ),
+					array( 'key' => 'dimensions.deck_length', 'label' => 'Deck Length', 'unit' => '"', 'higherBetter' => true ),
+					array( 'key' => 'dimensions.deck_width', 'label' => 'Deck Width', 'unit' => '"', 'higherBetter' => true ),
+					array( 'key' => 'dimensions.ground_clearance', 'label' => 'Ground Clearance', 'unit' => '"', 'tooltip' => 'More is not always better - depends on riding style' ),
+					array( 'key' => 'dimensions.handlebar_height_min', 'label' => 'Handlebar Height (min)', 'unit' => '"', 'tooltip' => 'Personal preference - depends on rider height' ),
+					array( 'key' => 'dimensions.handlebar_height_max', 'label' => 'Handlebar Height (max)', 'unit' => '"', 'tooltip' => 'Personal preference - depends on rider height' ),
+					array( 'key' => 'dimensions.handlebar_width', 'label' => 'Handlebar Width', 'unit' => '"', 'higherBetter' => true, 'tooltip' => 'Wider bars provide more control and stability' ),
+					array( 'key' => 'other.footrest', 'label' => 'Footrest', 'format' => 'boolean', 'higherBetter' => true ),
+					array( 'key' => 'other.terrain', 'label' => 'Terrain Type' ),
+				),
+			),
+			'Portability & Fit' => array(
+				'icon'  => 'box',
+				'specs' => array(
+					array( 'key' => 'dimensions.weight', 'label' => 'Weight', 'unit' => 'lbs', 'higherBetter' => false ),
+					array( 'key' => 'dimensions.max_load', 'label' => 'Max Rider Weight', 'unit' => 'lbs', 'higherBetter' => true ),
+					array( 'key' => 'dimensions.folded_length', 'label' => 'Folded Length', 'unit' => '"', 'higherBetter' => false ),
+					array( 'key' => 'dimensions.folded_width', 'label' => 'Folded Width', 'unit' => '"', 'higherBetter' => false ),
+					array( 'key' => 'dimensions.folded_height', 'label' => 'Folded Height', 'unit' => '"', 'higherBetter' => false ),
+					array( 'key' => 'dimensions.foldable_handlebars', 'label' => 'Foldable Bars', 'format' => 'boolean', 'higherBetter' => true ),
+					array( 'key' => 'other.fold_location', 'label' => 'Fold Mechanism' ),
+					array( 'key' => 'speed_per_lb', 'label' => 'mph/lb', 'format' => 'decimal', 'higherBetter' => true, 'tooltip' => 'Top speed divided by weight. Higher = more speed per pound of scooter', 'valueUnit' => 'mph/lb' ),
+					array( 'key' => 'wh_per_lb', 'label' => 'Wh/lb', 'format' => 'decimal', 'higherBetter' => true, 'tooltip' => 'Battery capacity divided by weight. Higher = more energy storage per pound', 'valueUnit' => 'Wh/lb' ),
+					array( 'key' => 'tested_range_per_lb', 'label' => 'mi/lb', 'format' => 'decimal', 'higherBetter' => true, 'tooltip' => 'Tested range divided by weight. Higher = more miles per pound of scooter', 'valueUnit' => 'mi/lb' ),
+				),
+			),
+			'Safety' => array(
+				'icon'  => 'shield',
+				'specs' => array(
+					array( 'key' => 'brakes.front', 'label' => 'Front Brake', 'format' => 'brakeType', 'tooltip' => 'Best brake type depends on scooter speed and weight', 'noWinner' => true ),
+					array( 'key' => 'brakes.rear', 'label' => 'Rear Brake', 'format' => 'brakeType', 'tooltip' => 'Best brake type depends on scooter speed and weight', 'noWinner' => true ),
+					array( 'key' => 'brakes.regenerative', 'label' => 'Regen Braking', 'format' => 'boolean', 'higherBetter' => true ),
+					array( 'key' => 'brake_distance', 'label' => 'Brake Distance (Tested)', 'unit' => 'ft', 'higherBetter' => false, 'tooltip' => 'Stopping distance from 15 mph. 175 lbs rider' ),
+					array( 'key' => 'lighting.lights', 'label' => 'Lights', 'format' => 'array' ),
+					array( 'key' => 'lighting.turn_signals', 'label' => 'Turn Signals', 'format' => 'boolean', 'higherBetter' => true ),
+				),
+			),
+			'Features' => array(
+				'icon'  => 'settings',
+				'specs' => array(
+					array( 'key' => 'features', 'label' => 'Features', 'format' => 'featureArray' ),
+					array( 'key' => 'other.display_type', 'label' => 'Display', 'format' => 'displayType' ),
+					array( 'key' => 'other.throttle_type', 'label' => 'Throttle' ),
+					array( 'key' => 'other.kickstand', 'label' => 'Kickstand', 'format' => 'boolean', 'higherBetter' => true ),
+				),
+			),
+			'Maintenance' => array(
+				'icon'  => 'tool',
+				'specs' => array(
+					array( 'key' => 'wheels.tire_type', 'label' => 'Tire Type', 'format' => 'tire', 'tooltip' => 'Solid = no flats, Pneumatic = more comfort' ),
+					array( 'key' => 'wheels.self_healing', 'label' => 'Self-Healing Tires', 'format' => 'boolean', 'higherBetter' => true ),
+					array( 'key' => 'other.ip_rating', 'label' => 'IP Rating', 'format' => 'ip', 'higherBetter' => true, 'tooltip' => 'Water/dust resistance' ),
+				),
+			),
+			'Value Analysis' => array(
+				'icon'           => 'dollar-sign',
+				'isValueSection' => true,
+				'specs'          => array(
+					array( 'key' => 'value_metrics.{geo}.price_per_tested_mile', 'label' => '{symbol}/mi', 'higherBetter' => false, 'format' => 'currency', 'geoAware' => true, 'tooltip' => 'Price divided by tested range. Lower = more miles for your money', 'valueUnit' => '/mi' ),
+					array( 'key' => 'value_metrics.{geo}.price_per_mph', 'label' => '{symbol}/mph', 'higherBetter' => false, 'format' => 'currency', 'geoAware' => true, 'tooltip' => 'Price divided by top speed. Lower = more speed for your money', 'valueUnit' => '/mph' ),
+					array( 'key' => 'value_metrics.{geo}.price_per_watt', 'label' => '{symbol}/W', 'higherBetter' => false, 'format' => 'currency', 'geoAware' => true, 'tooltip' => 'Price divided by motor power. Lower = more power for your money', 'valueUnit' => '/W' ),
+					array( 'key' => 'value_metrics.{geo}.price_per_wh', 'label' => '{symbol}/Wh', 'higherBetter' => false, 'format' => 'currency', 'geoAware' => true, 'tooltip' => 'Price divided by battery capacity. Lower = more energy storage for your money', 'valueUnit' => '/Wh' ),
+				),
+			),
+		),
+		'ebike' => array(
+			'Motor & Power' => array(
+				'icon'  => 'zap',
+				'specs' => array(
+					array( 'key' => 'e-bikes.motor.power_nominal', 'label' => 'Motor Power', 'unit' => 'W', 'higherBetter' => true ),
+					array( 'key' => 'e-bikes.motor.power_peak', 'label' => 'Peak Power', 'unit' => 'W', 'higherBetter' => true ),
+					array( 'key' => 'e-bikes.motor.torque', 'label' => 'Torque', 'unit' => 'Nm', 'higherBetter' => true ),
+					array( 'key' => 'e-bikes.motor.type', 'label' => 'Motor Type' ),
+					array( 'key' => 'e-bikes.motor.position', 'label' => 'Motor Position' ),
+				),
+			),
+			'Range & Battery' => array(
+				'icon'  => 'battery',
+				'specs' => array(
+					array( 'key' => 'e-bikes.battery.range_claimed', 'label' => 'Claimed Range', 'unit' => 'mi', 'higherBetter' => true ),
+					array( 'key' => 'e-bikes.battery.capacity', 'label' => 'Battery', 'unit' => 'Wh', 'higherBetter' => true ),
+					array( 'key' => 'e-bikes.battery.voltage', 'label' => 'Voltage', 'unit' => 'V', 'higherBetter' => true ),
+					array( 'key' => 'e-bikes.battery.removable', 'label' => 'Removable Battery', 'format' => 'boolean', 'higherBetter' => true ),
+					array( 'key' => 'e-bikes.battery.charge_time', 'label' => 'Charge Time', 'unit' => 'h', 'higherBetter' => false ),
+				),
+			),
+			'Speed & Performance' => array(
+				'icon'  => 'gauge',
+				'specs' => array(
+					array( 'key' => 'e-bikes.performance.top_speed', 'label' => 'Top Speed', 'unit' => 'mph', 'higherBetter' => true ),
+					array( 'key' => 'e-bikes.performance.class', 'label' => 'Class' ),
+					array( 'key' => 'e-bikes.performance.pedal_assist_levels', 'label' => 'Assist Levels', 'higherBetter' => true ),
+					array( 'key' => 'e-bikes.performance.throttle', 'label' => 'Throttle', 'format' => 'boolean' ),
+				),
+			),
+			'Build & Frame' => array(
+				'icon'  => 'box',
+				'specs' => array(
+					array( 'key' => 'e-bikes.frame.weight', 'label' => 'Weight', 'unit' => 'lbs', 'higherBetter' => false ),
+					array( 'key' => 'e-bikes.frame.max_load', 'label' => 'Max Load', 'unit' => 'lbs', 'higherBetter' => true ),
+					array( 'key' => 'e-bikes.frame.material', 'label' => 'Frame Material' ),
+					array( 'key' => 'e-bikes.frame.type', 'label' => 'Frame Type' ),
+					array( 'key' => 'e-bikes.frame.suspension', 'label' => 'Suspension', 'format' => 'suspension' ),
+					array( 'key' => 'e-bikes.frame.foldable', 'label' => 'Foldable', 'format' => 'boolean' ),
+				),
+			),
+			'Components' => array(
+				'icon'  => 'settings',
+				'specs' => array(
+					array( 'key' => 'e-bikes.components.gears', 'label' => 'Gears' ),
+					array( 'key' => 'e-bikes.components.brakes', 'label' => 'Brakes' ),
+					array( 'key' => 'e-bikes.components.wheel_size', 'label' => 'Wheel Size', 'unit' => '"' ),
+					array( 'key' => 'e-bikes.components.tire_type', 'label' => 'Tire Type' ),
+					array( 'key' => 'e-bikes.components.display', 'label' => 'Display' ),
+					array( 'key' => 'e-bikes.components.lights', 'label' => 'Lights' ),
+				),
+			),
+		),
+	);
+
+	return $configs[ $category ] ?? array();
+}
+
+/**
+ * Get currency symbol for geo region.
+ *
+ * @param string $geo Geo region code.
+ * @return string Currency symbol.
+ */
+function erh_get_currency_symbol( string $geo ): string {
+	$symbols = array(
+		'US' => '$',
+		'GB' => '£',
+		'EU' => '€',
+		'CA' => 'C$',
+		'AU' => 'A$',
+	);
+	return $symbols[ $geo ] ?? '$';
+}
+
+/**
+ * Get multiple products from product_data cache for comparison.
+ *
+ * @param int[]  $product_ids Product IDs.
+ * @param string $geo         User's geo region.
+ * @return array[] Products with enriched pricing data.
+ */
+function erh_get_compare_products( array $product_ids, string $geo = 'US' ): array {
+	$product_cache = new ERH\Database\ProductCache();
+	$products      = array();
+
+	foreach ( $product_ids as $id ) {
+		$data = $product_cache->get( (int) $id );
+		if ( ! $data ) {
+			continue;
+		}
+
+		// Enrich with geo-specific pricing.
+		$price_history  = $data['price_history'] ?? array();
+		$region_pricing = $price_history[ $geo ] ?? $price_history['US'] ?? array();
+
+		// Flatten specs (move e-scooters/e-bikes nested content to top level).
+		$raw_specs = $data['specs'] ?? array();
+		$specs     = erh_flatten_compare_specs( $raw_specs, $data['product_type'] ?? '' );
+
+		// Extract score from specs.scores.overall (calculated by CacheRebuildJob).
+		$score = $specs['scores']['overall'] ?? null;
+
+		$products[] = array(
+			'id'            => $data['product_id'],
+			'name'          => $data['name'],
+			'slug'          => get_post_field( 'post_name', $data['product_id'] ),
+			'url'           => $data['permalink'],
+			'thumbnail'     => $data['image_url'],
+			'specs'         => $specs,
+			'rating'        => $score,
+			'current_price' => $region_pricing['current_price'] ?? null,
+			'currency'      => class_exists( 'ERH\\GeoConfig' ) ? \ERH\GeoConfig::get_currency( $geo ) : 'USD',
+			'retailer'      => $region_pricing['retailer'] ?? null,
+			'buy_link'      => $region_pricing['tracked_url'] ?? null,
+			'in_stock'      => $region_pricing['instock'] ?? false,
+			'avg_3m'        => $region_pricing['avg_3m'] ?? null,
+		);
+	}
+
+	return $products;
+}
+
+/**
+ * Check if any product has pricing data in any geo region.
+ *
+ * Used to determine if Value Analysis section should be shown at all.
+ *
+ * @param array $product_ids Product IDs to check.
+ * @return bool True if at least one product has pricing in any geo.
+ */
+function erh_any_product_has_pricing( array $product_ids ): bool {
+	$product_cache = new ERH\Database\ProductCache();
+	$geos          = array( 'US', 'GB', 'EU', 'CA', 'AU' );
+
+	foreach ( $product_ids as $id ) {
+		$data = $product_cache->get( (int) $id );
+		if ( ! $data ) {
+			continue;
+		}
+
+		$price_history = $data['price_history'] ?? array();
+		foreach ( $geos as $geo ) {
+			if ( ! empty( $price_history[ $geo ]['current_price'] ) ) {
+				return true;
+			}
+		}
+	}
+
+	return false;
+}
+
+/**
+ * Flatten nested product specs for comparison.
+ *
+ * Moves product-type-specific nested content (e.g., e-scooters.motor) to top level
+ * so spec keys like 'motor.power_nominal' work directly.
+ *
+ * @param array  $specs        Raw specs from product_data table.
+ * @param string $product_type Product type (e.g., 'Electric Scooter').
+ * @return array Flattened specs.
+ */
+function erh_flatten_compare_specs( array $specs, string $product_type ): array {
+	// Map product type to nested field group key.
+	$nested_keys = array(
+		'Electric Scooter'    => 'e-scooters',
+		'Electric Bike'       => 'e-bikes',
+		'Electric Skateboard' => 'e-skateboards',
+		'Electric Unicycle'   => 'e-unicycles',
+		'Hoverboard'          => 'hoverboards',
+	);
+
+	// Fields to exclude from output.
+	$exclude = array( 'product_type', 'big_thumbnail', 'gallery', 'product_video', 'coupon', 'related_products', 'is_obsolete', 'variants' );
+
+	$nested_key = $nested_keys[ $product_type ] ?? null;
+	$output     = array();
+
+	// If nested group exists, move its contents to top level.
+	if ( $nested_key && isset( $specs[ $nested_key ] ) && is_array( $specs[ $nested_key ] ) ) {
+		// Copy nested group contents to output.
+		$output = $specs[ $nested_key ];
+
+		// Also include top-level fields (tested values, computed metrics, etc.).
+		foreach ( $specs as $key => $value ) {
+			if ( $key === $nested_key || in_array( $key, $exclude, true ) ) {
+				continue;
+			}
+			$output[ $key ] = $value;
+		}
+	} else {
+		// No nested structure - just filter exclusions.
+		foreach ( $specs as $key => $value ) {
+			if ( in_array( $key, $exclude, true ) ) {
+				continue;
+			}
+			$output[ $key ] = $value;
+		}
+	}
+
+	return $output;
+}
+
+/**
+ * Calculate advantages for each product in a comparison.
+ *
+ * Determines which categories each product leads in based on scores.
+ *
+ * @param array[] $products   Products from erh_get_compare_products().
+ * @param array   $categories Category score keys to label mapping.
+ * @return array[] Array of advantages per product index.
+ */
+function erh_calculate_product_advantages( array $products, array $categories ): array {
+	$advantages = array_fill( 0, count( $products ), array() );
+	$threshold  = 5; // Minimum % difference to count as advantage.
+	$max_adv    = 4; // Max advantages per product.
+
+	foreach ( $categories as $key => $label ) {
+		// Get scores for this category from all products.
+		$scores = array();
+		foreach ( $products as $idx => $product ) {
+			$scores[ $idx ] = $product['specs']['scores'][ $key ] ?? 0;
+		}
+
+		// Find the best score.
+		$max_score = max( $scores );
+		if ( $max_score <= 0 ) {
+			continue;
+		}
+
+		// Find winner(s) - products with the best score.
+		$winners = array_keys( array_filter( $scores, fn( $s ) => $s === $max_score ) );
+
+		// Only award advantage if there's a single winner.
+		if ( count( $winners ) !== 1 ) {
+			continue;
+		}
+
+		$winner_idx   = $winners[0];
+		$winner_score = $scores[ $winner_idx ];
+
+		// Calculate best runner-up score.
+		$runner_up_scores = $scores;
+		unset( $runner_up_scores[ $winner_idx ] );
+		$runner_up_max = count( $runner_up_scores ) > 0 ? max( $runner_up_scores ) : 0;
+
+		// Calculate percentage difference.
+		if ( $runner_up_max > 0 ) {
+			$diff = round( ( ( $winner_score - $runner_up_max ) / $runner_up_max ) * 100 );
+		} else {
+			$diff = 100;
+		}
+
+		// Only count as advantage if above threshold.
+		if ( $diff >= $threshold && count( $advantages[ $winner_idx ] ) < $max_adv ) {
+			$advantages[ $winner_idx ][] = array(
+				'label'     => $label,
+				'diff'      => $diff,
+				'direction' => 'higher',
+			);
+		}
+	}
+
+	// Sort each product's advantages by diff (biggest first).
+	foreach ( $advantages as &$adv_list ) {
+		usort( $adv_list, fn( $a, $b ) => $b['diff'] - $a['diff'] );
+	}
+
+	return $advantages;
+}
+
+/**
+ * Get nested spec value using dot notation.
+ *
+ * @param array  $specs Specs array.
+ * @param string $key   Dot-notation key (e.g., 'motor.power_nominal').
+ * @return mixed|null Value or null if not found.
+ */
+function erh_get_nested_spec( array $specs, string $key ) {
+	if ( empty( $key ) ) {
+		return null;
+	}
+
+	// Direct key access if no dot.
+	if ( strpos( $key, '.' ) === false ) {
+		return $specs[ $key ] ?? null;
+	}
+
+	// Navigate nested path.
+	$parts   = explode( '.', $key );
+	$current = $specs;
+
+	foreach ( $parts as $part ) {
+		if ( ! is_array( $current ) || ! isset( $current[ $part ] ) ) {
+			return null;
+		}
+		$current = $current[ $part ];
+	}
+
+	return $current;
+}
+
+/**
+ * Check if all values in array are empty/null.
+ *
+ * @param array $values Values to check.
+ * @return bool True if all empty.
+ */
+function erh_all_values_empty( array $values ): bool {
+	foreach ( $values as $val ) {
+		if ( $val !== null && $val !== '' && $val !== array() ) {
+			return false;
+		}
+	}
+	return true;
+}
+
+/**
+ * Check if all values are the same (for diff toggle).
+ *
+ * @param array $values Values to check.
+ * @return bool True if all same.
+ */
+function erh_values_are_same( array $values ): bool {
+	$valid_values = array_filter( $values, function ( $v ) {
+		return $v !== null && $v !== '';
+	} );
+
+	if ( count( $valid_values ) <= 1 ) {
+		return true;
+	}
+
+	$first = null;
+	foreach ( $valid_values as $val ) {
+		$normalized = erh_normalize_spec_value( $val );
+		if ( $first === null ) {
+			$first = $normalized;
+		} elseif ( $normalized !== $first ) {
+			return false;
+		}
+	}
+
+	return true;
+}
+
+/**
+ * Normalize spec value for comparison.
+ *
+ * @param mixed $value Value to normalize.
+ * @return string Normalized string.
+ */
+function erh_normalize_spec_value( $value ): string {
+	if ( is_array( $value ) ) {
+		sort( $value );
+		return wp_json_encode( $value );
+	}
+	if ( is_bool( $value ) ) {
+		return $value ? 'true' : 'false';
+	}
+	return strtolower( trim( (string) $value ) );
+}
+
+/**
+ * Find winner indices for a spec row.
+ *
+ * @param array $values Spec values from each product.
+ * @param array $spec   Spec definition with higherBetter.
+ * @return int[] Indices of winning products (can be multiple for ties).
+ */
+function erh_find_spec_winners( array $values, array $spec ): array {
+	// Skip specs explicitly marked as noWinner or without higherBetter.
+	if ( ! empty( $spec['noWinner'] ) || ! isset( $spec['higherBetter'] ) ) {
+		return array();
+	}
+
+	// Extract numeric values.
+	$numeric_values = array();
+	foreach ( $values as $idx => $val ) {
+		if ( is_numeric( $val ) ) {
+			$numeric_values[ $idx ] = (float) $val;
+		}
+	}
+
+	if ( count( $numeric_values ) < 2 ) {
+		return array();
+	}
+
+	// Find best value.
+	$higher_better = $spec['higherBetter'];
+	$best_value    = $higher_better ? max( $numeric_values ) : min( $numeric_values );
+
+	// Tie threshold (3%).
+	$tie_threshold = 0.03;
+	$winners       = array();
+
+	foreach ( $numeric_values as $idx => $val ) {
+		if ( $best_value == 0 ) {
+			if ( $val == 0 ) {
+				$winners[] = $idx;
+			}
+		} else {
+			$diff = abs( $val - $best_value ) / abs( $best_value );
+			if ( $diff <= $tie_threshold ) {
+				$winners[] = $idx;
+			}
+		}
+	}
+
+	// Only return winners if not all tied.
+	if ( count( $winners ) === count( $numeric_values ) ) {
+		return array();
+	}
+
+	return $winners;
+}
+
+/**
+ * Format spec value for display.
+ *
+ * @param mixed  $value  Raw value.
+ * @param array  $spec   Spec definition.
+ * @param string $symbol Currency symbol.
+ * @return string Formatted value.
+ */
+function erh_format_compare_spec_value( $value, array $spec, string $symbol = '$' ): string {
+	if ( $value === null || $value === '' ) {
+		return '—';
+	}
+
+	$format = $spec['format'] ?? '';
+	$unit   = $spec['unit'] ?? '';
+
+	// Boolean format.
+	if ( $format === 'boolean' ) {
+		$is_yes = is_bool( $value ) ? $value : ( $value === 'Yes' || $value === 'yes' || $value === '1' || $value === true );
+		return $is_yes ? 'Yes' : 'No';
+	}
+
+	// Currency format (with optional unit suffix like "/Wh").
+	if ( $format === 'currency' ) {
+		if ( ! is_numeric( $value ) ) {
+			return '—';
+		}
+		$formatted = $symbol . number_format( (float) $value, 2 );
+		// Append valueUnit if specified (e.g., "/Wh", "/mph")
+		if ( ! empty( $spec['valueUnit'] ) ) {
+			$formatted .= $spec['valueUnit'];
+		}
+		return $formatted;
+	}
+
+	// Decimal format (with optional unit suffix like "mph/lb").
+	if ( $format === 'decimal' ) {
+		if ( ! is_numeric( $value ) ) {
+			return '—';
+		}
+		$formatted = number_format( (float) $value, 2 );
+		// Append valueUnit if specified (e.g., "mph/lb", "Wh/lb")
+		if ( ! empty( $spec['valueUnit'] ) ) {
+			$formatted .= ' ' . $spec['valueUnit'];
+		}
+		return $formatted;
+	}
+
+	// Array format.
+	if ( $format === 'array' || $format === 'suspensionArray' ) {
+		if ( is_array( $value ) ) {
+			return implode( ', ', array_filter( $value ) );
+		}
+		return (string) $value;
+	}
+
+	// Feature array - special handling (expanded in template).
+	if ( $format === 'featureArray' ) {
+		if ( is_array( $value ) ) {
+			return implode( ', ', array_filter( $value ) );
+		}
+		return (string) $value;
+	}
+
+	// IP rating format.
+	if ( $format === 'ip' ) {
+		return (string) $value;
+	}
+
+	// Default: value with unit.
+	$formatted = is_numeric( $value ) ? number_format( (float) $value, is_float( $value + 0 ) && $value != floor( $value ) ? 1 : 0 ) : (string) $value;
+
+	return $unit ? $formatted . ' ' . $unit : $formatted;
+}
+
+/**
+ * Build compare spec rows with winner detection and diff tracking.
+ *
+ * @param array[] $products Products from erh_get_compare_products().
+ * @param array   $specs    Spec definitions.
+ * @param string  $geo      Geo region.
+ * @param string  $symbol   Currency symbol.
+ * @return array[] Rows with label, values, winners, all_same.
+ */
+function erh_build_compare_spec_rows( array $products, array $specs, string $geo, string $symbol ): array {
+	$rows = array();
+
+	foreach ( $specs as $spec ) {
+		// Resolve geo placeholders.
+		$key   = str_replace( '{geo}', $geo, $spec['key'] );
+		$label = str_replace( '{symbol}', $symbol, $spec['label'] );
+
+		// Skip feature arrays - they're expanded separately.
+		if ( ( $spec['format'] ?? '' ) === 'featureArray' ) {
+			// Get all unique features across products.
+			$all_features = array();
+			foreach ( $products as $product ) {
+				$features = erh_get_nested_spec( $product['specs'], $key );
+				if ( is_array( $features ) ) {
+					$all_features = array_merge( $all_features, $features );
+				}
+			}
+			$all_features = array_unique( $all_features );
+			sort( $all_features );
+
+			// Create a row for each feature.
+			foreach ( $all_features as $feature ) {
+				$feature_values = array();
+				foreach ( $products as $product ) {
+					$product_features = erh_get_nested_spec( $product['specs'], $key );
+					$has_feature      = is_array( $product_features ) && in_array( $feature, $product_features, true );
+					$feature_values[] = $has_feature;
+				}
+
+				$rows[] = array(
+					'label'    => $feature,
+					'key'      => $key . '.' . sanitize_title( $feature ),
+					'spec'     => array( 'format' => 'boolean', 'higherBetter' => true ),
+					'values'   => $feature_values,
+					'winners'  => array(), // Don't show winners for features.
+					'all_same' => erh_values_are_same( $feature_values ),
+					'is_bool'  => true,
+				);
+			}
+			continue;
+		}
+
+		// Get values from each product.
+		$values = array_map( function ( $p ) use ( $key ) {
+			return erh_get_nested_spec( $p['specs'], $key );
+		}, $products );
+
+		// Skip if all values missing.
+		if ( erh_all_values_empty( $values ) ) {
+			continue;
+		}
+
+		// Detect winners.
+		$winners = erh_find_spec_winners( $values, $spec );
+
+		// Check if all values are the same.
+		$all_same = erh_values_are_same( $values );
+
+		$rows[] = array(
+			'label'    => $label,
+			'key'      => $key,
+			'spec'     => $spec,
+			'values'   => $values,
+			'winners'  => $winners,
+			'all_same' => $all_same,
+			'is_bool'  => ( $spec['format'] ?? '' ) === 'boolean',
+		);
+	}
+
+	return $rows;
+}
+
+/**
+ * Render a single compare spec row.
+ *
+ * @param array   $row      Row data from erh_build_compare_spec_rows().
+ * @param array[] $products Products.
+ * @param string  $symbol   Currency symbol.
+ */
+function erh_render_compare_spec_row( array $row, array $products, string $symbol = '$' ): void {
+	$same_attr = $row['all_same'] ? ' data-same-values' : '';
+	$is_bool   = $row['is_bool'] ?? false;
+	$spec      = $row['spec'];
+	?>
+	<tr<?php echo $same_attr; ?>>
+		<td>
+			<div class="compare-spec-label">
+				<?php echo esc_html( $row['label'] ); ?>
+				<?php if ( ! empty( $spec['tooltip'] ) ) : ?>
+					<span class="info-trigger" data-tooltip="<?php echo esc_attr( $spec['tooltip'] ); ?>" data-tooltip-trigger="click">
+						<?php erh_the_icon( 'info', '', [ 'width' => '14', 'height' => '14' ] ); ?>
+					</span>
+				<?php endif; ?>
+			</div>
+		</td>
+		<?php foreach ( $row['values'] as $idx => $value ) : ?>
+			<?php
+			$is_winner = in_array( $idx, $row['winners'], true );
+			$formatted = erh_format_compare_spec_value( $value, $spec, $symbol );
+
+			// Handle boolean specs with green/red badges.
+			if ( $is_bool ) :
+				if ( $value === null || $value === '' ) :
+					?>
+					<td>—</td>
+					<?php
+				else :
+					$is_yes = is_bool( $value ) ? $value : ( $value === 'Yes' || $value === 'yes' || $value === '1' || $value === true );
+					$class  = $is_yes ? 'feature-yes' : 'feature-no';
+					$icon   = $is_yes ? 'check' : 'x';
+					$text   = $is_yes ? 'Yes' : 'No';
+					?>
+					<td class="<?php echo esc_attr( $class ); ?>">
+						<div class="compare-spec-value-inner">
+							<span class="compare-feature-badge">
+								<?php erh_the_icon( $icon ); ?>
+							</span>
+							<span class="compare-feature-text"><?php echo esc_html( $text ); ?></span>
+						</div>
+					</td>
+					<?php
+				endif;
+			// Handle winner cells with purple badge.
+			elseif ( $is_winner ) :
+				?>
+				<td class="is-winner">
+					<div class="compare-spec-value-inner">
+						<span class="compare-spec-badge">
+							<?php erh_the_icon( 'check' ); ?>
+						</span>
+						<span class="compare-spec-value-text"><?php echo esc_html( $formatted ); ?></span>
+					</div>
+				</td>
+				<?php
+			// Non-winner cells - plain text, no wrapper.
+			else :
+				?>
+				<td><?php echo esc_html( $formatted ); ?></td>
+				<?php
+			endif;
+			?>
+		<?php endforeach; ?>
+	</tr>
+	<?php
+}

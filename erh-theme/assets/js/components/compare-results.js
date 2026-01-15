@@ -36,11 +36,11 @@ const SELECTORS = {
     header: '[data-compare-header]',
     products: '[data-compare-products]',
     nav: '[data-compare-nav]',
+    navLinks: '[data-nav-links]',
     navLink: '[data-nav-link]',
     section: '[data-section]',
     overview: '[data-compare-overview]',
     specs: '[data-compare-specs]',
-    pricing: '[data-compare-pricing]',
     addModal: '#compare-add-modal',
     searchInput: '[data-compare-search]',
     searchResults: '[data-compare-results]',
@@ -52,6 +52,12 @@ const HEADER_HEIGHT = 72;
 const NAV_HEIGHT = 48;
 const SCROLL_OFFSET = HEADER_HEIGHT + NAV_HEIGHT + 24;
 
+// Layout constants for dynamic full-width calculation
+const CONTAINER_MAX_WIDTH = 1200;
+const CONTAINER_PADDING = 48; // 24px each side
+const LABEL_COL_WIDTH = 200;
+const PRODUCT_COL_MIN_WIDTH = 200;
+
 // =============================================================================
 // State
 // =============================================================================
@@ -61,6 +67,35 @@ let allProducts = [];
 let category = 'escooter';
 let userGeo = { geo: 'US', currency: 'USD' };
 let radarChart = null;
+let isFullWidthMode = false;
+let scrollSpyHandler = null;
+let isNavScrolling = false; // Prevents scroll spy during programmatic navigation
+
+// =============================================================================
+// Geo-Aware Spec Resolution
+// =============================================================================
+
+/**
+ * Resolve geo placeholders in a spec definition.
+ * Replaces {geo} in key and {symbol} in label with actual geo/currency values.
+ *
+ * @param {Object} spec - The spec definition from config
+ * @returns {Object} - Resolved spec with geo placeholders replaced
+ */
+function resolveGeoSpec(spec) {
+    if (!spec.geoAware) return spec;
+
+    const geo = userGeo.geo || 'US';
+    // Use symbol from getUserGeo() or derive from currency CODE (not geo code)
+    const symbol = userGeo.symbol || getCurrencySymbol(userGeo.currency || 'USD');
+
+    return {
+        ...spec,
+        key: spec.key.replace('{geo}', geo),
+        label: spec.label.replace('{symbol}', symbol),
+        currencySymbol: symbol, // Pass symbol to formatSpecValue() for currency formatting
+    };
+}
 
 // =============================================================================
 // Initialization
@@ -68,6 +103,10 @@ let radarChart = null;
 
 /**
  * Initialize compare page.
+ *
+ * Supports two modes:
+ * 1. SSR Hydration: Content is server-rendered, JS just attaches handlers
+ * 2. Client-side: JS fetches data and renders everything
  */
 export async function init() {
     const page = document.querySelector(SELECTORS.page);
@@ -87,8 +126,213 @@ export async function init() {
         userGeo = await getUserGeo();
     } catch (e) {
         console.warn('Geo detection failed, using defaults');
+        // Fallback to config if available
+        if (config.geo) {
+            userGeo = { geo: config.geo, currency: config.currencySymbol };
+        }
     }
 
+    // Check if content is server-rendered (SSR hydration mode)
+    const ssrMarker = document.querySelector('[data-ssr-rendered]');
+
+    if (ssrMarker) {
+        // SSR Hydration Mode: Content already rendered, just hydrate
+        await initHydrationMode(config);
+    } else {
+        // Client-side Mode: Fetch data and render
+        await initClientMode(config);
+    }
+}
+
+/**
+ * SSR Hydration Mode: Content is already rendered server-side.
+ * Just load product data and attach event handlers.
+ *
+ * @param {Object} config - Compare page config from PHP
+ */
+async function initHydrationMode(config) {
+    // Parse products from embedded JSON (already has geo pricing from PHP)
+    const productsJson = document.querySelector('[data-products-json]');
+    if (productsJson) {
+        try {
+            products = JSON.parse(productsJson.textContent || '[]');
+        } catch (e) {
+            console.error('Failed to parse products JSON:', e);
+            products = [];
+        }
+    }
+
+    // Load all products for search modal
+    await loadAllProducts();
+
+    // Update layout mode
+    updateLayoutMode();
+
+    // Hydrate price-related elements (not cached by PHP)
+    hydrateProductPricing();
+
+    // Hydrate Value Analysis section with geo-aware metrics
+    hydrateValueAnalysis();
+
+    // Render only the overview section (radar chart + advantages)
+    // Specs are already rendered by PHP
+    renderOverview();
+
+    // Attach all event handlers
+    setupScrollSpy();
+    setupAddProduct();
+    setupNavStuckState();
+    setupDiffToggle();
+    setupResizeHandler();
+    attachProductCardHandlers();
+
+    // Track view
+    trackComparisonView(config.productIds);
+
+    // Load related if curated
+    if (config.isCurated) {
+        loadRelatedComparisons(config.productIds, category);
+    }
+}
+
+/**
+ * Hydrate price-related elements in SSR product cards.
+ * Prices can't be cached so PHP renders placeholders, JS fills them.
+ */
+function hydrateProductPricing() {
+    products.forEach(p => {
+        const card = document.querySelector(`.compare-product[data-product-id="${p.id}"]`);
+        if (!card) return;
+
+        // Handle both camelCase (from enrichProduct) and snake_case (from PHP JSON)
+        const currentPrice = p.currentPrice || p.current_price;
+        const buyLink = p.buyLink || p.buy_link;
+        const hasPrice = currentPrice && p.retailer;
+        const price = hasPrice ? formatPrice(currentPrice, p.currency) : null;
+
+        // 1. Inject price overlay into image
+        const imageContainer = card.querySelector('.compare-product-image');
+        if (imageContainer && price) {
+            const priceRow = document.createElement('div');
+            priceRow.className = 'compare-product-price-row';
+            priceRow.innerHTML = `<span class="compare-product-price">${price}</span>`;
+            imageContainer.appendChild(priceRow);
+        }
+
+        // 2. Inject track button into actions
+        const actions = card.querySelector('.compare-product-actions');
+        if (actions && hasPrice) {
+            const trackBtn = document.createElement('button');
+            trackBtn.className = 'compare-product-track';
+            trackBtn.dataset.track = p.id;
+            trackBtn.dataset.name = p.name;
+            trackBtn.dataset.image = p.thumbnail || '';
+            trackBtn.dataset.price = currentPrice;
+            trackBtn.dataset.currency = p.currency || 'USD';
+            trackBtn.setAttribute('aria-label', 'Track price');
+            trackBtn.innerHTML = `<svg class="icon" width="16" height="16"><use href="#icon-bell"></use></svg>`;
+            actions.appendChild(trackBtn);
+        }
+
+        // 3. Replace CTA placeholder
+        const ctaPlaceholder = card.querySelector('[data-cta-placeholder]');
+        if (ctaPlaceholder) {
+            if (hasPrice && buyLink) {
+                // Replace with actual CTA
+                const cta = document.createElement('a');
+                cta.href = buyLink;
+                cta.className = 'compare-product-cta btn btn-primary btn-sm';
+                cta.target = '_blank';
+                cta.rel = 'noopener';
+                cta.innerHTML = `Buy at ${p.retailer} <svg class="icon" width="14" height="14"><use href="#icon-external-link"></use></svg>`;
+                ctaPlaceholder.replaceWith(cta);
+            } else {
+                // No price - hide placeholder
+                ctaPlaceholder.remove();
+            }
+        }
+    });
+}
+
+/**
+ * Hydrate Value Analysis section with geo-aware pricing metrics.
+ * PHP renders empty cells, JS fills them based on user's geo.
+ */
+function hydrateValueAnalysis() {
+    const container = document.querySelector('[data-value-analysis]');
+    if (!container) return;
+
+    const geo = userGeo.geo || 'US';
+    // Use symbol from getUserGeo() or derive from currency code
+    const symbol = userGeo.symbol || getCurrencySymbol(userGeo.currency || 'USD');
+
+    // Process each row
+    const rows = container.querySelectorAll('tr[data-spec-key]');
+    rows.forEach(row => {
+        const specKey = row.dataset.specKey;
+        // Replace {geo} placeholder with actual geo
+        const resolvedKey = specKey.replace('{geo}', geo);
+
+        // Check if this is a currency metric (has {symbol} in label) or efficiency metric
+        const labelEl = row.querySelector('[data-label-template]');
+        const template = labelEl?.dataset.labelTemplate || '';
+        const isCurrencyMetric = template.includes('{symbol}');
+
+        // Extract unit suffix from template for value display
+        // e.g., "{symbol}/Wh" → "/Wh", "mph/lb" → "mph/lb"
+        const unitSuffix = isCurrencyMetric
+            ? template.replace('{symbol}', '') // e.g., "/Wh"
+            : template; // e.g., "mph/lb"
+
+        // Update label with correct currency symbol
+        if (labelEl) {
+            labelEl.textContent = template.replace('{symbol}', symbol);
+        }
+
+        // Update each product cell
+        const cells = row.querySelectorAll('td[data-product-id]');
+        cells.forEach(cell => {
+            const productId = parseInt(cell.dataset.productId, 10);
+            const product = products.find(p => p.id === productId);
+
+            if (!product) {
+                cell.textContent = '—';
+                return;
+            }
+
+            // Get nested value from specs
+            const value = getNestedValue(product.specs, resolvedKey);
+
+            if (value === null || value === undefined) {
+                cell.textContent = '—';
+            } else if (isCurrencyMetric) {
+                // Currency metrics: $24.22/Wh format
+                cell.textContent = symbol + value.toFixed(2) + unitSuffix;
+            } else {
+                // Efficiency metrics: 0.45 mph/lb format
+                cell.textContent = value.toFixed(2) + ' ' + unitSuffix;
+            }
+        });
+    });
+}
+
+/**
+ * Get nested value from object using dot notation path.
+ * @param {Object} obj - Source object.
+ * @param {string} path - Dot notation path (e.g., "value_metrics.US.price_per_tested_mile").
+ * @returns {*} Value at path or undefined.
+ */
+function getNestedValue(obj, path) {
+    if (!obj || !path) return undefined;
+    return path.split('.').reduce((current, key) => current?.[key], obj);
+}
+
+/**
+ * Client-side Mode: Fetch product data and render everything.
+ *
+ * @param {Object} config - Compare page config from PHP
+ */
+async function initClientMode(config) {
     // Load products
     await loadProducts(config.productIds);
 
@@ -96,6 +340,9 @@ export async function init() {
         showError('Could not load product data.');
         return;
     }
+
+    // Update layout mode based on viewport and product count
+    updateLayoutMode();
 
     // Render all sections
     render();
@@ -105,6 +352,7 @@ export async function init() {
     setupAddProduct();
     setupNavStuckState();
     setupDiffToggle();
+    setupResizeHandler();
 
     // Track comparison view (fire and forget).
     trackComparisonView(config.productIds);
@@ -112,6 +360,50 @@ export async function init() {
     // Load related comparisons if curated.
     if (config.isCurated) {
         loadRelatedComparisons(config.productIds, category);
+    }
+}
+
+/**
+ * Attach event handlers to SSR-rendered product cards.
+ * Handles remove and track buttons.
+ */
+function attachProductCardHandlers() {
+    const productsContainer = document.querySelector(SELECTORS.products);
+    if (!productsContainer) return;
+
+    // Remove buttons
+    productsContainer.querySelectorAll('[data-remove]').forEach(btn => {
+        btn.addEventListener('click', (e) => {
+            e.preventDefault();
+            const productId = parseInt(btn.dataset.remove, 10);
+            removeProduct(productId);
+        });
+    });
+
+    // Track buttons
+    productsContainer.querySelectorAll('[data-track]').forEach(btn => {
+        btn.addEventListener('click', (e) => {
+            e.preventDefault();
+            e.stopPropagation();
+            PriceAlertModal.open({
+                productId: parseInt(btn.dataset.track, 10),
+                productName: btn.dataset.name,
+                productImage: btn.dataset.image,
+                currentPrice: parseFloat(btn.dataset.price) || 0,
+                currency: btn.dataset.currency || 'USD',
+            });
+        });
+    });
+
+    // Add button
+    const addBtn = productsContainer.querySelector('[data-open-add-modal]');
+    if (addBtn) {
+        addBtn.addEventListener('click', () => {
+            Modal.openById('compare-add-modal', addBtn);
+            setTimeout(() => {
+                document.querySelector(SELECTORS.searchInput)?.focus();
+            }, 100);
+        });
     }
 }
 
@@ -223,6 +515,83 @@ function renderCompareButton(selected) {
 }
 
 // =============================================================================
+// Layout Mode (Dynamic Full-Width)
+// =============================================================================
+
+/**
+ * Calculate if full-width mode is needed based on viewport and product count.
+ * Returns true if products don't fit within the standard container.
+ */
+function calculateNeedsFullWidth() {
+    const viewportWidth = window.innerWidth;
+    // Use smaller of viewport or max container width
+    const containerWidth = Math.min(viewportWidth, CONTAINER_MAX_WIDTH) - CONTAINER_PADDING;
+    // Available width for product columns (subtract label column)
+    const availableForProducts = containerWidth - LABEL_COL_WIDTH;
+    // Calculate how many products fit
+    const productsFit = Math.floor(availableForProducts / PRODUCT_COL_MIN_WIDTH);
+
+    return products.length > productsFit;
+}
+
+/**
+ * Update layout mode (full-width vs container) based on current state.
+ * Called on init, product add/remove, and window resize.
+ */
+function updateLayoutMode() {
+    const page = document.querySelector(SELECTORS.page);
+    const specsSection = document.querySelector('.compare-section--specs');
+    if (!page) return;
+
+    const needsFullWidth = calculateNeedsFullWidth();
+    const wasFullWidth = isFullWidthMode;
+
+    // Update state
+    isFullWidthMode = needsFullWidth;
+
+    // Update page element
+    page.dataset.productCount = products.length;
+    page.style.setProperty('--product-count', products.length);
+
+    // Update specs section container class
+    if (specsSection) {
+        const container = specsSection.querySelector('.container, .compare-section-full');
+        if (needsFullWidth) {
+            specsSection.classList.add('compare-section--full');
+            if (container) {
+                container.classList.remove('container');
+                container.classList.add('compare-section-full');
+            }
+        } else {
+            specsSection.classList.remove('compare-section--full');
+            if (container) {
+                container.classList.remove('compare-section-full');
+                container.classList.add('container');
+            }
+        }
+    }
+
+    // If mode changed, re-setup scroll sync
+    if (wasFullWidth !== needsFullWidth) {
+        setupScrollSync();
+    }
+}
+
+/**
+ * Set up window resize handler with debounce.
+ */
+function setupResizeHandler() {
+    let resizeTimeout = null;
+
+    window.addEventListener('resize', () => {
+        clearTimeout(resizeTimeout);
+        resizeTimeout = setTimeout(() => {
+            updateLayoutMode();
+        }, 150);
+    }, { passive: true });
+}
+
+// =============================================================================
 // Data Loading
 // =============================================================================
 
@@ -300,7 +669,8 @@ function render() {
     renderProducts();
     renderOverview();
     renderSpecs();
-    renderPricing();
+    // Re-hydrate Value Analysis with correct currency symbols (renderSpecs doesn't have symbol context)
+    hydrateValueAnalysis();
 }
 
 /**
@@ -449,11 +819,26 @@ function renderPriceIndicator(indicator) {
 
 /**
  * Render overview section.
+ *
+ * In SSR mode: Just renders radar chart (skeleton hidden via CSS :not(:empty)).
+ * In client mode: Renders everything from scratch.
  */
 function renderOverview() {
     const container = document.querySelector(SELECTORS.overview);
     if (!container || products.length < 2) return;
 
+    // Check if SSR content exists (has radar loading skeleton)
+    const ssrRadar = container.querySelector('[data-radar-container]');
+    const ssrAdvantages = container.querySelector('.compare-advantages');
+
+    if (ssrRadar && ssrAdvantages) {
+        // SSR hydration mode: Just render radar chart
+        // CSS will auto-hide skeleton via .compare-radar-chart:not(:empty) + .compare-radar-loading
+        renderRadarChart();
+        return;
+    }
+
+    // Client-side mode: Render everything
     const advantages = products.map((p, i) => {
         const others = products.filter((_, j) => j !== i);
         return renderAdvantageCard(p, generateAdvantages(p, others));
@@ -599,9 +984,18 @@ function renderMiniHeader() {
     const radius = 15;
     const circumference = 2 * Math.PI * radius;
 
+    // Build colgroup for consistent column widths (matches spec tables)
+    const colgroup = `
+        <colgroup>
+            <col class="compare-spec-col-label">
+            ${products.map(() => '<col>').join('')}
+        </colgroup>
+    `;
+
     return `
         <div class="compare-mini-header">
             <table class="compare-mini-table">
+                ${colgroup}
                 <tr>
                     <td class="compare-mini-label">
                         <label class="compare-diff-toggle">
@@ -635,7 +1029,7 @@ function renderMiniHeader() {
                                         <span class="compare-mini-name">${escapeHtml(p.name)}</span>
                                         ${hasRetailer ? `
                                             <a href="${p.buyLink}" class="compare-mini-price" target="_blank" rel="noopener">
-                                                ${price} at ${p.retailer}
+                                                ${price}
                                                 <svg class="icon" width="12" height="12"><use href="#icon-external-link"></use></svg>
                                             </a>
                                         ` : ''}
@@ -660,18 +1054,23 @@ function renderSpecs() {
     if (!container) return;
 
     const groups = SPEC_GROUPS[category] || {};
-    const sections = [];
-
-    // Add sticky mini-header at top of specs
-    sections.push(renderMiniHeader());
+    const categories = [];
+    const categoryNav = []; // Track categories for nav population
+    const needsScroll = isFullWidthMode;
 
     for (const [name, group] of Object.entries(groups)) {
         const specsWithValues = (group.specs || []).filter(spec => {
-            const values = products.map(p => getSpec(p, spec.key));
+            // Resolve geo placeholders before checking values
+            const resolved = resolveGeoSpec(spec);
+            const values = products.map(p => getSpec(p, resolved.key));
             return !values.every(v => v == null || v === '');
         });
 
         if (!specsWithValues.length) continue;
+
+        // Create slug for ID and navigation
+        const slug = name.toLowerCase().replace(/[^a-z0-9]+/g, '-').replace(/(^-|-$)/g, '');
+        categoryNav.push({ name, slug });
 
         // Calculate category scores for inline display
         const categoryScores = products.map(p => calculateCategoryScore(p, name));
@@ -700,8 +1099,8 @@ function renderSpecs() {
             </colgroup>
         `;
 
-        sections.push(`
-            <div class="compare-spec-category">
+        categories.push(`
+            <div id="${slug}" class="compare-spec-category" data-section="${slug}">
                 <h3 class="compare-spec-category-title">${name}</h3>
                 <!-- Desktop table -->
                 <table class="compare-spec-table">
@@ -716,18 +1115,59 @@ function renderSpecs() {
         `);
     }
 
-    container.innerHTML = sections.join('');
+    // Build final HTML: mini-header + categories (with scroll wrapper for 4+ products)
+    const miniHeader = renderMiniHeader();
+    const categoriesHtml = categories.join('');
+
+    if (needsScroll) {
+        container.innerHTML = `
+            ${miniHeader}
+            <div class="compare-specs-scroll">${categoriesHtml}</div>
+        `;
+        // Sync horizontal scroll between mini-header and tables
+        setupScrollSync();
+    } else {
+        container.innerHTML = miniHeader + categoriesHtml;
+    }
+
+    // Populate nav with category links
+    populateNav(categoryNav);
 }
 
 /**
  * Render mobile stacked cards for specs.
  * Each spec becomes a card showing all products' values.
+ * Handles winners (purple badge), booleans (green/red), feature arrays (expanded),
+ * and geo-aware specs.
  */
 function renderMobileSpecCards(specs) {
-    return specs.map(spec => {
-        const values = products.map(p => getSpec(p, spec.key));
-        const winners = findWinners(values, spec);
+    const cards = [];
 
+    // Formats that should NOT be expanded even if they're arrays
+    const noExpandFormats = ['suspensionArray', 'suspension'];
+
+    for (const rawSpec of specs) {
+        // Resolve geo placeholders for geoAware specs
+        const spec = resolveGeoSpec(rawSpec);
+
+        const values = products.map(p => getSpec(p, spec.key));
+
+        // Check if this is a feature array (expand into multiple cards)
+        // But skip expansion for certain formats like suspension
+        const hasArrayValues = values.some(v => Array.isArray(v));
+        const shouldExpand = hasArrayValues && !noExpandFormats.includes(spec.format);
+        if (shouldExpand) {
+            cards.push(...renderMobileFeatureCards(spec, values));
+            continue;
+        }
+
+        // Check if this is a boolean spec
+        const isBoolean = spec.type === 'boolean' || values.every(v =>
+            v === null || v === '' || v === true || v === false ||
+            v === 'Yes' || v === 'No' || v === 'yes' || v === 'no'
+        );
+
+        const winners = findWinners(values, spec);
         const tooltipHtml = spec.tooltip ? `
             <span class="info-trigger" data-tooltip="${escapeHtml(spec.tooltip)}" data-tooltip-trigger="click">
                 <svg class="icon" width="14" height="14"><use href="#icon-info"></use></svg>
@@ -735,20 +1175,17 @@ function renderMobileSpecCards(specs) {
         ` : '';
 
         const productValues = products.map((p, i) => {
-            const formatted = formatSpecValue(values[i], spec);
+            const value = values[i];
             const isWinner = winners.includes(i);
-            return `
-                <div class="compare-spec-card-value${isWinner ? ' is-winner' : ''}">
-                    <span class="compare-spec-card-product">
-                        <img src="${p.thumbnail || ''}" alt="">
-                        ${escapeHtml(p.name)}
-                    </span>
-                    <span class="compare-spec-card-data">${formatted}</span>
-                </div>
-            `;
+
+            if (isBoolean) {
+                return renderMobileBooleanValue(p, value);
+            }
+
+            return renderMobileSpecValue(p, value, spec, isWinner);
         }).join('');
 
-        return `
+        cards.push(`
             <div class="compare-spec-card">
                 <div class="compare-spec-card-label">
                     ${spec.label}${tooltipHtml}
@@ -757,8 +1194,111 @@ function renderMobileSpecCards(specs) {
                     ${productValues}
                 </div>
             </div>
+        `);
+    }
+
+    return cards.join('');
+}
+
+/**
+ * Render a single mobile spec value with optional winner badge.
+ */
+function renderMobileSpecValue(product, value, spec, isWinner) {
+    const formatted = formatSpecValue(value, spec);
+
+    if (isWinner) {
+        return `
+            <div class="compare-spec-card-value is-winner">
+                <span class="compare-spec-card-product">
+                    <img src="${product.thumbnail || ''}" alt="">
+                    ${escapeHtml(product.name)}
+                </span>
+                <span class="compare-spec-card-data">
+                    <span class="compare-spec-badge">
+                        <svg class="icon" aria-hidden="true"><use href="#icon-check"></use></svg>
+                    </span>
+                    <span class="compare-spec-card-text">${formatted}</span>
+                </span>
+            </div>
         `;
-    }).join('');
+    }
+
+    return `
+        <div class="compare-spec-card-value">
+            <span class="compare-spec-card-product">
+                <img src="${product.thumbnail || ''}" alt="">
+                ${escapeHtml(product.name)}
+            </span>
+            <span class="compare-spec-card-data">
+                <span class="compare-spec-card-text">${formatted}</span>
+            </span>
+        </div>
+    `;
+}
+
+/**
+ * Render a mobile boolean value with green/red badge.
+ */
+function renderMobileBooleanValue(product, value) {
+    const isTrue = value === true || value === 'Yes' || value === 'yes' || value === 1;
+    const hasValue = value !== null && value !== '' && value !== undefined;
+    const statusClass = hasValue ? (isTrue ? 'feature-yes' : 'feature-no') : '';
+    const icon = isTrue ? 'check' : 'x';
+    const text = hasValue ? (isTrue ? 'Yes' : 'No') : '—';
+
+    return `
+        <div class="compare-spec-card-value ${statusClass}">
+            <span class="compare-spec-card-product">
+                <img src="${product.thumbnail || ''}" alt="">
+                ${escapeHtml(product.name)}
+            </span>
+            <span class="compare-spec-card-data">
+                ${hasValue ? `
+                    <span class="compare-feature-badge">
+                        <svg class="icon" aria-hidden="true"><use href="#icon-${icon}"></use></svg>
+                    </span>
+                ` : ''}
+                ${text}
+            </span>
+        </div>
+    `;
+}
+
+/**
+ * Render mobile feature array cards (expanded into individual feature rows).
+ */
+function renderMobileFeatureCards(spec, values) {
+    const cards = [];
+
+    // Collect all unique features across all products
+    const allFeatures = new Set();
+    values.forEach(v => {
+        if (Array.isArray(v)) {
+            v.forEach(f => allFeatures.add(f));
+        }
+    });
+
+    if (allFeatures.size === 0) return cards;
+
+    // Render a card for each feature
+    for (const feature of allFeatures) {
+        const productValues = products.map((p, i) => {
+            const productFeatures = values[i];
+            const hasFeature = Array.isArray(productFeatures) && productFeatures.includes(feature);
+            return renderMobileBooleanValue(p, hasFeature);
+        }).join('');
+
+        cards.push(`
+            <div class="compare-spec-card">
+                <div class="compare-spec-card-label">${feature}</div>
+                <div class="compare-spec-card-values">
+                    ${productValues}
+                </div>
+            </div>
+        `);
+    }
+
+    return cards;
 }
 
 /**
@@ -885,16 +1425,20 @@ function areValuesSame(values) {
 /**
  * Render spec table rows.
  * Uses click-activated tooltips with info icon.
+ * Handles geo-aware specs by resolving {geo} and {symbol} placeholders.
  */
 function renderSpecRows(specs) {
     const rows = [];
 
-    for (const spec of specs) {
+    for (const rawSpec of specs) {
         // Handle feature arrays specially - expand into individual rows
-        if (spec.format === 'featureArray') {
-            rows.push(...renderFeatureArrayRows(spec));
+        if (rawSpec.format === 'featureArray') {
+            rows.push(...renderFeatureArrayRows(rawSpec));
             continue;
         }
+
+        // Resolve geo placeholders for geoAware specs
+        const spec = resolveGeoSpec(rawSpec);
 
         const values = products.map(p => getSpec(p, spec.key));
         if (values.every(v => v == null || v === '')) continue;
@@ -968,108 +1512,6 @@ function renderSpecRows(specs) {
     return rows;
 }
 
-/**
- * Render pricing section.
- */
-function renderPricing() {
-    const container = document.querySelector(SELECTORS.pricing);
-    if (!container) return;
-
-    const rows = [
-        pricingRow('Current Price', products.map(p => ({
-            html: p.currentPrice ? formatPrice(p.currentPrice, p.currency) : '—',
-            raw: p.currentPrice || Infinity,
-        })), true),
-        pricingRow('vs 3-Month Avg', products.map(p => {
-            const curr = p.currentPrice;
-            const avg = p.priceData?.avg_3m;
-            if (!curr || !avg) return { html: '—', raw: 0 };
-            const diff = ((curr - avg) / avg) * 100;
-            const cls = diff < -3 ? 'is-good' : diff > 3 ? 'is-bad' : '';
-            const icon = diff < 0 ? 'arrow-down' : diff > 0 ? 'arrow-up' : '';
-            const iconHtml = icon ? `<svg class="icon compare-price-icon" aria-hidden="true"><use href="#icon-${icon}"></use></svg>` : '';
-            return { html: `<span class="${cls}">${iconHtml}${Math.abs(Math.round(diff))}%</span>`, raw: diff };
-        }), false, true),
-        pricingRow('All-Time Low', products.map(p => {
-            const low = p.priceData?.low_all;
-            return { html: low ? formatPrice(low, p.currency) : '—', raw: low || 0 };
-        })),
-        pricingRow('Value/mi', products.map(p => {
-            const price = p.currentPrice;
-            const range = getSpec(p, 'tested_range_regular') || getSpec(p, 'manufacturer_range');
-            if (!price || !range) return { html: '—', raw: Infinity };
-            const perMile = price / range;
-            const symbol = getCurrencySymbol(p.currency);
-            return { html: `${symbol}${perMile.toFixed(0)}/mi`, raw: perMile };
-        }), true),
-    ];
-
-    const actions = `
-        <tr class="compare-pricing-actions">
-            <td></td>
-            ${products.map(p => `
-                <td>
-                    <div class="compare-pricing-btns">
-                        ${p.currentPrice ? `<button class="btn btn--ghost btn--sm" data-track="${p.id}" data-name="${escapeHtml(p.name)}"
-                            data-image="${p.thumbnail || ''}" data-price="${p.currentPrice}" data-currency="${p.currency}">
-                            <svg class="icon" width="14" height="14"><use href="#icon-bell"></use></svg>
-                            Track
-                        </button>` : ''}
-                        ${p.buyLink ? `<a href="${p.buyLink}" class="btn btn--primary btn--sm" target="_blank" rel="noopener">Buy</a>` : ''}
-                    </div>
-                </td>
-            `).join('')}
-        </tr>
-    `;
-
-    container.innerHTML = `
-        <table class="compare-pricing-table">
-            <thead>
-                <tr>
-                    <th></th>
-                    ${products.map(p => `<th>${escapeHtml(p.name)}</th>`).join('')}
-                </tr>
-            </thead>
-            <tbody>${rows.join('')}${actions}</tbody>
-        </table>
-    `;
-
-    // Track buttons
-    container.querySelectorAll('[data-track]').forEach(btn => {
-        btn.addEventListener('click', () => {
-            PriceAlertModal.open({
-                productId: parseInt(btn.dataset.track, 10),
-                productName: btn.dataset.name,
-                productImage: btn.dataset.image,
-                currentPrice: parseFloat(btn.dataset.price) || 0,
-                currency: btn.dataset.currency || 'USD',
-            });
-        });
-    });
-}
-
-/**
- * Create pricing table row.
- */
-function pricingRow(label, values, lowerWins = true, invertWinner = false) {
-    const valid = values.filter(v => v.raw !== Infinity && v.raw !== 0);
-    let winnerIdx = -1;
-
-    if (valid.length >= 2) {
-        const target = invertWinner || lowerWins
-            ? Math.min(...valid.map(v => v.raw))
-            : Math.max(...valid.map(v => v.raw));
-        winnerIdx = values.findIndex(v => v.raw === target);
-    }
-
-    const cells = values.map((v, i) => {
-        const cls = i === winnerIdx ? 'is-winner' : '';
-        return `<td class="${cls}">${v.html}</td>`;
-    }).join('');
-
-    return `<tr><td>${label}</td>${cells}</tr>`;
-}
-
 // Note: Verdict section is rendered via PHP in single-comparison.php for curated comparisons.
 // No JS rendering needed.
 
@@ -1132,48 +1574,182 @@ function calculateCategoryScore(product, categoryName) {
 }
 
 // =============================================================================
+// Navigation
+// =============================================================================
+
+/**
+ * Populate nav with spec category links.
+ * Called after renderSpecs to add category navigation items.
+ */
+function populateNav(categoryNav) {
+    const navContainer = document.querySelector(SELECTORS.navLinks);
+    if (!navContainer) return;
+
+    // Remove existing category links (keep Overview)
+    navContainer.querySelectorAll('[data-nav-link]:not([data-nav-link="overview"])').forEach(el => el.remove());
+
+    // Add category links
+    const config = window.erhData?.compareConfig;
+    const linksHtml = categoryNav.map(({ name, slug }) =>
+        `<a href="#${slug}" class="compare-nav-link" data-nav-link="${slug}">${name}</a>`
+    ).join('');
+
+    // Add verdict link if curated
+    const verdictHtml = config?.isCurated
+        ? '<a href="#verdict" class="compare-nav-link" data-nav-link="verdict">Verdict</a>'
+        : '';
+
+    navContainer.insertAdjacentHTML('beforeend', linksHtml + verdictHtml);
+
+    // Re-initialize scroll spy with new sections
+    setupScrollSpy();
+}
+
+// =============================================================================
 // Interactions
 // =============================================================================
 
 /**
  * Set up scroll spy for section nav.
+ * Uses event delegation for click handling to support dynamic nav links.
  */
 function setupScrollSpy() {
     const nav = document.querySelector(SELECTORS.nav);
+    if (!nav) return;
+
+    // Use event delegation for click handling (supports dynamic links)
+    nav.removeEventListener('click', handleNavClick);
+    nav.addEventListener('click', handleNavClick);
+
+    // Set up scroll spy observer
+    setupScrollSpyObserver();
+}
+
+/**
+ * Handle nav link clicks with smooth scroll.
+ * Temporarily disables scroll spy to prevent choppy intermediate updates.
+ */
+function handleNavClick(e) {
+    const link = e.target.closest(SELECTORS.navLink);
+    if (!link) return;
+
+    e.preventDefault();
+    const id = link.getAttribute('href')?.slice(1);
+    const section = document.getElementById(id);
+    if (!section) return;
+
+    // Disable scroll spy during programmatic scroll
+    isNavScrolling = true;
+
+    // Immediately update active state to clicked link
+    const nav = document.querySelector(SELECTORS.nav);
+    const navLinksContainer = document.querySelector(SELECTORS.navLinks);
+    nav?.querySelectorAll(SELECTORS.navLink).forEach(l => {
+        l.classList.toggle('is-active', l === link);
+    });
+
+    // Scroll nav to the clicked link
+    scrollNavToActive(navLinksContainer);
+
+    // Scroll page to section
+    const y = section.getBoundingClientRect().top + window.scrollY - SCROLL_OFFSET;
+    window.scrollTo({ top: y, behavior: 'smooth' });
+
+    // Re-enable scroll spy when scroll stops (detects actual completion)
+    waitForScrollEnd(() => {
+        isNavScrolling = false;
+    });
+}
+
+/**
+ * Wait for scroll to stop, then call callback.
+ * More reliable than fixed timeout for varying scroll distances.
+ */
+function waitForScrollEnd(callback) {
+    let lastScrollY = window.scrollY;
+    let checkCount = 0;
+    const maxChecks = 100; // Safety limit ~2.5s
+
+    clearInterval(waitForScrollEnd.interval);
+    waitForScrollEnd.interval = setInterval(() => {
+        checkCount++;
+        if (window.scrollY === lastScrollY || checkCount >= maxChecks) {
+            clearInterval(waitForScrollEnd.interval);
+            callback();
+        }
+        lastScrollY = window.scrollY;
+    }, 25);
+}
+
+/**
+ * Set up scroll spy using scroll listener.
+ * Updates active nav link based on scroll position.
+ */
+function setupScrollSpyObserver() {
+    const nav = document.querySelector(SELECTORS.nav);
+    const navLinksContainer = document.querySelector(SELECTORS.navLinks);
     const sections = document.querySelectorAll(SELECTORS.section);
     if (!nav || !sections.length) return;
 
-    const links = nav.querySelectorAll(SELECTORS.navLink);
+    let lastActive = null;
 
-    // Smooth scroll on click
-    links.forEach(link => {
-        link.addEventListener('click', (e) => {
-            e.preventDefault();
-            const id = link.getAttribute('href')?.slice(1);
-            const section = document.getElementById(id);
-            if (section) {
-                const y = section.offsetTop - SCROLL_OFFSET;
-                window.scrollTo({ top: y, behavior: 'smooth' });
-            }
-        });
-    });
-
-    // Scroll spy
     const updateActive = () => {
+        // Skip during programmatic navigation
+        if (isNavScrolling) return;
+
+        const links = nav.querySelectorAll(SELECTORS.navLink);
         let current = '';
+
+        // Find current section based on scroll position
         sections.forEach(s => {
-            if (window.scrollY >= s.offsetTop - SCROLL_OFFSET - 50) {
+            const rect = s.getBoundingClientRect();
+            if (rect.top <= SCROLL_OFFSET + 50) {
                 current = s.dataset.section;
             }
         });
 
+        // Update active states
         links.forEach(link => {
             link.classList.toggle('is-active', link.dataset.navLink === current);
         });
+
+        // Auto-scroll nav when active changes and nav is overflowing
+        if (current && current !== lastActive) {
+            lastActive = current;
+            scrollNavToActive(navLinksContainer);
+        }
     };
 
-    window.addEventListener('scroll', throttle(updateActive, 100), { passive: true });
+    // Remove existing listener before adding (prevents duplicates on re-init)
+    window.removeEventListener('scroll', scrollSpyHandler);
+    scrollSpyHandler = throttle(updateActive, 50);
+    window.addEventListener('scroll', scrollSpyHandler, { passive: true });
     updateActive();
+}
+
+/**
+ * Scroll nav container to center the active link.
+ * Only scrolls if nav is overflowing horizontally.
+ */
+function scrollNavToActive(container) {
+    if (!container) return;
+
+    const isOverflowing = container.scrollWidth > container.clientWidth;
+    if (!isOverflowing) return;
+
+    const activeLink = container.querySelector('.compare-nav-link.is-active');
+    if (!activeLink) return;
+
+    // Calculate scroll position to center the active link
+    const containerWidth = container.clientWidth;
+    const linkLeft = activeLink.offsetLeft;
+    const linkWidth = activeLink.offsetWidth;
+    const targetScroll = linkLeft - (containerWidth / 2) + (linkWidth / 2);
+
+    container.scrollTo({
+        left: Math.max(0, targetScroll),
+        behavior: 'smooth'
+    });
 }
 
 /**
@@ -1213,6 +1789,88 @@ function setupDiffToggle() {
         if (!specsContainer) return;
 
         specsContainer.classList.toggle('show-diff-only', toggle.checked);
+    });
+}
+
+/**
+ * Set up scroll sync between mini-header and specs scroll wrapper.
+ * Keeps both in horizontal sync for 4+ product comparisons.
+ */
+function setupScrollSync() {
+    const miniHeader = document.querySelector('.compare-mini-header');
+    const specsScroll = document.querySelector('.compare-specs-scroll');
+    if (!miniHeader || !specsScroll) return;
+
+    let isSyncing = false;
+
+    // Sync from mini-header to specs
+    miniHeader.addEventListener('scroll', () => {
+        if (isSyncing) return;
+        isSyncing = true;
+        specsScroll.scrollLeft = miniHeader.scrollLeft;
+        requestAnimationFrame(() => { isSyncing = false; });
+    }, { passive: true });
+
+    // Sync from specs to mini-header
+    specsScroll.addEventListener('scroll', () => {
+        if (isSyncing) return;
+        isSyncing = true;
+        miniHeader.scrollLeft = specsScroll.scrollLeft;
+        requestAnimationFrame(() => { isSyncing = false; });
+    }, { passive: true });
+
+    // Enable drag-to-scroll on both elements
+    setupDragToScroll(specsScroll);
+    setupDragToScroll(miniHeader);
+}
+
+/**
+ * Enable mouse drag to scroll horizontally on an element.
+ * Skipped on mobile/touch devices where native touch scroll works.
+ * @param {HTMLElement} element - Scrollable element to enable drag on.
+ */
+function setupDragToScroll(element) {
+    if (!element) return;
+
+    // Skip on mobile - touch scrolling is native
+    if (window.innerWidth <= 768) return;
+
+    let isDown = false;
+    let startX = 0;
+    let scrollLeft = 0;
+
+    element.style.cursor = 'grab';
+
+    element.addEventListener('mousedown', (e) => {
+        // Don't interfere with clicks on links/buttons
+        if (e.target.closest('a, button, input, label')) return;
+
+        isDown = true;
+        element.style.cursor = 'grabbing';
+        element.style.userSelect = 'none';
+        startX = e.pageX - element.offsetLeft;
+        scrollLeft = element.scrollLeft;
+    });
+
+    element.addEventListener('mouseleave', () => {
+        if (!isDown) return;
+        isDown = false;
+        element.style.cursor = 'grab';
+        element.style.userSelect = '';
+    });
+
+    element.addEventListener('mouseup', () => {
+        isDown = false;
+        element.style.cursor = 'grab';
+        element.style.userSelect = '';
+    });
+
+    element.addEventListener('mousemove', (e) => {
+        if (!isDown) return;
+        e.preventDefault();
+        const x = e.pageX - element.offsetLeft;
+        const walk = (x - startX) * 1.5; // Scroll speed multiplier
+        element.scrollLeft = scrollLeft - walk;
     });
 }
 
@@ -1284,9 +1942,14 @@ function renderSearchResults(query, container, exclude, onSelect) {
  * Add product to comparison.
  */
 function addProduct(product) {
-    products.push(enrichProduct(product));
+    const enrichedProduct = enrichProduct(product);
+    products.push(enrichedProduct);
+
+    // Update URL first, then render, then apply layout mode
+    // (render replaces DOM, so layout mode must come after)
     updateUrl();
     render();
+    updateLayoutMode();
 }
 
 /**
@@ -1295,8 +1958,12 @@ function addProduct(product) {
 function removeProduct(id) {
     if (products.length <= 2) return;
     products = products.filter(p => p.id !== id);
+
+    // Update URL first, then render, then apply layout mode
+    // (render replaces DOM, so layout mode must come after)
     updateUrl();
     render();
+    updateLayoutMode();
 }
 
 /**
@@ -1324,6 +1991,9 @@ function getSpec(product, key) {
  * Find winner indices.
  */
 function findWinners(values, spec) {
+    // Specs marked noWinner should not have winner highlighting
+    if (spec.noWinner) return [];
+
     const valid = values.map((v, i) => ({ v, i })).filter(x => x.v != null && x.v !== '');
     if (valid.length < 2) return [];
 

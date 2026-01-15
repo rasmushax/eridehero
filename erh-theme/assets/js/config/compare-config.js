@@ -29,21 +29,20 @@ export const SPEC_GROUPS = {
             icon: 'zap',
             question: 'How fast and powerful is it?',
             showScore: true,
-            valueMetric: { key: 'price_per_tested_mph', fallback: 'price_per_mph', label: '$/mph', lowerBetter: true },
             specs: [
-                { key: 'tested_top_speed', label: 'Tested Top Speed', unit: 'mph', higherBetter: true, tooltip: 'Our real-world test result' },
-                { key: 'manufacturer_top_speed', label: 'Claimed Top Speed', unit: 'mph', higherBetter: true },
-                { key: 'motor.power_nominal', label: 'Motor Power', unit: 'W', higherBetter: true },
-                { key: 'motor.power_peak', label: 'Peak Power', unit: 'W', higherBetter: true },
+                { key: 'tested_top_speed', label: 'Top Speed (Tested)', unit: 'mph', higherBetter: true, tooltip: 'Our real-world test result with a 175 lbs rider' },
+                { key: 'manufacturer_top_speed', label: 'Top Speed (Claimed)', unit: 'mph', higherBetter: true, tooltip: 'What the manufacturer claims' },
+                { key: 'motor.power_nominal', label: 'Nominal Power', unit: 'W', higherBetter: true, tooltip: 'Combined if dual motors' },
+                { key: 'motor.power_peak', label: 'Peak Power', unit: 'W', higherBetter: true, tooltip: 'Maximum output under load' },
                 { key: 'motor.voltage', label: 'Voltage', unit: 'V', higherBetter: true },
                 { key: 'motor.motor_position', label: 'Motor Config', tooltip: 'Single rear, dual, etc.' },
-                { key: 'motor.motor_type', label: 'Motor Type' },
-                { key: 'hill_climbing', label: 'Tested Hill Climb', unit: '°', higherBetter: true, tooltip: 'Degrees achieved in our test' },
-                { key: 'max_incline', label: 'Claimed Hill Grade', unit: '°', higherBetter: true },
-                { key: 'fastest_0_15', label: '0-15 mph (tested)', unit: 's', higherBetter: false, tooltip: 'Best run from our tests' },
-                { key: 'acceleration_0_15_mph', label: '0-15 mph (claimed)', unit: 's', higherBetter: false },
-                { key: 'fastest_0_20', label: '0-20 mph (tested)', unit: 's', higherBetter: false },
-                { key: 'acceleration_0_20_mph', label: '0-20 mph (claimed)', unit: 's', higherBetter: false },
+                { key: 'hill_climbing', label: 'Hill Climb (Tested)', unit: 's', higherBetter: false, tooltip: 'Time to climb our 250ft test hill at 8% average grade. 175 lbs rider' },
+                { key: 'max_incline', label: 'Hill Grade (Claimed)', unit: '°', higherBetter: true, tooltip: 'Maximum incline the manufacturer claims' },
+                { key: 'acceleration_0_15_mph', label: '0-15 mph (Tested)', unit: 's', higherBetter: false, tooltip: 'Average across 10+ test runs. 175 lbs rider' },
+                { key: 'acceleration_0_20_mph', label: '0-20 mph (Tested)', unit: 's', higherBetter: false, tooltip: 'Average across 10+ test runs. 175 lbs rider' },
+                { key: 'acceleration_0_25_mph', label: '0-25 mph (Tested)', unit: 's', higherBetter: false, tooltip: 'Average across 10+ test runs. 175 lbs rider' },
+                { key: 'acceleration_0_30_mph', label: '0-30 mph (Tested)', unit: 's', higherBetter: false, tooltip: 'Average across 10+ test runs. 175 lbs rider' },
+                { key: 'acceleration_0_to_top', label: '0-Top Speed (Tested)', unit: 's', higherBetter: false, tooltip: 'Average across 10+ test runs. 175 lbs rider' },
             ]
         },
 
@@ -51,15 +50,15 @@ export const SPEC_GROUPS = {
             icon: 'battery',
             question: 'How far can I go?',
             showScore: true,
-            valueMetric: { key: 'price_per_tested_mile', fallback: 'price_per_mile_range', label: '$/mile', lowerBetter: true },
             specs: [
-                { key: 'tested_range_regular', label: 'Tested Range', unit: 'mi', higherBetter: true, tooltip: 'Our real-world test at 165lb rider' },
-                { key: 'tested_range_fast', label: 'Tested Range (fast)', unit: 'mi', higherBetter: true, tooltip: 'Range at max speed setting' },
-                { key: 'tested_range_slow', label: 'Tested Range (eco)', unit: 'mi', higherBetter: true, tooltip: 'Range at eco/slow mode' },
-                { key: 'manufacturer_range', label: 'Claimed Range', unit: 'mi', higherBetter: true },
-                { key: 'battery.capacity', label: 'Battery', unit: 'Wh', higherBetter: true },
+                { key: 'tested_range_fast', label: 'Range - Fast (Tested)', unit: 'mi', higherBetter: true, tooltip: 'Range at high speed riding. 175 lbs rider' },
+                { key: 'tested_range_regular', label: 'Range - Regular (Tested)', unit: 'mi', higherBetter: true, tooltip: 'Range at normal riding pace. 175 lbs rider' },
+                { key: 'tested_range_slow', label: 'Range - Slow (Tested)', unit: 'mi', higherBetter: true, tooltip: 'Range in eco mode, prioritizing distance over speed. 175 lbs rider' },
+                { key: 'manufacturer_range', label: 'Range (Claimed)', unit: 'mi', higherBetter: true, tooltip: 'What the manufacturer claims. Wh is often a better comparison metric' },
+                { key: 'battery.capacity', label: 'Battery Capacity', unit: 'Wh', higherBetter: true, tooltip: 'Watt-hours = Voltage × Amp-hours' },
+                { key: 'battery.ah', label: 'Amp Hours', unit: 'Ah', higherBetter: true, tooltip: 'Battery capacity in amp-hours' },
                 { key: 'battery.voltage', label: 'Battery Voltage', unit: 'V', higherBetter: true },
-                { key: 'battery.charging_time', label: 'Charge Time', unit: 'h', higherBetter: false },
+                { key: 'battery.charging_time', label: 'Charge Time', unit: 'h', higherBetter: false, tooltip: 'Time to full charge with the included charger' },
                 { key: 'battery.battery_type', label: 'Battery Type' },
             ]
         },
@@ -69,7 +68,7 @@ export const SPEC_GROUPS = {
             question: 'Is it comfortable?',
             showScore: true,
             specs: [
-                { key: 'suspension.type', label: 'Suspension', higherBetter: true, format: 'suspensionArray' },
+                { key: 'suspension.type', label: 'Suspension', higherBetter: true, format: 'suspensionArray', tooltip: 'Dual suspension wins, then hydraulic, spring, rubber' },
                 { key: 'suspension.adjustable', label: 'Adjustable Suspension', format: 'boolean', higherBetter: true },
                 { key: 'wheels.tire_type', label: 'Tire Type', format: 'tire' },
                 { key: 'wheels.tire_size_front', label: 'Front Tire Size', unit: '"', higherBetter: true },
@@ -77,10 +76,10 @@ export const SPEC_GROUPS = {
                 { key: 'wheels.tire_width', label: 'Tire Width', unit: '"', higherBetter: true },
                 { key: 'dimensions.deck_length', label: 'Deck Length', unit: '"', higherBetter: true },
                 { key: 'dimensions.deck_width', label: 'Deck Width', unit: '"', higherBetter: true },
-                { key: 'dimensions.ground_clearance', label: 'Ground Clearance', unit: '"', higherBetter: true },
-                { key: 'dimensions.handlebar_height_min', label: 'Handlebar Height (min)', unit: '"' },
-                { key: 'dimensions.handlebar_height_max', label: 'Handlebar Height (max)', unit: '"' },
-                { key: 'dimensions.handlebar_width', label: 'Handlebar Width', unit: '"', higherBetter: true },
+                { key: 'dimensions.ground_clearance', label: 'Ground Clearance', unit: '"', tooltip: 'More is not always better - depends on riding style' },
+                { key: 'dimensions.handlebar_height_min', label: 'Handlebar Height (min)', unit: '"', tooltip: 'Personal preference - depends on rider height' },
+                { key: 'dimensions.handlebar_height_max', label: 'Handlebar Height (max)', unit: '"', tooltip: 'Personal preference - depends on rider height' },
+                { key: 'dimensions.handlebar_width', label: 'Handlebar Width', unit: '"', higherBetter: true, tooltip: 'Wider bars provide more control and stability' },
                 { key: 'other.footrest', label: 'Footrest', format: 'boolean', higherBetter: true },
                 { key: 'other.terrain', label: 'Terrain Type' },
             ]
@@ -98,6 +97,9 @@ export const SPEC_GROUPS = {
                 { key: 'dimensions.folded_height', label: 'Folded Height', unit: '"', higherBetter: false },
                 { key: 'dimensions.foldable_handlebars', label: 'Foldable Bars', format: 'boolean', higherBetter: true },
                 { key: 'other.fold_location', label: 'Fold Mechanism' },
+                { key: 'speed_per_lb', label: 'mph/lb', format: 'decimal', higherBetter: true, tooltip: 'Top speed divided by weight. Higher = more speed per pound of scooter', valueUnit: 'mph/lb' },
+                { key: 'wh_per_lb', label: 'Wh/lb', format: 'decimal', higherBetter: true, tooltip: 'Battery capacity divided by weight. Higher = more energy storage per pound', valueUnit: 'Wh/lb' },
+                { key: 'tested_range_per_lb', label: 'mi/lb', format: 'decimal', higherBetter: true, tooltip: 'Tested range divided by weight. Higher = more miles per pound of scooter', valueUnit: 'mi/lb' },
             ]
         },
 
@@ -106,10 +108,10 @@ export const SPEC_GROUPS = {
             question: 'Is it safe to ride?',
             showScore: true,
             specs: [
-                { key: 'brakes.front', label: 'Front Brake', format: 'brakeType' },
-                { key: 'brakes.rear', label: 'Rear Brake', format: 'brakeType' },
+                { key: 'brakes.front', label: 'Front Brake', format: 'brakeType', tooltip: 'Best brake type depends on scooter speed and weight', noWinner: true },
+                { key: 'brakes.rear', label: 'Rear Brake', format: 'brakeType', tooltip: 'Best brake type depends on scooter speed and weight', noWinner: true },
                 { key: 'brakes.regenerative', label: 'Regen Braking', format: 'boolean', higherBetter: true },
-                { key: 'brake_distance', label: 'Tested Brake Distance', unit: 'ft', higherBetter: false, tooltip: 'Distance to stop from 15 mph' },
+                { key: 'brake_distance', label: 'Brake Distance (Tested)', unit: 'ft', higherBetter: false, tooltip: 'Stopping distance from 15 mph. 175 lbs rider' },
                 { key: 'lighting.lights', label: 'Lights', format: 'array' },
                 { key: 'lighting.turn_signals', label: 'Turn Signals', format: 'boolean', higherBetter: true },
             ]
@@ -145,10 +147,10 @@ export const SPEC_GROUPS = {
             showScore: false,
             isValueSection: true,
             specs: [
-                { key: 'price_per_tested_mile', label: '$/Mile (tested)', lowerBetter: true, format: 'currency', tooltip: 'Cost per mile of tested range' },
-                { key: 'price_per_mile_range', label: '$/Mile (claimed)', lowerBetter: true, format: 'currency' },
-                { key: 'price_per_tested_mph', label: '$/MPH (tested)', lowerBetter: true, format: 'currency' },
-                { key: 'price_per_wh', label: '$/Wh', lowerBetter: true, format: 'currency', tooltip: 'Battery value' },
+                { key: 'value_metrics.{geo}.price_per_tested_mile', label: '{symbol}/mi', higherBetter: false, format: 'currency', geoAware: true, tooltip: 'Price divided by tested range. Lower = more miles for your money', valueUnit: '/mi' },
+                { key: 'value_metrics.{geo}.price_per_mph', label: '{symbol}/mph', higherBetter: false, format: 'currency', geoAware: true, tooltip: 'Price divided by top speed. Lower = more speed for your money', valueUnit: '/mph' },
+                { key: 'value_metrics.{geo}.price_per_watt', label: '{symbol}/W', higherBetter: false, format: 'currency', geoAware: true, tooltip: 'Price divided by motor power. Lower = more power for your money', valueUnit: '/W' },
+                { key: 'value_metrics.{geo}.price_per_wh', label: '{symbol}/Wh', higherBetter: false, format: 'currency', geoAware: true, tooltip: 'Price divided by battery capacity. Lower = more energy storage for your money', valueUnit: '/Wh' },
             ]
         },
     },
@@ -520,6 +522,30 @@ export function formatSpecValue(value, spec) {
         return String(value);
     }
 
+    // Currency formatting (value metrics like $24.22/Wh)
+    if (spec.format === 'currency') {
+        const num = parseFloat(value);
+        if (!isNaN(num)) {
+            // Currency format: symbol + value + unit (e.g., "€24.22/Wh")
+            // currencySymbol is added by resolveGeoSpec() for geoAware specs
+            const symbol = spec.currencySymbol || '$';
+            const unit = spec.valueUnit || '';
+            return symbol + num.toFixed(2) + unit;
+        }
+        return '—';
+    }
+
+    // Decimal formatting (efficiency metrics like 0.45 mph/lb)
+    if (spec.format === 'decimal') {
+        const num = parseFloat(value);
+        if (!isNaN(num)) {
+            // Decimal format uses valueUnit with space (e.g., "0.45 mph/lb")
+            const unit = spec.valueUnit ? ' ' + spec.valueUnit : '';
+            return num.toFixed(2) + unit;
+        }
+        return '—';
+    }
+
     // Numeric with unit
     if (spec.unit) {
         const num = parseFloat(value);
@@ -531,6 +557,74 @@ export function formatSpecValue(value, spec) {
     }
 
     return String(value);
+}
+
+/**
+ * Score suspension array for comparison.
+ * Hierarchy: dual > hydraulic > spring > rubber > none
+ *
+ * Scoring:
+ * - Dual hydraulic: 10
+ * - Dual spring: 9
+ * - Dual rubber: 8
+ * - Single hydraulic: 5
+ * - Single spring: 4
+ * - Single rubber: 3
+ * - None: 0
+ *
+ * For mixed setups (e.g., front hydraulic + rear spring), average the type scores.
+ *
+ * @param {Array|null} suspensionArray - Array like ["Front hydraulic", "Rear spring"]
+ * @returns {number} Score for comparison
+ */
+function scoreSuspensionForComparison(suspensionArray) {
+    if (!suspensionArray || !Array.isArray(suspensionArray) || suspensionArray.length === 0) {
+        return 0;
+    }
+
+    const types = suspensionArray.map(s => String(s).toLowerCase());
+
+    // Check for "None" only
+    if (types.every(t => t === 'none' || t === '')) {
+        return 0;
+    }
+
+    // Helper to score a single suspension type
+    const scoreType = (type) => {
+        if (type.includes('hydraulic')) return 3;
+        if (type.includes('spring') || type.includes('fork')) return 2;
+        if (type.includes('rubber')) return 1;
+        return 0;
+    };
+
+    // Check for dual suspension entries
+    const dualEntry = types.find(t => t.includes('dual'));
+    if (dualEntry) {
+        const typeScore = scoreType(dualEntry);
+        return 7 + typeScore; // Dual: 8-10 range
+    }
+
+    // Check for front and rear
+    const frontEntry = types.find(t => t.includes('front'));
+    const rearEntry = types.find(t => t.includes('rear'));
+
+    const hasFront = frontEntry && !frontEntry.includes('none');
+    const hasRear = rearEntry && !rearEntry.includes('none');
+
+    if (hasFront && hasRear) {
+        // Both front and rear = dual bonus
+        const frontScore = scoreType(frontEntry);
+        const rearScore = scoreType(rearEntry);
+        const avgTypeScore = (frontScore + rearScore) / 2;
+        return 7 + avgTypeScore; // Dual range: 7-10
+    } else if (hasFront || hasRear) {
+        // Single suspension
+        const entry = hasFront ? frontEntry : rearEntry;
+        const typeScore = scoreType(entry);
+        return 2 + typeScore; // Single range: 3-5
+    }
+
+    return 0;
 }
 
 /**
@@ -581,12 +675,13 @@ export function compareValues(valueA, valueB, spec) {
         return indexA > indexB ? -1 : 1;
     }
 
-    // Suspension array comparison - count suspension points (more = better)
+    // Suspension array comparison - dual > hydraulic > spring > rubber
+    // Scoring: dual gets bonus, then type quality matters
     if (spec.format === 'suspensionArray') {
-        const countA = Array.isArray(valueA) ? valueA.filter(v => v && v !== 'None').length : 0;
-        const countB = Array.isArray(valueB) ? valueB.filter(v => v && v !== 'None').length : 0;
-        if (countA === countB) return 0;
-        return countA > countB ? -1 : 1;
+        const scoreA = scoreSuspensionForComparison(valueA);
+        const scoreB = scoreSuspensionForComparison(valueB);
+        if (scoreA === scoreB) return 0;
+        return scoreA > scoreB ? -1 : 1;
     }
 
     // Brake type comparison

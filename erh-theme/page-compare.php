@@ -38,9 +38,31 @@ $product_names = array_map( 'get_the_title', $product_ids );
 $page_title    = $has_products
     ? implode( ' vs ', array_slice( $product_names, 0, 3 ) ) . ( count( $product_names ) > 3 ? ' & more' : '' )
     : 'Compare Products';
+
+// SSR: Fetch products from database for server-side rendering.
+$compare_products = array();
+$geo              = isset( $_COOKIE['erh_geo'] ) ? sanitize_text_field( wp_unslash( $_COOKIE['erh_geo'] ) ) : 'US';
+$currency_symbol  = erh_get_currency_symbol( $geo );
+
+if ( $has_products ) {
+    $compare_products = erh_get_compare_products( $product_ids, $geo );
+    // If not enough products found in cache, fall back to hub page.
+    if ( count( $compare_products ) < 2 ) {
+        $has_products = false;
+        $is_hub_page  = true;
+    }
+}
 ?>
 
-<main class="compare-page<?php echo $is_hub_page ? ' compare-page--hub' : ''; ?>" data-compare-page data-category="<?php echo esc_attr( $category ); ?>">
+<?php
+$product_count      = count( $product_ids );
+$product_count_attr = $has_products ? ' data-product-count="' . $product_count . '" style="--product-count: ' . $product_count . ';"' : '';
+$is_full_width      = $has_products && $product_count >= 5;
+$page_classes       = 'compare-page';
+$page_classes      .= $is_hub_page ? ' compare-page--hub' : '';
+$page_classes      .= $is_full_width ? ' compare-page--full-width' : '';
+?>
+<main class="<?php echo esc_attr( $page_classes ); ?>" data-compare-page data-category="<?php echo esc_attr( $category ); ?>"<?php echo $product_count_attr; ?>>
 
     <?php if ( $is_hub_page ) : ?>
         <!-- Hub Page: Compare Center -->
@@ -50,64 +72,118 @@ $page_title    = $has_products
         <?php get_template_part( 'template-parts/compare/hub-popular' ); ?>
 
     <?php else : ?>
-        <!-- Comparison Content -->
-        <div class="container">
+        <!-- SSR Comparison Content -->
+        <div data-ssr-rendered>
+            <div class="container">
+                <?php
+                erh_breadcrumb( [
+                    [ 'label' => $category_name, 'url' => home_url( '/' . $category_slug . '/' ) ],
+                    [ 'label' => $page_title ],
+                ] );
+                ?>
+            </div>
+
+            <!-- SSR: Product Hero Cards -->
             <?php
-            erh_breadcrumb( [
-                [ 'label' => $category_name, 'url' => home_url( '/' . $category_slug . '/' ) ],
-                [ 'label' => $page_title ],
+            get_template_part( 'template-parts/compare/header-products', null, [
+                'products' => $compare_products,
+                'geo'      => $geo,
             ] );
             ?>
-        </div>
 
-        <!-- Sticky Product Header -->
-        <header class="compare-header" data-compare-header>
-            <div class="container">
-                <div class="compare-header-products" data-compare-products>
-                    <!-- Product cards rendered by JS -->
-                </div>
-            </div>
-        </header>
-
-        <!-- Sticky Section Nav -->
-        <nav class="compare-nav" data-compare-nav>
-            <div class="container">
-                <div class="compare-nav-links">
-                    <a href="#overview" class="compare-nav-link is-active" data-nav-link="overview">Overview</a>
-                    <a href="#specifications" class="compare-nav-link" data-nav-link="specs">Specifications</a>
-                    <a href="#pricing" class="compare-nav-link" data-nav-link="pricing">Pricing</a>
-                </div>
-            </div>
-        </nav>
-
-        <!-- All Sections (Single Scroll) -->
-        <div class="compare-content">
-            <div class="container">
-
-                <!-- Overview Section -->
-                <section id="overview" class="compare-section" data-section="overview">
-                    <h2 class="compare-section-title">Overview</h2>
-                    <div class="compare-overview" data-compare-overview>
-                        <div class="compare-loading">
-                            <span class="compare-loading-spinner"></span>
-                            <span>Loading comparison...</span>
-                        </div>
+            <!-- Sticky Section Nav -->
+            <?php
+            $spec_groups = erh_get_compare_spec_groups( $category );
+            ?>
+            <nav class="compare-nav" data-compare-nav>
+                <div class="container">
+                    <div class="compare-nav-links" data-nav-links>
+                        <a href="#overview" class="compare-nav-link is-active" data-nav-link="overview">Overview</a>
+                        <?php foreach ( $spec_groups as $group_name => $group ) : ?>
+                            <a href="#<?php echo esc_attr( sanitize_title( $group_name ) ); ?>"
+                               class="compare-nav-link"
+                               data-nav-link="<?php echo esc_attr( sanitize_title( $group_name ) ); ?>">
+                                <?php echo esc_html( $group_name ); ?>
+                            </a>
+                        <?php endforeach; ?>
                     </div>
-                </section>
+                </div>
+            </nav>
 
-                <!-- Specifications Section -->
-                <section id="specifications" class="compare-section" data-section="specs">
-                    <h2 class="compare-section-title">Specifications</h2>
-                    <div class="compare-specs" data-compare-specs></div>
-                </section>
-
-                <!-- Pricing Section -->
-                <section id="pricing" class="compare-section" data-section="pricing">
-                    <h2 class="compare-section-title">Pricing</h2>
-                    <div class="compare-pricing" data-compare-pricing></div>
-                </section>
-
+            <!-- SSR: Overview Section -->
+            <div class="compare-content">
+                <div class="container">
+                    <section id="overview" class="compare-section" data-section="overview">
+                        <h2 class="compare-section-title">Overview</h2>
+                        <div class="compare-overview" data-compare-overview>
+                            <?php
+                            get_template_part( 'template-parts/compare/overview', null, [
+                                'products' => $compare_products,
+                                'category' => $category,
+                            ] );
+                            ?>
+                        </div>
+                    </section>
+                </div>
             </div>
+
+            <!-- SSR: Specifications Section -->
+            <section id="specifications" class="compare-section compare-section--specs" data-section="specs">
+                <div class="container">
+                    <h2 class="compare-section-title">Specifications</h2>
+                    <div class="compare-specs" data-compare-specs>
+                        <?php
+                        // Render mini-header.
+                        get_template_part( 'template-parts/compare/mini-header', null, [
+                            'products'        => $compare_products,
+                            'geo'             => $geo,
+                            'currency_symbol' => $currency_symbol,
+                        ] );
+
+                        // Check if any product has pricing in any geo (for Value Analysis).
+                        $any_has_pricing = erh_any_product_has_pricing( $product_ids );
+
+                        // Render each spec category table.
+                        foreach ( $spec_groups as $group_name => $group ) {
+                            $is_value_section = ! empty( $group['isValueSection'] );
+
+                            // Skip Value Analysis entirely if no product has any pricing.
+                            if ( $is_value_section && ! $any_has_pricing ) {
+                                continue;
+                            }
+
+                            $specs = $group['specs'] ?? array();
+
+                            // For Value Analysis, render with empty cells (JS will hydrate).
+                            if ( $is_value_section ) {
+                                get_template_part( 'template-parts/compare/specs-table-value', null, [
+                                    'group_name'      => $group_name,
+                                    'group_slug'      => sanitize_title( $group_name ),
+                                    'specs'           => $specs,
+                                    'products'        => $compare_products,
+                                    'currency_symbol' => $currency_symbol,
+                                ] );
+                                continue;
+                            }
+
+                            $rows = erh_build_compare_spec_rows( $compare_products, $specs, $geo, $currency_symbol );
+
+                            if ( empty( $rows ) ) {
+                                continue;
+                            }
+
+                            get_template_part( 'template-parts/compare/specs-table', null, [
+                                'group_name'      => $group_name,
+                                'group_slug'      => sanitize_title( $group_name ),
+                                'rows'            => $rows,
+                                'products'        => $compare_products,
+                                'currency_symbol' => $currency_symbol,
+                            ] );
+                        }
+                        ?>
+                    </div>
+                </div>
+            </section>
         </div>
 
     <?php endif; ?>
@@ -145,9 +221,17 @@ window.erhData.compareConfig = {
     productIds: <?php echo wp_json_encode( array_map( 'intval', $product_ids ) ); ?>,
     category: <?php echo wp_json_encode( $category ); ?>,
     categoryName: <?php echo wp_json_encode( $category_name ); ?>,
-    categorySlug: <?php echo wp_json_encode( $category_slug ); ?>
+    categorySlug: <?php echo wp_json_encode( $category_slug ); ?>,
+    geo: <?php echo wp_json_encode( $geo ); ?>,
+    currencySymbol: <?php echo wp_json_encode( $currency_symbol ); ?>
 };
 </script>
+<?php if ( ! empty( $compare_products ) ) : ?>
+<!-- Products JSON for JS hydration -->
+<script type="application/json" data-products-json>
+<?php echo wp_json_encode( $compare_products ); ?>
+</script>
+<?php endif; ?>
 <?php
 
 /**

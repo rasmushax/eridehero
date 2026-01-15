@@ -339,6 +339,7 @@ Redesign of the head-to-head comparison results page with improved UX, cleaner s
 | **Share section** | Removed entirely |
 | **Verdict** | Own nav section at bottom (curated only) |
 | **Mobile specs** | Stacked card layout |
+| **4+ products** | Specs section own container + full-width + horizontal scroll + sticky labels |
 
 ### Completed Work
 
@@ -411,13 +412,131 @@ Uses table structure to align columns with spec tables:
 - Share section (CSS and JS removed)
 - Value metric special styling and emojis
 
+#### Horizontal Scroll (4+ Products)
+
+**Purpose**: Gracefully handle many-product comparisons (4-8 products) with horizontal scroll.
+
+**Implementation**:
+1. **Restructured page layout** - Specs section in its own container:
+   - PHP determines product count and applies appropriate classes
+   - `<section class="compare-section--full">` for 4+ products
+   - Inner `<div class="compare-section-full">` replaces `.container`
+   - Clean separation instead of CSS "breakout" hack
+
+2. **Single scroll wrapper** (`<div class="compare-specs-scroll">`) for entire specs section:
+   - NOT per-table scroll (confusing which columns are which)
+   - Contains all category titles and spec tables
+
+3. **Sticky label column**:
+   - First column (spec names) stays fixed during horizontal scroll
+   - Category titles (`h3`) also sticky to left
+   - Uses `position: sticky; left: 0` with `border-collapse: separate`
+
+4. **Mini-header scroll sync**:
+   - Mini-header is OUTSIDE scroll wrapper (for vertical sticky to work)
+   - `setupScrollSync()` function syncs `scrollLeft` between mini-header and specs-scroll
+   - Uses `requestAnimationFrame` to prevent feedback loops
+
+5. **Column alignment**:
+   - Both tables use same `<colgroup>` with `.compare-spec-col-label` class
+   - Label column: 200px fixed, Product columns: 200px minimum
+   - Table min-width = 200px + (200px × product_count)
+   - For 12 products: 2600px total, triggering scroll on most viewports
+   - Mini-header scrollbar hidden (syncs via JS)
+   - Mini-header label cell (diff toggle) also sticky left
+   - Category titles (h3) sticky left with 200px width
+
+**PHP Structure** (`page-compare.php`):
+```php
+<?php $specs_full_width = count( $product_ids ) >= 4; ?>
+
+<!-- Specs section in own container for width control -->
+<section class="compare-section compare-section--specs<?php echo $specs_full_width ? ' compare-section--full' : ''; ?>">
+    <div class="<?php echo $specs_full_width ? 'compare-section-full' : 'container'; ?>">
+        <h2>Specifications</h2>
+        <div class="compare-specs" data-compare-specs></div>
+    </div>
+</section>
+```
+
+**CSS Key Rules**:
+```css
+/* Full-width inner container (replaces .container for 4+ products) */
+.compare-section-full {
+    width: 100%;
+    max-width: none;
+    padding: 0 var(--space-6);
+}
+
+/* Table minimum width: 200px label + 200px per product column */
+.compare-section--full .compare-spec-table,
+.compare-section--full .compare-mini-table {
+    min-width: calc(200px + (200px * var(--product-count, 4)));
+}
+
+/* Scroll wrapper triggers horizontal scroll when content exceeds viewport */
+.compare-section--full .compare-specs-scroll {
+    overflow-x: auto;
+}
+
+/* Mini-header syncs scroll via JS, hide its scrollbar */
+.compare-section--full .compare-mini-header {
+    overflow-x: auto;
+    scrollbar-width: none;
+}
+
+/* Sticky label column */
+.compare-specs-scroll .compare-spec-table td:first-child {
+    position: sticky;
+    left: 0;
+    z-index: 2;
+    background: var(--color-white);
+    box-shadow: 2px 0 4px -2px rgba(0,0,0,0.1);
+}
+
+/* Category titles sticky - needs fixed width */
+.compare-specs-scroll .compare-spec-category-title {
+    position: sticky;
+    left: 0;
+    z-index: 2;
+    background: var(--color-white);
+    width: 200px;
+}
+
+/* Mini-header label (diff toggle) sticky */
+.compare-section--full .compare-mini-label {
+    position: sticky;
+    left: 0;
+    z-index: 3;
+    background: var(--color-white);
+}
+```
+
+**JS Scroll Sync**:
+```javascript
+function setupScrollSync() {
+    const miniHeader = document.querySelector('.compare-mini-header');
+    const specsScroll = document.querySelector('.compare-specs-scroll');
+    let isSyncing = false;
+
+    miniHeader.addEventListener('scroll', () => {
+        if (isSyncing) return;
+        isSyncing = true;
+        specsScroll.scrollLeft = miniHeader.scrollLeft;
+        requestAnimationFrame(() => { isSyncing = false; });
+    }, { passive: true });
+
+    // ... symmetric listener for specsScroll
+}
+```
+
 ### Remaining Work
 
 - **Overview Section**: Radar chart, advantage lists, score display
 - **Pricing Section**: Price table, history integration, track buttons
 - **Verdict Section** (Curated Only): Add to nav, winner badge, editor's text
 - **Mobile Optimization**: Stacked cards for specs, touch interactions
-- **Testing**: Multiple product counts (2, 3, 4+), different categories
+- **Testing**: Different categories (escooter, ebike, etc.)
 
 ### Design Tokens Reference
 

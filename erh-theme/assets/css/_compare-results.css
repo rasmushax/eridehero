@@ -268,13 +268,39 @@
 .compare-product-cta {
     width: 100%;
     margin-top: var(--space-3);
-    font-size: var(--text-sm);
+    font-size: var(--text-xs);
     text-align: center;
     white-space: nowrap;
     overflow: hidden;
     text-overflow: ellipsis;
 }
 
+/* CTA loading placeholder with spinner */
+.compare-product-cta--loading {
+    display: flex;
+    align-items: center;
+    justify-content: center;
+    height: 40px;
+    background: transparent;
+    border-radius: var(--radius-md);
+    color: var(--color-muted);
+}
+
+.compare-product-cta--loading .spinner-sm {
+    width: 16px;
+    height: 16px;
+}
+
+/* Fade in for dynamically loaded elements */
+.compare-product-price-row,
+.compare-product-track {
+    animation: fadeIn 0.2s ease;
+}
+
+@keyframes fadeIn {
+    from { opacity: 0; }
+    to { opacity: 1; }
+}
 
 /* Add Product Card */
 .compare-product--add-wrap {
@@ -385,13 +411,23 @@
     background: var(--color-white);
     border-top: var(--border-width) solid var(--color-border);
     border-bottom: var(--border-width) solid var(--color-border);
+    overflow-x: auto;
+    -webkit-overflow-scrolling: touch;
+    scrollbar-width: none;
+}
+
+.compare-mini-header::-webkit-scrollbar {
+    display: none;
 }
 
 .compare-mini-table {
     width: 100%;
+    min-width: max-content;
     table-layout: fixed;
     border-collapse: collapse;
 }
+
+/* Mini-header minimum widths handled by .compare-section--full in Full-Width Mode section */
 
 .compare-mini-table td {
     padding: 0 var(--space-4);
@@ -399,7 +435,8 @@
 }
 
 .compare-mini-label {
-    width: 180px;
+    /* Width controlled by .compare-spec-col-label via colgroup for alignment */
+    min-width: 200px;
 }
 
 /* Differences Toggle */
@@ -409,6 +446,7 @@
     gap: var(--space-3);
     cursor: pointer;
     user-select: none;
+    flex-wrap: wrap;
 }
 
 .compare-diff-toggle input {
@@ -470,6 +508,8 @@
     align-items: center;
     justify-content: center;
     gap: var(--space-2);
+    min-width: 0; /* Allow flex children to shrink below content size */
+    max-width: 100%;
 }
 
 .compare-mini-thumb-wrap {
@@ -487,11 +527,11 @@
     object-fit: contain;
 }
 
-/* Score ring (matches hero cards) */
+/* Score ring (compact for mini-header) */
 .compare-mini-score {
     position: relative;
-    width: 36px;
-    height: 36px;
+    width: 28px;
+    height: 28px;
     flex-shrink: 0;
     display: flex;
     align-items: center;
@@ -519,7 +559,7 @@
 }
 
 .compare-mini-score-value {
-    font-size: var(--text-sm);
+    font-size: var(--text-tiny);
     font-weight: var(--font-bold);
     color: var(--color-dark);
     text-box-trim: trim-both;
@@ -552,6 +592,9 @@
     text-decoration: none;
     white-space: nowrap;
     font-weight: var(--font-medium);
+    overflow: hidden;
+    text-overflow: ellipsis;
+    max-width: 100%;
 }
 
 .compare-mini-price:hover {
@@ -565,43 +608,8 @@
 }
 
 @media (max-width: 768px) {
+    /* Hide mini-header entirely on mobile - not useful without horizontal scroll */
     .compare-mini-header {
-        padding: var(--space-2) 0;
-        overflow-x: auto;
-        scrollbar-width: none;
-    }
-
-    .compare-mini-header::-webkit-scrollbar {
-        display: none;
-    }
-
-    .compare-mini-table td {
-        padding: 0 var(--space-3);
-    }
-
-    .compare-mini-thumb-wrap {
-        width: 32px;
-        height: 32px;
-    }
-
-    .compare-mini-score {
-        width: 28px;
-        height: 28px;
-    }
-
-    .compare-mini-score-value {
-        font-size: var(--text-xs);
-    }
-
-    .compare-mini-name {
-        font-size: var(--text-xs);
-    }
-
-    .compare-mini-price {
-        display: none;
-    }
-
-    .compare-diff-toggle {
         display: none;
     }
 }
@@ -660,7 +668,55 @@
 }
 
 .compare-radar-chart {
-    padding: var(--space-4) var(--space-2);
+    padding: var(--space-4) 0 0;
+}
+
+/* Radar Loading Skeleton
+   Match dimensions to .radar-chart-wrapper and .radar-chart-svg */
+.compare-radar-loading {
+    --skeleton-chart-size: 340px;
+    display: flex;
+    flex-direction: column;
+    align-items: center;
+    padding: var(--space-4);
+}
+
+.compare-radar-skeleton-chart {
+    width: var(--skeleton-chart-size);
+    height: var(--skeleton-chart-size);
+    max-width: 100%;
+    aspect-ratio: 1;
+    margin-bottom: var(--space-4);
+}
+
+/* Match .radar-chart-legend styles */
+.compare-radar-legend-skeleton {
+    display: flex;
+    justify-content: center;
+    flex-wrap: wrap;
+    gap: var(--space-2);
+    padding: var(--space-4);
+    border-top: 1px solid var(--color-border);
+    width: 100%;
+}
+
+/* Match .radar-legend-item styles (34.8px tall) */
+.compare-radar-legend-skeleton .skeleton {
+    border: 1px solid var(--color-border);
+    min-width: 80px;
+    height: 35px;
+}
+
+@media (max-width: 600px) {
+    .compare-radar-loading {
+        --skeleton-chart-size: 280px;
+    }
+}
+
+/* Hide skeleton when chart is rendered */
+.compare-radar-chart:not(:empty) + .compare-radar-loading,
+.compare-radar-loading.is-hidden {
+    display: none;
 }
 
 .compare-advantages {
@@ -727,6 +783,12 @@
 /* Category section */
 .compare-spec-category {
     margin-bottom: var(--space-14);
+    scroll-margin-top: 144px; /* Header (72) + Nav (48) + padding (24) */
+}
+
+/* In full-width mode, category needs explicit width for sticky h3 to work */
+.compare-section--full .compare-spec-category {
+    min-width: calc(200px + (200px * var(--product-count, 4)));
 }
 
 /* Category header row (title + scores) */
@@ -748,19 +810,51 @@
     margin: var(--space-8) 0 var(--space-4);
 }
 
+/* Horizontal scroll wrapper for entire specs section (4+ products) */
+.compare-specs-scroll {
+    overflow-x: auto;
+    overflow-y: visible;
+    -webkit-overflow-scrolling: touch;
+    scrollbar-width: thin;
+    scrollbar-color: var(--color-border-hover) transparent;
+}
+
+.compare-specs-scroll::-webkit-scrollbar {
+    height: 8px;
+}
+
+.compare-specs-scroll::-webkit-scrollbar-track {
+    background: var(--color-background);
+    border-radius: var(--radius-full);
+}
+
+.compare-specs-scroll::-webkit-scrollbar-thumb {
+    background: var(--color-border-hover);
+    border-radius: var(--radius-full);
+}
+
+.compare-specs-scroll::-webkit-scrollbar-thumb:hover {
+    background: var(--color-muted);
+}
+
 /* Spec Table (clean, like product pages) */
 .compare-spec-table {
     width: 100%;
     table-layout: fixed;
-    border-collapse: collapse;
+    border-collapse: separate;
+    border-spacing: 0;
     background: var(--color-white);
     border: var(--border-width) solid var(--color-border);
     border-radius: var(--radius-lg);
-    overflow: hidden;
 }
 
 .compare-spec-col-label {
-    width: 180px;
+    width: 200px;
+}
+
+/* Product columns - minimum width */
+.compare-spec-table col:not(.compare-spec-col-label) {
+    min-width: 200px;
 }
 
 .compare-spec-table th,
@@ -778,12 +872,52 @@
     vertical-align: middle;
 }
 
-
 .compare-spec-table td:first-child {
     text-align: left;
     color: var(--color-dark);
     font-weight: var(--font-medium);
-    padding-left: 0;
+    padding-left: var(--space-4);
+    background: var(--color-white);
+}
+
+/* Sticky label column when scrolling horizontally (4+ products) */
+.compare-specs-scroll .compare-spec-table td:first-child {
+    position: sticky;
+    left: 0;
+    z-index: 2;
+    background: var(--color-white);
+    box-shadow: 2px 0 4px -2px rgba(0, 0, 0, 0.1);
+}
+
+/* Category titles sticky to left - needs fixed width to work */
+.compare-specs-scroll .compare-spec-category-title {
+    position: sticky;
+    left: 0;
+    z-index: 2;
+    background: var(--color-white);
+    width: 200px;
+    box-sizing: border-box;
+    /* Shadow to indicate sticky, matching table cells */
+    box-shadow: 2px 0 4px -2px rgba(0, 0, 0, 0.1);
+}
+
+/* Mini-header label cell (diff toggle) sticky to left */
+.compare-section--full .compare-mini-label {
+    position: sticky;
+    left: 0;
+    z-index: 3;
+    background: var(--color-white);
+}
+
+/* Drag-to-scroll cursor hint for scrollable areas */
+.compare-section--full .compare-specs-scroll,
+.compare-section--full .compare-mini-header {
+    cursor: grab;
+}
+
+.compare-section--full .compare-specs-scroll:active,
+.compare-section--full .compare-mini-header:active {
+    cursor: grabbing;
 }
 
 .compare-spec-table tbody tr:last-child td {
@@ -894,12 +1028,45 @@
     height: 14px;
 }
 
-/* Full-width specs when 4+ products */
-.compare-page[data-product-count="4"] .compare-specs,
-.compare-page[data-product-count="5"] .compare-specs,
-.compare-page[data-product-count="6"] .compare-specs {
-    max-width: 100%;
-    padding: 0 var(--space-4);
+/* ==========================================================================
+   Full-Width Mode (4+ products)
+   Specs section in own container with horizontal scroll and sticky labels
+   ========================================================================== */
+
+/* Full-width inner container (replaces .container for 4+ products) */
+.compare-section-full {
+    width: 100%;
+    max-width: none;
+    padding: 0 var(--space-6);
+}
+
+/* Scroll wrapper - triggers horizontal scroll when content exceeds viewport */
+.compare-section--full .compare-specs-scroll {
+    overflow-x: auto;
+    overflow-y: visible;
+    -webkit-overflow-scrolling: touch;
+}
+
+/* Table minimum width: 200px label + 200px per product column */
+.compare-section--full .compare-spec-table,
+.compare-section--full .compare-mini-table {
+    min-width: calc(200px + (200px * var(--product-count, 4)));
+}
+
+/* Mini-header also needs scroll capability */
+.compare-section--full .compare-mini-header {
+    overflow-x: auto;
+    scrollbar-width: none; /* Hide scrollbar - synced via JS */
+}
+
+.compare-section--full .compare-mini-header::-webkit-scrollbar {
+    display: none;
+}
+
+/* Product cells minimum width (backup for table-layout: fixed) */
+.compare-section--full .compare-spec-table td:not(:first-child),
+.compare-section--full .compare-mini-table td:not(.compare-mini-label) {
+    min-width: 200px;
 }
 
 /* ==========================================================================
@@ -912,6 +1079,30 @@
 }
 
 @media (max-width: 768px) {
+    /* Reset full-width mode on mobile - no horizontal scroll */
+    .compare-section--full {
+        max-width: none;
+    }
+
+    .compare-section-full {
+        padding: 0 var(--space-4);
+    }
+
+    .compare-section--full .compare-spec-category {
+        min-width: 0;
+    }
+
+    .compare-specs-scroll {
+        overflow-x: visible;
+        cursor: auto;
+    }
+
+    .compare-specs-scroll .compare-spec-category-title {
+        position: static;
+        width: auto;
+        box-shadow: none;
+    }
+
     /* Hide table on mobile */
     .compare-spec-table {
         display: none;
@@ -957,17 +1148,78 @@
         justify-content: space-between;
         align-items: center;
         padding: var(--space-2) var(--space-3);
-        background: var(--color-background);
         border-radius: var(--radius-md);
     }
 
-    .compare-spec-card-value.is-winner {
-        background: var(--color-primary-light);
+    .compare-spec-card-data {
+        display: flex;
+        align-items: center;
+        gap: var(--space-1);
+        text-align: right;
+        justify-content: flex-end;
+        flex-shrink: 1;
+        min-width: 0;
     }
 
+    .compare-spec-card-text {
+        word-break: break-word;
+    }
+
+    /* Winner styling with purple badge */
     .compare-spec-card-value.is-winner .compare-spec-card-data {
         color: var(--color-primary);
         font-weight: var(--font-semibold);
+    }
+
+    .compare-spec-card-value .compare-spec-badge {
+        display: inline-flex;
+        align-items: center;
+        justify-content: center;
+        width: 18px;
+        height: 18px;
+        border-radius: var(--radius-full);
+        background: var(--color-primary-light);
+        color: var(--color-primary);
+        flex-shrink: 0;
+    }
+
+    .compare-spec-card-value .compare-spec-badge .icon {
+        width: 10px;
+        height: 10px;
+    }
+
+    /* Boolean/Feature styling with green/red badges */
+    .compare-spec-card-value .compare-feature-badge {
+        display: inline-flex;
+        align-items: center;
+        justify-content: center;
+        width: 18px;
+        height: 18px;
+        border-radius: var(--radius-full);
+        flex-shrink: 0;
+    }
+
+    .compare-spec-card-value .compare-feature-badge .icon {
+        width: 10px;
+        height: 10px;
+    }
+
+    .compare-spec-card-value.feature-yes .compare-feature-badge {
+        background: var(--color-success-light);
+        color: var(--color-success);
+    }
+
+    .compare-spec-card-value.feature-yes .compare-spec-card-data {
+        color: var(--color-success);
+    }
+
+    .compare-spec-card-value.feature-no .compare-feature-badge {
+        background: var(--color-error-light);
+        color: var(--color-error);
+    }
+
+    .compare-spec-card-value.feature-no .compare-spec-card-data {
+        color: var(--color-error);
     }
 
     .compare-spec-card-product {
@@ -976,10 +1228,6 @@
         display: flex;
         align-items: center;
         gap: var(--space-2);
-        max-width: 60%;
-        overflow: hidden;
-        text-overflow: ellipsis;
-        white-space: nowrap;
     }
 
     .compare-spec-card-product img {
@@ -994,75 +1242,6 @@
         font-weight: var(--font-medium);
         color: var(--color-dark);
     }
-}
-
-/* ==========================================================================
-   Pricing Section
-   ========================================================================== */
-
-.compare-pricing-table {
-    width: 100%;
-    border-collapse: collapse;
-    background: var(--color-white);
-    border: 1px solid var(--color-border);
-    border-radius: var(--radius-lg);
-    overflow: hidden;
-}
-
-.compare-pricing-table th,
-.compare-pricing-table td {
-    padding: var(--space-4) var(--space-5);
-    text-align: center;
-    font-size: var(--text-sm);
-    border-bottom: 1px solid var(--color-border);
-}
-
-.compare-pricing-table th {
-    font-weight: var(--font-semibold);
-    color: var(--color-dark);
-    background: var(--color-background);
-}
-
-.compare-pricing-table th:first-child,
-.compare-pricing-table td:first-child {
-    text-align: left;
-    font-weight: var(--font-medium);
-    color: var(--color-body);
-    width: 140px;
-}
-
-.compare-pricing-table tr:last-child td {
-    border-bottom: none;
-}
-
-.compare-pricing-table td.is-winner {
-    color: var(--color-primary);
-    font-weight: var(--font-semibold);
-}
-
-.compare-pricing-table .is-good {
-    color: var(--color-success);
-}
-
-.compare-pricing-table .is-bad {
-    color: var(--color-error);
-}
-
-.compare-price-icon {
-    width: 12px;
-    height: 12px;
-    vertical-align: middle;
-    margin-right: 2px;
-}
-
-.compare-pricing-actions td {
-    padding: var(--space-5);
-}
-
-.compare-pricing-btns {
-    display: flex;
-    gap: var(--space-2);
-    justify-content: center;
 }
 
 /* ==========================================================================
@@ -1462,9 +1641,7 @@
     }
 
     .compare-spec-table th,
-    .compare-spec-table td,
-    .compare-pricing-table th,
-    .compare-pricing-table td {
+    .compare-spec-table td {
         padding: var(--space-2) var(--space-3);
         font-size: var(--text-xs);
     }
@@ -1518,12 +1695,17 @@
     }
 
     .compare-product-cta {
-        font-size: var(--text-xs);
         padding: var(--space-2) var(--space-3);
     }
 
-    .compare-pricing-btns {
-        flex-direction: column;
+    .compare-product-cta--loading {
+        height: 36px;
+    }
+}
+
+@media (max-width: 350px) {
+    .compare-header-products {
+        grid-template-columns: 1fr;
     }
 }
 
@@ -1541,5 +1723,42 @@
 
     .compare-spec-category-title {
         font-size: var(--text-base);
+    }
+}
+
+/* =============================================================================
+   Full-Width Mode (5+ products)
+   ============================================================================= */
+
+.compare-page--full-width .compare-section--specs .container {
+    max-width: 100%;
+    padding-left: var(--space-4);
+    padding-right: var(--space-4);
+}
+
+.compare-page--full-width .compare-spec-table {
+    min-width: calc(200px + (var(--product-count, 5) * 180px));
+}
+
+.compare-page--full-width .compare-specs {
+    overflow-x: auto;
+    -webkit-overflow-scrolling: touch;
+}
+
+/* Overview grid layout */
+.compare-overview-grid {
+    display: grid;
+    grid-template-columns: 1fr 1fr;
+    gap: var(--space-6);
+}
+
+@media (max-width: 768px) {
+    .compare-overview-grid {
+        grid-template-columns: 1fr;
+    }
+
+    .compare-scores-label {
+        flex: 0 0 100px;
+        font-size: var(--text-xs);
     }
 }
