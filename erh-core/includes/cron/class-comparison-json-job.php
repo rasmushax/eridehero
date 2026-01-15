@@ -9,6 +9,8 @@ declare(strict_types=1);
 
 namespace ERH\Cron;
 
+use ERH\CategoryConfig;
+
 /**
  * Generates the comparison_products.json file for the head-to-head comparison tool.
  */
@@ -203,15 +205,8 @@ class ComparisonJsonJob implements CronJobInterface {
      * @return string The normalized category slug.
      */
     private function normalize_category(string $product_type): string {
-        $map = [
-            'Electric Scooter'    => 'escooter',
-            'Electric Bike'       => 'ebike',
-            'Electric Skateboard' => 'eskate',
-            'Electric Unicycle'   => 'euc',
-            'Hoverboard'          => 'hoverboard',
-        ];
-
-        return $map[$product_type] ?? strtolower(str_replace(' ', '-', $product_type));
+        $key = CategoryConfig::type_to_finder_key( $product_type );
+        return $key ?: strtolower(str_replace(' ', '-', $product_type));
     }
 
     /**

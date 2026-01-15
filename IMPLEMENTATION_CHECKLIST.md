@@ -743,6 +743,56 @@ calculator.js:
 
 ---
 
+## Phase 7D: Compare System Refactoring - COMPLETE ✅
+
+Code quality refactoring for the compare pages system following SSR + JS hydration architecture.
+
+### SpecConfig Class (Single Source of Truth)
+- [x] Create `erh-core/includes/config/class-spec-config.php`
+  - Centralized spec groups, category weights, thresholds, ranking arrays
+  - Methods: `get_spec_groups()`, `get_category_weights()`, `export_compare_config()`
+  - Replaces duplicated config in 3 locations (PHP scoring, PHP display, JS)
+- [x] Update `erh-theme/inc/functions/specs-config.php` to delegate to SpecConfig
+- [x] Update `compare-config.js` - removed SPEC_GROUPS, CATEGORY_WEIGHTS (now PHP-injected)
+  - Reduced from 1,924 lines to 446 lines (-77%)
+- [x] Inject config via `window.erhData.specConfig` in:
+  - `single-comparison.php`
+  - `page-compare.php`
+  - `template-parts/compare/category.php`
+
+### Shared UI Renderers (Mirrored PHP/JS)
+- [x] Create `template-parts/compare/components/score-ring.php`
+  - `erh_score_ring()`, `erh_the_score_ring()`
+- [x] Create `template-parts/compare/components/winner-badge.php`
+  - `erh_winner_badge()`, `erh_feature_badge()`
+- [x] Create `template-parts/compare/components/spec-value.php`
+  - `erh_spec_value()`, `erh_spec_cell()`, `erh_format_spec_value()`
+- [x] Create `template-parts/compare/components/product-thumb.php`
+  - `erh_product_thumb()`, `erh_mobile_spec_value()`, `erh_mobile_boolean_value()`
+- [x] Create `assets/js/components/compare/renderers.js`
+  - Matching JS functions for all PHP components
+  - `renderScoreRing()`, `renderWinnerBadge()`, `renderSpecCell()`, etc.
+- [x] Update `compare-results.js` to use shared renderers
+  - Removed duplicate `renderMobileSpecValue()`, `renderMobileBooleanValue()`
+  - Replaced inline SVG icons with `renderIcon()`
+  - Replaced inline score ring with `renderScoreRing()`
+
+### Architecture Pattern
+```
+PHP (SSR for SEO)                    JS (Hydration for interactivity)
+─────────────────                    ────────────────────────────────
+template-parts/compare/components/   assets/js/components/compare/
+├── score-ring.php                   └── renderers.js
+├── winner-badge.php                     ├── renderScoreRing()
+├── spec-value.php                       ├── renderWinnerBadge()
+└── product-thumb.php                    ├── renderSpecCell()
+                                         └── renderMobileSpecValue()
+```
+
+**SYNC Rule:** Changes to rendering must update BOTH PHP and JS.
+
+---
+
 ## Phase 8: JavaScript & Polish (Day 19) - PENDING
 
 - [ ] Bundle all JS into `dist/main.min.js`
@@ -817,6 +867,9 @@ erh-core/
 │   ├── class-core.php               # Main orchestrator
 │   ├── class-cache-keys.php         # Centralized cache key management
 │   ├── class-geo-config.php         # Geo constants (regions, currencies, EU countries)
+│   │
+│   ├── config/
+│   │   └── class-spec-config.php    # Single source of truth for spec metadata
 │   │
 │   ├── admin/
 │   │   ├── class-settings-page.php      # Settings > ERideHero (incl. Cron Jobs tab)
@@ -992,7 +1045,12 @@ erh-theme/
 │   │       ├── archive-filter.js   # Archive filtering
 │   │       ├── archive-sort.js     # Archive sorting
 │   │       ├── header-scroll.js    # Header scroll behavior
-│   │       └── sticky-buy-bar.js   # Sticky purchase CTA
+│   │       ├── sticky-buy-bar.js   # Sticky purchase CTA
+│   │       └── compare/            # Compare system modules
+│   │           ├── renderers.js    # Shared UI renderers (matches PHP components)
+│   │           ├── constants.js    # Shared constants
+│   │           ├── utils.js        # Comparison utilities
+│   │           └── state.js        # State management
 │   └── images/
 │       └── logos/                  # Retailer logos
 ├── inc/
@@ -1019,6 +1077,14 @@ erh-theme/
 │   ├── product/                    # Product page components
 │   │   ├── hero.php, performance-profile.php, comparison-widget.php
 │   │   └── specs-grouped.php
+│   ├── compare/                    # Compare page components
+│   │   ├── components/             # Shared renderers (mirrored in JS)
+│   │   │   ├── score-ring.php      # Score ring SVG
+│   │   │   ├── winner-badge.php    # Winner/feature badges
+│   │   │   ├── spec-value.php      # Spec formatting + cells
+│   │   │   └── product-thumb.php   # Mobile card thumbnails
+│   │   ├── category.php, hub-*.php # Compare hub pages
+│   │   └── specs-table.php, overview.php  # Compare result sections
 │   ├── sidebar/
 │   │   ├── tools.php, comparison.php, comparison-open.php, toc.php
 │   ├── home/
@@ -1098,6 +1164,8 @@ erh-theme/
 | Price Alert Visibility | Hide track buttons when no regional pricing | Can't alert on prices user can't actually buy |
 | Search | Client-side JSON with lazy loading | Fast UX, no server load per search, cache-busted via filemtime |
 | Search Matching | Simple contains (all words in title) | Good enough for ~500 items, no fuzzy complexity |
+| Compare Spec Config | Single PHP class (SpecConfig) | One source of truth, inject to JS, no drift |
+| Compare Renderers | Mirrored PHP/JS functions | SSR for SEO, JS for interactivity, same output |
 
 ---
 

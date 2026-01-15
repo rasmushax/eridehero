@@ -10,13 +10,20 @@
 
 defined( 'ABSPATH' ) || exit;
 
-// Categories to show popular comparisons for.
-$categories = [
-	'escooter'    => [ 'name' => 'E-Scooters', 'type' => 'Electric Scooter', 'slug' => 'electric-scooters' ],
-	'ebike'       => [ 'name' => 'E-Bikes', 'type' => 'Electric Bike', 'slug' => 'e-bikes' ],
-	'euc'         => [ 'name' => 'Electric Unicycles', 'type' => 'Electric Unicycle', 'slug' => 'electric-unicycles' ],
-	'eskateboard' => [ 'name' => 'E-Skateboards', 'type' => 'Electric Skateboard', 'slug' => 'e-skateboards' ],
-];
+use ERH\CategoryConfig;
+
+// Build categories array from config (excluding hoverboard for now).
+$categories = [];
+foreach ( CategoryConfig::get_all() as $key => $cat ) {
+	if ( $key === 'hoverboard' ) {
+		continue; // Skip hoverboards for popular section.
+	}
+	$categories[ $key ] = [
+		'name' => $cat['name'],
+		'type' => $cat['type'],
+		'slug' => $cat['slug'],
+	];
+}
 
 // Get comparison views DB instance.
 $views_db = null;

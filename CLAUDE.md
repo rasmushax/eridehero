@@ -12,6 +12,7 @@ Electric mobility review platform (scooters, e-bikes, EUCs, skateboards, hoverbo
 | Porting old plugin code | `LEGACY_FUNCTIONS.md` |
 | Progress tracking, phase status | `IMPLEMENTATION_CHECKLIST.md` |
 | Static HTML/CSS reference | `eridehero-redesign/CLAUDE.md` |
+| Compare system refactoring plan | `.claude/plans/playful-whistling-thompson.md` |
 
 ---
 
@@ -37,6 +38,8 @@ eridehero/
 │   │   ├── amazon/              # Amazon API integration (locales, AWS signer)
 │   │   ├── api/                 # REST endpoints
 │   │   ├── blocks/              # ACF block templates
+│   │   ├── config/              # Configuration classes
+│   │   │   └── class-spec-config.php  # Single source of truth for spec metadata
 │   │   ├── cron/                # Scheduled jobs
 │   │   ├── database/            # Table operations
 │   │   ├── email/               # Email templates
@@ -54,12 +57,15 @@ eridehero/
 │   │   ├── css/                 # Modular CSS partials
 │   │   ├── js/
 │   │   │   ├── components/      # UI components
-│   │   │   │   └── calculators/ # Calculator modules (battery-*, escooter-*)
+│   │   │   │   ├── calculators/ # Calculator modules (battery-*, escooter-*)
+│   │   │   │   └── compare/     # Compare system (renderers.js, constants.js, utils.js)
+│   │   │   ├── config/          # Configuration (compare-config.js)
 │   │   │   ├── services/        # geo-price.js, geo-config.js, search-client.js
 │   │   │   └── utils/           # Shared utilities (pricing-ui.js, calculator-utils.js, etc.)
 │   │   └── images/logos/        # Retailer logos
 │   ├── inc/                     # PHP includes
 │   └── template-parts/          # Component templates
+│       └── compare/components/  # Shared PHP renderers (mirrored in JS)
 │
 ├── reference/                   # Old plugins (READ ONLY - for reference)
 │   ├── my-custom-functionality-master/
@@ -188,6 +194,85 @@ import { calculatePriceVerdict, renderRetailerRow, renderVerdictBadge } from '..
 const verdict = calculatePriceVerdict(currentPrice, avgPrice);
 // Returns: { percent, type: 'below'|'above'|'neutral', text, shouldShow }
 ```
+
+---
+
+## Compare System Architecture
+
+The compare system uses SSR (PHP) + JS hydration for SEO + interactivity.
+
+### Single Source of Truth: SpecConfig
+
+All spec metadata (groups, weights, thresholds, rankings) lives in one PHP class:
+
+```php
+use ERH\Config\SpecConfig;
+
+// Get spec groups for a category
+$groups = SpecConfig::get_spec_groups('escooter');
+
+// Export config for JS (inject after get_footer())
+window.erhData.specConfig = <?php echo wp_json_encode(
+    SpecConfig::export_compare_config($category)
+); ?>;
+```
+
+**JS Access:**
+```javascript
+const { specGroups, categoryWeights, advantageThreshold } = window.erhData.specConfig;
+```
+
+### Shared UI Renderers (Mirrored PHP/JS)
+
+Components have matching PHP and JS functions for consistent rendering:
+
+| PHP Component | JS Function | Purpose |
+|--------------|-------------|---------|
+| `erh_score_ring()` | `renderScoreRing()` | Circular score indicator |
+| `erh_winner_badge()` | `renderWinnerBadge()` | Winner check badge |
+| `erh_spec_value()` | `renderSpecValue()` | Spec cell content |
+| `erh_spec_cell()` | `renderSpecCell()` | Full `<td>` with value |
+| `erh_mobile_spec_value()` | `renderMobileSpecValue()` | Mobile card value |
+
+**File Locations:**
+```
+erh-theme/
+├── template-parts/compare/components/
+│   ├── score-ring.php      # Score ring SVG
+│   ├── winner-badge.php    # Winner/feature badges
+│   ├── spec-value.php      # Spec formatting + cells
+│   └── product-thumb.php   # Mobile card thumbnails
+│
+└── assets/js/components/compare/
+    ├── renderers.js        # Matching JS functions
+    ├── constants.js        # Shared constants
+    ├── utils.js            # Comparison utilities
+    └── state.js            # State management
+```
+
+**SYNC Rule:** When modifying rendering logic, update BOTH the PHP component AND the JS renderer.
+
+### Compare Config Files
+
+| File | Purpose |
+|------|---------|
+| `erh-core/includes/config/class-spec-config.php` | Single source of truth for spec metadata |
+| `erh-theme/assets/js/config/compare-config.js` | Utility functions (formatSpecValue, compareValues) |
+| `erh-theme/inc/functions/specs-config.php` | Legacy helpers (delegates to SpecConfig) |
+| `erh-theme/inc/compare-routes.php` | URL routing for compare pages |
+
+### Adding a New Spec
+
+1. Add to `SpecConfig::SPEC_GROUPS` in the correct category group
+2. Include: `key`, `label`, `unit`, `format`, `higherBetter`, `tooltip`
+3. Run cache rebuild cron to populate new spec in product data
+
+### Adding a New Product Category
+
+1. Add category config to `SpecConfig::SPEC_GROUPS['newcategory']`
+2. Add category weights to `SpecConfig::CATEGORY_WEIGHTS['newcategory']`
+3. Add scorer class (see `scoring/class-escooter-scorer.php` pattern)
+4. Update `CategoryConfig` class with new category mapping
 
 ---
 

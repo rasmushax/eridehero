@@ -17,46 +17,88 @@ import { Modal } from './modal.js';
 import { RadarChart } from './radar-chart.js';
 import { escapeHtml } from '../utils/dom.js';
 import {
-    SPEC_GROUPS,
-    CATEGORY_WEIGHTS,
-    ADVANTAGE_THRESHOLD,
-    MAX_ADVANTAGES,
     formatSpecValue,
     compareValues,
     calculatePercentDiff,
-    calculateAbsoluteCategoryScore,
 } from '../config/compare-config.js';
 
+// Import from modular files
+import {
+    SELECTORS,
+    HEADER_HEIGHT,
+    NAV_HEIGHT,
+    SCROLL_OFFSET,
+    CONTAINER_MAX_WIDTH,
+    CONTAINER_PADDING,
+    LABEL_COL_WIDTH,
+    PRODUCT_COL_MIN_WIDTH,
+} from './compare/constants.js';
+import {
+    getSpec,
+    findWinners,
+    buildCompareUrl,
+    closeModal,
+    showError,
+    throttle,
+    debounce,
+    trackComparisonView,
+} from './compare/utils.js';
+
+// Shared UI renderers (matches PHP components)
+import {
+    renderScoreRing,
+    renderWinnerBadge,
+    renderSpecCell,
+    renderMobileSpecValue as renderMobileValue,
+    renderMobileBooleanValue as renderMobileBoolean,
+    renderIcon,
+} from './compare/renderers.js';
+
 // =============================================================================
-// Constants
+// Config from PHP (Single Source of Truth)
 // =============================================================================
+// Spec config is injected by PHP via window.erhData.specConfig
+// This includes: specGroups, categoryWeights, thresholds, ranking arrays
 
-const SELECTORS = {
-    page: '[data-compare-page]',
-    header: '[data-compare-header]',
-    products: '[data-compare-products]',
-    nav: '[data-compare-nav]',
-    navLinks: '[data-nav-links]',
-    navLink: '[data-nav-link]',
-    section: '[data-section]',
-    overview: '[data-compare-overview]',
-    specs: '[data-compare-specs]',
-    addModal: '#compare-add-modal',
-    searchInput: '[data-compare-search]',
-    searchResults: '[data-compare-results]',
-    addBtn: '[data-compare-add]',
-    inputs: '[data-compare-inputs]',
-};
+/**
+ * Get spec config from PHP-injected data.
+ * Falls back to empty defaults if not available.
+ */
+function getSpecConfig() {
+    return window.erhData?.specConfig || {};
+}
 
-const HEADER_HEIGHT = 72;
-const NAV_HEIGHT = 48;
-const SCROLL_OFFSET = HEADER_HEIGHT + NAV_HEIGHT + 24;
+/**
+ * Get spec groups for the current category.
+ */
+function getSpecGroups() {
+    const config = getSpecConfig();
+    return config.specGroups || {};
+}
 
-// Layout constants for dynamic full-width calculation
-const CONTAINER_MAX_WIDTH = 1200;
-const CONTAINER_PADDING = 48; // 24px each side
-const LABEL_COL_WIDTH = 200;
-const PRODUCT_COL_MIN_WIDTH = 200;
+/**
+ * Get category weights for the current category.
+ */
+function getCategoryWeights() {
+    const config = getSpecConfig();
+    return config.categoryWeights || {};
+}
+
+/**
+ * Get advantage threshold (min % diff to show as advantage).
+ */
+function getAdvantageThreshold() {
+    const config = getSpecConfig();
+    return config.advantageThreshold || 5;
+}
+
+/**
+ * Get max advantages to show per product.
+ */
+function getMaxAdvantages() {
+    const config = getSpecConfig();
+    return config.maxAdvantages || 5;
+}
 
 // =============================================================================
 // State
@@ -510,7 +552,7 @@ function renderCompareButton(selected) {
     }
 
     btn.onclick = () => {
-        window.location.href = buildCompareUrl(selected.map(p => p.id));
+        window.location.href = buildCompareUrl(selected.map(p => p.id), allProducts);
     };
 }
 
@@ -696,23 +738,10 @@ function renderProducts() {
         // CTA only if retailer exists
         const hasCta = p.retailer && p.buyLink;
 
-        // Score ring calculation (0-100 scale, circumference = 2 * PI * radius)
-        const radius = 15;
-        const circumference = 2 * Math.PI * radius;
-        const scorePercent = Math.min(100, Math.max(0, score)); // Clamp 0-100
-        const offset = circumference - (scorePercent / 100) * circumference;
-
         return `
             <article class="compare-product" data-product-id="${p.id}">
-                <!-- Score ring (top-left) -->
-                <div class="compare-product-score" title="${score} points">
-                    <svg class="compare-product-score-ring" viewBox="0 0 36 36">
-                        <circle class="compare-product-score-track" cx="18" cy="18" r="${radius}" />
-                        <circle class="compare-product-score-progress" cx="18" cy="18" r="${radius}"
-                                style="stroke-dasharray: ${circumference}; stroke-dashoffset: ${offset};" />
-                    </svg>
-                    <span class="compare-product-score-value">${score}</span>
-                </div>
+                <!-- Score ring (top-left, uses shared renderer) -->
+                ${renderScoreRing(score, 'md')}
 
                 <div class="compare-product-actions">
                     <button class="compare-product-remove" data-remove-product="${p.id}" aria-label="Remove from comparison">
@@ -871,7 +900,7 @@ function renderRadarChart() {
     }
 
     // Build category data for radar
-    const weights = CATEGORY_WEIGHTS[category] || {};
+    const weights = getCategoryWeights();
     const categories = Object.entries(weights)
         .filter(([_, weight]) => weight > 0)
         .map(([name]) => ({
@@ -904,7 +933,7 @@ function renderRadarChart() {
  */
 function generateAdvantages(product, others) {
     const advantages = [];
-    const groups = SPEC_GROUPS[category] || {};
+    const groups = getSpecGroups();
 
     for (const group of Object.values(groups)) {
         for (const spec of group.specs || []) {
@@ -932,7 +961,7 @@ function generateAdvantages(product, others) {
                 }
             }
 
-            if (winsAll && bestDiff >= ADVANTAGE_THRESHOLD) {
+            if (winsAll && bestDiff >= getAdvantageThreshold()) {
                 advantages.push({
                     label: spec.label,
                     value: formatSpecValue(val, spec),
@@ -944,7 +973,7 @@ function generateAdvantages(product, others) {
         }
     }
 
-    return advantages.sort((a, b) => b.diff - a.diff).slice(0, MAX_ADVANTAGES);
+    return advantages.sort((a, b) => b.diff - a.diff).slice(0, getMaxAdvantages());
 }
 
 /**
@@ -1053,7 +1082,7 @@ function renderSpecs() {
     const container = document.querySelector(SELECTORS.specs);
     if (!container) return;
 
-    const groups = SPEC_GROUPS[category] || {};
+    const groups = getSpecGroups();
     const categories = [];
     const categoryNav = []; // Track categories for nav population
     const needsScroll = isFullWidthMode;
@@ -1170,7 +1199,7 @@ function renderMobileSpecCards(specs) {
         const winners = findWinners(values, spec);
         const tooltipHtml = spec.tooltip ? `
             <span class="info-trigger" data-tooltip="${escapeHtml(spec.tooltip)}" data-tooltip-trigger="click">
-                <svg class="icon" width="14" height="14"><use href="#icon-info"></use></svg>
+                ${renderIcon('info', 14, 14)}
             </span>
         ` : '';
 
@@ -1179,10 +1208,10 @@ function renderMobileSpecCards(specs) {
             const isWinner = winners.includes(i);
 
             if (isBoolean) {
-                return renderMobileBooleanValue(p, value);
+                return renderMobileBoolean(p, value);
             }
 
-            return renderMobileSpecValue(p, value, spec, isWinner);
+            return renderMobileValue(p, value, spec, isWinner);
         }).join('');
 
         cards.push(`
@@ -1200,69 +1229,8 @@ function renderMobileSpecCards(specs) {
     return cards.join('');
 }
 
-/**
- * Render a single mobile spec value with optional winner badge.
- */
-function renderMobileSpecValue(product, value, spec, isWinner) {
-    const formatted = formatSpecValue(value, spec);
-
-    if (isWinner) {
-        return `
-            <div class="compare-spec-card-value is-winner">
-                <span class="compare-spec-card-product">
-                    <img src="${product.thumbnail || ''}" alt="">
-                    ${escapeHtml(product.name)}
-                </span>
-                <span class="compare-spec-card-data">
-                    <span class="compare-spec-badge">
-                        <svg class="icon" aria-hidden="true"><use href="#icon-check"></use></svg>
-                    </span>
-                    <span class="compare-spec-card-text">${formatted}</span>
-                </span>
-            </div>
-        `;
-    }
-
-    return `
-        <div class="compare-spec-card-value">
-            <span class="compare-spec-card-product">
-                <img src="${product.thumbnail || ''}" alt="">
-                ${escapeHtml(product.name)}
-            </span>
-            <span class="compare-spec-card-data">
-                <span class="compare-spec-card-text">${formatted}</span>
-            </span>
-        </div>
-    `;
-}
-
-/**
- * Render a mobile boolean value with green/red badge.
- */
-function renderMobileBooleanValue(product, value) {
-    const isTrue = value === true || value === 'Yes' || value === 'yes' || value === 1;
-    const hasValue = value !== null && value !== '' && value !== undefined;
-    const statusClass = hasValue ? (isTrue ? 'feature-yes' : 'feature-no') : '';
-    const icon = isTrue ? 'check' : 'x';
-    const text = hasValue ? (isTrue ? 'Yes' : 'No') : '—';
-
-    return `
-        <div class="compare-spec-card-value ${statusClass}">
-            <span class="compare-spec-card-product">
-                <img src="${product.thumbnail || ''}" alt="">
-                ${escapeHtml(product.name)}
-            </span>
-            <span class="compare-spec-card-data">
-                ${hasValue ? `
-                    <span class="compare-feature-badge">
-                        <svg class="icon" aria-hidden="true"><use href="#icon-${icon}"></use></svg>
-                    </span>
-                ` : ''}
-                ${text}
-            </span>
-        </div>
-    `;
-}
+// renderMobileSpecValue and renderMobileBooleanValue now imported from ./compare/renderers.js
+// as renderMobileValue and renderMobileBoolean (see imports at top)
 
 /**
  * Render mobile feature array cards (expanded into individual feature rows).
@@ -1285,7 +1253,7 @@ function renderMobileFeatureCards(spec, values) {
         const productValues = products.map((p, i) => {
             const productFeatures = values[i];
             const hasFeature = Array.isArray(productFeatures) && productFeatures.includes(feature);
-            return renderMobileBooleanValue(p, hasFeature);
+            return renderMobileBoolean(p, hasFeature);
         }).join('');
 
         cards.push(`
@@ -1351,9 +1319,7 @@ function renderBooleanCell(value) {
     return `
         <td class="${statusClass}">
             <div class="compare-spec-value-inner">
-                <span class="compare-feature-badge">
-                    <svg class="icon" aria-hidden="true"><use href="#icon-${icon}"></use></svg>
-                </span>
+                <span class="compare-feature-badge">${renderIcon(icon)}</span>
                 <span class="compare-feature-text">${text}</span>
             </div>
         </td>
@@ -1456,7 +1422,7 @@ function renderSpecRows(specs) {
 
             const tooltipHtml = spec.tooltip ? `
                 <span class="info-trigger" data-tooltip="${escapeHtml(spec.tooltip)}" data-tooltip-trigger="click">
-                    <svg class="icon" width="14" height="14"><use href="#icon-info"></use></svg>
+                    ${renderIcon('info', 14, 14)}
                 </span>
             ` : '';
 
@@ -1475,27 +1441,14 @@ function renderSpecRows(specs) {
         const winners = findWinners(values, spec);
 
         const cells = values.map((v, i) => {
-            const formatted = formatSpecValue(v, spec);
             const isWinner = winners.includes(i);
-            if (isWinner) {
-                return `
-                    <td class="is-winner">
-                        <div class="compare-spec-value-inner">
-                            <span class="compare-spec-badge">
-                                <svg class="icon" aria-hidden="true"><use href="#icon-check"></use></svg>
-                            </span>
-                            <span class="compare-spec-value-text">${formatted}</span>
-                        </div>
-                    </td>
-                `;
-            }
-            return `<td>${formatted}</td>`;
+            return renderSpecCell(v, spec, isWinner);
         }).join('');
 
         // Click-activated tooltip with info circle icon
         const tooltipHtml = spec.tooltip ? `
             <span class="info-trigger" data-tooltip="${escapeHtml(spec.tooltip)}" data-tooltip-trigger="click">
-                <svg class="icon" width="14" height="14"><use href="#icon-info"></use></svg>
+                ${renderIcon('info', 14, 14)}
             </span>
         ` : '';
 
@@ -1516,32 +1469,10 @@ function renderSpecRows(specs) {
 // No JS rendering needed.
 
 // =============================================================================
-// Scoring
+// Scoring - Uses PHP Pre-computed Scores
 // =============================================================================
-
-/**
- * Calculate overall product score.
- * Uses pre-calculated backend score when available, falls back to JS calculation.
- */
-function calculateProductScore(product) {
-    const specs = product.specs || product;
-
-    // Try pre-calculated overall score first (from backend CacheRebuildJob).
-    if (specs.scores && typeof specs.scores.overall === 'number') {
-        return specs.scores.overall;
-    }
-
-    // Fallback to JS calculation using category scores.
-    const weights = CATEGORY_WEIGHTS[category] || {};
-    let total = 0, weightSum = 0;
-
-    for (const [name, weight] of Object.entries(weights)) {
-        total += calculateCategoryScore(product, name) * weight;
-        weightSum += weight;
-    }
-
-    return weightSum > 0 ? Math.round(total / weightSum) : 0;
-}
+// All scores are pre-calculated by PHP (ProductScorer) during cache rebuild
+// and stored in specs.scores. No client-side calculation needed.
 
 /**
  * Map JS category names to PHP score keys.
@@ -1557,20 +1488,25 @@ const CATEGORY_SCORE_KEYS = {
 };
 
 /**
- * Calculate category score using absolute scoring.
- * Uses pre-calculated backend scores when available, falls back to JS calculation.
+ * Get overall product score from PHP pre-computed scores.
+ * @param {Object} product - Product data with specs.scores
+ * @returns {number} Overall score 0-100, or 0 if not available
+ */
+function calculateProductScore(product) {
+    const specs = product.specs || product;
+    return specs.scores?.overall ?? 0;
+}
+
+/**
+ * Get category score from PHP pre-computed scores.
+ * @param {Object} product - Product data with specs.scores
+ * @param {string} categoryName - Category display name (e.g., 'Motor Performance')
+ * @returns {number} Category score 0-100, or 0 if not available
  */
 function calculateCategoryScore(product, categoryName) {
     const specs = product.specs || product;
-
-    // Try pre-calculated scores first (from backend CacheRebuildJob).
     const scoreKey = CATEGORY_SCORE_KEYS[categoryName];
-    if (scoreKey && specs.scores && typeof specs.scores[scoreKey] === 'number') {
-        return specs.scores[scoreKey];
-    }
-
-    // Fallback to JS calculation.
-    return calculateAbsoluteCategoryScore(specs, categoryName, category);
+    return scoreKey ? (specs.scores?.[scoreKey] ?? 0) : 0;
 }
 
 // =============================================================================
@@ -1948,6 +1884,7 @@ function addProduct(product) {
     // Update URL first, then render, then apply layout mode
     // (render replaces DOM, so layout mode must come after)
     updateUrl();
+    updateDocumentTitle();
     render();
     updateLayoutMode();
 }
@@ -1962,6 +1899,7 @@ function removeProduct(id) {
     // Update URL first, then render, then apply layout mode
     // (render replaces DOM, so layout mode must come after)
     updateUrl();
+    updateDocumentTitle();
     render();
     updateLayoutMode();
 }
@@ -1971,184 +1909,55 @@ function removeProduct(id) {
  */
 function updateUrl() {
     const ids = products.map(p => p.id);
-    const url = buildCompareUrl(ids);
+    const url = buildCompareUrl(ids, allProducts);
     window.history.replaceState({}, '', url);
 }
 
-// =============================================================================
-// Helpers
-// =============================================================================
-
 /**
- * Get nested spec value.
+ * Update document title dynamically based on current products.
+ *
+ * Title formats:
+ * - 2-3 products: "Product A vs Product B [vs Product C]"
+ * - 4+ products: "Comparing X electric scooters"
  */
-function getSpec(product, key) {
-    const specs = product.specs || product;
-    return key.split('.').reduce((obj, k) => obj?.[k], specs) ?? null;
-}
+function updateDocumentTitle() {
+    const names = products.map(p => p.name);
+    const count = names.length;
 
-/**
- * Find winner indices.
- */
-function findWinners(values, spec) {
-    // Specs marked noWinner should not have winner highlighting
-    if (spec.noWinner) return [];
+    if (count === 0) return;
 
-    const valid = values.map((v, i) => ({ v, i })).filter(x => x.v != null && x.v !== '');
-    if (valid.length < 2) return [];
+    const categoryName = window.erhData?.compareConfig?.categoryName || 'Electric Rides';
+    let title;
 
-    let best = valid[0];
-    for (const item of valid.slice(1)) {
-        if (compareValues(item.v, best.v, spec) < 0) best = item;
+    if (count <= 3) {
+        // "Product A vs Product B [vs Product C]"
+        title = names.join(' vs ');
+    } else {
+        // "Comparing X electric scooters"
+        title = `Comparing ${count} ${categoryName}`;
     }
 
-    const winners = valid.filter(x => compareValues(x.v, best.v, spec) === 0).map(x => x.i);
-    return winners.length === valid.length ? [] : winners;
-}
+    // Update document title (browser tab)
+    document.title = title;
 
-/**
- * Build compare URL.
- */
-function buildCompareUrl(ids) {
-    const base = window.erhData?.siteUrl || '';
-    if (ids.length <= 4) {
-        const slugs = ids.map(id => {
-            const p = allProducts.find(x => x.id === id);
-            if (p?.slug) return p.slug;
-            const match = p?.url?.match(/\/([^/]+)\/?$/);
-            return match?.[1] || null;
-        }).filter(Boolean);
-
-        if (slugs.length === ids.length) {
-            return `${base}/compare/${slugs.join('-vs-')}/`;
-        }
+    // Update RankMath title tag if present
+    const titleTag = document.querySelector('title');
+    if (titleTag) {
+        titleTag.textContent = title;
     }
-    return `${base}/compare/?products=${ids.join(',')}`;
-}
 
-/**
- * Close modal.
- */
-function closeModal() {
-    const modal = document.querySelector(SELECTORS.addModal);
-    modal?.querySelector('[data-modal-close]')?.click();
-}
-
-/**
- * Show error.
- */
-function showError(msg) {
-    const container = document.querySelector(SELECTORS.overview);
-    if (container) {
-        container.innerHTML = `<div class="compare-error"><p>${msg}</p></div>`;
+    // Update OG title meta if present
+    const ogTitle = document.querySelector('meta[property="og:title"]');
+    if (ogTitle) {
+        ogTitle.setAttribute('content', title);
     }
-}
-
-// escapeHtml imported from utils/dom.js
-
-/**
- * Throttle function.
- */
-function throttle(fn, wait) {
-    let last = 0;
-    return function(...args) {
-        const now = Date.now();
-        if (now - last >= wait) {
-            last = now;
-            fn.apply(this, args);
-        }
-    };
 }
 
 // =============================================================================
-// View Tracking
+// Helpers - Imported from ./compare/utils.js
 // =============================================================================
-
-/**
- * Track comparison view via REST API.
- * Uses sessionStorage to deduplicate - only tracks once per session per unique pair.
- *
- * @param {number[]} productIds - Array of product IDs being compared.
- */
-async function trackComparisonView(productIds) {
-    if (!productIds || productIds.length < 2) return;
-
-    // Generate all unique pairs from the product IDs.
-    const pairs = generatePairs(productIds);
-    if (!pairs.length) return;
-
-    // Filter to pairs not yet tracked this session.
-    const untracked = pairs.filter(pair => !isTrackedThisSession(pair));
-    if (!untracked.length) return;
-
-    try {
-        const restUrl = window.erhData?.restUrl || '/wp-json/erh/v1/';
-        const nonce = window.erhData?.nonce || '';
-
-        await fetch(`${restUrl}compare/track`, {
-            method: 'POST',
-            headers: {
-                'Content-Type': 'application/json',
-                'X-WP-Nonce': nonce,
-            },
-            body: JSON.stringify({ product_ids: productIds }),
-        });
-
-        // Mark all pairs as tracked for this session.
-        untracked.forEach(pair => markTrackedThisSession(pair));
-    } catch (e) {
-        // Silent fail - tracking is non-critical.
-        console.debug('Comparison tracking failed:', e);
-    }
-}
-
-/**
- * Generate all unique pairs from an array of product IDs.
- * Each pair is normalized with lower ID first.
- *
- * @param {number[]} ids - Array of product IDs.
- * @returns {string[]} Array of pair keys like "123-456".
- */
-function generatePairs(ids) {
-    const pairs = [];
-    for (let i = 0; i < ids.length; i++) {
-        for (let j = i + 1; j < ids.length; j++) {
-            // Canonical order: lower ID first.
-            const a = Math.min(ids[i], ids[j]);
-            const b = Math.max(ids[i], ids[j]);
-            pairs.push(`${a}-${b}`);
-        }
-    }
-    return pairs;
-}
-
-/**
- * Check if a pair has been tracked this session.
- *
- * @param {string} pairKey - Pair key like "123-456".
- * @returns {boolean} True if already tracked.
- */
-function isTrackedThisSession(pairKey) {
-    try {
-        return sessionStorage.getItem(`erh_compared_${pairKey}`) === '1';
-    } catch {
-        // sessionStorage may be unavailable (private mode, etc.).
-        return false;
-    }
-}
-
-/**
- * Mark a pair as tracked for this session.
- *
- * @param {string} pairKey - Pair key like "123-456".
- */
-function markTrackedThisSession(pairKey) {
-    try {
-        sessionStorage.setItem(`erh_compared_${pairKey}`, '1');
-    } catch {
-        // Silent fail if sessionStorage unavailable.
-    }
-}
+// getSpec, findWinners, buildCompareUrl, closeModal, showError, throttle,
+// debounce, trackComparisonView are imported at the top of this file.
 
 // =============================================================================
 // Related Comparisons

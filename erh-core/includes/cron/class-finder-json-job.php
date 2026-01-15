@@ -9,22 +9,13 @@ declare(strict_types=1);
 
 namespace ERH\Cron;
 
+use ERH\CategoryConfig;
+
 /**
  * Generates finder JSON files per product type for the database/finder tools.
  * Creates separate files: finder_escooter.json, finder_ebike.json, etc.
  */
 class FinderJsonJob implements CronJobInterface {
-
-    /**
-     * Product type to file slug mapping.
-     */
-    private const PRODUCT_TYPE_SLUGS = [
-        'Electric Scooter'    => 'escooter',
-        'Electric Bike'       => 'ebike',
-        'Electric Skateboard' => 'eskate',
-        'Electric Unicycle'   => 'euc',
-        'Hoverboard'          => 'hoverboard',
-    ];
 
     /**
      * Cron manager reference for locking.
@@ -116,7 +107,7 @@ class FinderJsonJob implements CronJobInterface {
         $upload_dir = wp_upload_dir();
         $total_products = 0;
 
-        foreach (self::PRODUCT_TYPE_SLUGS as $product_type => $slug) {
+        foreach (CategoryConfig::get_type_to_finder_key() as $product_type => $slug) {
             $count = $this->generate_type_json($product_type, $slug, $upload_dir['basedir']);
             $total_products += $count;
         }
@@ -239,16 +230,11 @@ class FinderJsonJob implements CronJobInterface {
             'variants',
         ];
 
-        // Map category to nested field group key.
-        $nested_group_keys = [
-            'ebike'      => 'e-bikes',
-            'escooter'   => 'e-scooters',
-            'eskate'     => 'e-skateboards',
-            'euc'        => 'e-unicycles',
-            'hoverboard' => 'hoverboards',
-        ];
-
-        $nested_key = $nested_group_keys[$category] ?? null;
+        // Map category (finder key) to ACF wrapper key.
+        // First normalize the finder key to canonical key, then get ACF wrapper.
+        $canonical_key = CategoryConfig::normalize_key( $category );
+        $category_data = CategoryConfig::get_by_key( $canonical_key );
+        $nested_key = $category_data ? $category_data['acf_wrapper'] : null;
         $output = [];
 
         // Handle nested product type structure.

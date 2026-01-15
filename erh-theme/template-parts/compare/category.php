@@ -340,6 +340,9 @@ window.erhData.compareConfig = {
     category: <?php echo wp_json_encode( $category_key ); ?>,
     categoryName: <?php echo wp_json_encode( $category_name ); ?>,
     categorySlug: <?php echo wp_json_encode( $category_slug ); ?>,
-    isCategoryPage: true
+    isCategoryPage: true,
+    titleData: <?php echo wp_json_encode( erh_get_compare_title_data() ); ?>
 };
+// Inject spec config from PHP (single source of truth).
+window.erhData.specConfig = <?php echo wp_json_encode( \ERH\Config\SpecConfig::export_compare_config( $category_key ) ); ?>;
 </script>

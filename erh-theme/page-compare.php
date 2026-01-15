@@ -11,6 +11,8 @@
 
 defined( 'ABSPATH' ) || exit;
 
+use ERH\CategoryConfig;
+
 get_header();
 
 // Parse product IDs from URL (SEO slugs or query string).
@@ -77,8 +79,8 @@ $page_classes      .= $is_full_width ? ' compare-page--full-width' : '';
             <div class="container">
                 <?php
                 erh_breadcrumb( [
-                    [ 'label' => $category_name, 'url' => home_url( '/' . $category_slug . '/' ) ],
-                    [ 'label' => $page_title ],
+                    [ 'label' => 'Compare', 'url' => home_url( '/compare/' ) ],
+                    [ 'label' => $category_name, 'url' => erh_get_compare_category_url( $category ) ],
                 ] );
                 ?>
             </div>
@@ -223,8 +225,11 @@ window.erhData.compareConfig = {
     categoryName: <?php echo wp_json_encode( $category_name ); ?>,
     categorySlug: <?php echo wp_json_encode( $category_slug ); ?>,
     geo: <?php echo wp_json_encode( $geo ); ?>,
-    currencySymbol: <?php echo wp_json_encode( $currency_symbol ); ?>
+    currencySymbol: <?php echo wp_json_encode( $currency_symbol ); ?>,
+    titleData: <?php echo wp_json_encode( erh_get_compare_title_data() ); ?>
 };
+// Inject spec config from PHP (single source of truth).
+window.erhData.specConfig = <?php echo wp_json_encode( \ERH\Config\SpecConfig::export_compare_config( $category ) ); ?>;
 </script>
 <?php if ( ! empty( $compare_products ) ) : ?>
 <!-- Products JSON for JS hydration -->
@@ -280,13 +285,14 @@ function erh_get_compare_product_ids(): array {
  * @return array{key: string, name: string, slug: string}
  */
 function erh_get_category_from_type( ?string $product_type ): array {
-    $types = [
-        'Electric Scooter'    => [ 'key' => 'escooter', 'name' => 'E-Scooters', 'slug' => 'escooter' ],
-        'Electric Bike'       => [ 'key' => 'ebike', 'name' => 'E-Bikes', 'slug' => 'ebike' ],
-        'Electric Skateboard' => [ 'key' => 'eskateboard', 'name' => 'E-Skateboards', 'slug' => 'eskateboard' ],
-        'Electric Unicycle'   => [ 'key' => 'euc', 'name' => 'Electric Unicycles', 'slug' => 'euc' ],
-        'Hoverboard'          => [ 'key' => 'hoverboard', 'name' => 'Hoverboards', 'slug' => 'hoverboard' ],
-    ];
-
-    return $types[ $product_type ?? '' ] ?? [ 'key' => 'escooter', 'name' => 'E-Scooters', 'slug' => 'escooter' ];
+    $category = CategoryConfig::get_by_type( $product_type ?? '' );
+    if ( $category ) {
+        return [
+            'key'  => $category['key'],
+            'name' => $category['name'],
+            'slug' => $category['key'], // Note: uses key for internal slug, not URL slug.
+        ];
+    }
+    // Default to escooter.
+    return [ 'key' => 'escooter', 'name' => 'E-Scooters', 'slug' => 'escooter' ];
 }

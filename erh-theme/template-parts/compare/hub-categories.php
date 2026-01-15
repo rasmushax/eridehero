@@ -9,49 +9,10 @@
 
 defined( 'ABSPATH' ) || exit;
 
-// Category data with icons (matching homepage hero icons).
-$categories = [
-    [
-        'key'          => 'escooter',
-        'slug'         => 'electric-scooters',
-        'name'         => 'Electric Scooters',
-        'icon'         => 'escooter',
-        'icon_class'   => 'icon-filled',
-        'product_type' => 'Electric Scooter',
-    ],
-    [
-        'key'          => 'ebike',
-        'slug'         => 'e-bikes',
-        'name'         => 'E-Bikes',
-        'icon'         => 'ebike',
-        'icon_class'   => 'icon-filled',
-        'product_type' => 'Electric Bike',
-    ],
-    [
-        'key'          => 'euc',
-        'slug'         => 'electric-unicycles',
-        'name'         => 'Electric Unicycles',
-        'icon'         => 'euc',
-        'icon_class'   => '',
-        'product_type' => 'Electric Unicycle',
-    ],
-    [
-        'key'          => 'eskate',
-        'slug'         => 'e-skateboards',
-        'name'         => 'E-Skateboards',
-        'icon'         => 'eskate',
-        'icon_class'   => '',
-        'product_type' => 'Electric Skateboard',
-    ],
-    [
-        'key'          => 'hoverboard',
-        'slug'         => 'hoverboards',
-        'name'         => 'Hoverboards',
-        'icon'         => 'hoverboard',
-        'icon_class'   => 'icon-filled',
-        'product_type' => 'Hoverboard',
-    ],
-];
+use ERH\CategoryConfig;
+
+// Category data from centralized config.
+$categories = CategoryConfig::get_hub_categories();
 
 // Get product counts for each category from the product_data cache table.
 global $wpdb;

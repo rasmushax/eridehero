@@ -58,7 +58,6 @@ $comparison_id = get_the_ID();
         erh_breadcrumb( [
             [ 'label' => 'Compare', 'url' => home_url( '/compare/' ) ],
             [ 'label' => $category_name, 'url' => erh_get_compare_category_url( $category ) ],
-            [ 'label' => $page_title ],
         ] );
         ?>
     </div>
@@ -216,6 +215,9 @@ window.erhData.compareConfig = {
     categorySlug: <?php echo wp_json_encode( $category_slug ); ?>,
     isCurated: true,
     comparisonId: <?php echo (int) $comparison_id; ?>,
-    verdictWinner: <?php echo wp_json_encode( $verdict_winner ); ?>
+    verdictWinner: <?php echo wp_json_encode( $verdict_winner ); ?>,
+    titleData: <?php echo wp_json_encode( erh_get_compare_title_data() ); ?>
 };
+// Inject spec config from PHP (single source of truth).
+window.erhData.specConfig = <?php echo wp_json_encode( \ERH\Config\SpecConfig::export_compare_config( $category ) ); ?>;
 </script>
