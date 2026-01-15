@@ -252,14 +252,32 @@ erh-theme/
 
 **SYNC Rule:** When modifying rendering logic, update BOTH the PHP component AND the JS renderer.
 
+### Compare Templates (Consolidated)
+
+All compare URLs use a single template for consistency:
+
+| URL Pattern | Template | Mode |
+|-------------|----------|------|
+| `/compare/` | `page-compare.php` | Hub page |
+| `/compare/electric-scooters/` | `category.php` | Category hub |
+| `/compare/?products=123,456` | `page-compare.php` | Dynamic comparison |
+| `/compare/product-a-vs-product-b/` | `page-compare.php` | Dynamic or curated |
+| Curated comparison CPT | `page-compare.php` | Curated (adds intro + verdict) |
+
+**Curated comparisons** (comparison CPT) use the same template but conditionally show:
+- Intro section with H1 and intro text
+- Verdict section with winner pick
+- Related comparisons section
+
 ### Compare Config Files
 
 | File | Purpose |
 |------|---------|
+| `page-compare.php` | Consolidated template (hub, dynamic, curated) |
+| `template-parts/compare/category.php` | Category landing pages |
 | `erh-core/includes/config/class-spec-config.php` | Single source of truth for spec metadata |
 | `erh-theme/assets/js/config/compare-config.js` | Utility functions (formatSpecValue, compareValues) |
-| `erh-theme/inc/functions/specs-config.php` | Legacy helpers (delegates to SpecConfig) |
-| `erh-theme/inc/compare-routes.php` | URL routing for compare pages |
+| `erh-theme/inc/compare-routes.php` | URL routing, RankMath SEO integration |
 
 ### Adding a New Spec
 

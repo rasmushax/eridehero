@@ -755,10 +755,7 @@ Code quality refactoring for the compare pages system following SSR + JS hydrati
 - [x] Update `erh-theme/inc/functions/specs-config.php` to delegate to SpecConfig
 - [x] Update `compare-config.js` - removed SPEC_GROUPS, CATEGORY_WEIGHTS (now PHP-injected)
   - Reduced from 1,924 lines to 446 lines (-77%)
-- [x] Inject config via `window.erhData.specConfig` in:
-  - `single-comparison.php`
-  - `page-compare.php`
-  - `template-parts/compare/category.php`
+- [x] Inject config via `window.erhData.specConfig` in compare templates
 
 ### Shared UI Renderers (Mirrored PHP/JS)
 - [x] Create `template-parts/compare/components/score-ring.php`
@@ -777,16 +774,37 @@ Code quality refactoring for the compare pages system following SSR + JS hydrati
   - Replaced inline SVG icons with `renderIcon()`
   - Replaced inline score ring with `renderScoreRing()`
 
+### Template Consolidation
+- [x] Consolidate `single-comparison.php` into `page-compare.php`
+  - Both dynamic and curated comparisons now use same template
+  - Curated mode detected via `is_singular('comparison')`
+  - Intro section (H1 + intro text) shown conditionally for curated
+  - Verdict section shown conditionally when verdict_text exists
+  - Full SSR for both modes (was JS-only for curated)
+- [x] Delete `single-comparison.php` (no longer needed)
+- [x] Update `compare-routes.php` routing to use consolidated template
+
+### RankMath SEO Integration
+- [x] Add `erh_compare_rankmath_title()` filter for dynamic meta titles
+- [x] Add `erh_compare_rankmath_description()` filter for meta descriptions
+- [x] Title formats: "Compare X Electric Scooters", "Product A vs Product B", "Comparing X E-Scooters"
+- [x] Category counts use `product_type` taxonomy
+
 ### Architecture Pattern
 ```
 PHP (SSR for SEO)                    JS (Hydration for interactivity)
 ─────────────────                    ────────────────────────────────
-template-parts/compare/components/   assets/js/components/compare/
-├── score-ring.php                   └── renderers.js
-├── winner-badge.php                     ├── renderScoreRing()
-├── spec-value.php                       ├── renderWinnerBadge()
-└── product-thumb.php                    ├── renderSpecCell()
-                                         └── renderMobileSpecValue()
+page-compare.php (consolidated)      assets/js/components/compare-results.js
+├── Hub, dynamic, curated modes      └── Hydrates SSR content
+├── Detects curated via CPT
+└── Conditionally renders            assets/js/components/compare/
+    intro + verdict sections         ├── renderers.js (mirrored functions)
+                                     ├── constants.js
+template-parts/compare/components/   └── utils.js
+├── score-ring.php
+├── winner-badge.php
+├── spec-value.php
+└── product-thumb.php
 ```
 
 **SYNC Rule:** Changes to rendering must update BOTH PHP and JS.

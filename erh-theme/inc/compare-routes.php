@@ -90,10 +90,20 @@ add_filter( 'query_vars', 'erh_compare_query_vars' );
 /**
  * Load compare template when erh_compare query var is set.
  *
+ * Also handles curated comparison CPT - uses same template for consistency.
+ *
  * @param string $template The template to load.
  * @return string Modified template path.
  */
 function erh_compare_template_include( $template ) {
+    // Curated comparison CPT also uses page-compare.php (consolidated template).
+    if ( is_singular( 'comparison' ) ) {
+        $compare_template = get_template_directory() . '/page-compare.php';
+        if ( file_exists( $compare_template ) ) {
+            return $compare_template;
+        }
+    }
+
     if ( get_query_var( 'erh_compare' ) ) {
         // Check for category landing page.
         $category = get_query_var( 'compare_category', '' );
