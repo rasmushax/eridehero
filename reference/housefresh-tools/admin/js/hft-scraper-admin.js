@@ -91,13 +91,17 @@ jQuery(document).ready(function($) {
         }
     });
     
+    // Store tagify instance globally for geo group buttons
+    let hftGeosTagify = null;
+    const geoGroups = hftScraperAdmin.geoGroups || {};
+
     // Initialize Tagify for GEO selection (existing functionality)
     if (typeof Tagify !== 'undefined' && $('.hft-geos-tagify').length) {
         $('.hft-geos-tagify').each(function() {
             var input = this;
             var tagify = new Tagify(input, {
                 whitelist: hftScraperAdmin.geoWhitelist || [],
-                enforceWhitelist: true,
+                enforceWhitelist: false, // Allow non-whitelist values (for group country codes)
                 dropdown: {
                     enabled: 0, // Show dropdown on focus
                     closeOnSelect: false,
@@ -106,7 +110,11 @@ jQuery(document).ready(function($) {
                 },
                 editTags: false // Prevent editing after tag creation
             });
-            
+
+            // Store reference for geo group buttons
+            hftGeosTagify = tagify;
+            window.hftGeosTagify = tagify; // Also expose globally
+
             // Convert initial value
             var initialValue = $(input).val();
             if (initialValue) {
@@ -134,8 +142,114 @@ jQuery(document).ready(function($) {
                     tagify.addTags([initialValue.trim()]);
                 }
             }
+
+            // Update group button states when tags change
+            tagify.on('add remove', function() {
+                updateGeoGroupButtonStates();
+            });
+
+            // Initial update of button states
+            updateGeoGroupButtonStates();
         });
     }
+
+    /**
+     * Update the active state of geo group buttons based on current tags
+     */
+    function updateGeoGroupButtonStates() {
+        if (!hftGeosTagify) return;
+
+        const currentTags = hftGeosTagify.value.map(tag => tag.value.toUpperCase());
+
+        $('.hft-geo-group-btn').each(function() {
+            const $btn = $(this);
+            const groupKey = $btn.data('group');
+            const group = geoGroups[groupKey];
+
+            if (!group) return;
+
+            // Check if all countries in the group are present
+            let allPresent = true;
+            if (groupKey === 'GLOBAL') {
+                allPresent = currentTags.includes('GLOBAL');
+            } else {
+                for (const country of group.countries) {
+                    if (!currentTags.includes(country.toUpperCase())) {
+                        allPresent = false;
+                        break;
+                    }
+                }
+            }
+
+            if (allPresent && group.countries.length > 0) {
+                $btn.addClass('active');
+            } else {
+                $btn.removeClass('active');
+            }
+        });
+    }
+
+    // Geo group button click handler
+    $(document).on('click', '.hft-geo-group-btn', function(e) {
+        e.preventDefault();
+
+        if (!hftGeosTagify) {
+            console.warn('Tagify not initialized');
+            return;
+        }
+
+        const groupKey = $(this).data('group');
+        const group = geoGroups[groupKey];
+
+        if (!group || !group.countries) {
+            console.warn('Invalid geo group:', groupKey);
+            return;
+        }
+
+        const currentTags = hftGeosTagify.value.map(tag => tag.value.toUpperCase());
+
+        // Check if this group is already fully added (toggle behavior)
+        let allPresent = true;
+        if (groupKey === 'GLOBAL') {
+            allPresent = currentTags.includes('GLOBAL');
+        } else {
+            for (const country of group.countries) {
+                if (!currentTags.includes(country.toUpperCase())) {
+                    allPresent = false;
+                    break;
+                }
+            }
+        }
+
+        if (allPresent) {
+            // Remove all countries in this group
+            group.countries.forEach(function(country) {
+                hftGeosTagify.removeTag(country);
+            });
+        } else {
+            // Add countries that aren't already present
+            const newTags = group.countries.filter(function(country) {
+                return !currentTags.includes(country.toUpperCase());
+            });
+
+            if (newTags.length > 0) {
+                hftGeosTagify.addTags(newTags);
+            }
+        }
+
+        // Update button states
+        updateGeoGroupButtonStates();
+    });
+
+    // Clear all GEOs button
+    $(document).on('click', '.hft-geo-clear-btn', function(e) {
+        e.preventDefault();
+
+        if (!hftGeosTagify) return;
+
+        hftGeosTagify.removeAllTags();
+        updateGeoGroupButtonStates();
+    });
     
     // Test full scraper
     $testButton.on('click', function(e) {
@@ -582,4 +696,214 @@ jQuery(document).ready(function($) {
         };
         return text.replace(/[&<>"']/g, function(m) { return map[m]; });
     }
+
+    // ===========================================
+    // Enhanced Rule UI - Dynamic Rule Management
+    // ===========================================
+
+    // Track rule indices per field type
+    const ruleIndices = {};
+
+    // Initialize rule indices from existing rules
+    $('.hft-rules-container').each(function() {
+        const fieldType = $(this).attr('id').replace('rules-', '');
+        ruleIndices[fieldType] = $(this).find('.hft-scraper-rule').length;
+    });
+
+    // Add new rule button handler
+    $(document).on('click', '.hft-add-rule', function(e) {
+        e.preventDefault();
+
+        const fieldType = $(this).data('field');
+        const $container = $('#rules-' + fieldType);
+        const template = $('#hft-rule-template').html();
+
+        if (!template) {
+            console.error('Rule template not found');
+            return;
+        }
+
+        // Get next index
+        const index = ruleIndices[fieldType] || 0;
+        ruleIndices[fieldType] = index + 1;
+
+        // Replace placeholders in template
+        let newRule = template
+            .replace(/__FIELD__/g, fieldType)
+            .replace(/__INDEX__/g, index);
+
+        // Set default priority based on number of existing rules
+        const existingRules = $container.find('.hft-scraper-rule').length;
+        const defaultPriority = (existingRules + 1) * 10;
+
+        // Create element and set priority
+        const $newRule = $(newRule);
+        $newRule.find('input[name*="[priority]"]').val(defaultPriority);
+
+        // Add to container
+        $container.append($newRule);
+
+        // Animate in
+        $newRule.hide().slideDown();
+
+        // Initialize mode toggle for new rule
+        updateModeVisibility($newRule, false);
+    });
+
+    // Remove rule button handler
+    $(document).on('click', '.hft-remove-rule', function(e) {
+        e.preventDefault();
+
+        const $rule = $(this).closest('.hft-scraper-rule');
+        const $container = $rule.parent();
+
+        // Don't remove if it's the last rule in the container
+        if ($container.find('.hft-scraper-rule').length <= 1) {
+            // Clear the fields instead
+            $rule.find('input[type="text"], textarea').val('');
+            $rule.find('input[type="checkbox"]').prop('checked', false);
+            $rule.find('select').val('xpath');
+            updateModeVisibility($rule);
+            return;
+        }
+
+        // Animate out and remove
+        $rule.slideUp(function() {
+            $(this).remove();
+        });
+    });
+
+    // Extraction mode change handler
+    $(document).on('change', '.hft-extraction-mode-select', function() {
+        const $rule = $(this).closest('.hft-scraper-rule');
+        updateModeVisibility($rule, true);
+    });
+
+    // Update visibility based on extraction mode
+    // animate=true for user interactions, false for initial page load
+    function updateModeVisibility($rule, animate) {
+        const mode = $rule.find('.hft-extraction-mode-select').val() || 'xpath';
+        const showFn = animate ? 'slideDown' : 'show';
+        const hideFn = animate ? 'slideUp' : 'hide';
+
+        // Show/hide regex extraction rows
+        const $regexRows = $rule.find('.hft-regex-extraction-row');
+        const $booleanRow = $rule.find('.hft-boolean-row');
+
+        if (mode === 'xpath_regex') {
+            // Remove inline display:none first, then animate
+            $regexRows.css('display', '').hide()[showFn]();
+            $booleanRow.css('display', '').hide()[showFn]();
+        } else {
+            $regexRows[hideFn]();
+            $booleanRow[hideFn]();
+        }
+
+        // Show/hide attribute row (hide for json_path)
+        const $attrRow = $rule.find('.hft-attribute-row');
+        if (mode === 'json_path') {
+            $attrRow[hideFn]();
+        } else {
+            $attrRow.css('display', '').hide()[showFn]();
+        }
+
+        // Update mode hints
+        $rule.find('.hft-mode-hint').hide();
+        $rule.find('.hft-mode-' + mode).show();
+    }
+
+    // Boolean mode toggle handler
+    $(document).on('change', '.hft-return-boolean-toggle', function() {
+        const $values = $(this).closest('td').find('.hft-boolean-values');
+
+        if ($(this).is(':checked')) {
+            $values.slideDown();
+        } else {
+            $values.slideUp();
+        }
+    });
+
+    // Post-processing regex toggle handler
+    $(document).on('change', '.hft-post-regex-toggle', function() {
+        const $options = $(this).closest('td').find('.hft-post-regex-options');
+
+        if ($(this).is(':checked')) {
+            $options.slideDown();
+        } else {
+            $options.slideUp();
+        }
+    });
+
+    // Initialize mode visibility for existing rules on page load
+    $('.hft-scraper-rule').each(function() {
+        updateModeVisibility($(this), false);
+    });
+
+    // Updated test selector for new rule structure
+    $(document).on('click', '.test-selector', function(e) {
+        e.preventDefault();
+
+        const $button = $(this);
+        const $rule = $button.closest('.hft-scraper-rule');
+        const $group = $button.closest('.hft-scraper-rule-group');
+        const fieldType = $group.data('field');
+
+        const xpath = $rule.find('input[name*="[xpath]"]').val();
+        const attribute = $rule.find('input[name*="[attribute]"]').val();
+        const extractionMode = $rule.find('select[name*="[extraction_mode]"]').val();
+        const regexPattern = $rule.find('input[name*="[regex_pattern]"]').val();
+        const url = $testUrl.val().trim();
+
+        if (!url) {
+            alert('Please enter a test URL first');
+            return;
+        }
+
+        if (!xpath) {
+            alert('Please enter a selector');
+            return;
+        }
+
+        // Show loading
+        const originalText = $button.text();
+        $button.prop('disabled', true).html('<span class="hft-spinner"></span>');
+
+        // Get scraper ID if available
+        const scraperId = $('input[name="scraper_id"]').val() || 0;
+
+        // Test selector with enhanced parameters
+        $.post(hftScraperAdmin.ajaxUrl, {
+            action: 'hft_test_selector',
+            nonce: hftScraperAdmin.nonce,
+            scraper_id: scraperId,
+            test_url: url,
+            xpath: xpath,
+            attribute: attribute,
+            field_type: fieldType,
+            extraction_mode: extractionMode,
+            regex_pattern: regexPattern
+        })
+        .done(function(response) {
+            const $result = $rule.find('.hft-test-result');
+            if (response.success) {
+                let text = response.data.value !== null
+                    ? 'Found: ' + response.data.value
+                    : 'No match';
+                $result.removeClass('error').addClass('success').text(text);
+            } else {
+                $result.removeClass('success').addClass('error').text('Error: ' + response.data.message);
+            }
+
+            // Clear result after 10 seconds
+            setTimeout(function() {
+                $result.text('').removeClass('success error');
+            }, 10000);
+        })
+        .fail(function() {
+            $rule.find('.hft-test-result').removeClass('success').addClass('error').text('Test failed');
+        })
+        .always(function() {
+            $button.prop('disabled', false).text(originalText);
+        });
+    });
 });

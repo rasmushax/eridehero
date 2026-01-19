@@ -2,6 +2,15 @@
 /**
  * Click Redirector - Handles /go/ URL redirects.
  *
+ * Optimized for performance:
+ * - Uses early `parse_request` hook instead of `template_redirect`
+ * - Direct SQL queries instead of WP_Query
+ * - Async click tracking (records after redirect sent)
+ *
+ * SEO optimized:
+ * - Sends X-Robots-Tag: noindex header
+ * - Excluded from RankMath processing
+ *
  * @package ERH\Tracking
  */
 
@@ -31,11 +40,16 @@ class ClickRedirector {
     public const QUERY_VAR_LINK = 'erh_go_link';
 
     /**
-     * Click tracker instance.
-     *
-     * @var ClickTracker
+     * Valid geo regions.
      */
-    private ClickTracker $tracker;
+    private const VALID_GEOS = ['US', 'GB', 'EU', 'CA', 'AU'];
+
+    /**
+     * Click data to record after redirect (async tracking).
+     *
+     * @var array|null
+     */
+    private static ?array $pending_click = null;
 
     /**
      * Price fetcher instance.
@@ -45,21 +59,26 @@ class ClickRedirector {
     private ?PriceFetcher $price_fetcher = null;
 
     /**
-     * Constructor.
-     */
-    public function __construct() {
-        $this->tracker = new ClickTracker();
-    }
-
-    /**
      * Register hooks for URL handling.
      *
      * @return void
      */
     public function register(): void {
+        // Rewrite rules need init hook.
         add_action('init', [$this, 'add_rewrite_rules']);
         add_filter('query_vars', [$this, 'add_query_vars']);
-        add_action('template_redirect', [$this, 'handle_redirect']);
+
+        // Use parse_request for earlier interception (before main query).
+        add_action('parse_request', [$this, 'handle_redirect_early'], 1);
+
+        // SEO: Exclude /go/ from RankMath processing.
+        // These filters only fire if RankMath is active; methods are type-safe.
+        add_filter('rank_math/frontend/robots', [$this, 'rankmath_noindex']);
+        add_filter('rank_math/frontend/title', [$this, 'rankmath_exclude'], 1);
+        add_filter('rank_math/frontend/description', [$this, 'rankmath_exclude'], 1);
+
+        // Async click tracking: record after response sent.
+        add_action('shutdown', [__CLASS__, 'record_pending_click']);
     }
 
     /**
@@ -96,35 +115,35 @@ class ClickRedirector {
     }
 
     /**
-     * Handle the redirect.
+     * Handle the redirect early in the request lifecycle.
      *
+     * Hooked to parse_request (before main WP query runs).
+     *
+     * @param \WP $wp WordPress environment instance.
      * @return void
      */
-    public function handle_redirect(): void {
-        $product_slug = get_query_var(self::QUERY_VAR_PRODUCT);
+    public function handle_redirect_early(\WP $wp): void {
+        // Check if this is a /go/ request.
+        $product_slug = $wp->query_vars[self::QUERY_VAR_PRODUCT] ?? '';
 
         if (empty($product_slug)) {
             return;
         }
 
-        $link_id = (int) get_query_var(self::QUERY_VAR_LINK);
+        $link_id = (int) ($wp->query_vars[self::QUERY_VAR_LINK] ?? 0);
 
-        // Get product by slug.
-        $product = $this->get_product_by_slug($product_slug);
+        // Get product by slug using direct query (faster than get_posts).
+        $product_id = $this->get_product_id_by_slug($product_slug);
 
-        if (!$product) {
+        if (!$product_id) {
             $this->show_not_found('Product not found.');
             return;
         }
 
-        $product_id = $product->ID;
-
         // Determine which link to use.
         if ($link_id > 0) {
-            // Specific link requested.
             $link = $this->get_specific_link($link_id);
         } else {
-            // Auto-pick best link for user's geo.
             $link = $this->get_auto_pick_link($product_id);
         }
 
@@ -133,52 +152,122 @@ class ClickRedirector {
             return;
         }
 
-        // Record the click.
-        $this->tracker->record_click($link['id'], $product_id);
-
-        // Redirect to affiliate URL.
+        // Validate URL before redirecting.
         $redirect_url = $link['url'];
 
-        // Validate URL before redirecting.
         if (empty($redirect_url)) {
             $this->show_not_found('No redirect URL available.');
             return;
         }
 
-        // Check if URL is valid - filter_var can be too strict, so also check for basic URL structure
+        // Check if URL is valid.
         $is_valid = filter_var($redirect_url, FILTER_VALIDATE_URL)
             || preg_match('#^https?://#i', $redirect_url);
 
         if (!$is_valid) {
-            // Log for debugging
-            error_log('[ERH ClickRedirector] Invalid URL for link ' . $link['id'] . ': ' . $redirect_url);
             $this->show_not_found('Invalid redirect URL.');
             return;
         }
 
-        // Set cache headers to prevent caching of redirect.
-        nocache_headers();
+        // Queue click for async recording (after redirect).
+        self::$pending_click = [
+            'link_id'    => $link['id'],
+            'product_id' => $product_id,
+        ];
 
-        // Use 302 (temporary) redirect so it's not cached by browsers.
-        wp_redirect($redirect_url, 302, 'ERideHero');
+        // Perform the redirect.
+        $this->do_redirect($redirect_url);
+    }
+
+    /**
+     * Perform the actual redirect with proper headers.
+     *
+     * @param string $url The URL to redirect to.
+     * @return void
+     */
+    private function do_redirect(string $url): void {
+        // Prevent any output.
+        if (ob_get_level()) {
+            ob_end_clean();
+        }
+
+        // SEO: Tell search engines not to index /go/ URLs.
+        header('X-Robots-Tag: noindex, nofollow', true);
+
+        // Prevent caching.
+        header('Cache-Control: no-cache, no-store, must-revalidate', true);
+        header('Pragma: no-cache', true);
+        header('Expires: 0', true);
+
+        // 302 Temporary redirect (affiliate URLs may change).
+        header('Location: ' . $url, true, 302);
+
+        // Flush output to browser immediately.
+        if (function_exists('fastcgi_finish_request')) {
+            fastcgi_finish_request();
+        } else {
+            // For non-FastCGI environments, flush what we can.
+            if (function_exists('ob_flush')) {
+                @ob_flush();
+            }
+            flush();
+        }
+
+        // Don't exit yet - let shutdown hook record the click.
+        // But prevent WordPress from continuing.
+        // We use a flag and check in shutdown.
+
+        // Actually, after fastcgi_finish_request, we can continue execution.
+        // The response is already sent to the client.
+        // Record click synchronously if fastcgi available, otherwise shutdown hook handles it.
+        if (function_exists('fastcgi_finish_request')) {
+            self::record_pending_click();
+        }
+
         exit;
     }
 
     /**
-     * Get product post by slug.
+     * Record pending click data (called on shutdown or after fastcgi_finish_request).
+     *
+     * @return void
+     */
+    public static function record_pending_click(): void {
+        if (self::$pending_click === null) {
+            return;
+        }
+
+        $click_data = self::$pending_click;
+        self::$pending_click = null; // Prevent double-recording.
+
+        // Record the click.
+        $tracker = new ClickTracker();
+        $tracker->record_click($click_data['link_id'], $click_data['product_id']);
+    }
+
+    /**
+     * Get product ID by slug using direct SQL query.
+     *
+     * Much faster than get_posts() or WP_Query for simple lookups.
      *
      * @param string $slug The product slug.
-     * @return \WP_Post|null The product post or null.
+     * @return int|null The product ID or null if not found.
      */
-    private function get_product_by_slug(string $slug): ?\WP_Post {
-        $posts = get_posts([
-            'name'        => sanitize_title($slug),
-            'post_type'   => 'products',
-            'post_status' => 'publish',
-            'numberposts' => 1,
-        ]);
+    private function get_product_id_by_slug(string $slug): ?int {
+        global $wpdb;
 
-        return $posts[0] ?? null;
+        $product_id = $wpdb->get_var(
+            $wpdb->prepare(
+                "SELECT ID FROM {$wpdb->posts}
+                WHERE post_name = %s
+                AND post_type = 'products'
+                AND post_status = 'publish'
+                LIMIT 1",
+                sanitize_title($slug)
+            )
+        );
+
+        return $product_id ? (int) $product_id : null;
     }
 
     /**
@@ -219,7 +308,7 @@ class ClickRedirector {
         $url = $row['affiliate_link_override'];
 
         if (empty($url)) {
-            // Check if this is an Amazon link (parser_identifier = 'amazon' and tracking_url is ASIN)
+            // Check if this is an Amazon link.
             if ($row['parser_identifier'] === 'amazon' && !empty($row['tracking_url'])) {
                 $url = $this->build_amazon_url($row['tracking_url'], $row['geo_target']);
             } else {
@@ -264,19 +353,18 @@ class ClickRedirector {
     /**
      * Get user's geo from cookie.
      *
-     * @return string|null The geo code or null for default (US).
+     * @return string The geo code (defaults to US).
      */
-    private function get_user_geo(): ?string {
+    private function get_user_geo(): string {
         if (isset($_COOKIE['erh_geo'])) {
             $geo = strtoupper(sanitize_text_field(wp_unslash($_COOKIE['erh_geo'])));
-            $valid_geos = ['US', 'GB', 'EU', 'CA', 'AU'];
 
-            if (in_array($geo, $valid_geos, true)) {
+            if (in_array($geo, self::VALID_GEOS, true)) {
                 return $geo;
             }
         }
 
-        return 'US'; // Default to US.
+        return 'US';
     }
 
     /**
@@ -287,7 +375,6 @@ class ClickRedirector {
      * @return string The full Amazon affiliate URL.
      */
     private function build_amazon_url(string $asin, ?string $geo): string {
-        // Map geo to Amazon domain
         $domains = [
             'US' => 'www.amazon.com',
             'GB' => 'www.amazon.co.uk',
@@ -305,8 +392,6 @@ class ClickRedirector {
         ];
 
         $domain = $domains[strtoupper($geo ?? 'US')] ?? 'www.amazon.com';
-
-        // Get associate tag from HFT settings
         $tag = $this->get_amazon_associate_tag($geo);
 
         $url = "https://{$domain}/dp/{$asin}";
@@ -362,14 +447,11 @@ class ClickRedirector {
             return $tracking_url;
         }
 
-        // Replace template placeholders.
-        $url = str_replace(
+        return str_replace(
             ['{URL}', '{URLE}', '{ID}'],
             [$tracking_url, urlencode($tracking_url), $this->extract_product_id($tracking_url)],
             $format
         );
-
-        return $url;
     }
 
     /**
@@ -392,21 +474,69 @@ class ClickRedirector {
      * @return void
      */
     private function show_not_found(string $message): void {
-        global $wp_query;
-        $wp_query->set_404();
-        status_header(404);
+        // Send noindex header even for 404s.
+        header('X-Robots-Tag: noindex, nofollow', true);
 
-        // Try to load 404 template.
-        if ($template = get_404_template()) {
-            include $template;
-        } else {
-            wp_die(
-                esc_html($message),
-                esc_html__('Product Not Found', 'erh-core'),
-                ['response' => 404]
-            );
+        status_header(404);
+        nocache_headers();
+
+        // Minimal 404 response (avoid loading full theme).
+        wp_die(
+            esc_html($message),
+            esc_html__('Not Found', 'erh-core'),
+            ['response' => 404]
+        );
+    }
+
+    /**
+     * RankMath: Set noindex for /go/ URLs.
+     *
+     * @param mixed $robots The robots array.
+     * @return array Modified robots array.
+     */
+    public function rankmath_noindex($robots): array {
+        // Ensure we have an array (RankMath may pass different types).
+        if (!is_array($robots)) {
+            $robots = [];
         }
-        exit;
+
+        if ($this->is_go_url()) {
+            $robots['index'] = 'noindex';
+            $robots['follow'] = 'nofollow';
+        }
+
+        return $robots;
+    }
+
+    /**
+     * RankMath: Skip processing for /go/ URLs.
+     *
+     * @param mixed $value The value to filter.
+     * @return string Original or empty value.
+     */
+    public function rankmath_exclude($value): string {
+        if ($this->is_go_url()) {
+            return '';
+        }
+
+        return is_string($value) ? $value : '';
+    }
+
+    /**
+     * Check if current request is a /go/ URL.
+     *
+     * Handles subfolder installs (e.g., /eridehero/go/).
+     *
+     * @return bool True if /go/ URL.
+     */
+    private function is_go_url(): bool {
+        $request_uri = $_SERVER['REQUEST_URI'] ?? '';
+
+        // Get site path for subfolder installs.
+        $site_path = wp_parse_url(home_url(), PHP_URL_PATH) ?: '';
+        $go_pattern = '#^' . preg_quote($site_path, '#') . '/go/#';
+
+        return (bool) preg_match($go_pattern, $request_uri);
     }
 
     /**
@@ -417,13 +547,11 @@ class ClickRedirector {
      * @return string The tracked URL.
      */
     public static function get_tracked_url(string $product_slug, ?int $link_id = null): string {
-        $base_url = home_url('/go/' . $product_slug . '/');
-
         if ($link_id) {
             return home_url('/go/' . $product_slug . '/' . $link_id . '/');
         }
 
-        return $base_url;
+        return home_url('/go/' . $product_slug . '/');
     }
 
     /**

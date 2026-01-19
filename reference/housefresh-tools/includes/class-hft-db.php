@@ -103,14 +103,20 @@ if ( ! class_exists( 'HFT_Db' ) ) {
 			) {$charset_collate};";
 			dbDelta( $sql_scrapers );
 
-			// Table: hft_scraper_rules  
+			// Table: hft_scraper_rules
 			$table_name_scraper_rules = $wpdb->prefix . 'hft_scraper_rules';
 			$sql_scraper_rules = "CREATE TABLE {$table_name_scraper_rules} (
 				id BIGINT UNSIGNED NOT NULL AUTO_INCREMENT,
 				scraper_id BIGINT UNSIGNED NOT NULL,
 				field_type ENUM('price', 'status', 'shipping') NOT NULL,
+				priority INT NOT NULL DEFAULT 10,
+				extraction_mode VARCHAR(50) NOT NULL DEFAULT 'xpath',
 				xpath_selector TEXT NOT NULL,
 				attribute VARCHAR(100) NULL DEFAULT NULL,
+				regex_pattern TEXT NULL DEFAULT NULL,
+				regex_fallbacks TEXT NULL DEFAULT NULL,
+				return_boolean BOOLEAN NOT NULL DEFAULT 0,
+				boolean_true_values TEXT NULL DEFAULT NULL,
 				post_processing TEXT NULL DEFAULT NULL,
 				is_active BOOLEAN NOT NULL DEFAULT 1,
 				created_at DATETIME NOT NULL DEFAULT CURRENT_TIMESTAMP,
@@ -118,7 +124,7 @@ if ( ! class_exists( 'HFT_Db' ) ) {
 				PRIMARY KEY (id),
 				KEY scraper_id (scraper_id),
 				KEY field_type (field_type),
-				UNIQUE KEY unique_scraper_field (scraper_id, field_type)
+				KEY scraper_field_priority (scraper_id, field_type, priority)
 			) {$charset_collate};";
 			dbDelta( $sql_scraper_rules );
 
@@ -197,6 +203,64 @@ if ( ! class_exists( 'HFT_Db' ) ) {
 			$logo_attachment_id_exists = $wpdb->get_var("SHOW COLUMNS FROM `{$scrapers_table}` LIKE 'logo_attachment_id'");
 			if (!$logo_attachment_id_exists) {
 				$wpdb->query("ALTER TABLE `{$scrapers_table}` ADD COLUMN `logo_attachment_id` BIGINT UNSIGNED NULL AFTER `name`");
+			}
+
+			// Add geos_input column to hft_scrapers if it doesn't exist
+			// This stores the original geo input (including group identifiers) before expansion
+			$geos_input_exists = $wpdb->get_var("SHOW COLUMNS FROM `{$scrapers_table}` LIKE 'geos_input'");
+			if (!$geos_input_exists) {
+				$wpdb->query("ALTER TABLE `{$scrapers_table}` ADD COLUMN `geos_input` TEXT NULL AFTER `geos`");
+			}
+
+			// Migration for enhanced extraction system (hft_scraper_rules)
+			$scraper_rules_table = $wpdb->prefix . 'hft_scraper_rules';
+
+			// Add priority column
+			$priority_exists = $wpdb->get_var("SHOW COLUMNS FROM `{$scraper_rules_table}` LIKE 'priority'");
+			if (!$priority_exists) {
+				$wpdb->query("ALTER TABLE `{$scraper_rules_table}` ADD COLUMN `priority` INT NOT NULL DEFAULT 10 AFTER `field_type`");
+			}
+
+			// Add extraction_mode column
+			$extraction_mode_exists = $wpdb->get_var("SHOW COLUMNS FROM `{$scraper_rules_table}` LIKE 'extraction_mode'");
+			if (!$extraction_mode_exists) {
+				$wpdb->query("ALTER TABLE `{$scraper_rules_table}` ADD COLUMN `extraction_mode` VARCHAR(50) NOT NULL DEFAULT 'xpath' AFTER `priority`");
+			}
+
+			// Add regex_pattern column
+			$regex_pattern_exists = $wpdb->get_var("SHOW COLUMNS FROM `{$scraper_rules_table}` LIKE 'regex_pattern'");
+			if (!$regex_pattern_exists) {
+				$wpdb->query("ALTER TABLE `{$scraper_rules_table}` ADD COLUMN `regex_pattern` TEXT NULL DEFAULT NULL AFTER `attribute`");
+			}
+
+			// Add regex_fallbacks column
+			$regex_fallbacks_exists = $wpdb->get_var("SHOW COLUMNS FROM `{$scraper_rules_table}` LIKE 'regex_fallbacks'");
+			if (!$regex_fallbacks_exists) {
+				$wpdb->query("ALTER TABLE `{$scraper_rules_table}` ADD COLUMN `regex_fallbacks` TEXT NULL DEFAULT NULL AFTER `regex_pattern`");
+			}
+
+			// Add return_boolean column
+			$return_boolean_exists = $wpdb->get_var("SHOW COLUMNS FROM `{$scraper_rules_table}` LIKE 'return_boolean'");
+			if (!$return_boolean_exists) {
+				$wpdb->query("ALTER TABLE `{$scraper_rules_table}` ADD COLUMN `return_boolean` BOOLEAN NOT NULL DEFAULT 0 AFTER `regex_fallbacks`");
+			}
+
+			// Add boolean_true_values column
+			$boolean_true_values_exists = $wpdb->get_var("SHOW COLUMNS FROM `{$scraper_rules_table}` LIKE 'boolean_true_values'");
+			if (!$boolean_true_values_exists) {
+				$wpdb->query("ALTER TABLE `{$scraper_rules_table}` ADD COLUMN `boolean_true_values` TEXT NULL DEFAULT NULL AFTER `return_boolean`");
+			}
+
+			// Remove the UNIQUE constraint on (scraper_id, field_type) to allow multiple rules per field
+			$unique_key_exists = $wpdb->get_var("SHOW INDEX FROM `{$scraper_rules_table}` WHERE Key_name = 'unique_scraper_field'");
+			if ($unique_key_exists) {
+				$wpdb->query("ALTER TABLE `{$scraper_rules_table}` DROP INDEX `unique_scraper_field`");
+			}
+
+			// Add composite index for priority-based queries
+			$priority_index_exists = $wpdb->get_var("SHOW INDEX FROM `{$scraper_rules_table}` WHERE Key_name = 'scraper_field_priority'");
+			if (!$priority_index_exists) {
+				$wpdb->query("ALTER TABLE `{$scraper_rules_table}` ADD INDEX `scraper_field_priority` (`scraper_id`, `field_type`, `priority`)");
 			}
 
 			// Store/update plugin database version.

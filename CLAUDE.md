@@ -24,6 +24,7 @@ Electric mobility review platform (scooters, e-bikes, EUCs, skateboards, hoverbo
 | Plugin | `erh-core/` - Unified functionality plugin |
 | Price Data | HFT Plugin (Housefresh Tools) |
 | Fields | ACF Pro |
+| SEO | RankMath Pro |
 | Caching | LiteSpeed + Cloudflare |
 
 ---
@@ -94,6 +95,117 @@ eridehero/
 - Modular partials (`_variables.css`, `_header.css`, etc.)
 - Custom properties for design tokens
 - Mobile-first responsive
+
+### URL Generation (Subfolder-Safe)
+**CRITICAL:** Site may be installed in a subfolder (e.g., `localhost/eridehero/`). Always use WordPress URL functions instead of hardcoded paths.
+
+```php
+// ✅ CORRECT - Works in any installation
+home_url('/go/product-slug/123/')     // → https://eridehero.com/go/product-slug/123/
+                                       // → http://localhost/eridehero/go/product-slug/123/
+
+// ❌ WRONG - Breaks in subfolder installs
+'/go/product-slug/123/'               // → Missing domain and subfolder
+```
+
+**PHP URL Functions:**
+- `home_url($path)` - For frontend URLs (links, redirects)
+- `admin_url($path)` - For admin URLs
+- `rest_url($path)` - For REST API URLs
+- `get_permalink($post_id)` - For post/page URLs
+
+**In JavaScript:**
+```javascript
+// Use ensureAbsoluteUrl() for any URL that may be relative
+import { ensureAbsoluteUrl } from '../utils/dom.js';
+
+link.href = ensureAbsoluteUrl(offer.tracked_url || offer.url);
+// Handles: "/go/..." → "http://localhost/eridehero/go/..."
+// Passes through: "https://..." → "https://..."
+```
+
+### Affiliate Links (SEO Compliance)
+All affiliate/retailer links MUST include proper `rel` attributes for SEO and security.
+
+**Required attributes:**
+```html
+<!-- Affiliate links (buy buttons, retailer links, /go/ redirects) -->
+<a href="..." target="_blank" rel="sponsored noopener">
+
+<!-- Non-affiliate external links (YouTube, social, reference docs) -->
+<a href="..." target="_blank" rel="noopener">
+```
+
+**Attribute meanings:**
+- `sponsored` - Indicates commercial relationship (Google requirement for affiliate links)
+- `noopener` - Security: prevents reverse tabnabbing
+
+**Note:** We use `sponsored` without `nofollow` because `sponsored` already tells Google to treat the link appropriately. Adding `nofollow` is redundant and can look over-cautious to search engines.
+
+**Files with affiliate links:**
+- `erh-theme/assets/js/components/compare-results.js`
+- `erh-theme/assets/js/components/price-intel.js`
+- `erh-theme/assets/js/components/listicle-item.js`
+- `erh-theme/assets/js/components/sticky-buy-bar.js`
+- `erh-theme/assets/js/utils/pricing-ui.js`
+- `erh-theme/assets/js/services/geo-price.js`
+- `erh-theme/template-parts/components/price-intel.php`
+- `erh-theme/template-parts/components/sticky-buy-bar.php`
+- `erh-core/includes/blocks/listicle-item/template.php`
+
+**Shared utility:** `erh-theme/assets/js/utils/dom.js` - Contains `ensureAbsoluteUrl()` used by all JS files above.
+
+### RankMath SEO Integration
+
+We use **RankMath Pro** for SEO. All meta tags, Open Graph, and schema are managed through RankMath - do NOT output these manually.
+
+**Integration pattern for dynamic pages:**
+```php
+// Override RankMath title for custom/dynamic pages
+add_filter('rank_math/frontend/title', function(string $title): string {
+    if (!is_my_custom_page()) {
+        return $title;
+    }
+    return 'My Custom Title | ERideHero';
+}, 20);
+
+// Override RankMath description
+add_filter('rank_math/frontend/description', function(string $desc): string {
+    if (!is_my_custom_page()) {
+        return $desc;
+    }
+    return 'Custom meta description for this page.';
+}, 20);
+```
+
+**Key RankMath filters:**
+| Filter | Purpose |
+|--------|---------|
+| `rank_math/frontend/title` | Override `<title>` tag |
+| `rank_math/frontend/description` | Override meta description |
+| `rank_math/json_ld` | Modify schema/JSON-LD output |
+| `rank_math/opengraph/facebook` | Modify Open Graph tags |
+| `rank_math/opengraph/twitter` | Modify Twitter Card tags |
+
+**Current integrations:**
+- `erh-theme/inc/compare-routes.php` - Dynamic titles/descriptions for compare pages
+- `erh-core/includes/tracking/class-click-redirector.php` - Excludes /go/ URLs from indexing
+
+**Important:**
+- Never use `wp_head` to output meta tags manually - RankMath handles this
+- For schema, use RankMath's schema builder or filter `rank_math/json_ld`
+- Product schema is managed via RankMath's WooCommerce-style product schema on `products` CPT
+
+### robots.txt
+
+Add the following to your robots.txt (via RankMath > General Settings > Edit robots.txt):
+
+```
+# Block affiliate redirect URLs from crawling
+Disallow: /go/
+```
+
+This prevents search engines from wasting crawl budget on redirect URLs.
 
 ---
 

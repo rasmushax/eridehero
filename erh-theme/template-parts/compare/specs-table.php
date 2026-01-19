@@ -42,4 +42,11 @@ if ( empty( $rows ) || empty( $products ) ) {
 			<?php endforeach; ?>
 		</tbody>
 	</table>
+
+	<!-- Mobile stacked cards -->
+	<div class="compare-spec-cards">
+		<?php foreach ( $rows as $row ) : ?>
+			<?php erh_render_mobile_spec_card( $row, $products, $symbol ); ?>
+		<?php endforeach; ?>
+	</div>
 </div>

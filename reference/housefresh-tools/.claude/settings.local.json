@@ -1,0 +1,20 @@
+{
+  "permissions": {
+    "allow": [
+      "Bash(grep:*)",
+      "Bash(ls:*)",
+      "Bash(find:*)",
+      "Bash(mkdir:*)",
+      "Bash(wp eval-file:*)",
+      "Bash(sed:*)",
+      "Bash(awk:*)",
+      "Bash(php:*)",
+      "Bash(rm:*)",
+      "Bash(rg:*)",
+      "Bash(wp eval:*)",
+      "WebFetch(domain:github.com)",
+      "WebFetch(domain:ipinfo.io)"
+    ],
+    "deny": []
+  }
+}

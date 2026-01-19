@@ -12,10 +12,11 @@
  */
 
 import { getUserGeo, formatPrice, getCurrencySymbol } from '../services/geo-price.js';
+import { REGIONS, isValidRegion } from '../services/geo-config.js';
 import { PriceAlertModal } from './price-alert.js';
 import { Modal } from './modal.js';
 import { RadarChart } from './radar-chart.js';
-import { escapeHtml } from '../utils/dom.js';
+import { escapeHtml, ensureAbsoluteUrl } from '../utils/dom.js';
 import {
     formatSpecValue,
     compareValues,
@@ -112,6 +113,40 @@ let radarChart = null;
 let isFullWidthMode = false;
 let scrollSpyHandler = null;
 let isNavScrolling = false; // Prevents scroll spy during programmatic navigation
+let navStuckObserver = null;
+let navStuckSentinel = null;
+let isRendering = false; // Guard to prevent double re-renders
+
+// =============================================================================
+// Product Normalization
+// =============================================================================
+
+/**
+ * Normalize a product from SSR (snake_case) to JS format (camelCase).
+ * Ensures consistent property names across SSR-hydrated and JS-enriched products.
+ *
+ * @param {Object} p - Product object (from PHP JSON or enrichProduct)
+ * @returns {Object} - Normalized product with camelCase keys
+ */
+function normalizeProduct(p) {
+    // If already has camelCase keys, assume it's normalized
+    if (p._normalized) return p;
+
+    return {
+        ...p,
+        // Pricing keys (snake_case from PHP → camelCase)
+        currentPrice: p.currentPrice ?? p.current_price ?? null,
+        buyLink: p.buyLink ?? p.buy_link ?? p.tracked_url ?? null,
+        avg6m: p.avg6m ?? p.avg_6m ?? null,
+        priceIndicator: p.priceIndicator ?? p.price_indicator ?? null,
+        inStock: p.inStock ?? p.in_stock ?? true,
+        // Ensure critical fields exist
+        retailer: p.retailer ?? null,
+        currency: p.currency ?? 'USD',
+        // Mark as normalized to avoid double-processing
+        _normalized: true,
+    };
+}
 
 // =============================================================================
 // Geo-Aware Spec Resolution
@@ -197,7 +232,9 @@ async function initHydrationMode(config) {
     const productsJson = document.querySelector('[data-products-json]');
     if (productsJson) {
         try {
-            products = JSON.parse(productsJson.textContent || '[]');
+            const rawProducts = JSON.parse(productsJson.textContent || '[]');
+            // Normalize snake_case keys from PHP to camelCase for consistency
+            products = rawProducts.map(normalizeProduct);
         } catch (e) {
             console.error('Failed to parse products JSON:', e);
             products = [];
@@ -213,8 +250,17 @@ async function initHydrationMode(config) {
     // Hydrate price-related elements (not cached by PHP)
     hydrateProductPricing();
 
+    // Hydrate verdict section products with pricing (curated only)
+    hydrateVerdictProducts();
+
     // Hydrate Value Analysis section with geo-aware metrics
     hydrateValueAnalysis();
+
+    // Hydrate mini-header prices with geo-aware data
+    hydrateMiniHeader();
+
+    // Hydrate buy row at end of specs (all comparisons)
+    hydrateBuyRow();
 
     // Render only the overview section (radar chart + advantages)
     // Specs are already rendered by PHP
@@ -231,10 +277,6 @@ async function initHydrationMode(config) {
     // Track view
     trackComparisonView(config.productIds);
 
-    // Load related if curated
-    if (config.isCurated) {
-        loadRelatedComparisons(config.productIds, category);
-    }
 }
 
 /**
@@ -252,12 +294,17 @@ function hydrateProductPricing() {
         const hasPrice = currentPrice && p.retailer;
         const price = hasPrice ? formatPrice(currentPrice, p.currency) : null;
 
+        // Calculate price indicator from 6-month average
+        const avg6m = p.avg6m || p.avg_6m || p.priceData?.avg_6m;
+        const indicator = calculatePriceIndicator(currentPrice, avg6m);
+        const indicatorHtml = renderPriceIndicator(indicator);
+
         // 1. Inject price overlay into image
         const imageContainer = card.querySelector('.compare-product-image');
         if (imageContainer && price) {
             const priceRow = document.createElement('div');
             priceRow.className = 'compare-product-price-row';
-            priceRow.innerHTML = `<span class="compare-product-price">${price}</span>`;
+            priceRow.innerHTML = `<span class="compare-product-price">${price}</span>${indicatorHtml}`;
             imageContainer.appendChild(priceRow);
         }
 
@@ -280,13 +327,13 @@ function hydrateProductPricing() {
         const ctaPlaceholder = card.querySelector('[data-cta-placeholder]');
         if (ctaPlaceholder) {
             if (hasPrice && buyLink) {
-                // Replace with actual CTA
+                // Replace with actual CTA (affiliate link - needs proper rel for SEO)
                 const cta = document.createElement('a');
-                cta.href = buyLink;
+                cta.href = ensureAbsoluteUrl(buyLink);
                 cta.className = 'compare-product-cta btn btn-primary btn-sm';
                 cta.target = '_blank';
-                cta.rel = 'noopener';
-                cta.innerHTML = `Buy at ${p.retailer} <svg class="icon" width="14" height="14"><use href="#icon-external-link"></use></svg>`;
+                cta.rel = 'sponsored noopener';
+                cta.innerHTML = `Buy at ${escapeHtml(p.retailer)} <svg class="icon" width="14" height="14"><use href="#icon-external-link"></use></svg>`;
                 ctaPlaceholder.replaceWith(cta);
             } else {
                 // No price - hide placeholder
@@ -297,8 +344,109 @@ function hydrateProductPricing() {
 }
 
 /**
+ * Hydrate verdict section product cards with geo-aware pricing.
+ * Curated comparisons have a verdict section with product cards.
+ *
+ * - Shows price, tracker button, and CTA when price is available
+ * - Hides price row and CTA entirely when no price (keeps review/video links)
+ */
+function hydrateVerdictProducts() {
+    const verdictProducts = document.querySelectorAll('[data-verdict-product]');
+    if (!verdictProducts.length) return;
+
+    products.forEach(p => {
+        const card = document.querySelector(`[data-verdict-product="${p.id}"]`);
+        if (!card) return;
+
+        const currentPrice = p.currentPrice || p.current_price;
+        const buyLink = p.buyLink || p.buy_link;
+        const hasPrice = currentPrice && p.retailer;
+        const price = hasPrice ? formatPrice(currentPrice, p.currency) : null;
+
+        // Calculate price indicator from 6-month average
+        const avg6m = p.avg6m || p.avg_6m || p.priceData?.avg_6m;
+        const indicator = calculatePriceIndicator(currentPrice, avg6m);
+        const indicatorHtml = renderPriceIndicator(indicator);
+
+        // Get elements
+        const priceRowEl = card.querySelector('[data-verdict-price-row]');
+        const priceEl = card.querySelector('[data-verdict-price]');
+        const ctaEl = card.querySelector('[data-verdict-cta]');
+        const ctaMobileEl = card.querySelector('[data-verdict-cta-mobile]');
+
+        if (hasPrice) {
+            // Show price with indicator
+            if (priceEl) {
+                priceEl.innerHTML = `${price}${indicatorHtml}`;
+            }
+
+            // Add tracker button into the image area (top-right)
+            const imageEl = card.querySelector('.compare-verdict-product-image');
+            if (imageEl) {
+                const trackBtn = document.createElement('button');
+                trackBtn.type = 'button';
+                trackBtn.className = 'compare-verdict-product-track';
+                trackBtn.dataset.track = p.id;
+                trackBtn.dataset.name = p.name;
+                trackBtn.dataset.image = p.thumbnail || '';
+                trackBtn.dataset.price = currentPrice;
+                trackBtn.dataset.currency = p.currency || 'USD';
+                trackBtn.setAttribute('aria-label', 'Track price');
+                trackBtn.innerHTML = `<svg class="icon" width="14" height="14"><use href="#icon-bell"></use></svg>`;
+                imageEl.appendChild(trackBtn);
+
+                // Attach click handler
+                trackBtn.addEventListener('click', (e) => {
+                    e.preventDefault();
+                    e.stopPropagation();
+                    PriceAlertModal.open({
+                        productId: parseInt(trackBtn.dataset.track, 10),
+                        productName: trackBtn.dataset.name,
+                        productImage: trackBtn.dataset.image,
+                        currentPrice: parseFloat(trackBtn.dataset.price) || 0,
+                        currency: trackBtn.dataset.currency || 'USD',
+                    });
+                });
+            }
+
+            // Show CTA with retailer link (both desktop and mobile)
+            if (buyLink) {
+                const createCtaLink = () => {
+                    const link = document.createElement('a');
+                    link.href = ensureAbsoluteUrl(buyLink);
+                    link.className = 'btn btn-sm btn-primary';
+                    link.target = '_blank';
+                    link.rel = 'sponsored noopener';
+                    link.innerHTML = `Buy at ${escapeHtml(p.retailer)} <svg class="icon" width="14" height="14"><use href="#icon-external-link"></use></svg>`;
+                    return link;
+                };
+
+                if (ctaEl) {
+                    ctaEl.replaceChildren(createCtaLink());
+                }
+                if (ctaMobileEl) {
+                    ctaMobileEl.replaceChildren(createCtaLink());
+                }
+            }
+        } else {
+            // No price - hide price row and CTA entirely
+            if (priceRowEl) {
+                priceRowEl.style.display = 'none';
+            }
+            if (ctaEl) {
+                ctaEl.style.display = 'none';
+            }
+            if (ctaMobileEl) {
+                ctaMobileEl.style.display = 'none';
+            }
+        }
+    });
+}
+
+/**
  * Hydrate Value Analysis section with geo-aware pricing metrics.
  * PHP renders empty cells, JS fills them based on user's geo.
+ * Includes winner detection (lower value wins for value metrics).
  */
 function hydrateValueAnalysis() {
     const container = document.querySelector('[data-value-analysis]');
@@ -308,7 +456,19 @@ function hydrateValueAnalysis() {
     // Use symbol from getUserGeo() or derive from currency code
     const symbol = userGeo.symbol || getCurrencySymbol(userGeo.currency || 'USD');
 
-    // Process each row
+    // Helper to format value based on metric type
+    const formatValue = (value, isCurrencyMetric, unitSuffix) => {
+        if (value === null || value === undefined) return '—';
+        if (isCurrencyMetric) {
+            return symbol + value.toFixed(2) + unitSuffix;
+        }
+        return value.toFixed(2) + ' ' + unitSuffix;
+    };
+
+    // Value metrics spec definition (lower is better for all value metrics)
+    const valueSpec = { higherBetter: false };
+
+    // Process each desktop table row
     const rows = container.querySelectorAll('tr[data-spec-key]');
     rows.forEach(row => {
         const specKey = row.dataset.specKey;
@@ -326,36 +486,221 @@ function hydrateValueAnalysis() {
             ? template.replace('{symbol}', '') // e.g., "/Wh"
             : template; // e.g., "mph/lb"
 
-        // Update label with correct currency symbol
+        // Update label with correct currency symbol (preserve tooltip span)
         if (labelEl) {
-            labelEl.textContent = template.replace('{symbol}', symbol);
+            const newText = template.replace('{symbol}', symbol);
+            const textNode = Array.from(labelEl.childNodes).find(n => n.nodeType === Node.TEXT_NODE);
+            if (textNode) {
+                textNode.textContent = newText;
+            } else {
+                labelEl.prepend(newText);
+            }
         }
 
-        // Update each product cell
+        // Collect values for winner detection
         const cells = row.querySelectorAll('td[data-product-id]');
+        const values = [];
+        const cellData = [];
+
         cells.forEach(cell => {
             const productId = parseInt(cell.dataset.productId, 10);
             const product = products.find(p => p.id === productId);
+            const value = product ? getNestedValue(product.specs, resolvedKey) : null;
+            values.push(value);
+            cellData.push({ cell, value, isCurrencyMetric, unitSuffix });
+        });
 
-            if (!product) {
-                cell.textContent = '—';
-                return;
-            }
+        // Find winners (lower is better for value metrics)
+        const winners = findWinners(values, valueSpec);
 
-            // Get nested value from specs
-            const value = getNestedValue(product.specs, resolvedKey);
+        // Update each product cell with value and winner badge
+        cellData.forEach(({ cell, value, isCurrencyMetric, unitSuffix }, idx) => {
+            const isWinner = winners.includes(idx);
+            const formatted = formatValue(value, isCurrencyMetric, unitSuffix);
 
-            if (value === null || value === undefined) {
-                cell.textContent = '—';
-            } else if (isCurrencyMetric) {
-                // Currency metrics: $24.22/Wh format
-                cell.textContent = symbol + value.toFixed(2) + unitSuffix;
+            if (isWinner && value !== null && value !== undefined) {
+                cell.classList.add('is-winner');
+                cell.innerHTML = `
+                    <div class="compare-spec-value-inner">
+                        ${renderWinnerBadge()}
+                        <span class="compare-spec-value-text">${formatted}</span>
+                    </div>
+                `;
             } else {
-                // Efficiency metrics: 0.45 mph/lb format
-                cell.textContent = value.toFixed(2) + ' ' + unitSuffix;
+                cell.classList.remove('is-winner');
+                cell.textContent = formatted;
             }
         });
     });
+
+    // Process mobile cards
+    const mobileContainer = container.querySelector('[data-value-analysis-mobile]');
+    if (mobileContainer) {
+        const cards = mobileContainer.querySelectorAll('.compare-spec-card[data-spec-key]');
+        cards.forEach(card => {
+            const specKey = card.dataset.specKey;
+            const resolvedKey = specKey.replace('{geo}', geo);
+
+            // Check if this is a currency metric
+            const labelEl = card.querySelector('[data-label-template]');
+            const template = labelEl?.dataset.labelTemplate || '';
+            const isCurrencyMetric = template.includes('{symbol}');
+            const unitSuffix = isCurrencyMetric
+                ? template.replace('{symbol}', '')
+                : template;
+
+            // Update label with correct currency symbol (preserve tooltip span)
+            if (labelEl) {
+                const newText = template.replace('{symbol}', symbol);
+                const textNode = Array.from(labelEl.childNodes).find(n => n.nodeType === Node.TEXT_NODE);
+                if (textNode) {
+                    textNode.textContent = newText;
+                } else {
+                    labelEl.prepend(newText);
+                }
+            }
+
+            // Collect values for winner detection
+            const valueEls = card.querySelectorAll('.compare-spec-card-value[data-product-id]');
+            const values = [];
+            const elData = [];
+
+            valueEls.forEach(valueEl => {
+                const productId = parseInt(valueEl.dataset.productId, 10);
+                const product = products.find(p => p.id === productId);
+                const value = product ? getNestedValue(product.specs, resolvedKey) : null;
+                values.push(value);
+                elData.push({ valueEl, value, isCurrencyMetric, unitSuffix });
+            });
+
+            // Find winners (lower is better for value metrics)
+            const winners = findWinners(values, valueSpec);
+
+            // Update each product value with winner indicator
+            elData.forEach(({ valueEl, value, isCurrencyMetric, unitSuffix }, idx) => {
+                const textEl = valueEl.querySelector('.compare-spec-card-text');
+                if (!textEl) return;
+
+                const isWinner = winners.includes(idx);
+                const formatted = formatValue(value, isCurrencyMetric, unitSuffix);
+
+                if (isWinner && value !== null && value !== undefined) {
+                    valueEl.classList.add('is-winner');
+                    // Add winner badge before text
+                    const dataEl = valueEl.querySelector('.compare-spec-card-data');
+                    if (dataEl) {
+                        dataEl.innerHTML = `
+                            ${renderWinnerBadge()}
+                            <span class="compare-spec-card-text">${formatted}</span>
+                        `;
+                    }
+                } else {
+                    valueEl.classList.remove('is-winner');
+                    textEl.textContent = formatted;
+                }
+            });
+        });
+    }
+}
+
+/**
+ * Hydrate mini-header prices with geo-aware data.
+ * PHP renders placeholders, JS fills with correct currency.
+ */
+function hydrateMiniHeader() {
+    const placeholders = document.querySelectorAll('[data-mini-price-placeholder]');
+
+    placeholders.forEach(el => {
+        const productId = parseInt(el.dataset.productId, 10);
+        const buyLink = el.dataset.buyLink;
+        const product = products.find(p => p.id === productId);
+
+        if (!product) {
+            el.style.display = 'none';
+            return;
+        }
+
+        const currentPrice = product.currentPrice || product.current_price;
+        const hasPrice = currentPrice && product.retailer && buyLink;
+
+        if (hasPrice) {
+            const price = formatPrice(currentPrice, product.currency);
+
+            // Create link element safely (affiliate link - needs proper rel for SEO).
+            const link = document.createElement('a');
+            link.href = ensureAbsoluteUrl(buyLink);
+            link.className = 'compare-mini-price-link';
+            link.target = '_blank';
+            link.rel = 'sponsored noopener';
+            link.textContent = price + ' ';
+
+            // Add icon via SVG use (safe).
+            const svg = document.createElementNS('http://www.w3.org/2000/svg', 'svg');
+            svg.setAttribute('class', 'icon');
+            svg.setAttribute('width', '12');
+            svg.setAttribute('height', '12');
+            const use = document.createElementNS('http://www.w3.org/2000/svg', 'use');
+            use.setAttribute('href', '#icon-external-link');
+            svg.appendChild(use);
+            link.appendChild(svg);
+
+            el.appendChild(link);
+        } else {
+            el.style.display = 'none';
+        }
+    });
+}
+
+/**
+ * Hydrate buy row at end of specs with geo-aware pricing.
+ * All comparisons (not just curated) get buy buttons when pricing is available.
+ */
+function hydrateBuyRow() {
+    const buyRow = document.querySelector('[data-compare-buy-row]');
+    if (!buyRow) return;
+
+    const cells = buyRow.querySelectorAll('[data-buy-cell]');
+    let hasAnyPrice = false;
+
+    cells.forEach(cell => {
+        const productId = parseInt(cell.dataset.buyCell, 10);
+        const product = products.find(p => p.id === productId);
+
+        if (!product) {
+            cell.innerHTML = '';
+            return;
+        }
+
+        const currentPrice = product.currentPrice || product.current_price;
+        const buyLink = product.buyLink || product.buy_link;
+        const hasPrice = currentPrice && product.retailer && buyLink;
+
+        if (hasPrice) {
+            hasAnyPrice = true;
+            const price = formatPrice(currentPrice, product.currency);
+
+            // Create buy button with price and retailer
+            const link = document.createElement('a');
+            link.href = ensureAbsoluteUrl(buyLink);
+            link.className = 'btn btn-sm btn-primary';
+            link.target = '_blank';
+            link.rel = 'sponsored noopener';
+            link.innerHTML = `
+                <span class="compare-buy-price">${price}</span>
+                <span class="compare-buy-retailer">at ${escapeHtml(product.retailer)}</span>
+                <svg class="icon" width="14" height="14"><use href="#icon-external-link"></use></svg>
+            `;
+            cell.replaceChildren(link);
+        } else {
+            // No price - hide the cell content
+            cell.innerHTML = '';
+        }
+    });
+
+    // If no products have pricing, hide the entire table
+    if (!hasAnyPrice) {
+        buyRow.dataset.hidden = 'true';
+    }
 }
 
 /**
@@ -399,10 +744,6 @@ async function initClientMode(config) {
     // Track comparison view (fire and forget).
     trackComparisonView(config.productIds);
 
-    // Load related comparisons if curated.
-    if (config.isCurated) {
-        loadRelatedComparisons(config.productIds, category);
-    }
 }
 
 /**
@@ -595,6 +936,13 @@ function updateLayoutMode() {
     page.dataset.productCount = products.length;
     page.style.setProperty('--product-count', products.length);
 
+    // Toggle page-level full-width class (matches PHP behavior)
+    if (needsFullWidth) {
+        page.classList.add('compare-page--full-width');
+    } else {
+        page.classList.remove('compare-page--full-width');
+    }
+
     // Update specs section container class
     if (specsSection) {
         const container = specsSection.querySelector('.container, .compare-section-full');
@@ -668,35 +1016,64 @@ async function loadAllProducts() {
 
 /**
  * Enrich product with geo pricing.
+ *
+ * Business rule: No currency mixing!
+ * - User in supported geo (US/GB/EU/CA/AU): Show price ONLY if that geo has pricing. No fallback.
+ * - User outside supported geos: Fall back to US as reference.
  */
 function enrichProduct(product) {
     const geo = userGeo.geo || 'US';
     const pricing = product.pricing || {};
-    const regionPricing = pricing[geo] || pricing.US || {};
+
+    // Check if user's geo has valid pricing
+    const geoPricing = pricing[geo];
+    const hasGeoPrice = geoPricing?.current_price != null;
+
+    // Only fall back to US if user is OUTSIDE all supported geos (use centralized config)
+    const isInSupportedGeo = isValidRegion(geo);
+    const shouldFallbackToUS = !isInSupportedGeo && !hasGeoPrice;
+
+    let regionPricing, currency;
+    if (hasGeoPrice) {
+        // User's geo has pricing - use it
+        regionPricing = geoPricing;
+        currency = userGeo.currency;
+    } else if (shouldFallbackToUS) {
+        // User outside supported geos - fall back to US as reference
+        regionPricing = pricing.US || {};
+        currency = 'USD';
+    } else {
+        // User in supported geo but no pricing for that geo - NO price shown
+        regionPricing = {};
+        currency = userGeo.currency;
+    }
+
     const currentPrice = regionPricing.current_price || null;
-    const avg3m = regionPricing.avg_3m || null;
+    const avg6m = regionPricing.avg_6m || null;
 
     return {
         ...product,
         currentPrice,
-        currency: pricing[geo] ? userGeo.currency : 'USD',
+        currency,
         priceData: regionPricing,
         inStock: regionPricing.instock !== false,
-        buyLink: regionPricing.tracked_url || product.url,
-        retailer: regionPricing.retailer || null,
-        priceIndicator: calculatePriceIndicator(currentPrice, avg3m),
+        buyLink: currentPrice ? (regionPricing.tracked_url || null) : null, // No link without price
+        retailer: currentPrice ? (regionPricing.retailer || null) : null,   // No retailer without price
+        priceIndicator: calculatePriceIndicator(currentPrice, avg6m),
+        avg6m,
+        _normalized: true,
     };
 }
 
 /**
- * Calculate price indicator (% vs 3-month average).
+ * Calculate price indicator (% vs 6-month average).
  * @param {number|null} currentPrice - Current price.
- * @param {number|null} avg3m - 3-month average price.
+ * @param {number|null} avg6m - 6-month average price.
  * @returns {number|null} Percentage difference (negative = below avg).
  */
-function calculatePriceIndicator(currentPrice, avg3m) {
-    if (!currentPrice || !avg3m || avg3m <= 0) return null;
-    return Math.round(((currentPrice - avg3m) / avg3m) * 100);
+function calculatePriceIndicator(currentPrice, avg6m) {
+    if (!currentPrice || !avg6m || avg6m <= 0) return null;
+    return Math.round(((currentPrice - avg6m) / avg6m) * 100);
 }
 
 // =============================================================================
@@ -706,13 +1083,41 @@ function calculatePriceIndicator(currentPrice, avg3m) {
 /**
  * Render all sections.
  * Note: Verdict section is rendered via PHP in single-comparison.php for curated comparisons.
+ * Uses isRendering guard to prevent double re-renders from concurrent triggers.
  */
 function render() {
-    renderProducts();
-    renderOverview();
-    renderSpecs();
-    // Re-hydrate Value Analysis with correct currency symbols (renderSpecs doesn't have symbol context)
-    hydrateValueAnalysis();
+    if (isRendering) return;
+    isRendering = true;
+
+    try {
+        // Render each section independently so one failure doesn't stop others
+        try {
+            renderProducts();
+        } catch (err) {
+            console.error('Failed to render products:', err);
+        }
+
+        try {
+            renderOverview();
+        } catch (err) {
+            console.error('Failed to render overview:', err);
+        }
+
+        try {
+            renderSpecs();
+        } catch (err) {
+            console.error('Failed to render specs:', err);
+        }
+
+        try {
+            // Re-hydrate Value Analysis with correct currency symbols
+            hydrateValueAnalysis();
+        } catch (err) {
+            console.error('Failed to hydrate value analysis:', err);
+        }
+    } finally {
+        isRendering = false;
+    }
 }
 
 /**
@@ -728,9 +1133,10 @@ function renderProducts() {
     const isCurated = config?.isCurated;
 
     const cards = products.map((p, idx) => {
-        const score = calculateProductScore(p);
-        const price = p.currentPrice ? formatPrice(p.currentPrice, p.currency) : null;
-        const isWinner = isCurated && verdictWinner === `product_${idx + 1}`;
+        try {
+            const score = calculateProductScore(p);
+            const price = p.currentPrice ? formatPrice(p.currentPrice, p.currency) : null;
+            const isWinner = isCurated && verdictWinner === `product_${idx + 1}`;
 
         // Price indicator badge (below/above avg)
         const indicatorHtml = renderPriceIndicator(p.priceIndicator);
@@ -774,7 +1180,7 @@ function renderProducts() {
                 <div class="compare-product-content">
                     <a href="${p.url}" class="compare-product-name">${escapeHtml(p.name)}</a>
                     ${hasCta ? `
-                        <a href="${p.buyLink}" class="compare-product-cta btn btn-primary btn-sm" target="_blank" rel="noopener">
+                        <a href="${ensureAbsoluteUrl(p.buyLink)}" class="compare-product-cta btn btn-primary btn-sm" target="_blank" rel="sponsored noopener">
                             Buy at ${p.retailer}
                             <svg class="icon" width="14" height="14"><use href="#icon-external-link"></use></svg>
                         </a>
@@ -782,6 +1188,12 @@ function renderProducts() {
                 </div>
             </article>
         `;
+        } catch (err) {
+            console.error(`Failed to render product ${p?.id}:`, err);
+            return `<article class="compare-product compare-product--error" data-product-id="${p?.id || 'unknown'}">
+                <div class="compare-product-error">Failed to load product</div>
+            </article>`;
+        }
     }).join('');
 
     const addCard = `
@@ -835,13 +1247,12 @@ function renderPriceIndicator(indicator) {
 
     const isBelow = indicator < 0;
     const cls = isBelow ? 'compare-product-indicator--below' : 'compare-product-indicator--above';
-    const icon = isBelow ? 'trending-down' : 'trending-up';
+    const icon = isBelow ? 'arrow-down' : 'arrow-up';
     const absPercent = Math.abs(indicator);
 
     return `
         <span class="compare-product-indicator ${cls}">
-            <svg class="compare-product-indicator-icon"><use href="#icon-${icon}"></use></svg>
-            ${absPercent}%
+            <svg class="icon compare-product-indicator-icon" aria-hidden="true"><use href="#icon-${icon}"></use></svg>${absPercent}%
         </span>
     `;
 }
@@ -1057,7 +1468,7 @@ function renderMiniHeader() {
                                     <div class="compare-mini-info">
                                         <span class="compare-mini-name">${escapeHtml(p.name)}</span>
                                         ${hasRetailer ? `
-                                            <a href="${p.buyLink}" class="compare-mini-price" target="_blank" rel="noopener">
+                                            <a href="${ensureAbsoluteUrl(p.buyLink)}" class="compare-mini-price" target="_blank" rel="sponsored noopener">
                                                 ${price}
                                                 <svg class="icon" width="12" height="12"><use href="#icon-external-link"></use></svg>
                                             </a>
@@ -1085,7 +1496,6 @@ function renderSpecs() {
     const groups = getSpecGroups();
     const categories = [];
     const categoryNav = []; // Track categories for nav population
-    const needsScroll = isFullWidthMode;
 
     for (const [name, group] of Object.entries(groups)) {
         const specsWithValues = (group.specs || []).filter(spec => {
@@ -1144,20 +1554,18 @@ function renderSpecs() {
         `);
     }
 
-    // Build final HTML: mini-header + categories (with scroll wrapper for 4+ products)
+    // Build final HTML: mini-header + scroll wrapper with categories.
+    // Always render scroll wrapper for consistency with SSR (CSS only enables overflow in full-width mode).
     const miniHeader = renderMiniHeader();
     const categoriesHtml = categories.join('');
 
-    if (needsScroll) {
-        container.innerHTML = `
-            ${miniHeader}
-            <div class="compare-specs-scroll">${categoriesHtml}</div>
-        `;
-        // Sync horizontal scroll between mini-header and tables
-        setupScrollSync();
-    } else {
-        container.innerHTML = miniHeader + categoriesHtml;
-    }
+    container.innerHTML = `
+        ${miniHeader}
+        <div class="compare-specs-scroll">${categoriesHtml}</div>
+    `;
+
+    // Sync horizontal scroll between mini-header and tables (safe to call even when not in full-width mode)
+    setupScrollSync();
 
     // Populate nav with category links
     populateNav(categoryNav);
@@ -1696,12 +2104,22 @@ function setupNavStuckState() {
     const nav = document.querySelector(SELECTORS.nav);
     if (!nav) return;
 
-    // Insert a sentinel element right before the nav
-    const sentinel = document.createElement('div');
-    sentinel.style.cssText = 'height: 1px; margin-bottom: -1px; pointer-events: none;';
-    nav.parentNode.insertBefore(sentinel, nav);
+    // Cleanup previous observer and sentinel to prevent memory leaks
+    if (navStuckObserver) {
+        navStuckObserver.disconnect();
+        navStuckObserver = null;
+    }
+    if (navStuckSentinel && navStuckSentinel.parentNode) {
+        navStuckSentinel.remove();
+        navStuckSentinel = null;
+    }
 
-    const observer = new IntersectionObserver(
+    // Insert a sentinel element right before the nav
+    navStuckSentinel = document.createElement('div');
+    navStuckSentinel.style.cssText = 'height: 1px; margin-bottom: -1px; pointer-events: none;';
+    nav.parentNode.insertBefore(navStuckSentinel, nav);
+
+    navStuckObserver = new IntersectionObserver(
         ([entry]) => {
             // When sentinel scrolls out of view, nav is stuck
             nav.classList.toggle('is-stuck', !entry.isIntersecting);
@@ -1709,7 +2127,7 @@ function setupNavStuckState() {
         { threshold: 0, rootMargin: '0px' }
     );
 
-    observer.observe(sentinel);
+    navStuckObserver.observe(navStuckSentinel);
 }
 
 /**
@@ -1853,8 +2271,22 @@ function renderSearchResults(query, container, exclude, onSelect) {
     }
 
     container.innerHTML = matches.map(p => {
-        const price = p.pricing?.[userGeo.geo]?.current_price || p.pricing?.US?.current_price;
-        const priceHtml = price ? formatPrice(price, userGeo.currency) : '';
+        // Same geo pricing logic as enrichProduct: no fallback for supported geos
+        const geo = userGeo.geo || 'US';
+        const geoPricing = p.pricing?.[geo];
+        const hasGeoPrice = geoPricing?.current_price != null;
+        const isInSupportedGeo = isValidRegion(geo);
+
+        // Only show price if: geo has price, OR user outside supported geos (fallback to US)
+        let price = null, currency = userGeo.currency;
+        if (hasGeoPrice) {
+            price = geoPricing.current_price;
+        } else if (!isInSupportedGeo && p.pricing?.US?.current_price) {
+            price = p.pricing.US.current_price;
+            currency = 'USD';
+        }
+
+        const priceHtml = price ? formatPrice(price, currency) : '';
         return `
             <button type="button" class="compare-search-result" data-id="${p.id}">
                 <img src="${p.thumbnail || ''}" alt="" class="compare-search-result-img">
@@ -1875,9 +2307,41 @@ function renderSearchResults(query, container, exclude, onSelect) {
 }
 
 /**
+ * Hide curated-only sections when products change.
+ *
+ * Once products are added/removed, the comparison is no longer "curated"
+ * so we remove the intro, verdict, and related sections permanently.
+ */
+function hideCuratedSections() {
+    const config = window.erhData?.compareConfig;
+    if (!config?.isCurated) return;
+
+    // Remove curated sections from DOM
+    const sectionsToRemove = [
+        '.compare-intro',           // H1 and intro text
+        '.compare-section--verdict', // Verdict section
+    ];
+
+    sectionsToRemove.forEach(selector => {
+        const el = document.querySelector(selector);
+        if (el) el.remove();
+    });
+
+    // Remove verdict nav link
+    const verdictNavLink = document.querySelector('[data-nav-link="verdict"]');
+    if (verdictNavLink) verdictNavLink.remove();
+
+    // Mark as no longer curated (prevents future renders from treating as curated)
+    config.isCurated = false;
+}
+
+/**
  * Add product to comparison.
  */
 function addProduct(product) {
+    // Hide curated sections when products change
+    hideCuratedSections();
+
     const enrichedProduct = enrichProduct(product);
     products.push(enrichedProduct);
 
@@ -1894,6 +2358,10 @@ function addProduct(product) {
  */
 function removeProduct(id) {
     if (products.length <= 2) return;
+
+    // Hide curated sections when products change
+    hideCuratedSections();
+
     products = products.filter(p => p.id !== id);
 
     // Update URL first, then render, then apply layout mode
@@ -1960,65 +2428,4 @@ function updateDocumentTitle() {
 // debounce, trackComparisonView are imported at the top of this file.
 
 // =============================================================================
-// Related Comparisons
-// =============================================================================
-
-/**
- * Load related comparisons for curated pages.
- *
- * @param {number[]} productIds - Current product IDs.
- * @param {string} categoryKey - Category key.
- */
-async function loadRelatedComparisons(productIds, categoryKey) {
-    const container = document.querySelector('[data-related-comparisons]');
-    if (!container) return;
-
-    try {
-        const restUrl = window.erhData?.restUrl || '/wp-json/erh/v1/';
-        const params = new URLSearchParams({
-            products: productIds.join(','),
-            category: categoryKey,
-            limit: '4',
-        });
-
-        const res = await fetch(`${restUrl}compare/related?${params}`);
-        if (!res.ok) throw new Error(`HTTP ${res.status}`);
-
-        const json = await res.json();
-        if (!json.success || !json.data?.length) {
-            container.innerHTML = '<p class="compare-related-empty">No related comparisons found.</p>';
-            return;
-        }
-
-        container.innerHTML = json.data.map(item => {
-            const p1 = item.product_1;
-            const p2 = item.product_2;
-
-            return `
-                <a href="${item.url}" class="compare-popular-card">
-                    <div class="compare-popular-card-products">
-                        <div class="compare-popular-card-product">
-                            ${p1.thumbnail ? `<img src="${p1.thumbnail}" alt="" class="compare-popular-card-thumb">` : ''}
-                            <span class="compare-popular-card-name">${escapeHtml(p1.name)}</span>
-                        </div>
-                        <span class="compare-popular-card-vs">vs</span>
-                        <div class="compare-popular-card-product">
-                            ${p2.thumbnail ? `<img src="${p2.thumbnail}" alt="" class="compare-popular-card-thumb">` : ''}
-                            <span class="compare-popular-card-name">${escapeHtml(p2.name)}</span>
-                        </div>
-                    </div>
-                    ${item.view_count ? `
-                        <div class="compare-popular-card-meta">
-                            <span class="compare-popular-card-views">${item.view_count.toLocaleString()} views</span>
-                        </div>
-                    ` : ''}
-                </a>
-            `;
-        }).join('');
-    } catch (e) {
-        console.warn('Failed to load related comparisons:', e);
-        container.innerHTML = '';
-    }
-}
-
 export default { init };

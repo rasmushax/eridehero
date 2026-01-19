@@ -78,11 +78,11 @@ class HFT_Scraper_Admin {
         if (empty($this->scrapers_list_page) && empty($this->scraper_edit_page)) {
             return;
         }
-        
+
         // Only enqueue on our admin pages
         $is_scrapers_list = strpos($hook_suffix, 'hft-scrapers') !== false;
         $is_scraper_edit = strpos($hook_suffix, 'hft-scraper-edit') !== false;
-        
+
         if (!$is_scrapers_list && !$is_scraper_edit) {
             return;
         }
@@ -127,12 +127,13 @@ class HFT_Scraper_Admin {
             HFT_VERSION,
             true
         );
-        
+
         wp_localize_script('hft-scraper-admin', 'hftScraperAdmin', [
             'ajaxUrl' => admin_url('admin-ajax.php'),
             'nonce' => wp_create_nonce('hft_scraper_admin'),
             'confirmDelete' => __('Are you sure you want to delete this scraper?', 'housefresh-tools'),
             'geoWhitelist' => $this->get_geo_whitelist(),
+            'geoGroups' => class_exists('HFT_Geo_Groups') ? HFT_Geo_Groups::get_groups_for_js() : [],
             'strings' => [
                 'testInProgress' => __('Testing...', 'housefresh-tools'),
                 'testComplete' => __('Test Complete', 'housefresh-tools'),
@@ -378,14 +379,55 @@ class HFT_Scraper_Admin {
                                 <?php
                                 // Convert comma-separated GEOs to simple format for Tagify
                                 $geos_value = '';
+                                $geos_input_value = '';
                                 if ($scraper && !empty($scraper->geos)) {
                                     $geos_value = $scraper->geos;
                                 }
+                                if ($scraper && !empty($scraper->geos_input)) {
+                                    $geos_input_value = $scraper->geos_input;
+                                }
+
+                                // Detect which groups are fully present
+                                $detected_groups = [];
+                                if (!empty($geos_value) && class_exists('HFT_Geo_Groups')) {
+                                    $detected_groups = HFT_Geo_Groups::detect_groups($geos_value);
+                                }
                                 ?>
-                                <input type="text" name="geos" id="geos" class="hft-geos-tagify regular-text" 
-                                       value="<?php echo esc_attr($geos_value); ?>"
-                                       placeholder="Type or select GEOs">
-                                <p class="description">Geographic regions where affiliate links should be generated (e.g., US, GB, CA)</p>
+                                <div class="hft-geo-groups-wrapper">
+                                    <div class="hft-geo-groups-buttons">
+                                        <span class="hft-geo-groups-label"><?php _e('Quick Add:', 'housefresh-tools'); ?></span>
+                                        <?php
+                                        if (class_exists('HFT_Geo_Groups')) {
+                                            $groups = HFT_Geo_Groups::get_all_groups();
+                                            foreach ($groups as $key => $group) {
+                                                $is_active = in_array($key, $detected_groups);
+                                                $active_class = $is_active ? ' active' : '';
+                                                $country_count = count($group['countries']);
+                                                $tooltip = $key === 'GLOBAL'
+                                                    ? __('Special flag for all countries', 'housefresh-tools')
+                                                    : sprintf(__('%d countries: %s', 'housefresh-tools'), $country_count, implode(', ', $group['countries']));
+                                                ?>
+                                                <button type="button"
+                                                        class="button hft-geo-group-btn<?php echo $active_class; ?>"
+                                                        data-group="<?php echo esc_attr($key); ?>"
+                                                        title="<?php echo esc_attr($tooltip); ?>">
+                                                    <?php echo esc_html($key); ?>
+                                                </button>
+                                                <?php
+                                            }
+                                        }
+                                        ?>
+                                        <button type="button" class="button hft-geo-clear-btn" title="<?php esc_attr_e('Clear all GEOs', 'housefresh-tools'); ?>">
+                                            <?php _e('Clear', 'housefresh-tools'); ?>
+                                        </button>
+                                    </div>
+                                    <input type="text" name="geos" id="geos" class="hft-geos-tagify regular-text"
+                                           value="<?php echo esc_attr($geos_value); ?>"
+                                           placeholder="<?php esc_attr_e('Type or select GEOs', 'housefresh-tools'); ?>">
+                                    <input type="hidden" name="geos_input" id="geos_input"
+                                           value="<?php echo esc_attr($geos_input_value); ?>">
+                                </div>
+                                <p class="description"><?php _e('Geographic regions where affiliate links should be generated. Click group buttons to add predefined regions or type individual country codes (e.g., US, GB, CA).', 'housefresh-tools'); ?></p>
                             </td>
                         </tr>
                         <tr>
@@ -491,80 +533,40 @@ class HFT_Scraper_Admin {
                 </div>
                 
                 <h2>Extraction Rules</h2>
-                <p class="description">Define XPath selectors to extract product data. Leave fields empty to skip extraction.</p>
-                
+                <p class="description">Define extraction rules for product data. Use the advanced modes for complex sites like those with JSON-embedded prices or dynamic content.</p>
+
                 <div class="hft-scraper-rules">
                     <?php
-                    $field_types = ['price', 'status', 'shipping'];
-                    foreach ($field_types as $field_type):
-                        $rule = $this->get_rule_by_type($rules, $field_type);
+                    $field_types = ['price' => 'Price', 'status' => 'Stock Status', 'shipping' => 'Shipping Info'];
+                    foreach ($field_types as $field_type => $field_label):
+                        // Get all rules for this field type (may be multiple with different priorities)
+                        $field_rules = $this->get_rules_by_type($rules, $field_type);
+                        // Ensure at least one rule form
+                        if (empty($field_rules)) {
+                            $field_rules = [null];
+                        }
                     ?>
-                        <div class="hft-scraper-rule">
-                            <h3><?php echo ucfirst($field_type); ?></h3>
-                            <table class="form-table">
-                                <tbody>
-                                    <tr>
-                                        <th scope="row"><label for="rule_<?php echo $field_type; ?>_xpath">XPath Selector</label></th>
-                                        <td>
-                                            <input type="text" name="rules[<?php echo $field_type; ?>][xpath]" 
-                                                   id="rule_<?php echo $field_type; ?>_xpath" class="large-text"
-                                                   value="<?php echo $rule ? esc_attr($rule->xpath_selector) : ''; ?>">
-                                            <p class="description">XPath expression to select the element</p>
-                                        </td>
-                                    </tr>
-                                    <tr>
-                                        <th scope="row"><label for="rule_<?php echo $field_type; ?>_attribute">Attribute</label></th>
-                                        <td>
-                                            <input type="text" name="rules[<?php echo $field_type; ?>][attribute]" 
-                                                   id="rule_<?php echo $field_type; ?>_attribute" class="regular-text"
-                                                   value="<?php echo $rule ? esc_attr($rule->attribute ?? '') : ''; ?>">
-                                            <p class="description">Optional: Extract from attribute instead of text content</p>
-                                        </td>
-                                    </tr>
-                                    <tr>
-                                        <th scope="row">Post-processing</th>
-                                        <td>
-                                            <?php $post_processing = $rule ? $rule->post_processing ?? [] : []; ?>
-                                            <label>
-                                                <input type="checkbox" name="rules[<?php echo $field_type; ?>][post_processing][]" 
-                                                       value="trim" <?php checked(in_array('trim', $post_processing)); ?>>
-                                                Trim whitespace
-                                            </label><br>
-                                            <label>
-                                                <input type="checkbox" name="rules[<?php echo $field_type; ?>][post_processing][]" 
-                                                       value="remove_currency" <?php checked(in_array('remove_currency', $post_processing)); ?>>
-                                                Remove currency symbols
-                                            </label><br>
-                                            <label>
-                                                <input type="checkbox" name="rules[<?php echo $field_type; ?>][post_processing][]" 
-                                                       value="regex_replace" <?php checked(in_array('regex_replace', $post_processing)); ?>
-                                                       class="hft-regex-toggle" data-field="<?php echo $field_type; ?>">
-                                                Regex replace
-                                            </label>
-                                            <div class="hft-regex-options" id="regex_options_<?php echo $field_type; ?>" 
-                                                 style="<?php echo in_array('regex_replace', $post_processing) ? '' : 'display:none;'; ?>">
-                                                <input type="text" name="rules[<?php echo $field_type; ?>][regex_pattern]" 
-                                                       placeholder="Pattern" class="regular-text"
-                                                       value="<?php echo isset($post_processing['regex_pattern']) ? esc_attr($post_processing['regex_pattern']) : ''; ?>">
-                                                <input type="text" name="rules[<?php echo $field_type; ?>][regex_replacement]" 
-                                                       placeholder="Replacement" class="regular-text"
-                                                       value="<?php echo isset($post_processing['regex_replacement']) ? esc_attr($post_processing['regex_replacement']) : ''; ?>">
-                                            </div>
-                                        </td>
-                                    </tr>
-                                    <tr>
-                                        <th scope="row"></th>
-                                        <td>
-                                            <button type="button" class="button test-selector">
-                                                <?php _e('Test This Selector', 'housefresh-tools'); ?>
-                                            </button>
-                                        </td>
-                                    </tr>
-                                </tbody>
-                            </table>
+                        <div class="hft-scraper-rule-group" data-field="<?php echo $field_type; ?>">
+                            <h3><?php echo esc_html($field_label); ?>
+                                <button type="button" class="button button-small hft-add-rule" data-field="<?php echo $field_type; ?>">
+                                    <?php _e('+ Add Fallback Rule', 'housefresh-tools'); ?>
+                                </button>
+                            </h3>
+                            <p class="description"><?php _e('Add multiple rules in priority order. First successful extraction wins.', 'housefresh-tools'); ?></p>
+
+                            <div class="hft-rules-container" id="rules-<?php echo $field_type; ?>">
+                            <?php foreach ($field_rules as $rule_index => $rule): ?>
+                                <?php $this->render_rule_form($field_type, $rule, $rule_index); ?>
+                            <?php endforeach; ?>
+                            </div>
                         </div>
                     <?php endforeach; ?>
                 </div>
+
+                <!-- Template for new rules -->
+                <script type="text/template" id="hft-rule-template">
+                    <?php $this->render_rule_form('__FIELD__', null, '__INDEX__'); ?>
+                </script>
                 
                 <p class="submit">
                     <input type="submit" name="submit" id="submit" class="button button-primary" 
@@ -608,21 +610,10 @@ class HFT_Scraper_Admin {
             $scraper->logo_attachment_id = !empty($_POST['logo_attachment_id']) ? absint($_POST['logo_attachment_id']) : null;
             $scraper->currency = sanitize_text_field($_POST['currency'] ?? 'USD');
 
-            // Process GEOs from Tagify format
-            $geos_input = $_POST['geos'] ?? '';
-            if (!empty($geos_input) && $geos_input[0] === '[') {
-                // It's JSON from Tagify
-                $geos_array = json_decode(stripslashes($geos_input), true);
-                if (is_array($geos_array)) {
-                    $geo_values = array_column($geos_array, 'value');
-                    $scraper->geos = implode(',', $geo_values);
-                } else {
-                    $scraper->geos = '';
-                }
-            } else {
-                // It's already a comma-separated string
-                $scraper->geos = sanitize_text_field($geos_input);
-            }
+            // Process GEOs from Tagify format and expand groups
+            $geos_data = $this->process_geos_input($_POST['geos'] ?? '');
+            $scraper->geos = $geos_data['expanded'];
+            $scraper->geos_input = $geos_data['original'];
 
             $scraper->affiliate_link_format = sanitize_text_field($_POST['affiliate_link_format'] ?? '');
             $scraper->test_url = esc_url_raw($_POST['test_url'] ?? '') ?: null;
@@ -648,21 +639,10 @@ class HFT_Scraper_Admin {
             $scraper->logo_attachment_id = !empty($_POST['logo_attachment_id']) ? absint($_POST['logo_attachment_id']) : null;
             $scraper->currency = sanitize_text_field($_POST['currency'] ?? 'USD');
 
-            // Process GEOs from Tagify format
-            $geos_input = $_POST['geos'] ?? '';
-            if (!empty($geos_input) && $geos_input[0] === '[') {
-                // It's JSON from Tagify
-                $geos_array = json_decode(stripslashes($geos_input), true);
-                if (is_array($geos_array)) {
-                    $geo_values = array_column($geos_array, 'value');
-                    $scraper->geos = implode(',', $geo_values);
-                } else {
-                    $scraper->geos = '';
-                }
-            } else {
-                // It's already a comma-separated string
-                $scraper->geos = sanitize_text_field($geos_input);
-            }
+            // Process GEOs from Tagify format and expand groups
+            $geos_data = $this->process_geos_input($_POST['geos'] ?? '');
+            $scraper->geos = $geos_data['expanded'];
+            $scraper->geos_input = $geos_data['original'];
 
             $scraper->affiliate_link_format = sanitize_text_field($_POST['affiliate_link_format'] ?? '');
             $scraper->test_url = esc_url_raw($_POST['test_url'] ?? '') ?: null;
@@ -694,75 +674,310 @@ class HFT_Scraper_Admin {
     }
     
     /**
-     * Save scraper rules.
+     * Save scraper rules (supports multiple rules per field).
      *
      * @param int $scraper_id
      */
     private function save_scraper_rules(int $scraper_id): void {
-        $rules = $_POST['rules'] ?? [];
-        
-        foreach ($rules as $field_type => $rule_data) {
-            // Process XPath without escaping quotes but with basic sanitization
-            $xpath_raw = $rule_data['xpath'] ?? '';
-            $xpath = wp_unslash(trim($xpath_raw));
-            
-            // Basic security: remove any script tags and dangerous characters while preserving XPath syntax
-            $xpath = preg_replace('/<script\b[^<]*(?:(?!<\/script>)<[^<]*)*<\/script>/mi', '', $xpath);
-            $xpath = str_replace(['<script', '</script>', 'javascript:', 'vbscript:'], '', $xpath);
-            
-            // Skip if no xpath provided
-            if (empty($xpath)) {
-                // Delete existing rule if any
-                $this->repository->delete_rule_by_scraper_and_field($scraper_id, $field_type);
+        $rules_data = $_POST['rules'] ?? [];
+        $saved_rule_ids = [];
+
+        foreach ($rules_data as $field_type => $field_rules) {
+            // field_rules is now an array of rule data indexed by index
+            if (!is_array($field_rules)) {
                 continue;
             }
-            
-            // Prepare post-processing
-            $post_processing = [];
-            if (isset($rule_data['post_processing']) && is_array($rule_data['post_processing'])) {
-                $post_processing = $rule_data['post_processing'];
-                
-                // Add regex pattern/replacement if regex_replace is selected
-                if (in_array('regex_replace', $post_processing)) {
-                    $post_processing['regex_pattern'] = sanitize_text_field($rule_data['regex_pattern'] ?? '');
-                    $post_processing['regex_replacement'] = sanitize_text_field($rule_data['regex_replacement'] ?? '');
+
+            foreach ($field_rules as $index => $rule_data) {
+                // Skip template placeholders
+                if ($index === '__INDEX__') {
+                    continue;
+                }
+
+                // Process XPath without escaping quotes but with basic sanitization
+                $xpath_raw = $rule_data['xpath'] ?? '';
+                $xpath = wp_unslash(trim($xpath_raw));
+
+                // Basic security: remove any script tags and dangerous characters while preserving XPath syntax
+                $xpath = preg_replace('/<script\b[^<]*(?:(?!<\/script>)<[^<]*)*<\/script>/mi', '', $xpath);
+                $xpath = str_replace(['<script', '</script>', 'javascript:', 'vbscript:'], '', $xpath);
+
+                // Skip if no xpath provided
+                if (empty($xpath)) {
+                    continue;
+                }
+
+                // Prepare post-processing
+                $post_processing = [];
+                if (isset($rule_data['post_processing']) && is_array($rule_data['post_processing'])) {
+                    $post_processing = $rule_data['post_processing'];
+
+                    // Add regex pattern/replacement if regex_replace is selected
+                    if (in_array('regex_replace', $post_processing)) {
+                        $post_processing['regex_pattern'] = wp_unslash($rule_data['post_regex_pattern'] ?? '');
+                        $post_processing['regex_replacement'] = wp_unslash($rule_data['post_regex_replacement'] ?? '');
+                    }
+                }
+
+                // Parse regex fallbacks (one per line)
+                $regex_fallbacks = null;
+                if (!empty($rule_data['regex_fallbacks'])) {
+                    $fallbacks_raw = wp_unslash(trim($rule_data['regex_fallbacks']));
+                    $fallbacks = array_filter(array_map('trim', explode("\n", $fallbacks_raw)));
+                    if (!empty($fallbacks)) {
+                        $regex_fallbacks = $fallbacks;
+                    }
+                }
+
+                // Parse boolean true values (comma-separated)
+                $boolean_true_values = null;
+                if (!empty($rule_data['boolean_true_values'])) {
+                    $values_raw = sanitize_text_field($rule_data['boolean_true_values']);
+                    $values = array_filter(array_map('trim', explode(',', $values_raw)));
+                    if (!empty($values)) {
+                        $boolean_true_values = $values;
+                    }
+                }
+
+                // Create or update rule
+                $rule = new HFT_Scraper_Rule();
+                $rule->scraper_id = $scraper_id;
+                $rule->field_type = $field_type;
+                $rule->priority = absint($rule_data['priority'] ?? 10);
+                $rule->extraction_mode = sanitize_text_field($rule_data['extraction_mode'] ?? 'xpath');
+                $rule->xpath_selector = $xpath;
+                $rule->attribute = sanitize_text_field($rule_data['attribute'] ?? '') ?: null;
+                $rule->regex_pattern = !empty($rule_data['regex_pattern']) ? wp_unslash(trim($rule_data['regex_pattern'])) : null;
+                $rule->regex_fallbacks = $regex_fallbacks;
+                $rule->return_boolean = !empty($rule_data['return_boolean']);
+                $rule->boolean_true_values = $boolean_true_values;
+                $rule->post_processing = $post_processing;
+                $rule->is_active = true;
+
+                // Check if this is an existing rule (has ID)
+                if (!empty($rule_data['id'])) {
+                    $rule->id = absint($rule_data['id']);
+                    $this->repository->update_rule($rule);
+                    $saved_rule_ids[] = $rule->id;
+                } else {
+                    $new_id = $this->repository->create_rule($rule);
+                    if ($new_id) {
+                        $saved_rule_ids[] = $new_id;
+                    }
                 }
             }
-            
-            $rule = new HFT_Scraper_Rule();
-            $rule->scraper_id = $scraper_id;
-            $rule->field_type = $field_type;
-            $rule->xpath_selector = $xpath;
-            $rule->attribute = sanitize_text_field($rule_data['attribute'] ?? '') ?: null;
-            $rule->post_processing = $post_processing;
-            $rule->is_active = true;
-            
-            // Check if rule exists
-            $existing_rule = $this->repository->find_rule_by_scraper_and_field($scraper_id, $field_type);
-            if ($existing_rule) {
-                $rule->id = $existing_rule->id;
-                $this->repository->update_rule($rule);
-            } else {
-                $this->repository->create_rule($rule);
+        }
+
+        // Delete rules that were removed (not in saved_rule_ids but belong to this scraper)
+        $this->cleanup_removed_rules($scraper_id, $saved_rule_ids);
+    }
+
+    /**
+     * Clean up rules that were removed from the form.
+     *
+     * @param int $scraper_id
+     * @param array $kept_rule_ids
+     */
+    private function cleanup_removed_rules(int $scraper_id, array $kept_rule_ids): void {
+        $existing_rules = $this->repository->find_rules_by_scraper_id($scraper_id);
+
+        foreach ($existing_rules as $rule) {
+            if (!in_array($rule->id, $kept_rule_ids)) {
+                $this->repository->delete_rule($rule->id);
             }
         }
     }
     
     
     /**
-     * Get rule by field type.
+     * Get all rules by field type (supports multiple rules per field).
      *
      * @param array $rules
      * @param string $field_type
-     * @return HFT_Scraper_Rule|null
+     * @return array Array of HFT_Scraper_Rule
      */
-    private function get_rule_by_type(array $rules, string $field_type): ?HFT_Scraper_Rule {
+    private function get_rules_by_type(array $rules, string $field_type): array {
+        $matching = [];
         foreach ($rules as $rule) {
             if ($rule->field_type === $field_type) {
-                return $rule;
+                $matching[] = $rule;
             }
         }
-        return null;
+        // Sort by priority
+        usort($matching, fn($a, $b) => $a->priority <=> $b->priority);
+        return $matching;
+    }
+
+    /**
+     * Render a single rule form.
+     *
+     * @param string $field_type
+     * @param HFT_Scraper_Rule|null $rule
+     * @param int|string $index
+     */
+    private function render_rule_form(string $field_type, ?HFT_Scraper_Rule $rule, $index): void {
+        $name_prefix = "rules[{$field_type}][{$index}]";
+        $id_prefix = "rule_{$field_type}_{$index}";
+        $extraction_mode = $rule ? $rule->extraction_mode : 'xpath';
+        $post_processing = $rule ? ($rule->post_processing ?? []) : [];
+        ?>
+        <div class="hft-scraper-rule" data-index="<?php echo esc_attr($index); ?>">
+            <?php if ($rule && $rule->id): ?>
+                <input type="hidden" name="<?php echo $name_prefix; ?>[id]" value="<?php echo esc_attr($rule->id); ?>">
+            <?php endif; ?>
+
+            <div class="hft-rule-header">
+                <span class="hft-rule-priority">
+                    <label><?php _e('Priority:', 'housefresh-tools'); ?></label>
+                    <input type="number" name="<?php echo $name_prefix; ?>[priority]"
+                           value="<?php echo esc_attr($rule ? $rule->priority : (is_numeric($index) ? (($index + 1) * 10) : 10)); ?>"
+                           min="1" max="999" class="small-text">
+                </span>
+                <span class="hft-rule-mode">
+                    <label><?php _e('Mode:', 'housefresh-tools'); ?></label>
+                    <select name="<?php echo $name_prefix; ?>[extraction_mode]" class="hft-extraction-mode-select">
+                        <option value="xpath" <?php selected($extraction_mode, 'xpath'); ?>><?php _e('XPath', 'housefresh-tools'); ?></option>
+                        <option value="xpath_regex" <?php selected($extraction_mode, 'xpath_regex'); ?>><?php _e('XPath + Regex', 'housefresh-tools'); ?></option>
+                        <option value="css" <?php selected($extraction_mode, 'css'); ?>><?php _e('CSS Selector', 'housefresh-tools'); ?></option>
+                        <option value="json_path" <?php selected($extraction_mode, 'json_path'); ?>><?php _e('JSON Path', 'housefresh-tools'); ?></option>
+                    </select>
+                </span>
+                <button type="button" class="button button-link-delete hft-remove-rule" title="<?php esc_attr_e('Remove this rule', 'housefresh-tools'); ?>">
+                    <span class="dashicons dashicons-trash"></span>
+                </button>
+            </div>
+
+            <table class="form-table hft-rule-table">
+                <tbody>
+                    <tr>
+                        <th scope="row">
+                            <label for="<?php echo $id_prefix; ?>_xpath"><?php _e('Selector', 'housefresh-tools'); ?></label>
+                        </th>
+                        <td>
+                            <input type="text" name="<?php echo $name_prefix; ?>[xpath]"
+                                   id="<?php echo $id_prefix; ?>_xpath" class="large-text code"
+                                   value="<?php echo $rule ? esc_attr($rule->xpath_selector) : ''; ?>"
+                                   placeholder="<?php esc_attr_e('e.g., //span[@class="price"] or //html for full page', 'housefresh-tools'); ?>">
+                            <p class="description hft-mode-hint hft-mode-xpath"><?php _e('XPath expression to select the element containing the value.', 'housefresh-tools'); ?></p>
+                            <p class="description hft-mode-hint hft-mode-xpath_regex" style="display:none;"><?php _e('XPath to get content (use //html for full page), then apply regex below.', 'housefresh-tools'); ?></p>
+                            <p class="description hft-mode-hint hft-mode-css" style="display:none;"><?php _e('CSS selector (e.g., .price, #product-price, span.amount).', 'housefresh-tools'); ?></p>
+                            <p class="description hft-mode-hint hft-mode-json_path" style="display:none;"><?php _e('JSON path (e.g., $.product.price or product.offers[0].price).', 'housefresh-tools'); ?></p>
+                        </td>
+                    </tr>
+
+                    <tr class="hft-attribute-row">
+                        <th scope="row">
+                            <label for="<?php echo $id_prefix; ?>_attribute"><?php _e('Attribute', 'housefresh-tools'); ?></label>
+                        </th>
+                        <td>
+                            <input type="text" name="<?php echo $name_prefix; ?>[attribute]"
+                                   id="<?php echo $id_prefix; ?>_attribute" class="regular-text"
+                                   value="<?php echo $rule ? esc_attr($rule->attribute ?? '') : ''; ?>"
+                                   placeholder="<?php esc_attr_e('Leave empty for text content', 'housefresh-tools'); ?>">
+                            <p class="description"><?php _e('Extract from this attribute instead of text content (e.g., content, data-price).', 'housefresh-tools'); ?></p>
+                        </td>
+                    </tr>
+
+                    <!-- Regex extraction fields (for xpath_regex mode) -->
+                    <tr class="hft-regex-extraction-row" style="<?php echo $extraction_mode === 'xpath_regex' ? '' : 'display:none;'; ?>">
+                        <th scope="row">
+                            <label for="<?php echo $id_prefix; ?>_regex_pattern"><?php _e('Regex Pattern', 'housefresh-tools'); ?></label>
+                        </th>
+                        <td>
+                            <input type="text" name="<?php echo $name_prefix; ?>[regex_pattern]"
+                                   id="<?php echo $id_prefix; ?>_regex_pattern" class="large-text code"
+                                   value="<?php echo $rule ? esc_attr($rule->regex_pattern ?? '') : ''; ?>"
+                                   placeholder="<?php esc_attr_e('/\"minimum_price\":\{[^}]*\"value\":([0-9]+\.?[0-9]*)/s', 'housefresh-tools'); ?>">
+                            <p class="description"><?php _e('Regex with capture group. First capture group ($1) is returned as the value. For escaped quotes in JSON use \\\".', 'housefresh-tools'); ?></p>
+                        </td>
+                    </tr>
+
+                    <tr class="hft-regex-extraction-row" style="<?php echo $extraction_mode === 'xpath_regex' ? '' : 'display:none;'; ?>">
+                        <th scope="row">
+                            <label for="<?php echo $id_prefix; ?>_regex_fallbacks"><?php _e('Fallback Patterns', 'housefresh-tools'); ?></label>
+                        </th>
+                        <td>
+                            <textarea name="<?php echo $name_prefix; ?>[regex_fallbacks]"
+                                      id="<?php echo $id_prefix; ?>_regex_fallbacks" class="large-text code" rows="3"
+                                      placeholder="<?php esc_attr_e('One pattern per line', 'housefresh-tools'); ?>"><?php
+                                      if ($rule && !empty($rule->regex_fallbacks)) {
+                                          echo esc_textarea(implode("\n", $rule->regex_fallbacks));
+                                      }
+                            ?></textarea>
+                            <p class="description"><?php _e('Additional regex patterns to try if the primary pattern fails (one per line).', 'housefresh-tools'); ?></p>
+                        </td>
+                    </tr>
+
+                    <!-- Boolean mode for stock status -->
+                    <?php if ($field_type === 'status'): ?>
+                    <tr class="hft-boolean-row" style="<?php echo $extraction_mode === 'xpath_regex' ? '' : 'display:none;'; ?>">
+                        <th scope="row">
+                            <label><?php _e('Boolean Mode', 'housefresh-tools'); ?></label>
+                        </th>
+                        <td>
+                            <label>
+                                <input type="checkbox" name="<?php echo $name_prefix; ?>[return_boolean]" value="1"
+                                       <?php checked($rule ? $rule->return_boolean : false); ?>
+                                       class="hft-return-boolean-toggle">
+                                <?php _e('Interpret extracted value as boolean (for in-stock checks)', 'housefresh-tools'); ?>
+                            </label>
+                            <div class="hft-boolean-values" style="<?php echo ($rule && $rule->return_boolean) ? '' : 'display:none;'; ?>">
+                                <label for="<?php echo $id_prefix; ?>_boolean_true_values"><?php _e('Values that mean "In Stock":', 'housefresh-tools'); ?></label>
+                                <input type="text" name="<?php echo $name_prefix; ?>[boolean_true_values]"
+                                       id="<?php echo $id_prefix; ?>_boolean_true_values" class="regular-text"
+                                       value="<?php echo $rule && $rule->boolean_true_values ? esc_attr(implode(',', $rule->boolean_true_values)) : 'true,1,yes'; ?>"
+                                       placeholder="true,1,yes">
+                                <p class="description"><?php _e('Comma-separated values. If extracted value matches any of these, status = "In Stock", otherwise "Out of Stock".', 'housefresh-tools'); ?></p>
+                            </div>
+                        </td>
+                    </tr>
+                    <?php endif; ?>
+
+                    <tr>
+                        <th scope="row"><?php _e('Post-processing', 'housefresh-tools'); ?></th>
+                        <td>
+                            <label>
+                                <input type="checkbox" name="<?php echo $name_prefix; ?>[post_processing][]"
+                                       value="trim" <?php checked(in_array('trim', $post_processing)); ?>>
+                                <?php _e('Trim whitespace', 'housefresh-tools'); ?>
+                            </label><br>
+                            <?php if ($field_type === 'price'): ?>
+                            <label>
+                                <input type="checkbox" name="<?php echo $name_prefix; ?>[post_processing][]"
+                                       value="remove_currency" <?php checked(in_array('remove_currency', $post_processing)); ?>>
+                                <?php _e('Remove currency symbols', 'housefresh-tools'); ?>
+                            </label><br>
+                            <?php endif; ?>
+                            <label>
+                                <input type="checkbox" name="<?php echo $name_prefix; ?>[post_processing][]"
+                                       value="regex_replace" <?php checked(in_array('regex_replace', $post_processing)); ?>
+                                       class="hft-post-regex-toggle">
+                                <?php _e('Regex replace (post-processing)', 'housefresh-tools'); ?>
+                            </label>
+                            <div class="hft-post-regex-options" style="<?php echo in_array('regex_replace', $post_processing) ? '' : 'display:none;'; ?>">
+                                <input type="text" name="<?php echo $name_prefix; ?>[post_regex_pattern]"
+                                       placeholder="<?php esc_attr_e('Pattern', 'housefresh-tools'); ?>" class="regular-text code"
+                                       value="<?php echo isset($post_processing['regex_pattern']) ? esc_attr($post_processing['regex_pattern']) : ''; ?>">
+                                <input type="text" name="<?php echo $name_prefix; ?>[post_regex_replacement]"
+                                       placeholder="<?php esc_attr_e('Replacement', 'housefresh-tools'); ?>" class="regular-text"
+                                       value="<?php echo isset($post_processing['regex_replacement']) ? esc_attr($post_processing['regex_replacement']) : ''; ?>">
+                            </div>
+                        </td>
+                    </tr>
+
+                    <tr>
+                        <th scope="row"></th>
+                        <td>
+                            <button type="button" class="button test-selector" data-field="<?php echo $field_type; ?>" data-index="<?php echo $index; ?>">
+                                <?php _e('Test This Rule', 'housefresh-tools'); ?>
+                            </button>
+                            <span class="hft-test-result"></span>
+                        </td>
+                    </tr>
+                </tbody>
+            </table>
+        </div>
+        <?php
     }
     
     /**
@@ -855,32 +1070,106 @@ class HFT_Scraper_Admin {
     
     /**
      * Get GEO whitelist for Tagify.
+     * Includes all countries from geo groups plus common additional markets.
      *
      * @return array
      */
     private function get_geo_whitelist(): array {
         return [
+            // North America
             ['value' => 'US', 'name' => 'United States'],
-            ['value' => 'GB', 'name' => 'United Kingdom'],
             ['value' => 'CA', 'name' => 'Canada'],
-            ['value' => 'DE', 'name' => 'Germany'],
-            ['value' => 'FR', 'name' => 'France'],
-            ['value' => 'ES', 'name' => 'Spain'],
-            ['value' => 'IT', 'name' => 'Italy'],
-            ['value' => 'AU', 'name' => 'Australia'],
-            ['value' => 'BR', 'name' => 'Brazil'],
-            ['value' => 'IN', 'name' => 'India'],
-            ['value' => 'JP', 'name' => 'Japan'],
             ['value' => 'MX', 'name' => 'Mexico'],
-            ['value' => 'NL', 'name' => 'Netherlands'],
-            ['value' => 'SE', 'name' => 'Sweden'],
-            ['value' => 'PL', 'name' => 'Poland'],
+            // UK
+            ['value' => 'GB', 'name' => 'United Kingdom'],
+            // EU Countries
+            ['value' => 'AT', 'name' => 'Austria'],
             ['value' => 'BE', 'name' => 'Belgium'],
+            ['value' => 'BG', 'name' => 'Bulgaria'],
+            ['value' => 'HR', 'name' => 'Croatia'],
+            ['value' => 'CY', 'name' => 'Cyprus'],
+            ['value' => 'CZ', 'name' => 'Czech Republic'],
+            ['value' => 'DK', 'name' => 'Denmark'],
+            ['value' => 'EE', 'name' => 'Estonia'],
+            ['value' => 'FI', 'name' => 'Finland'],
+            ['value' => 'FR', 'name' => 'France'],
+            ['value' => 'DE', 'name' => 'Germany'],
+            ['value' => 'GR', 'name' => 'Greece'],
+            ['value' => 'HU', 'name' => 'Hungary'],
+            ['value' => 'IE', 'name' => 'Ireland'],
+            ['value' => 'IT', 'name' => 'Italy'],
+            ['value' => 'LV', 'name' => 'Latvia'],
+            ['value' => 'LT', 'name' => 'Lithuania'],
+            ['value' => 'LU', 'name' => 'Luxembourg'],
+            ['value' => 'MT', 'name' => 'Malta'],
+            ['value' => 'NL', 'name' => 'Netherlands'],
+            ['value' => 'PL', 'name' => 'Poland'],
+            ['value' => 'PT', 'name' => 'Portugal'],
+            ['value' => 'RO', 'name' => 'Romania'],
+            ['value' => 'SK', 'name' => 'Slovakia'],
+            ['value' => 'SI', 'name' => 'Slovenia'],
+            ['value' => 'ES', 'name' => 'Spain'],
+            ['value' => 'SE', 'name' => 'Sweden'],
+            // Non-EU European
+            ['value' => 'NO', 'name' => 'Norway'],
+            ['value' => 'IS', 'name' => 'Iceland'],
+            ['value' => 'CH', 'name' => 'Switzerland'],
+            // Asia-Pacific
+            ['value' => 'AU', 'name' => 'Australia'],
+            ['value' => 'NZ', 'name' => 'New Zealand'],
+            ['value' => 'JP', 'name' => 'Japan'],
             ['value' => 'SG', 'name' => 'Singapore'],
+            ['value' => 'IN', 'name' => 'India'],
+            // Other Markets
+            ['value' => 'BR', 'name' => 'Brazil'],
             ['value' => 'AE', 'name' => 'United Arab Emirates'],
+            // Special
+            ['value' => 'GLOBAL', 'name' => 'Global (All Countries)'],
         ];
     }
-    
+
+    /**
+     * Process GEOs input from Tagify format.
+     * Expands any geo group identifiers to their country codes.
+     *
+     * @param string $input Raw input from Tagify.
+     * @return array Array with 'expanded' (for DB storage) and 'original' (for UI restoration).
+     */
+    private function process_geos_input(string $input): array {
+        $geo_values = [];
+
+        if (!empty($input) && $input[0] === '[') {
+            // It's JSON from Tagify
+            $geos_array = json_decode(stripslashes($input), true);
+            if (is_array($geos_array)) {
+                $geo_values = array_column($geos_array, 'value');
+            }
+        } elseif (!empty($input)) {
+            // It's already a comma-separated string
+            $geo_values = array_map('trim', explode(',', $input));
+        }
+
+        // Store the original input (pre-expansion) for UI restoration
+        $original = implode(',', array_filter($geo_values));
+
+        // Expand any geo groups to individual country codes
+        if (class_exists('HFT_Geo_Groups')) {
+            $expanded_values = HFT_Geo_Groups::expand($geo_values);
+        } else {
+            $expanded_values = $geo_values;
+        }
+
+        // Sanitize and deduplicate
+        $expanded_values = array_map('sanitize_text_field', $expanded_values);
+        $expanded_values = array_unique(array_filter($expanded_values));
+        $expanded = implode(',', $expanded_values);
+
+        return [
+            'expanded' => $expanded,
+            'original' => $original,
+        ];
+    }
+
     /**
      * Show migration notice for unmigrated links
      */

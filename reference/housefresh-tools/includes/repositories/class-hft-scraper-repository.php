@@ -94,6 +94,7 @@ class HFT_Scraper_Repository {
             'logo_attachment_id' => $scraper->logo_attachment_id,
             'currency' => $scraper->currency,
             'geos' => $scraper->geos,
+            'geos_input' => $scraper->geos_input,
             'affiliate_link_format' => $scraper->affiliate_link_format,
             'is_active' => $scraper->is_active,
             'use_base_parser' => $scraper->use_base_parser,
@@ -108,7 +109,7 @@ class HFT_Scraper_Repository {
                 $this->scrapers_table,
                 $data,
                 ['id' => $scraper->id],
-                ['%s', '%s', '%d', '%s', '%s', '%s', '%d', '%d', '%d', '%d', '%s'],
+                ['%s', '%s', '%d', '%s', '%s', '%s', '%s', '%d', '%d', '%d', '%d', '%s'],
                 ['%d']
             );
 
@@ -121,7 +122,7 @@ class HFT_Scraper_Repository {
             $result = $wpdb->insert(
                 $this->scrapers_table,
                 $data,
-                ['%s', '%s', '%d', '%s', '%s', '%s', '%d', '%d', '%d', '%d', '%s']
+                ['%s', '%s', '%d', '%s', '%s', '%s', '%s', '%d', '%d', '%d', '%d', '%s']
             );
             
             if ($result === false) {
@@ -156,73 +157,99 @@ class HFT_Scraper_Repository {
     }
 
     /**
-     * Get rules for a scraper
+     * Get rules for a scraper (ordered by priority)
      */
     private function get_rules_for_scraper(int $scraper_id): array {
         global $wpdb;
-        
+
         $rows = $wpdb->get_results(
             $wpdb->prepare(
-                "SELECT * FROM {$this->rules_table} WHERE scraper_id = %d AND is_active = 1",
+                "SELECT * FROM {$this->rules_table} WHERE scraper_id = %d AND is_active = 1 ORDER BY field_type ASC, priority ASC",
                 $scraper_id
             ),
             ARRAY_A
         );
-        
+
         $rules = [];
         foreach ($rows as $row) {
             $rules[] = new HFT_Scraper_Rule($row);
         }
-        
+
         return $rules;
     }
 
     /**
-     * Save rule
+     * Get rules for a scraper grouped by field type
+     */
+    public function get_rules_grouped_by_field(int $scraper_id): array {
+        $rules = $this->get_rules_for_scraper($scraper_id);
+
+        $grouped = [
+            'price' => [],
+            'status' => [],
+            'shipping' => [],
+        ];
+
+        foreach ($rules as $rule) {
+            if (isset($grouped[$rule->field_type])) {
+                $grouped[$rule->field_type][] = $rule;
+            }
+        }
+
+        return $grouped;
+    }
+
+    /**
+     * Save rule (insert or update)
      */
     public function save_rule(HFT_Scraper_Rule $rule): int {
         global $wpdb;
-        
+
         $data = [
             'scraper_id' => $rule->scraper_id,
             'field_type' => $rule->field_type,
+            'priority' => $rule->priority,
+            'extraction_mode' => $rule->extraction_mode,
             'xpath_selector' => $rule->xpath_selector,
             'attribute' => $rule->attribute,
+            'regex_pattern' => $rule->regex_pattern,
+            'regex_fallbacks' => $rule->regex_fallbacks ? json_encode($rule->regex_fallbacks) : null,
+            'return_boolean' => $rule->return_boolean ? 1 : 0,
+            'boolean_true_values' => $rule->boolean_true_values ? json_encode($rule->boolean_true_values) : null,
             'post_processing' => $rule->post_processing ? json_encode($rule->post_processing) : null,
-            'is_active' => $rule->is_active
+            'is_active' => $rule->is_active ? 1 : 0
         ];
-        
+
+        $format = ['%d', '%s', '%d', '%s', '%s', '%s', '%s', '%s', '%d', '%s', '%s', '%d'];
+
         if ($rule->id > 0) {
-            // Update
+            // Update existing rule
             $wpdb->update(
                 $this->rules_table,
                 $data,
                 ['id' => $rule->id],
-                ['%d', '%s', '%s', '%s', '%s', '%d'],
+                $format,
                 ['%d']
             );
             return $rule->id;
         } else {
-            // Insert or update based on unique constraint
-            $existing = $wpdb->get_var($wpdb->prepare(
-                "SELECT id FROM {$this->rules_table} WHERE scraper_id = %d AND field_type = %s",
-                $rule->scraper_id,
-                $rule->field_type
-            ));
-            
-            if ($existing) {
-                $data['id'] = $existing;
-                $rule->id = (int)$existing;
-                return $this->save_rule($rule);
-            }
-            
+            // Insert new rule (no unique constraint check - multiple rules per field allowed)
             $wpdb->insert(
                 $this->rules_table,
                 $data,
-                ['%d', '%s', '%s', '%s', '%s', '%d']
+                $format
             );
             return $wpdb->insert_id;
         }
+    }
+
+    /**
+     * Delete rule by ID
+     */
+    public function delete_rule(int $rule_id): bool {
+        global $wpdb;
+        $result = $wpdb->delete($this->rules_table, ['id' => $rule_id], ['%d']);
+        return $result !== false;
     }
 
     /**

@@ -25,7 +25,8 @@
       "WebFetch(domain:arxiv.org)",
       "WebFetch(domain:www.geotab.com)",
       "WebFetch(domain:xbenbike.com)",
-      "Bash(wc:*)"
+      "Bash(wc:*)",
+      "Bash(git checkout:*)"
     ]
   }
 }

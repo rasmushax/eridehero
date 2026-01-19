@@ -75,6 +75,111 @@ class SpecConfig {
     public const MAX_ADVANTAGES      = 5;  // Max advantages per product
 
     // =========================================================================
+    // Advantage Specs - What to show when a product wins a category
+    // =========================================================================
+
+    /**
+     * Primary and secondary specs to highlight for each category advantage.
+     * Based on scoring algorithm weights - shows what actually drives the score.
+     *
+     * Structure:
+     * - primary: The headline spec (most user-relatable)
+     * - secondary: Supporting specs (shown if significantly different)
+     * - headlines: Adjective headlines for different specs
+     * - lowerBetter: Specs where lower values win
+     */
+    public const ADVANTAGE_SPECS = [
+        'motor_performance' => [
+            'primary'     => 'manufacturer_top_speed', // Most relatable to users
+            'secondary'   => [ 'motor.power_peak', 'motor.motor_position' ],
+            'headlines'   => [
+                'manufacturer_top_speed' => 'Faster',
+                'tested_top_speed'       => 'Faster',
+                'motor.power_peak'       => 'More Powerful',
+                'motor.power_nominal'    => 'More Powerful',
+                'motor.motor_position'   => 'Dual Motors',
+            ],
+            'lowerBetter' => [],
+        ],
+        'range_battery' => [
+            'primary'     => 'battery.capacity', // Based on scoring algo (70pts)
+            'secondary'   => [ 'tested_range_regular', 'battery.charging_time' ],
+            'headlines'   => [
+                'battery.capacity'       => 'Bigger Battery',
+                'tested_range_regular'   => 'More Range',
+                'tested_range_fast'      => 'More Range',
+                'battery.charging_time'  => 'Faster Charging',
+            ],
+            'lowerBetter' => [ 'battery.charging_time' ],
+        ],
+        'ride_quality' => [
+            'primary'     => 'suspension.type', // Biggest factor (40pts)
+            'secondary'   => [ 'wheels.tire_size_front', 'wheels.tire_type' ],
+            'headlines'   => [
+                'suspension.type'        => 'Smoother Ride',
+                'wheels.tire_size_front' => 'Larger Tires',
+                'wheels.tire_type'       => 'Better Tires',
+            ],
+            'lowerBetter' => [],
+        ],
+        'portability' => [
+            'primary'     => 'dimensions.weight', // Dominant factor (60pts)
+            'secondary'   => [ 'dimensions.max_load' ],
+            'headlines'   => [
+                'dimensions.weight'   => 'Lighter',
+                'dimensions.max_load' => 'Higher Weight Capacity',
+            ],
+            'lowerBetter' => [ 'dimensions.weight' ],
+        ],
+        'safety' => [
+            'primary'     => 'other.ip_rating', // Most user-relatable
+            'secondary'   => [ 'brakes.front', 'lighting.turn_signals' ],
+            'headlines'   => [
+                'other.ip_rating'       => 'Better Protected',
+                'brakes.front'          => 'Better Brakes',
+                'lighting.turn_signals' => 'Turn Signals',
+            ],
+            'lowerBetter' => [],
+        ],
+        'features' => [
+            'primary'     => 'features', // Feature count
+            'secondary'   => [ 'other.display_type' ],
+            'headlines'   => [
+                'features'          => 'More Features',
+                'other.display_type' => 'Better Display',
+            ],
+            'lowerBetter' => [],
+        ],
+        'maintenance' => [
+            'primary'     => 'wheels.tire_type', // Dominant factor (45pts)
+            'secondary'   => [ 'other.ip_rating', 'wheels.self_healing' ],
+            'headlines'   => [
+                'wheels.tire_type'    => 'Easier Maintenance',
+                'other.ip_rating'     => 'Better Protected',
+                'wheels.self_healing' => 'Self-Healing Tires',
+            ],
+            'lowerBetter' => [],
+        ],
+    ];
+
+    /**
+     * Spec display units for advantage formatting.
+     */
+    public const ADVANTAGE_UNITS = [
+        'manufacturer_top_speed' => 'mph',
+        'tested_top_speed'       => 'mph',
+        'motor.power_peak'       => 'W',
+        'motor.power_nominal'    => 'W',
+        'battery.capacity'       => 'Wh',
+        'battery.charging_time'  => 'hrs',
+        'tested_range_regular'   => 'mi',
+        'tested_range_fast'      => 'mi',
+        'dimensions.weight'      => 'lbs',
+        'dimensions.max_load'    => 'lbs',
+        'wheels.tire_size_front' => '"',
+    ];
+
+    // =========================================================================
     // Category Weights
     // =========================================================================
 
@@ -281,10 +386,10 @@ class SpecConfig {
                 'showScore'      => false,
                 'isValueSection' => true,
                 'specs'          => [
-                    [ 'key' => 'value_metrics.{geo}.price_per_tested_mile', 'label' => '{symbol}/mi', 'higherBetter' => false, 'format' => 'currency', 'geoAware' => true, 'tooltip' => 'Price divided by tested range. Lower = more miles for your money', 'valueUnit' => '/mi' ],
-                    [ 'key' => 'value_metrics.{geo}.price_per_mph', 'label' => '{symbol}/mph', 'higherBetter' => false, 'format' => 'currency', 'geoAware' => true, 'tooltip' => 'Price divided by top speed. Lower = more speed for your money', 'valueUnit' => '/mph' ],
-                    [ 'key' => 'value_metrics.{geo}.price_per_watt', 'label' => '{symbol}/W', 'higherBetter' => false, 'format' => 'currency', 'geoAware' => true, 'tooltip' => 'Price divided by motor power. Lower = more power for your money', 'valueUnit' => '/W' ],
-                    [ 'key' => 'value_metrics.{geo}.price_per_wh', 'label' => '{symbol}/Wh', 'higherBetter' => false, 'format' => 'currency', 'geoAware' => true, 'tooltip' => 'Price divided by battery capacity. Lower = more energy storage for your money', 'valueUnit' => '/Wh' ],
+                    [ 'key' => 'value_metrics.{geo}.price_per_tested_mile', 'label' => '{symbol}/mi', 'higherBetter' => false, 'format' => 'currency', 'geoAware' => true, 'tooltip' => 'Price divided by tested range (regular). Lower = more miles for your money', 'valueUnit' => '/mi' ],
+                    [ 'key' => 'value_metrics.{geo}.price_per_mph', 'label' => '{symbol}/mph', 'higherBetter' => false, 'format' => 'currency', 'geoAware' => true, 'tooltip' => 'Price divided by claimed top speed. Lower = more speed for your money', 'valueUnit' => '/mph' ],
+                    [ 'key' => 'value_metrics.{geo}.price_per_watt', 'label' => '{symbol}/W', 'higherBetter' => false, 'format' => 'currency', 'geoAware' => true, 'tooltip' => 'Price divided by nominal motor power. Lower = more power for your money', 'valueUnit' => '/W' ],
+                    [ 'key' => 'value_metrics.{geo}.price_per_wh', 'label' => '{symbol}/Wh', 'higherBetter' => false, 'format' => 'currency', 'geoAware' => true, 'tooltip' => 'Price divided by battery capacity (Wh). Lower = more energy storage for your money', 'valueUnit' => '/Wh' ],
                 ],
             ],
         ];

@@ -20,7 +20,7 @@ defined( 'ABSPATH' ) || exit;
  * Render a score ring SVG component.
  *
  * @param int|float $score Score value (0-100).
- * @param string    $size  Size variant: 'sm' | 'md'.
+ * @param string    $size  Size variant: 'sm' | 'md' | 'verdict'.
  * @param string    $class Additional CSS classes.
  * @return string HTML output.
  */
@@ -41,7 +41,12 @@ function erh_score_ring( $score, string $size = 'md', string $class = '' ): stri
     $rounded_score = round( $score );
 
     // Size-specific class prefix
-    $prefix = $size === 'sm' ? 'compare-mini-score' : 'compare-product-score';
+    $prefixes = [
+        'sm'      => 'compare-mini-score',
+        'md'      => 'compare-product-score',
+        'verdict' => 'compare-verdict-product-score',
+    ];
+    $prefix = $prefixes[ $size ] ?? $prefixes['md'];
     $extra  = $class ? ' ' . esc_attr( $class ) : '';
 
     return <<<HTML

@@ -86,12 +86,11 @@ if ( ! $featured_comparisons->have_posts() ) {
 
 <main class="compare-page compare-page--category" data-compare-page data-category="<?php echo esc_attr( $category_key ); ?>">
 
-    <!-- Breadcrumb -->
+    <!-- Breadcrumb: Just "Compare" link on category pages -->
     <div class="container">
         <?php
         erh_breadcrumb( [
-            [ 'label' => 'Compare', 'url' => home_url( '/compare/' ) ],
-            [ 'label' => $category_name ],
+            [ 'label' => 'Compare', 'url' => home_url( '/compare/' ), 'is_link' => true ],
         ] );
         ?>
     </div>
@@ -337,12 +336,36 @@ get_footer();
 window.erhData = window.erhData || {};
 window.erhData.compareConfig = {
     productIds: [],
-    category: <?php echo wp_json_encode( $category_key ); ?>,
-    categoryName: <?php echo wp_json_encode( $category_name ); ?>,
-    categorySlug: <?php echo wp_json_encode( $category_slug ); ?>,
+    category: <?php echo wp_json_encode( $category_key, JSON_HEX_TAG | JSON_HEX_AMP ); ?>,
+    categoryName: <?php echo wp_json_encode( $category_name, JSON_HEX_TAG | JSON_HEX_AMP ); ?>,
+    categorySlug: <?php echo wp_json_encode( $category_slug, JSON_HEX_TAG | JSON_HEX_AMP ); ?>,
     isCategoryPage: true,
-    titleData: <?php echo wp_json_encode( erh_get_compare_title_data() ); ?>
+    titleData: <?php echo wp_json_encode( erh_get_compare_title_data(), JSON_HEX_TAG | JSON_HEX_AMP ); ?>
 };
 // Inject spec config from PHP (single source of truth).
-window.erhData.specConfig = <?php echo wp_json_encode( \ERH\Config\SpecConfig::export_compare_config( $category_key ) ); ?>;
+window.erhData.specConfig = <?php echo wp_json_encode( \ERH\Config\SpecConfig::export_compare_config( $category_key ), JSON_HEX_TAG | JSON_HEX_AMP ); ?>;
+</script>
+
+<?php
+// Schema.org BreadcrumbList for category landing pages.
+$breadcrumb_schema = [
+    '@context'        => 'https://schema.org',
+    '@type'           => 'BreadcrumbList',
+    'itemListElement' => [
+        [
+            '@type'    => 'ListItem',
+            'position' => 1,
+            'name'     => 'Compare',
+            'item'     => home_url( '/compare/' ),
+        ],
+        [
+            '@type'    => 'ListItem',
+            'position' => 2,
+            'name'     => $category_name,
+        ],
+    ],
+];
+?>
+<script type="application/ld+json">
+<?php echo wp_json_encode( $breadcrumb_schema, JSON_UNESCAPED_SLASHES | JSON_HEX_TAG | JSON_HEX_AMP | JSON_PRETTY_PRINT ); ?>
 </script>

@@ -9,6 +9,8 @@ declare(strict_types=1);
 
 namespace ERH\Pricing;
 
+use ERH\GeoConfig;
+
 /**
  * Fetches product prices from the HouseFresh Tools (HFT) plugin database tables.
  */
@@ -128,7 +130,7 @@ class PriceFetcher {
 
             // EU region needs to match EU or any individual EU country code.
             if ($geo === 'EU') {
-                $eu_countries = ['EU', 'DE', 'FR', 'IT', 'ES', 'NL', 'BE', 'AT', 'IE', 'PT', 'FI', 'GR', 'PL', 'SE', 'DK', 'NO', 'CH', 'CZ', 'RO', 'HU', 'LU', 'SK', 'SI', 'EE', 'LV', 'LT', 'CY', 'MT', 'BG', 'HR'];
+                $eu_countries = array_merge(['EU'], GeoConfig::EU_COUNTRIES);
 
                 // Build FIND_IN_SET conditions for comma-separated geo fields.
                 $find_in_set_geo_target = [];
@@ -276,7 +278,7 @@ class PriceFetcher {
 
             // EU region needs to match EU + individual EU country codes.
             if ($geo === 'EU') {
-                $eu_countries = ['EU', 'DE', 'FR', 'IT', 'ES', 'NL', 'BE', 'AT', 'IE', 'PT', 'FI', 'GR', 'LU', 'SK', 'SI', 'EE', 'LV', 'LT', 'CY', 'MT'];
+                $eu_countries = array_merge(['EU'], GeoConfig::EU_COUNTRIES);
                 $placeholders = implode(',', array_fill(0, count($eu_countries), '%s'));
                 $sql .= " AND (tl.geo_target IS NULL OR tl.geo_target = '' OR tl.geo_target IN ({$placeholders}))";
                 $params = array_merge($params, $eu_countries);
@@ -359,7 +361,7 @@ class PriceFetcher {
 
             // EU region needs to match EU + individual EU country codes.
             if ($geo === 'EU') {
-                $eu_countries = ['EU', 'DE', 'FR', 'IT', 'ES', 'NL', 'BE', 'AT', 'IE', 'PT', 'FI', 'GR', 'LU', 'SK', 'SI', 'EE', 'LV', 'LT', 'CY', 'MT'];
+                $eu_countries = array_merge(['EU'], GeoConfig::EU_COUNTRIES);
                 $placeholders = implode(',', array_fill(0, count($eu_countries), '%s'));
                 $sql .= " AND (geo_target IS NULL OR geo_target = '' OR geo_target IN ({$placeholders}))";
                 $params = array_merge($params, $eu_countries);

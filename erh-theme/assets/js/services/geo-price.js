@@ -25,6 +25,7 @@ import {
     getAvailableRegions,
     isValidRegion,
 } from './geo-config.js';
+import { ensureAbsoluteUrl } from '../utils/dom.js';
 
 // Cache duration (1 hour for prices - prices update twice daily)
 const CACHE_DURATION = 60 * 60 * 1000;
@@ -719,7 +720,7 @@ export async function updatePriceElements(selector, geo, convertTo = null) {
             // Update link
             const linkEl = el.querySelector('[data-buy-link]');
             if (linkEl && (priceData.tracked_url || priceData.url)) {
-                linkEl.href = priceData.tracked_url || priceData.url;
+                linkEl.href = ensureAbsoluteUrl(priceData.tracked_url || priceData.url);
             }
 
             // Update stock status

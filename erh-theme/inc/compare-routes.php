@@ -19,7 +19,45 @@ if ( ! defined( 'ABSPATH' ) ) {
     exit;
 }
 
-use ERH\CategoryConfig;
+/**
+ * Fallback category data when erh-core plugin is not active.
+ *
+ * @return array<string, array<string, string>>
+ */
+function erh_compare_fallback_categories(): array {
+    return [
+        'electric-scooters' => [
+            'key'         => 'escooter',
+            'name'        => 'E-Scooters',
+            'name_plural' => 'Electric Scooters',
+            'type'        => 'Electric Scooter',
+        ],
+        'e-bikes' => [
+            'key'         => 'ebike',
+            'name'        => 'E-Bikes',
+            'name_plural' => 'Electric Bikes',
+            'type'        => 'Electric Bike',
+        ],
+        'e-skateboards' => [
+            'key'         => 'eskateboard',
+            'name'        => 'E-Skateboards',
+            'name_plural' => 'Electric Skateboards',
+            'type'        => 'Electric Skateboard',
+        ],
+        'electric-unicycles' => [
+            'key'         => 'euc',
+            'name'        => 'Electric Unicycles',
+            'name_plural' => 'Electric Unicycles',
+            'type'        => 'Electric Unicycle',
+        ],
+        'hoverboards' => [
+            'key'         => 'hoverboard',
+            'name'        => 'Hoverboards',
+            'name_plural' => 'Hoverboards',
+            'type'        => 'Hoverboard',
+        ],
+    ];
+}
 
 /**
  * Category slug mapping for compare landing pages.
@@ -27,7 +65,10 @@ use ERH\CategoryConfig;
  * @return array<string, array<string, string>>
  */
 function erh_compare_category_map(): array {
-    return CategoryConfig::get_compare_map();
+    if ( class_exists( 'ERH\CategoryConfig' ) ) {
+        return \ERH\CategoryConfig::get_compare_map();
+    }
+    return erh_compare_fallback_categories();
 }
 
 /**
@@ -232,7 +273,9 @@ function erh_compare_parse_request( $wp ) {
                         wp_redirect( $curated_redirect, 301 );
                         exit;
                     }
-                    // Same URL means this IS the curated comparison, let CPT handle it.
+                    // Same URL means this IS the curated comparison.
+                    // Set erh_compare so our filters detect it.
+                    $wp->query_vars['erh_compare'] = 1;
                     return;
                 }
 
@@ -374,7 +417,24 @@ function erh_check_canonical_order( string $slug_1, string $slug_2 ): ?string {
  * @return bool True if on compare page.
  */
 function erh_is_compare_page() {
-    return (bool) get_query_var( 'erh_compare' );
+    // Check query var (dynamic comparisons).
+    if ( get_query_var( 'erh_compare' ) ) {
+        return true;
+    }
+
+    // For curated comparisons, check post type directly (works before is_singular()).
+    global $post;
+    if ( $post && $post->post_type === 'comparison' ) {
+        return true;
+    }
+
+    // Fallback: check queried object.
+    $queried = get_queried_object();
+    if ( $queried instanceof WP_Post && $queried->post_type === 'comparison' ) {
+        return true;
+    }
+
+    return false;
 }
 
 /**
@@ -470,7 +530,18 @@ function erh_get_compare_canonical_url( $product_ids ) {
  * @return string Category compare URL.
  */
 function erh_get_compare_category_url( string $category_key ): string {
-    $slug = CategoryConfig::key_to_slug( $category_key );
+    $slug = '';
+    if ( class_exists( 'ERH\CategoryConfig' ) ) {
+        $slug = \ERH\CategoryConfig::key_to_slug( $category_key );
+    } else {
+        // Fallback: search in fallback categories.
+        foreach ( erh_compare_fallback_categories() as $cat_slug => $cat ) {
+            if ( $cat['key'] === $category_key ) {
+                $slug = $cat_slug;
+                break;
+            }
+        }
+    }
     if ( $slug ) {
         return home_url( '/compare/' . $slug . '/' );
     }
@@ -634,6 +705,24 @@ function erh_get_compare_title_data(): array {
 		return $data;
 	}
 
+	// Curated comparison CPT - get products from ACF fields.
+	global $post;
+	if ( $post && $post->post_type === 'comparison' ) {
+		$product_1_raw = get_field( 'product_1', $post->ID );
+		$product_2_raw = get_field( 'product_2', $post->ID );
+		$product_1_id  = is_array( $product_1_raw ) ? ( $product_1_raw[0] ?? null ) : $product_1_raw;
+		$product_2_id  = is_array( $product_2_raw ) ? ( $product_2_raw[0] ?? null ) : $product_2_raw;
+
+		if ( $product_1_id && $product_2_id ) {
+			$name_1 = get_the_title( $product_1_id );
+			$name_2 = get_the_title( $product_2_id );
+			$data['products'] = [ $name_1, $name_2 ];
+			$data['title']    = sprintf( '%s vs %s', $name_1, $name_2 );
+			$data['count']    = 2;
+			return $data;
+		}
+	}
+
 	// Main hub (no category, no products selected).
 	$compare_slugs  = get_query_var( 'compare_slugs', '' );
 	$products_param = isset( $_GET['products'] ) ? sanitize_text_field( wp_unslash( $_GET['products'] ) ) : '';
@@ -686,7 +775,18 @@ function erh_get_compare_title_data(): array {
 
 	// Determine category name from product type.
 	if ( $product_type ) {
-		$cat_config = CategoryConfig::get_by_type( $product_type );
+		$cat_config = null;
+		if ( class_exists( 'ERH\CategoryConfig' ) ) {
+			$cat_config = \ERH\CategoryConfig::get_by_type( $product_type );
+		} else {
+			// Fallback: search in fallback categories.
+			foreach ( erh_compare_fallback_categories() as $cat ) {
+				if ( $cat['type'] === $product_type ) {
+					$cat_config = $cat;
+					break;
+				}
+			}
+		}
 		if ( $cat_config ) {
 			$data['category'] = $cat_config['name'];
 		}
@@ -737,7 +837,18 @@ function erh_get_compare_category_count( string $category_key ): int {
 
 	if ( false === $count ) {
 		// Get product type (e.g., "Electric Scooter") and convert to taxonomy slug.
-		$product_type = CategoryConfig::key_to_type( $category_key );
+		$product_type = '';
+		if ( class_exists( 'ERH\CategoryConfig' ) ) {
+			$product_type = \ERH\CategoryConfig::key_to_type( $category_key );
+		} else {
+			// Fallback: search in fallback categories.
+			foreach ( erh_compare_fallback_categories() as $cat ) {
+				if ( $cat['key'] === $category_key ) {
+					$product_type = $cat['type'];
+					break;
+				}
+			}
+		}
 		if ( ! $product_type ) {
 			return 0;
 		}
@@ -803,3 +914,33 @@ function erh_compare_rankmath_description( string $description ): string {
 	return 'Compare electric scooters, e-bikes, and more side-by-side. Find the perfect electric ride with detailed specs and prices.';
 }
 add_filter( 'rank_math/frontend/description', 'erh_compare_rankmath_description', 20 );
+
+/**
+ * Remove RankMath breadcrumbs on compare pages (we add our own with full category hierarchy).
+ *
+ * @param array $data The JSON-LD data.
+ * @return array Modified data.
+ */
+function erh_compare_remove_rankmath_breadcrumbs( array $data ): array {
+	if ( ! erh_is_compare_page() ) {
+		return $data;
+	}
+
+	// RankMath calls this filter per schema type. If BreadcrumbList is a key, remove it.
+	if ( isset( $data['BreadcrumbList'] ) ) {
+		unset( $data['BreadcrumbList'] );
+	}
+
+	// Also handle @graph structure (some RankMath versions).
+	if ( isset( $data['@graph'] ) && is_array( $data['@graph'] ) ) {
+		$data['@graph'] = array_values(
+			array_filter(
+				$data['@graph'],
+				fn( $item ) => ( $item['@type'] ?? '' ) !== 'BreadcrumbList'
+			)
+		);
+	}
+
+	return $data;
+}
+add_filter( 'rank_math/json_ld', 'erh_compare_remove_rankmath_breadcrumbs', 20 );

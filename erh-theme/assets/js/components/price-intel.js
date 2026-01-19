@@ -9,6 +9,7 @@ import { getUserGeo, formatPrice, getCurrencySymbol, getProductPrices, filterOff
 import { createChart } from './chart.js';
 import { PriceAlertModal } from './price-alert.js';
 import { calculatePriceVerdict, renderRetailerRow } from '../utils/pricing-ui.js';
+import { ensureAbsoluteUrl } from '../utils/dom.js';
 
 // Debug logging
 const DEBUG = localStorage.getItem('erh_geo_debug') === 'true' ||
@@ -265,7 +266,7 @@ class PriceIntelComponent {
         }
 
         if (this.bestPriceLink) {
-            this.bestPriceLink.href = best.tracked_url || best.url || '#';
+            this.bestPriceLink.href = ensureAbsoluteUrl(best.tracked_url || best.url) || '#';
         }
 
         // Update retailer logo
@@ -279,7 +280,7 @@ class PriceIntelComponent {
 
         // Update buy CTA
         if (this.buyCta) {
-            this.buyCta.href = best.tracked_url || best.url || '#';
+            this.buyCta.href = ensureAbsoluteUrl(best.tracked_url || best.url) || '#';
         }
         if (this.buyCtaText) {
             this.buyCtaText.textContent = `Buy at ${best.retailer}`;
@@ -664,7 +665,7 @@ class PriceIntelComponent {
         // Build retailer cards (up to 4)
         const cardsHtml = fallback.offers.slice(0, 4).map(offer => {
             const price = formatPrice(offer.price, fallback.currency);
-            const url = offer.tracked_url || offer.url || '#';
+            const url = ensureAbsoluteUrl(offer.tracked_url || offer.url) || '#';
             const logoHtml = offer.logo_url
                 ? `<img src="${offer.logo_url}" alt="${offer.retailer}" class="price-intel-reference-card-logo">`
                 : `<span class="price-intel-reference-card-name">${offer.retailer}</span>`;
@@ -675,7 +676,7 @@ class PriceIntelComponent {
             const stockText = inStock ? 'In stock' : 'Out of stock';
 
             return `
-                <a href="${url}" class="price-intel-reference-card" target="_blank" rel="noopener noreferrer nofollow">
+                <a href="${url}" class="price-intel-reference-card" target="_blank" rel="sponsored noopener">
                     ${logoHtml}
                     <span class="price-intel-reference-card-price">${price}</span>
                     <span class="price-intel-reference-card-stock ${stockClass}">

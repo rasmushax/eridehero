@@ -302,10 +302,14 @@ class RestComparisonViews extends WP_REST_Controller {
     /**
      * Get category key from product type.
      *
-     * @param string $product_type The product type field value.
+     * @param string|null $product_type The product type field value.
      * @return string Category key.
      */
-    private function get_category_from_type(string $product_type): string {
+    private function get_category_from_type(?string $product_type): string {
+        if (!$product_type) {
+            return 'escooter';
+        }
+
         $map = [
             'Electric Scooter'    => 'escooter',
             'Electric Bike'       => 'ebike',

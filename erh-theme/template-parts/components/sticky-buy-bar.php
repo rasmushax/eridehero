@@ -90,7 +90,7 @@ if ( empty( $thumbnail_url ) ) {
                class="btn btn-primary btn-sm"
                data-sticky-buy-link
                target="_blank"
-               rel="nofollow noopener sponsored">
+               rel="sponsored noopener">
                 <span data-sticky-retailer>Buy now</span>
                 <?php erh_the_icon( 'external-link' ); ?>
             </a>

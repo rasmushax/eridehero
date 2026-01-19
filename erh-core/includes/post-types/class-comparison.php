@@ -92,7 +92,7 @@ class Comparison {
             'menu_icon'          => 'dashicons-columns',
             'show_in_rest'       => true,
             'rest_base'          => 'comparisons',
-            'supports'           => ['title', 'thumbnail'],
+            'supports'           => ['title', 'thumbnail', 'author'],
         ];
 
         register_post_type(self::POST_TYPE, $args);
@@ -207,6 +207,40 @@ class Comparison {
                     'rows'          => 4,
                 ],
                 [
+                    'key'               => 'field_comparison_choose_product_1',
+                    'label'             => 'Choose Product 1 If...',
+                    'name'              => 'choose_product_1_reasons',
+                    'type'              => 'textarea',
+                    'instructions'      => 'One reason per line. E.g., "You want maximum range" or "Budget is your priority".',
+                    'rows'              => 4,
+                    'conditional_logic' => [
+                        [
+                            [
+                                'field'    => 'field_comparison_verdict_winner',
+                                'operator' => '==',
+                                'value'    => 'depends',
+                            ],
+                        ],
+                    ],
+                ],
+                [
+                    'key'               => 'field_comparison_choose_product_2',
+                    'label'             => 'Choose Product 2 If...',
+                    'name'              => 'choose_product_2_reasons',
+                    'type'              => 'textarea',
+                    'instructions'      => 'One reason per line. E.g., "Ride comfort is your priority" or "You need a portable scooter".',
+                    'rows'              => 4,
+                    'conditional_logic' => [
+                        [
+                            [
+                                'field'    => 'field_comparison_verdict_winner',
+                                'operator' => '==',
+                                'value'    => 'depends',
+                            ],
+                        ],
+                    ],
+                ],
+                [
                     'key'           => 'field_comparison_featured',
                     'label'         => 'Featured Comparison',
                     'name'          => 'is_featured',
@@ -235,10 +269,17 @@ class Comparison {
     /**
      * Handle post save - auto-generate slug and set category.
      *
-     * @param int $post_id The post ID.
+     * @param int|string $post_id The post ID (ACF passes strings like 'user_1' for user saves).
      * @return void
      */
-    public function on_save_comparison(int $post_id): void {
+    public function on_save_comparison($post_id): void {
+        // ACF fires this for users too (e.g., 'user_1'), skip non-numeric IDs.
+        if (!is_numeric($post_id)) {
+            return;
+        }
+
+        $post_id = (int) $post_id;
+
         if (get_post_type($post_id) !== self::POST_TYPE) {
             return;
         }

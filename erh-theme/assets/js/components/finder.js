@@ -426,9 +426,6 @@ class Finder {
         this.bindProductSearch();
         this.bindMobileFilter();
 
-        // Listen for manual region changes
-        window.addEventListener('erh:region-changed', (e) => this.handleRegionChange(e));
-
         // Sync UI to filter state (loaded from URL)
         this.syncUIToFilters();
 
@@ -464,8 +461,8 @@ class Finder {
     }
 
     /**
-     * Process products to extract pricing for user's geo region
-     * Called on init and when region changes
+     * Process products to extract pricing for user's geo region.
+     * Called once during init after geo detection.
      */
     processProductsForGeo() {
         // Get the raw products from PHP and extract geo-specific pricing
@@ -586,22 +583,6 @@ class Finder {
         prefixes.forEach(prefix => {
             prefix.textContent = symbol;
         });
-    }
-
-    /**
-     * Handle manual region change event
-     */
-    handleRegionChange(event) {
-        const { region, currency, symbol } = event.detail;
-        if (region && region !== this.userGeo) {
-            this.userGeo = region;
-            this.userCurrency = currency;
-            this.currencySymbol = symbol;
-
-            // Reprocess products with new geo and re-render
-            this.processProductsForGeo();
-            this.applyFilters();
-        }
     }
 
     /**

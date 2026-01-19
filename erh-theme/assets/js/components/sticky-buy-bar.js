@@ -11,6 +11,7 @@
 import { getUserGeo, formatPrice, getProductPrices, filterOffersForGeo } from '../services/geo-price.js';
 import { PriceAlertModal } from './price-alert.js';
 import { calculatePriceVerdict } from '../utils/pricing-ui.js';
+import { ensureAbsoluteUrl } from '../utils/dom.js';
 
 const SELECTORS = {
     bar: '#sticky-buy-bar',
@@ -133,7 +134,7 @@ async function loadPriceData() {
         const buyLink = stickyBar.querySelector(SELECTORS.buyLink);
         const retailerEl = stickyBar.querySelector(SELECTORS.retailer);
         if (buyLink && (bestOffer.tracked_url || bestOffer.url)) {
-            buyLink.href = bestOffer.tracked_url || bestOffer.url;
+            buyLink.href = ensureAbsoluteUrl(bestOffer.tracked_url || bestOffer.url);
             if (retailerEl && bestOffer.retailer) {
                 retailerEl.textContent = `Buy at ${bestOffer.retailer}`;
             }

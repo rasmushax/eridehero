@@ -17,9 +17,10 @@ if ( ! defined( 'ABSPATH' ) ) {
  *
  * Single reusable function for all breadcrumbs across the site.
  * Takes an array of items, each with 'label' and optional 'url'.
- * Last item is automatically treated as current page (no link).
+ * By default, last item is treated as current page (no link).
+ * Use 'is_link' => true to force an item to render as a link even if it's the last item.
  *
- * @param array $items Array of breadcrumb items: [ ['label' => 'Home', 'url' => '/'], ['label' => 'Current'] ]
+ * @param array $items Array of breadcrumb items: [ ['label' => 'Home', 'url' => '/'], ['label' => 'Category', 'url' => '...', 'is_link' => true] ]
  */
 function erh_breadcrumb( array $items ): void {
     if ( empty( $items ) ) {
@@ -31,14 +32,20 @@ function erh_breadcrumb( array $items ): void {
 
     foreach ( $items as $index => $item ) {
         $is_last = ( $index === $count - 1 );
+        $force_link = ! empty( $item['is_link'] );
+        $has_url = ! empty( $item['url'] );
 
-        if ( ! $is_last && ! empty( $item['url'] ) ) {
+        // Render as link if: (not last AND has URL) OR (force_link AND has URL)
+        if ( $has_url && ( ! $is_last || $force_link ) ) {
             $output .= sprintf(
                 '<a href="%s">%s</a>',
                 esc_url( $item['url'] ),
                 esc_html( $item['label'] )
             );
-            $output .= '<span class="breadcrumb-sep" aria-hidden="true">/</span>';
+            // Add separator only if not the last item
+            if ( ! $is_last ) {
+                $output .= '<span class="breadcrumb-sep" aria-hidden="true">/</span>';
+            }
         } else {
             $output .= sprintf(
                 '<span class="breadcrumb-current">%s</span>',

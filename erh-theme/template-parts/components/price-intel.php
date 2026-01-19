@@ -237,7 +237,7 @@ $has_pricing = erh_product_has_pricing( $product_id );
             <div class="price-intel-best">
                 <span class="label">Best price</span>
                 <div class="price-intel-price-row">
-                    <a href="#" class="price-intel-price-link" data-best-price-link target="_blank" rel="nofollow noopener">
+                    <a href="#" class="price-intel-price-link" data-best-price-link target="_blank" rel="sponsored noopener">
                         <span class="price-intel-amount" data-best-price>
                             <span class="skeleton skeleton-text" style="width: 80px;"></span>
                         </span>
@@ -249,7 +249,7 @@ $has_pricing = erh_product_has_pricing( $product_id );
                     <span class="price-intel-verdict" data-price-verdict style="display: none;"></span>
                 </div>
             </div>
-            <a href="#" class="btn btn-primary" data-buy-cta target="_blank" rel="nofollow noopener">
+            <a href="#" class="btn btn-primary" data-buy-cta target="_blank" rel="sponsored noopener">
                 <span data-buy-cta-text style="display: none;">Buy now</span>
                 <svg class="icon" aria-hidden="true" data-buy-cta-icon style="display: none;"><use href="#icon-external-link"></use></svg>
                 <svg class="spinner" viewBox="0 0 24 24" data-buy-cta-spinner><circle cx="12" cy="12" r="10" stroke="currentColor" stroke-width="3" fill="none" stroke-dasharray="31.4" stroke-linecap="round"/></svg>

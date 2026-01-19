@@ -186,7 +186,7 @@ $js_data = wp_json_encode([
                 <div class="listicle-item-best-price" data-best-price>
                     <span class="skeleton skeleton-text" style="width: 160px;"></span>
                 </div>
-                <a href="#" class="btn btn-primary" data-buy-btn target="_blank" rel="nofollow noopener">
+                <a href="#" class="btn btn-primary" data-buy-btn target="_blank" rel="sponsored noopener">
                     <span data-buy-text style="display: none;"><?php esc_html_e('Buy now', 'erh-core'); ?></span>
                     <svg class="icon" aria-hidden="true" data-buy-icon style="display: none;"><use href="#icon-external-link"></use></svg>
                     <svg class="spinner" viewBox="0 0 24 24" data-buy-spinner><circle cx="12" cy="12" r="10" stroke="currentColor" stroke-width="3" fill="none" stroke-dasharray="31.4" stroke-linecap="round"/></svg>

@@ -41,6 +41,10 @@ require_once __DIR__ . '/functions/specs-config.php';
 // Spec retrieval and rendering.
 require_once __DIR__ . '/functions/specs-rendering.php';
 
+// Compare component renderers (must load before compare-helpers).
+require_once ERH_THEME_DIR . '/template-parts/compare/components/score-ring.php';
+require_once ERH_THEME_DIR . '/template-parts/compare/components/product-thumb.php';
+
 // Compare page helpers.
 require_once __DIR__ . '/functions/compare-helpers.php';
 

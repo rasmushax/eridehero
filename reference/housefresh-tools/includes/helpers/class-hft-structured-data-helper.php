@@ -148,14 +148,19 @@ if ( ! class_exists( 'HFT_Structured_Data_Helper' ) ) { // Renamed class
         /** Extracts data using JSON-LD scripts. */
         private function _extract_from_json_ld(DOMXPath $xpath): array {
             $data = ['price' => null, 'currency' => null, 'status' => null];
-            $scripts = $xpath->query('//script[@type="application/ld+json"]');
+
+            // Check both application/ld+json and application/json (some sites like Shopify use the latter)
+            $scripts = $xpath->query('//script[@type="application/ld+json" or @type="application/json"]');
 
             if (!$scripts) return $data;
 
             foreach ($scripts as $script) {
                 if (empty($script->nodeValue)) continue;
                 $json_data = json_decode($script->nodeValue, true);
+
+                // Skip if not valid JSON or doesn't contain schema.org context
                 if (json_last_error() !== JSON_ERROR_NONE || !is_array($json_data)) continue;
+                if (!isset($json_data['@context']) || strpos((string)$json_data['@context'], 'schema.org') === false) continue;
 
                 // Handle cases where JSON-LD contains a graph array
                 $potential_products = [];
@@ -251,20 +256,29 @@ if ( ! class_exists( 'HFT_Structured_Data_Helper' ) ) { // Renamed class
             return $data;
         }
 
-        /** Extracts data using OpenGraph meta tags. */
+        /** Extracts data using OpenGraph and Facebook Product meta tags. */
         private function _extract_from_opengraph(DOMXPath $xpath): array {
              $data = ['price' => null, 'currency' => null, 'status' => null];
 
-            // Price (og:price:amount)
-            $price_value = $this->_xpath_query_first($xpath, ["//meta[@property='og:price:amount']/@content"]);
+            // Price (og:price:amount and product:price:amount for Shopify/Facebook Product tags)
+            $price_value = $this->_xpath_query_first($xpath, [
+                "//meta[@property='og:price:amount']/@content",
+                "//meta[@property='product:price:amount']/@content"
+            ]);
             $data['price'] = $this->_normalize_price($price_value);
 
-            // Currency (og:price:currency)
-            $currency_value = $this->_xpath_query_first($xpath, ["//meta[@property='og:price:currency']/@content"]);
+            // Currency (og:price:currency and product:price:currency)
+            $currency_value = $this->_xpath_query_first($xpath, [
+                "//meta[@property='og:price:currency']/@content",
+                "//meta[@property='product:price:currency']/@content"
+            ]);
              if (is_string($currency_value) && $currency_value !== '') $data['currency'] = strtoupper(trim($currency_value));
 
-            // Availability (og:availability)
-            $status_value = $this->_xpath_query_first($xpath, ["//meta[@property='og:availability']/@content"]);
+            // Availability (og:availability and product:availability)
+            $status_value = $this->_xpath_query_first($xpath, [
+                "//meta[@property='og:availability']/@content",
+                "//meta[@property='product:availability']/@content"
+            ]);
             $data['status'] = $this->_normalize_status($status_value);
 
             return $data;

@@ -81,7 +81,8 @@ $page_title    = $has_products
 // SSR: Fetch Products
 // =============================================================================
 $compare_products = array();
-$geo              = isset( $_COOKIE['erh_geo'] ) ? sanitize_text_field( wp_unslash( $_COOKIE['erh_geo'] ) ) : 'US';
+$geo_raw          = isset( $_COOKIE['erh_geo'] ) ? sanitize_text_field( wp_unslash( $_COOKIE['erh_geo'] ) ) : 'US';
+$geo              = \ERH\GeoConfig::is_valid_region( $geo_raw ) ? strtoupper( $geo_raw ) : 'US';
 $currency_symbol  = erh_get_currency_symbol( $geo );
 
 if ( $has_products ) {
@@ -121,9 +122,10 @@ $curated_attrs = $is_curated ? ' data-comparison-id="' . esc_attr( $comparison_i
 		<div data-ssr-rendered>
 			<div class="container">
 				<?php
+				// Both items are links on comparison pages (no "current page" indicator)
 				erh_breadcrumb( [
 					[ 'label' => 'Compare', 'url' => home_url( '/compare/' ) ],
-					[ 'label' => $category_name, 'url' => erh_get_compare_category_url( $category ) ],
+					[ 'label' => $category_name, 'url' => erh_get_compare_category_url( $category ), 'is_link' => true ],
 				] );
 				?>
 			</div>
@@ -193,7 +195,7 @@ $curated_attrs = $is_curated ? ' data-comparison-id="' . esc_attr( $comparison_i
 					<h2 class="compare-section-title">Specifications</h2>
 					<div class="compare-specs" data-compare-specs>
 						<?php
-						// Render mini-header.
+						// Render mini-header (outside scroll wrapper for sticky positioning).
 						get_template_part( 'template-parts/compare/mini-header', null, [
 							'products'        => $compare_products,
 							'geo'             => $geo,
@@ -202,7 +204,11 @@ $curated_attrs = $is_curated ? ' data-comparison-id="' . esc_attr( $comparison_i
 
 						// Check if any product has pricing in any geo (for Value Analysis).
 						$any_has_pricing = erh_any_product_has_pricing( $product_ids );
-
+						?>
+						<!-- Scroll wrapper for horizontal scroll sync with mini-header in full-width mode.
+						     CSS only enables overflow when parent has .compare-section--full class. -->
+						<div class="compare-specs-scroll">
+						<?php
 						// Render each spec category table.
 						foreach ( $spec_groups as $group_name => $group ) {
 							$is_value_section = ! empty( $group['isValueSection'] );
@@ -241,70 +247,213 @@ $curated_attrs = $is_curated ? ' data-comparison-id="' . esc_attr( $comparison_i
 							] );
 						}
 						?>
+
+						<!-- Buy Row (JS hydrates with geo-aware pricing) -->
+						<table class="compare-spec-table compare-buy-table" data-compare-buy-row>
+							<colgroup>
+								<col class="compare-spec-col-label">
+								<?php foreach ( $compare_products as $product ) : ?>
+									<col>
+								<?php endforeach; ?>
+							</colgroup>
+							<tbody>
+								<tr class="compare-buy-row">
+									<td></td>
+									<?php foreach ( $compare_products as $product ) : ?>
+									<td class="compare-buy-cell" data-buy-cell="<?php echo esc_attr( $product['id'] ); ?>">
+										<span class="compare-buy-loading">
+											<svg class="spinner spinner-sm" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2">
+												<circle cx="12" cy="12" r="10" stroke-opacity="0.25"/>
+												<path d="M12 2a10 10 0 0 1 10 10" stroke-linecap="round"/>
+											</svg>
+										</span>
+									</td>
+									<?php endforeach; ?>
+								</tr>
+							</tbody>
+						</table>
+
+						</div>
 					</div>
 				</div>
 			</section>
 
-			<?php if ( $is_curated && $verdict_text ) : ?>
+			<?php if ( $is_curated && $verdict_text ) :
+			// Get author info for verdict.
+			$author_id    = get_post_field( 'post_author', $comparison_id );
+			$author_name  = get_the_author_meta( 'display_name', $author_id );
+			$author_role  = get_field( 'user_title', 'user_' . $author_id );
+			$profile_img  = get_field( 'profile_image', 'user_' . $author_id );
+			$author_url   = get_author_posts_url( $author_id );
+
+			if ( $profile_img && ! empty( $profile_img['url'] ) ) {
+				$avatar_url = $profile_img['sizes']['thumbnail'] ?? $profile_img['url'];
+			} else {
+				$avatar_url = get_avatar_url( $author_id, array( 'size' => 80 ) );
+			}
+
+			// Determine winner display text.
+			$winner_display = '';
+			if ( $verdict_winner === 'product_1' ) {
+				$winner_display = $product_names[0];
+			} elseif ( $verdict_winner === 'product_2' ) {
+				$winner_display = $product_names[1];
+			} elseif ( $verdict_winner === 'tie' ) {
+				$winner_display = 'It\'s a tie';
+			} elseif ( $verdict_winner === 'depends' ) {
+				$winner_display = 'Depends on your use case';
+			}
+
+			// Get "Choose X if" reasons for depends case.
+			$choose_1_reasons = array();
+			$choose_2_reasons = array();
+			if ( $verdict_winner === 'depends' ) {
+				$choose_1_raw = get_field( 'choose_product_1_reasons' );
+				$choose_2_raw = get_field( 'choose_product_2_reasons' );
+				if ( $choose_1_raw ) {
+					$choose_1_reasons = array_filter( array_map( 'trim', explode( "\n", $choose_1_raw ) ) );
+				}
+				if ( $choose_2_raw ) {
+					$choose_2_reasons = array_filter( array_map( 'trim', explode( "\n", $choose_2_raw ) ) );
+				}
+			}
+			?>
 			<!-- Curated: Verdict Section -->
 			<section id="verdict" class="compare-section compare-section--verdict" data-section="verdict">
 				<div class="container">
 					<h2 class="compare-section-title">Our Verdict</h2>
 					<div class="compare-verdict">
-						<div class="compare-verdict-card">
-							<?php if ( $verdict_winner && $verdict_winner !== 'tie' && $verdict_winner !== 'depends' ) : ?>
-								<?php
-								$winner_name  = $verdict_winner === 'product_1' ? $product_names[0] : $product_names[1];
-								$winner_id    = $verdict_winner === 'product_1' ? $product_ids[0] : $product_ids[1];
-								$winner_thumb = get_the_post_thumbnail_url( $winner_id, 'thumbnail' );
-								?>
-								<div class="compare-verdict-winner">
-									<span class="compare-verdict-crown">
-										<?php erh_the_icon( 'crown' ); ?>
-									</span>
-									<span class="compare-verdict-label">Our Pick</span>
-									<div class="compare-verdict-winner-product">
-										<?php if ( $winner_thumb ) : ?>
-											<img src="<?php echo esc_url( $winner_thumb ); ?>" alt="<?php echo esc_attr( $winner_name ); ?>" class="compare-verdict-winner-thumb">
+						<!-- Author info -->
+						<div class="compare-verdict-author">
+							<a href="<?php echo esc_url( $author_url ); ?>" class="compare-verdict-author-avatar">
+								<img src="<?php echo esc_url( $avatar_url ); ?>" alt="<?php echo esc_attr( $author_name ); ?>">
+							</a>
+							<div class="compare-verdict-author-info">
+								<a href="<?php echo esc_url( $author_url ); ?>" class="compare-verdict-author-name"><?php echo esc_html( $author_name ); ?></a>
+								<?php if ( $author_role ) : ?>
+									<span class="compare-verdict-author-role"><?php echo esc_html( $author_role ); ?></span>
+								<?php endif; ?>
+							</div>
+						</div>
+
+						<hr class="compare-verdict-divider">
+
+						<?php if ( $winner_display ) : ?>
+						<!-- Winner line -->
+						<div class="compare-verdict-winner">
+							<span class="compare-verdict-winner-label">Winner:</span>
+							<span class="compare-verdict-winner-value"><?php echo esc_html( $winner_display ); ?></span>
+						</div>
+						<?php endif; ?>
+
+						<!-- Verdict text -->
+						<div class="compare-verdict-text"><?php echo wp_kses_post( wpautop( $verdict_text ) ); ?></div>
+
+						<!-- Product cards with dynamic pricing -->
+						<div class="compare-verdict-products">
+							<?php foreach ( $product_ids as $idx => $pid ) :
+								$pname  = $product_names[ $idx ] ?? get_the_title( $pid );
+								$pthumb = get_the_post_thumbnail_url( $pid, 'medium' );
+								$purl   = get_permalink( $pid );
+
+								// Get algo score from compare products data (not editor rating).
+								$product_data = array_filter( $compare_products, fn( $p ) => $p['id'] === $pid );
+								$product_data = reset( $product_data );
+								$score        = $product_data['rating'] ?? null;
+
+								// Get review and video links.
+								$review_group = get_field( 'review', $pid );
+								$review_post  = null;
+								$video_url    = '';
+								if ( $review_group ) {
+									$review_post_id = $review_group['review_post'] ?? null;
+									if ( $review_post_id ) {
+										$review_post = get_post( $review_post_id );
+									}
+									$video_url = $review_group['youtube_video'] ?? '';
+								}
+								$video_id = $video_url ? erh_extract_youtube_id( $video_url ) : '';
+
+								// Get choose reasons for this product (only for "depends" verdict).
+								$choose_reasons = null;
+								if ( $verdict_winner === 'depends' ) {
+									$choose_reasons = $idx === 0 ? $choose_1_reasons : $choose_2_reasons;
+								}
+							?>
+							<article class="compare-verdict-product" data-verdict-product="<?php echo esc_attr( $pid ); ?>">
+								<!-- Top row: Image + Info -->
+								<div class="compare-verdict-product-main">
+									<a href="<?php echo esc_url( $purl ); ?>" class="compare-verdict-product-image">
+										<?php erh_the_score_ring( $score, 'verdict' ); ?>
+										<?php if ( $pthumb ) : ?>
+											<img src="<?php echo esc_url( $pthumb ); ?>" alt="<?php echo esc_attr( $pname ); ?>" loading="lazy">
 										<?php endif; ?>
-										<span class="compare-verdict-winner-name"><?php echo esc_html( $winner_name ); ?></span>
+									</a>
+
+									<div class="compare-verdict-product-content">
+										<a href="<?php echo esc_url( $purl ); ?>" class="compare-verdict-product-name"><?php echo esc_html( $pname ); ?></a>
+
+										<div class="compare-verdict-product-price-row" data-verdict-price-row="<?php echo esc_attr( $pid ); ?>">
+											<span class="compare-verdict-product-price" data-verdict-price="<?php echo esc_attr( $pid ); ?>">
+												<span class="skeleton skeleton-text" style="width: 70px; height: 20px;"></span>
+											</span>
+										</div>
+
+										<div class="compare-verdict-product-cta" data-verdict-cta="<?php echo esc_attr( $pid ); ?>">
+											<span class="skeleton skeleton-text" style="width: 100%; height: 40px;"></span>
+										</div>
 									</div>
 								</div>
-							<?php elseif ( $verdict_winner === 'tie' ) : ?>
-								<div class="compare-verdict-tie">
-									<span class="compare-verdict-label">It's a Tie</span>
-								</div>
-							<?php elseif ( $verdict_winner === 'depends' ) : ?>
-								<div class="compare-verdict-depends">
-									<span class="compare-verdict-label">It Depends on Your Needs</span>
-								</div>
-							<?php endif; ?>
 
-							<p class="compare-verdict-text"><?php echo esc_html( $verdict_text ); ?></p>
+								<?php if ( ! empty( $choose_reasons ) || $review_post || $video_id ) : ?>
+								<!-- Footer row: Choose if + Links -->
+								<div class="compare-verdict-product-footer">
+									<?php if ( ! empty( $choose_reasons ) ) : ?>
+									<div class="compare-verdict-choose-list">
+										<h4 class="compare-verdict-choose-title">Choose <?php echo esc_html( $pname ); ?> if:</h4>
+										<ul>
+											<?php foreach ( $choose_reasons as $reason ) : ?>
+											<li>
+												<span class="compare-verdict-choose-icon">
+													<?php erh_the_icon( 'check' ); ?>
+												</span>
+												<span><?php echo esc_html( $reason ); ?></span>
+											</li>
+											<?php endforeach; ?>
+										</ul>
+										<!-- Mobile CTA (shown at 450px) -->
+										<div class="compare-verdict-product-cta compare-verdict-product-cta--mobile" data-verdict-cta-mobile="<?php echo esc_attr( $pid ); ?>">
+											<span class="skeleton skeleton-text" style="width: 100%; height: 40px;"></span>
+										</div>
+									</div>
+									<?php endif; ?>
 
-							<?php if ( $verdict_winner && $verdict_winner !== 'tie' && $verdict_winner !== 'depends' ) : ?>
-								<div class="compare-verdict-actions">
-									<a href="<?php echo esc_url( get_permalink( $winner_id ) ); ?>" class="btn btn--primary">
-										View <?php echo esc_html( $winner_name ); ?>
-										<?php erh_the_icon( 'arrow-right' ); ?>
-									</a>
+									<?php if ( $review_post || $video_id ) : ?>
+									<div class="compare-verdict-product-links">
+										<?php if ( $review_post ) : ?>
+										<a href="<?php echo esc_url( get_permalink( $review_post ) ); ?>" class="compare-verdict-product-link">
+											<?php erh_the_icon( 'review' ); ?>
+											<span>Full review</span>
+										</a>
+										<?php endif; ?>
+										<?php if ( $video_id ) : ?>
+										<a href="<?php echo esc_url( 'https://www.youtube.com/watch?v=' . $video_id ); ?>" class="compare-verdict-product-link" target="_blank" rel="noopener">
+											<?php erh_the_icon( 'youtube' ); ?>
+											<span>Video review</span>
+										</a>
+										<?php endif; ?>
+									</div>
+									<?php endif; ?>
 								</div>
-							<?php endif; ?>
+								<?php endif; ?>
+							</article>
+							<?php endforeach; ?>
 						</div>
 					</div>
 				</div>
 			</section>
 			<?php endif; ?>
 
-			<?php if ( $is_curated ) : ?>
-			<!-- Curated: Related Comparisons -->
-			<section class="compare-related">
-				<div class="container">
-					<h2 class="compare-section-title">Related Comparisons</h2>
-					<div class="compare-related-grid" data-related-comparisons></div>
-				</div>
-			</section>
-			<?php endif; ?>
 		</div>
 
 	<?php endif; ?>
@@ -339,24 +488,144 @@ get_footer();
 // Extend erhData with page-specific config (erhData set by wp_localize_script in footer)
 window.erhData = window.erhData || {};
 window.erhData.compareConfig = {
-	productIds: <?php echo wp_json_encode( array_map( 'intval', $product_ids ) ); ?>,
-	category: <?php echo wp_json_encode( $category ); ?>,
-	categoryName: <?php echo wp_json_encode( $category_name ); ?>,
-	categorySlug: <?php echo wp_json_encode( $category_slug ); ?>,
-	geo: <?php echo wp_json_encode( $geo ); ?>,
-	currencySymbol: <?php echo wp_json_encode( $currency_symbol ); ?>,
-	titleData: <?php echo wp_json_encode( erh_get_compare_title_data() ); ?>,
+	productIds: <?php echo wp_json_encode( array_map( 'intval', $product_ids ), JSON_HEX_TAG | JSON_HEX_AMP ); ?>,
+	category: <?php echo wp_json_encode( $category, JSON_HEX_TAG | JSON_HEX_AMP ); ?>,
+	categoryName: <?php echo wp_json_encode( $category_name, JSON_HEX_TAG | JSON_HEX_AMP ); ?>,
+	categorySlug: <?php echo wp_json_encode( $category_slug, JSON_HEX_TAG | JSON_HEX_AMP ); ?>,
+	geo: <?php echo wp_json_encode( $geo, JSON_HEX_TAG | JSON_HEX_AMP ); ?>,
+	currencySymbol: <?php echo wp_json_encode( $currency_symbol, JSON_HEX_TAG | JSON_HEX_AMP ); ?>,
+	titleData: <?php echo wp_json_encode( erh_get_compare_title_data(), JSON_HEX_TAG | JSON_HEX_AMP ); ?>,
 	isCurated: <?php echo $is_curated ? 'true' : 'false'; ?>,
-	comparisonId: <?php echo (int) $comparison_id; ?>,
-	verdictWinner: <?php echo wp_json_encode( $verdict_winner ); ?>
+	comparisonId: <?php echo (int) $comparison_id; ?>
 };
 // Inject spec config from PHP (single source of truth).
-window.erhData.specConfig = <?php echo wp_json_encode( \ERH\Config\SpecConfig::export_compare_config( $category ) ); ?>;
+window.erhData.specConfig = <?php echo wp_json_encode( \ERH\Config\SpecConfig::export_compare_config( $category ), JSON_HEX_TAG | JSON_HEX_AMP ); ?>;
 </script>
 <?php if ( ! empty( $compare_products ) ) : ?>
 <!-- Products JSON for JS hydration -->
 <script type="application/json" data-products-json>
-<?php echo wp_json_encode( $compare_products ); ?>
+<?php echo wp_json_encode( $compare_products, JSON_HEX_TAG | JSON_HEX_AMP ); ?>
+</script>
+<?php endif; ?>
+<?php
+// Schema.org JSON-LD for curated comparisons only (indexed pages).
+// Uses US prices since Google crawls as US user.
+if ( $is_curated && ! empty( $compare_products ) ) :
+	// Fetch US pricing directly from cache for schema (compare_products only has user's geo).
+	$product_cache = new ERH\Database\ProductCache();
+
+	$schema_items = array_map( function( $product, $index ) use ( $product_cache ) {
+		$item = [
+			'@type'    => 'ListItem',
+			'position' => $index + 1,
+			'item'     => [
+				'@type' => 'Product',
+				'name'  => $product['name'] ?? '',
+				'image' => $product['thumbnail'] ?? '',
+				'url'   => $product['url'] ?? '',
+			],
+		];
+
+		// Get US pricing from cache for schema (not user's geo).
+		$cached_data = $product_cache->get( (int) $product['id'] );
+		$us_pricing  = $cached_data['price_history']['US'] ?? null;
+
+		if ( $us_pricing && ! empty( $us_pricing['current_price'] ) ) {
+			$item['item']['offers'] = [
+				'@type'         => 'Offer',
+				'price'         => $us_pricing['current_price'],
+				'priceCurrency' => 'USD',
+				'availability'  => ! empty( $us_pricing['instock'] ) ? 'https://schema.org/InStock' : 'https://schema.org/OutOfStock',
+			];
+		}
+
+		return $item;
+	}, $compare_products, array_keys( $compare_products ) );
+
+	// Build comparison title.
+	$schema_title = implode( ' vs ', array_column( $compare_products, 'name' ) ) . ' comparison';
+
+	// ItemList schema for the comparison.
+	$item_list_schema = [
+		'@context'        => 'https://schema.org',
+		'@type'           => 'ItemList',
+		'name'            => $schema_title,
+		'description'     => $intro_text ?: 'Head-to-head comparison of ' . implode( ' and ', array_column( $compare_products, 'name' ) ),
+		'itemListElement' => $schema_items,
+	];
+
+	// BreadcrumbList schema for hierarchy.
+	$breadcrumb_schema = [
+		'@context'        => 'https://schema.org',
+		'@type'           => 'BreadcrumbList',
+		'itemListElement' => [
+			[
+				'@type'    => 'ListItem',
+				'position' => 1,
+				'name'     => 'Compare',
+				'item'     => home_url( '/compare/' ),
+			],
+			[
+				'@type'    => 'ListItem',
+				'position' => 2,
+				'name'     => $category_name,
+				'item'     => erh_get_compare_category_url( $category ),
+			],
+			[
+				'@type'    => 'ListItem',
+				'position' => 3,
+				'name'     => $schema_title,
+			],
+		],
+	];
+
+	// Author/Person schema for curated comparisons.
+	$schema_author_id = get_post_field( 'post_author', $comparison_id );
+	$author_schema    = null;
+
+	if ( $schema_author_id ) {
+		$author_name   = get_the_author_meta( 'display_name', $schema_author_id );
+		$author_bio    = get_the_author_meta( 'description', $schema_author_id );
+		$author_url    = get_author_posts_url( $schema_author_id );
+		$author_role   = get_field( 'user_title', 'user_' . $schema_author_id );
+		$profile_img   = get_field( 'profile_image', 'user_' . $schema_author_id );
+		$author_avatar = $profile_img['url'] ?? get_avatar_url( $schema_author_id, [ 'size' => 200 ] );
+
+		// Collect sameAs social links.
+		$same_as = [];
+		$social_fields = [ 'social_linkedin', 'social_facebook', 'social_instagram', 'social_twitter', 'social_youtube' ];
+		foreach ( $social_fields as $field ) {
+			$url = get_field( $field, 'user_' . $schema_author_id );
+			if ( $url ) {
+				$same_as[] = $url;
+			}
+		}
+
+		$author_schema = [
+			'@context'    => 'https://schema.org',
+			'@type'       => 'Person',
+			'name'        => $author_name,
+			'url'         => $author_url,
+			'image'       => $author_avatar,
+			'description' => $author_bio ?: null,
+			'jobTitle'    => $author_role ?: null,
+		];
+
+		if ( ! empty( $same_as ) ) {
+			$author_schema['sameAs'] = $same_as;
+		}
+
+		// Remove null values.
+		$author_schema = array_filter( $author_schema, fn( $v ) => $v !== null );
+	}
+
+	$schemas = [ $item_list_schema, $breadcrumb_schema ];
+	if ( $author_schema ) {
+		$schemas[] = $author_schema;
+	}
+?>
+<script type="application/ld+json">
+<?php echo wp_json_encode( $schemas, JSON_UNESCAPED_SLASHES | JSON_HEX_TAG | JSON_HEX_AMP | JSON_PRETTY_PRINT ); ?>
 </script>
 <?php endif; ?>
 <?php

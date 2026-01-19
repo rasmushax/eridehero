@@ -6,6 +6,7 @@
  */
 
 import { formatPrice } from '../services/geo-price.js';
+import { ensureAbsoluteUrl } from './dom.js';
 
 /**
  * Default verdict threshold configuration.
@@ -91,7 +92,7 @@ export function renderRetailerRow(offer, options = {}) {
         : '';
 
     return `
-        <a href="${offer.tracked_url || offer.url || '#'}" class="${classPrefix}-retailer-row ${bestClass}" target="_blank" rel="nofollow noopener">
+        <a href="${ensureAbsoluteUrl(offer.tracked_url || offer.url) || '#'}" class="${classPrefix}-retailer-row ${bestClass}" target="_blank" rel="sponsored noopener">
             ${logoHtml}
             <div class="${classPrefix}-retailer-info">
                 <span class="${classPrefix}-retailer-name">${offer.retailer}</span>

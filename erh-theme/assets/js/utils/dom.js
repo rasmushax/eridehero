@@ -23,4 +23,26 @@ export function escapeHtml(str) {
     })[c]);
 }
 
-export default { escapeHtml };
+/**
+ * Ensure URL is absolute (handles subfolder installs).
+ * Relative URLs like "/go/product/123/" become "http://localhost/eridehero/go/product/123/".
+ *
+ * @param {string} url - URL that may be relative or absolute
+ * @returns {string} Absolute URL
+ */
+export function ensureAbsoluteUrl(url) {
+    if (!url) return '';
+    // Already absolute (has protocol)
+    if (url.startsWith('http://') || url.startsWith('https://')) {
+        return url;
+    }
+    // Relative URL - prepend site URL
+    const siteUrl = window.erhData?.siteUrl || '';
+    // Handle both "/path" and "path" formats
+    if (url.startsWith('/')) {
+        return siteUrl + url;
+    }
+    return siteUrl + '/' + url;
+}
+
+export default { escapeHtml, ensureAbsoluteUrl };

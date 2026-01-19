@@ -100,6 +100,74 @@
     100% { transform: rotate(360deg); }
 }
 
+/* Geo Groups Wrapper */
+.hft-geo-groups-wrapper {
+    display: flex;
+    flex-direction: column;
+    gap: 10px;
+}
+
+.hft-geo-groups-buttons {
+    display: flex;
+    flex-wrap: wrap;
+    align-items: center;
+    gap: 6px;
+    padding: 10px;
+    background: #f9f9f9;
+    border: 1px solid #e5e5e5;
+    border-radius: 4px;
+}
+
+.hft-geo-groups-label {
+    font-weight: 600;
+    color: #666;
+    margin-right: 5px;
+    font-size: 12px;
+    text-transform: uppercase;
+}
+
+.hft-geo-group-btn {
+    padding: 4px 12px !important;
+    font-size: 12px !important;
+    font-weight: 600 !important;
+    min-height: 28px !important;
+    line-height: 1.4 !important;
+    transition: all 0.2s ease !important;
+}
+
+.hft-geo-group-btn:hover {
+    background-color: #0073aa !important;
+    border-color: #0073aa !important;
+    color: #fff !important;
+}
+
+.hft-geo-group-btn.active {
+    background-color: #0073aa !important;
+    border-color: #005a87 !important;
+    color: #fff !important;
+    box-shadow: inset 0 2px 5px rgba(0, 0, 0, 0.2) !important;
+}
+
+.hft-geo-group-btn.active:hover {
+    background-color: #005a87 !important;
+}
+
+.hft-geo-clear-btn {
+    padding: 4px 10px !important;
+    font-size: 12px !important;
+    min-height: 28px !important;
+    line-height: 1.4 !important;
+    margin-left: auto !important;
+    color: #a00 !important;
+    border-color: #a00 !important;
+}
+
+.hft-geo-clear-btn:hover {
+    background-color: #dc3232 !important;
+    border-color: #dc3232 !important;
+    color: #fff !important;
+}
+
 /* Tagify Styles */
 .hft-geos-tagify {
     width: 100%;
@@ -400,6 +468,169 @@
     margin-top: 3px;
 }
 
+/* Enhanced Rule UI Styles */
+.hft-scraper-rule-group {
+    margin-bottom: 30px;
+    padding-bottom: 20px;
+    border-bottom: 2px solid #e5e5e5;
+}
+
+.hft-scraper-rule-group h3 {
+    display: flex;
+    align-items: center;
+    gap: 15px;
+    margin-bottom: 10px;
+}
+
+.hft-scraper-rule-group h3 .hft-add-rule {
+    font-size: 12px;
+    padding: 3px 10px;
+}
+
+.hft-rules-container {
+    display: flex;
+    flex-direction: column;
+    gap: 15px;
+}
+
+.hft-scraper-rule {
+    background: #fff;
+    border: 1px solid #ddd;
+    border-radius: 4px;
+    padding: 15px;
+    position: relative;
+}
+
+.hft-scraper-rule:hover {
+    border-color: #0073aa;
+    box-shadow: 0 1px 3px rgba(0, 115, 170, 0.1);
+}
+
+.hft-rule-header {
+    display: flex;
+    align-items: center;
+    gap: 20px;
+    padding-bottom: 10px;
+    margin-bottom: 10px;
+    border-bottom: 1px solid #eee;
+}
+
+.hft-rule-priority label,
+.hft-rule-mode label {
+    font-weight: 600;
+    font-size: 12px;
+    color: #666;
+    margin-right: 5px;
+}
+
+.hft-rule-priority input {
+    width: 60px !important;
+}
+
+.hft-rule-mode select {
+    min-width: 140px;
+}
+
+.hft-remove-rule {
+    margin-left: auto;
+    color: #a00 !important;
+    padding: 5px !important;
+}
+
+.hft-remove-rule:hover {
+    color: #dc3232 !important;
+    background-color: #fbeaea !important;
+}
+
+.hft-remove-rule .dashicons {
+    font-size: 16px;
+    width: 16px;
+    height: 16px;
+}
+
+.hft-rule-table {
+    margin: 0;
+}
+
+.hft-rule-table th {
+    width: 150px;
+    padding: 8px 10px 8px 0;
+    font-weight: 500;
+}
+
+.hft-rule-table td {
+    padding: 8px 0;
+}
+
+.hft-rule-table input.code,
+.hft-rule-table textarea.code {
+    font-family: 'Monaco', 'Menlo', 'Ubuntu Mono', 'Courier New', monospace;
+    font-size: 12px;
+}
+
+.hft-mode-hint {
+    margin: 5px 0 0 0 !important;
+    font-size: 12px;
+}
+
+/* Regex extraction rows */
+.hft-regex-extraction-row td {
+    padding-top: 12px;
+}
+
+.hft-regex-extraction-row textarea {
+    min-height: 80px;
+}
+
+/* Boolean mode styling */
+.hft-boolean-values {
+    margin-top: 10px;
+    padding: 10px;
+    background: #f9f9f9;
+    border-radius: 4px;
+}
+
+.hft-boolean-values label {
+    display: block;
+    margin-bottom: 5px;
+    font-weight: 500;
+}
+
+/* Post-processing options */
+.hft-post-regex-options {
+    margin-top: 10px;
+    padding: 10px;
+    background: #f9f9f9;
+    border-radius: 4px;
+    display: flex;
+    gap: 10px;
+    flex-wrap: wrap;
+}
+
+.hft-post-regex-options input {
+    flex: 1;
+    min-width: 200px;
+}
+
+/* Test result inline */
+.hft-test-result {
+    margin-left: 10px;
+    font-size: 13px;
+}
+
+.hft-test-result.success {
+    color: #46b450;
+}
+
+.hft-test-result.error {
+    color: #dc3232;
+}
+
+/* Grid layout for rules - single column for vertical stacking */
+.hft-scraper-rules {
+    display: block;
+}
+
 /* Mobile responsiveness */
 @media (max-width: 768px) {
     .hft-modal-content {
@@ -424,5 +655,36 @@
 
     .hft-scraper-rules {
         grid-template-columns: 1fr;
+    }
+
+    .hft-geo-groups-buttons {
+        flex-direction: row;
+        flex-wrap: wrap;
+    }
+
+    .hft-geo-groups-label {
+        width: 100%;
+        margin-bottom: 5px;
+    }
+
+    .hft-geo-clear-btn {
+        margin-left: 0 !important;
+        margin-top: 5px;
+    }
+
+    .hft-rule-header {
+        flex-wrap: wrap;
+    }
+
+    .hft-rule-table th {
+        width: 100px;
+    }
+
+    .hft-post-regex-options {
+        flex-direction: column;
+    }
+
+    .hft-post-regex-options input {
+        min-width: 100%;
     }
 }

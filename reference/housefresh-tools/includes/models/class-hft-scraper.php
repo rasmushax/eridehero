@@ -15,6 +15,7 @@ class HFT_Scraper {
     public ?int $logo_attachment_id;
     public string $currency;
     public ?string $geos;
+    public ?string $geos_input;
     public ?string $affiliate_link_format;
     public bool $is_active;
     public bool $use_base_parser;
@@ -35,6 +36,7 @@ class HFT_Scraper {
         $this->logo_attachment_id = isset($data['logo_attachment_id']) ? (int) $data['logo_attachment_id'] ?: null : null;
         $this->currency = $data['currency'] ?? 'USD';
         $this->geos = $data['geos'] ?? null;
+        $this->geos_input = $data['geos_input'] ?? null;
         $this->affiliate_link_format = $data['affiliate_link_format'] ?? null;
         $this->is_active = (bool) ($data['is_active'] ?? true);
         $this->use_base_parser = (bool) ($data['use_base_parser'] ?? true);
@@ -56,6 +58,7 @@ class HFT_Scraper {
             'logo_attachment_id' => $this->logo_attachment_id,
             'currency' => $this->currency,
             'geos' => $this->geos,
+            'geos_input' => $this->geos_input,
             'affiliate_link_format' => $this->affiliate_link_format,
             'is_active' => $this->is_active,
             'use_base_parser' => $this->use_base_parser,

@@ -200,7 +200,8 @@ class PriceUpdateJob implements CronJobInterface {
             $currency = strtoupper($price_data['currency'] ?? 'USD');
 
             // Map to region and validate currency matches.
-            $region = $this->map_to_region($raw_geo, $currency);
+            // Uses GeoConfig::map_geo_to_region() which handles comma-separated geo strings.
+            $region = GeoConfig::map_geo_to_region($raw_geo, $currency);
             if ($region === null) {
                 continue; // Skip prices that don't fit our region model.
             }
@@ -247,43 +248,6 @@ class PriceUpdateJob implements CronJobInterface {
         }
 
         return $grouped;
-    }
-
-    /**
-     * Map a geo code and currency to one of the 5 regions.
-     *
-     * @param string $geo      The raw geo/country code (e.g., 'US', 'DE', 'FR').
-     * @param string $currency The currency code.
-     * @return string|null The region code or null if no match.
-     */
-    private function map_to_region(string $geo, string $currency): ?string {
-        // Direct region matches.
-        if (in_array($geo, GeoConfig::REGIONS, true)) {
-            return $geo;
-        }
-
-        // EU country codes map to EU region.
-        if (GeoConfig::is_eu_country($geo)) {
-            return 'EU';
-        }
-
-        // Empty geo: infer from currency.
-        if ($geo === '') {
-            switch ($currency) {
-                case 'USD':
-                    return 'US';
-                case 'EUR':
-                    return 'EU';
-                case 'GBP':
-                    return 'GB';
-                case 'CAD':
-                    return 'CA';
-                case 'AUD':
-                    return 'AU';
-            }
-        }
-
-        return null;
     }
 
     /**

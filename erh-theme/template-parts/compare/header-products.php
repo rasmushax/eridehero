@@ -27,27 +27,10 @@ if ( empty( $products ) ) {
 	<div class="container">
 		<div class="compare-header-products" data-compare-products>
 			<?php foreach ( $products as $product ) : ?>
-				<?php
-				$score = $product['rating'] ?? null;
-
-				// Score ring calculation (0-100 scale) - matches JS.
-				$radius        = 15;
-				$circumference = 2 * M_PI * $radius;
-				$score_percent = $score ? min( 100, max( 0, $score ) ) : 0;
-				$offset        = $circumference - ( $score_percent / 100 ) * $circumference;
-				?>
+				<?php $score = $product['rating'] ?? null; ?>
 				<article class="compare-product" data-product-id="<?php echo esc_attr( $product['id'] ); ?>">
 					<!-- Score ring (top-left) -->
-					<?php if ( $score ) : ?>
-						<div class="compare-product-score" title="<?php echo esc_attr( $score ); ?> points">
-							<svg class="compare-product-score-ring" viewBox="0 0 36 36">
-								<circle class="compare-product-score-track" cx="18" cy="18" r="<?php echo esc_attr( $radius ); ?>" />
-								<circle class="compare-product-score-progress" cx="18" cy="18" r="<?php echo esc_attr( $radius ); ?>"
-										style="stroke-dasharray: <?php echo esc_attr( $circumference ); ?>; stroke-dashoffset: <?php echo esc_attr( $offset ); ?>;" />
-							</svg>
-							<span class="compare-product-score-value"><?php echo esc_html( round( $score ) ); ?></span>
-						</div>
-					<?php endif; ?>
+					<?php erh_the_score_ring( $score, 'md' ); ?>
 
 					<!-- Actions: remove always visible, track button added by JS when price loads -->
 					<div class="compare-product-actions">

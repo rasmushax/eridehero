@@ -135,6 +135,12 @@ if ( ! class_exists( 'HFT_Loader' ) ) {
 				// Handle error: Cron class file not found.
 			}
 
+			// Load Geo Groups class (needed by admin and frontend)
+			$geo_groups_file = HFT_PLUGIN_PATH . 'includes/class-hft-geo-groups.php';
+			if ( file_exists( $geo_groups_file ) ) {
+				require_once $geo_groups_file;
+			}
+
 			// Load admin-specific classes only in admin area.
 			if ( is_admin() ) {
 				$meta_box_file = HFT_PLUGIN_PATH . 'includes/admin/class-hft-meta-boxes.php';
@@ -361,6 +367,12 @@ if ( ! class_exists( 'HFT_Loader' ) ) {
 			$post_processor_file = HFT_PLUGIN_PATH . 'includes/parsers/class-hft-post-processor.php';
 			if (file_exists($post_processor_file)) {
 				require_once $post_processor_file;
+			}
+
+			// Load extraction pipeline (depends on xpath extractor and post processor)
+			$extraction_pipeline_file = HFT_PLUGIN_PATH . 'includes/parsers/class-hft-extraction-pipeline.php';
+			if (file_exists($extraction_pipeline_file)) {
+				require_once $extraction_pipeline_file;
 			}
 
 			// Now load the dynamic parser (which extends base parser)

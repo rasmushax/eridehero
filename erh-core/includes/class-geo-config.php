@@ -133,4 +133,82 @@ class GeoConfig {
     public static function is_eu_country(string $country): bool {
         return in_array(strtoupper($country), self::EU_COUNTRIES, true);
     }
+
+    /**
+     * Parse comma-separated geo string into array of country codes.
+     *
+     * Handles: 'DE', 'AT,BE,DE', null, ''
+     *
+     * @param string|null $geo_string Geo string (single or comma-separated).
+     * @return array<string> Array of uppercase country codes.
+     */
+    public static function parse_geo_codes(?string $geo_string): array {
+        if ($geo_string === null || $geo_string === '') {
+            return [];
+        }
+
+        if (strpos($geo_string, ',') !== false) {
+            return array_map('trim', array_map('strtoupper', explode(',', $geo_string)));
+        }
+
+        return [strtoupper(trim($geo_string))];
+    }
+
+    /**
+     * Map geo string (single or comma-separated) to region.
+     *
+     * Returns region for first recognized country code in the string.
+     * Falls back to currency-based inference if geo is empty.
+     *
+     * @param string|null $geo      Geo string (single like 'DE' or comma-separated like 'AT,BE,DE').
+     * @param string      $currency Currency code for fallback inference.
+     * @return string|null Region code (US, GB, EU, CA, AU) or null if unrecognized.
+     */
+    public static function map_geo_to_region(?string $geo, string $currency): ?string {
+        $codes = self::parse_geo_codes($geo);
+
+        // Try each code until we find a recognized one.
+        foreach ($codes as $code) {
+            // Direct region match (US, GB, EU, CA, AU).
+            if (in_array($code, self::REGIONS, true)) {
+                return $code;
+            }
+
+            // EU country codes map to EU.
+            if (self::is_eu_country($code)) {
+                return 'EU';
+            }
+
+            // Check country map (NZ → AU, etc.).
+            if (isset(self::COUNTRY_MAP[$code])) {
+                return self::COUNTRY_MAP[$code];
+            }
+        }
+
+        // Empty geo: infer region from currency.
+        if (empty($codes)) {
+            return self::get_region_by_currency($currency);
+        }
+
+        // No recognized codes.
+        return null;
+    }
+
+    /**
+     * Get region by currency code.
+     *
+     * @param string $currency Currency code (USD, EUR, GBP, etc.).
+     * @return string|null Region code or null if unrecognized currency.
+     */
+    public static function get_region_by_currency(string $currency): ?string {
+        $currency = strtoupper($currency);
+
+        foreach (self::CURRENCIES as $region => $curr) {
+            if ($curr === $currency) {
+                return $region;
+            }
+        }
+
+        return null;
+    }
 }

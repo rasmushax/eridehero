@@ -278,7 +278,7 @@ export function renderMobileSpecValue(product, value, spec, isWinner = false) {
  * @returns {string} HTML output
  */
 export function renderMobileBooleanValue(product, value) {
-    const isYes = value === true || value === 'Yes' || value === 'yes' || value === 1;
+    const isYes = value === true || value === 'Yes' || value === 'yes' || value === '1' || value === 1;
     const hasValue = value !== null && value !== '' && value !== undefined;
     const statusClass = hasValue ? (isYes ? 'feature-yes' : 'feature-no') : '';
     const icon = isYes ? 'check' : 'x';

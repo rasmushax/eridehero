@@ -77,14 +77,30 @@ $product_advantages = erh_calculate_product_advantages( $products, $categories )
 				<?php else : ?>
 					<h4 class="compare-advantage-title">Why <?php echo esc_html( $product['name'] ); ?> wins</h4>
 					<ul class="compare-advantage-list">
-						<?php foreach ( $advantages as $adv ) : ?>
-							<li>
-								<?php erh_the_icon( 'check', '', array( 'width' => '16', 'height' => '16' ) ); ?>
-								<span>
-									<strong><?php echo esc_html( $adv['diff'] ); ?>%</strong>
-									<?php echo esc_html( $adv['direction'] ); ?>
-									<?php echo esc_html( strtolower( $adv['label'] ) ); ?>
+						<?php foreach ( $advantages as $adv ) :
+							$details = $adv['details'] ?? null;
+							?>
+							<li class="compare-advantage-item">
+								<span class="compare-advantage-check">
+									<?php erh_the_icon( 'check', '', array( 'width' => '16', 'height' => '16' ) ); ?>
 								</span>
+								<div class="compare-advantage-content">
+									<?php if ( $details && ! empty( $details['headline'] ) ) : ?>
+										<!-- New detailed format -->
+										<span class="compare-advantage-headline"><?php echo esc_html( $details['headline'] ); ?></span>
+										<?php if ( ! empty( $details['primary'] ) ) : ?>
+											<span class="compare-advantage-primary"><?php echo esc_html( $details['primary'] ); ?></span>
+										<?php endif; ?>
+										<?php if ( ! empty( $details['supporting'] ) ) : ?>
+											<span class="compare-advantage-supporting"><?php echo esc_html( $details['supporting'] ); ?></span>
+										<?php endif; ?>
+									<?php else : ?>
+										<!-- Fallback to old format (for 3+ product comparisons) -->
+										<span class="compare-advantage-headline">
+											<?php echo esc_html( $adv['diff'] ); ?>% <?php echo esc_html( $adv['direction'] ); ?> <?php echo esc_html( strtolower( $adv['label'] ) ); ?>
+										</span>
+									<?php endif; ?>
+								</div>
 							</li>
 						<?php endforeach; ?>
 					</ul>

@@ -35,13 +35,18 @@ function erh_get_currency_symbol( string $geo ): string {
 /**
  * Get multiple products from product_data cache for comparison.
  *
+ * Business rule: No currency mixing!
+ * - User in supported geo (US/GB/EU/CA/AU): Show price ONLY if that geo has pricing. No fallback.
+ * - User outside supported geos: Fall back to US as reference.
+ *
  * @param int[]  $product_ids Product IDs.
  * @param string $geo         User's geo region.
  * @return array[] Products with enriched pricing data.
  */
 function erh_get_compare_products( array $product_ids, string $geo = 'US' ): array {
-    $product_cache = new ERH\Database\ProductCache();
-    $products      = array();
+    $product_cache  = new ERH\Database\ProductCache();
+    $products       = array();
+    $supported_geos = array( 'US', 'GB', 'EU', 'CA', 'AU' );
 
     foreach ( $product_ids as $id ) {
         $data = $product_cache->get( (int) $id );
@@ -49,9 +54,28 @@ function erh_get_compare_products( array $product_ids, string $geo = 'US' ): arr
             continue;
         }
 
-        // Enrich with geo-specific pricing.
-        $price_history  = $data['price_history'] ?? array();
-        $region_pricing = $price_history[ $geo ] ?? $price_history['US'] ?? array();
+        // Get pricing - NO fallback to US for users in supported geos.
+        $price_history   = $data['price_history'] ?? array();
+        $geo_pricing     = $price_history[ $geo ] ?? array();
+        $has_geo_price   = ! empty( $geo_pricing['current_price'] );
+        $is_supported    = in_array( $geo, $supported_geos, true );
+
+        // Determine which pricing to use.
+        if ( $has_geo_price ) {
+            // User's geo has pricing - use it.
+            $region_pricing = $geo_pricing;
+            $currency       = class_exists( 'ERH\\GeoConfig' ) ? \ERH\GeoConfig::get_currency( $geo ) : 'USD';
+        } elseif ( ! $is_supported && ! empty( $price_history['US']['current_price'] ) ) {
+            // User outside supported geos - fall back to US.
+            $region_pricing = $price_history['US'];
+            $currency       = 'USD';
+        } else {
+            // User in supported geo but no pricing for that geo - NO price.
+            $region_pricing = array();
+            $currency       = class_exists( 'ERH\\GeoConfig' ) ? \ERH\GeoConfig::get_currency( $geo ) : 'USD';
+        }
+
+        $current_price = $region_pricing['current_price'] ?? null;
 
         // Flatten specs (move e-scooters/e-bikes nested content to top level).
         $raw_specs = $data['specs'] ?? array();
@@ -68,12 +92,13 @@ function erh_get_compare_products( array $product_ids, string $geo = 'US' ): arr
             'thumbnail'     => $data['image_url'],
             'specs'         => $specs,
             'rating'        => $score,
-            'current_price' => $region_pricing['current_price'] ?? null,
-            'currency'      => class_exists( 'ERH\\GeoConfig' ) ? \ERH\GeoConfig::get_currency( $geo ) : 'USD',
-            'retailer'      => $region_pricing['retailer'] ?? null,
-            'buy_link'      => $region_pricing['tracked_url'] ?? null,
+            'current_price' => $current_price,
+            'currency'      => $currency,
+            'retailer'      => $current_price ? ( $region_pricing['retailer'] ?? null ) : null,
+            'buy_link'      => $current_price ? ( $region_pricing['tracked_url'] ?? null ) : null,
             'in_stock'      => $region_pricing['instock'] ?? false,
             'avg_3m'        => $region_pricing['avg_3m'] ?? null,
+            'avg_6m'        => $region_pricing['avg_6m'] ?? null,
         );
     }
 
@@ -157,6 +182,7 @@ function erh_flatten_compare_specs( array $specs, string $product_type ): array 
  * Calculate advantages for each product in a comparison.
  *
  * Determines which categories each product leads in based on scores.
+ * Returns detailed advantage data with concrete spec comparisons.
  *
  * @param array[] $products   Products from erh_get_compare_products().
  * @param array   $categories Category score keys to label mapping.
@@ -164,8 +190,8 @@ function erh_flatten_compare_specs( array $specs, string $product_type ): array 
  */
 function erh_calculate_product_advantages( array $products, array $categories ): array {
     $advantages = array_fill( 0, count( $products ), array() );
-    $threshold  = 5; // Minimum % difference to count as advantage.
-    $max_adv    = 4; // Max advantages per product.
+    $threshold  = \ERH\Config\SpecConfig::ADVANTAGE_THRESHOLD;
+    $max_adv    = \ERH\Config\SpecConfig::MAX_ADVANTAGES;
 
     foreach ( $categories as $key => $label ) {
         // Get scores for this category from all products.
@@ -175,6 +201,9 @@ function erh_calculate_product_advantages( array $products, array $categories ):
         }
 
         // Find the best score.
+        if ( empty( $scores ) ) {
+            continue;
+        }
         $max_score = max( $scores );
         if ( $max_score <= 0 ) {
             continue;
@@ -205,10 +234,23 @@ function erh_calculate_product_advantages( array $products, array $categories ):
 
         // Only count as advantage if above threshold.
         if ( $diff >= $threshold && count( $advantages[ $winner_idx ] ) < $max_adv ) {
+            // Get detailed advantage data for 2-product comparisons.
+            $details = null;
+            if ( count( $products ) === 2 ) {
+                $loser_idx = $winner_idx === 0 ? 1 : 0;
+                $details   = erh_get_advantage_details(
+                    $key,
+                    $products[ $winner_idx ],
+                    $products[ $loser_idx ]
+                );
+            }
+
             $advantages[ $winner_idx ][] = array(
-                'label'     => $label,
-                'diff'      => $diff,
-                'direction' => 'higher',
+                'label'      => $label,
+                'diff'       => $diff,
+                'direction'  => 'higher',
+                'category'   => $key,
+                'details'    => $details,
             );
         }
     }
@@ -219,6 +261,231 @@ function erh_calculate_product_advantages( array $products, array $categories ):
     }
 
     return $advantages;
+}
+
+/**
+ * Get detailed advantage data for a category comparison.
+ *
+ * Returns concrete spec comparisons instead of abstract percentages.
+ * For 2-product comparisons only.
+ *
+ * @param string $category_key Score category key (e.g., 'motor_performance').
+ * @param array  $winner       Winning product data.
+ * @param array  $loser        Losing product data.
+ * @return array|null Detailed advantage data or null if no concrete data.
+ */
+function erh_get_advantage_details( string $category_key, array $winner, array $loser ): ?array {
+    $adv_specs = \ERH\Config\SpecConfig::ADVANTAGE_SPECS[ $category_key ] ?? null;
+    if ( ! $adv_specs ) {
+        return null;
+    }
+
+    $primary_key   = $adv_specs['primary'] ?? null;
+    $secondary     = $adv_specs['secondary'] ?? [];
+    $headlines     = $adv_specs['headlines'] ?? [];
+    $lower_better  = $adv_specs['lowerBetter'] ?? [];
+    $units         = \ERH\Config\SpecConfig::ADVANTAGE_UNITS;
+
+    // Get primary spec values.
+    $winner_primary = erh_get_nested_spec( $winner['specs'], $primary_key );
+    $loser_primary  = erh_get_nested_spec( $loser['specs'], $primary_key );
+
+    // Format primary comparison.
+    $primary_comparison = erh_format_advantage_comparison(
+        $primary_key,
+        $winner_primary,
+        $loser_primary,
+        $units[ $primary_key ] ?? '',
+        in_array( $primary_key, $lower_better, true )
+    );
+
+    // Determine headline.
+    $headline = $headlines[ $primary_key ] ?? ucfirst( str_replace( '_', ' ', $category_key ) );
+
+    // Check secondary specs for notable differences.
+    $supporting = null;
+    foreach ( $secondary as $sec_key ) {
+        $winner_sec = erh_get_nested_spec( $winner['specs'], $sec_key );
+        $loser_sec  = erh_get_nested_spec( $loser['specs'], $sec_key );
+
+        $sec_comparison = erh_format_supporting_comparison(
+            $sec_key,
+            $winner_sec,
+            $loser_sec,
+            $units[ $sec_key ] ?? '',
+            $headlines[ $sec_key ] ?? null,
+            in_array( $sec_key, $lower_better, true )
+        );
+
+        if ( $sec_comparison ) {
+            $supporting = $sec_comparison;
+            break; // Only show one supporting detail.
+        }
+    }
+
+    return array(
+        'headline'   => $headline,
+        'primary'    => $primary_comparison,
+        'supporting' => $supporting,
+    );
+}
+
+/**
+ * Format primary spec comparison for advantage display.
+ *
+ * @param string     $key         Spec key.
+ * @param mixed      $winner_val  Winner's value.
+ * @param mixed      $loser_val   Loser's value.
+ * @param string     $unit        Unit string.
+ * @param bool       $lower_better Whether lower is better.
+ * @return string|null Formatted comparison or null.
+ */
+function erh_format_advantage_comparison( string $key, $winner_val, $loser_val, string $unit = '', bool $lower_better = false ): ?string {
+    // Handle arrays (suspension types, features).
+    if ( is_array( $winner_val ) || is_array( $loser_val ) ) {
+        return erh_format_array_comparison( $key, $winner_val, $loser_val );
+    }
+
+    // Handle non-numeric values.
+    if ( ! is_numeric( $winner_val ) || ! is_numeric( $loser_val ) ) {
+        // IP ratings, tire types, etc.
+        if ( $winner_val && $loser_val && $winner_val !== $loser_val ) {
+            return sprintf( '%s vs %s', $winner_val, $loser_val );
+        }
+        if ( $winner_val && ! $loser_val ) {
+            return (string) $winner_val;
+        }
+        return null;
+    }
+
+    // Both values are numeric.
+    $w = (float) $winner_val;
+    $l = (float) $loser_val;
+
+    // Skip if values are essentially the same (<3% diff).
+    if ( $l > 0 ) {
+        $diff_pct = abs( $w - $l ) / $l * 100;
+        if ( $diff_pct < 3 ) {
+            return null;
+        }
+    }
+
+    // Format with appropriate precision.
+    $w_fmt = erh_format_spec_number( $w );
+    $l_fmt = erh_format_spec_number( $l );
+
+    // Build comparison string: "23.6 mph vs 22 mph".
+    $unit_str = $unit ? ' ' . $unit : '';
+    return sprintf( '%s%s vs %s%s', $w_fmt, $unit_str, $l_fmt, $unit_str );
+}
+
+/**
+ * Format supporting comparison for advantage display.
+ *
+ * Only returns something if there's a notable difference (>15%).
+ *
+ * @param string      $key          Spec key.
+ * @param mixed       $winner_val   Winner's value.
+ * @param mixed       $loser_val    Loser's value.
+ * @param string      $unit         Unit string.
+ * @param string|null $headline     Optional headline override.
+ * @param bool        $lower_better Whether lower is better.
+ * @return string|null Formatted supporting text or null.
+ */
+function erh_format_supporting_comparison( string $key, $winner_val, $loser_val, string $unit = '', ?string $headline = null, bool $lower_better = false ): ?string {
+    // Handle arrays.
+    if ( is_array( $winner_val ) || is_array( $loser_val ) ) {
+        $comparison = erh_format_array_comparison( $key, $winner_val, $loser_val );
+        return $comparison ? '+ ' . $comparison : null;
+    }
+
+    // Handle booleans (e.g., turn_signals, self_healing).
+    if ( is_bool( $winner_val ) && $winner_val === true && ( ! $loser_val || $loser_val === false ) ) {
+        return $headline ? '+ ' . $headline : null;
+    }
+
+    // Handle non-numeric.
+    if ( ! is_numeric( $winner_val ) || ! is_numeric( $loser_val ) ) {
+        if ( $winner_val && $loser_val && $winner_val !== $loser_val ) {
+            return sprintf( '+ %s vs %s', $winner_val, $loser_val );
+        }
+        return null;
+    }
+
+    // Numeric comparison - only show if >15% difference.
+    $w = (float) $winner_val;
+    $l = (float) $loser_val;
+
+    if ( $l <= 0 ) {
+        return null;
+    }
+
+    $diff_pct = abs( $w - $l ) / $l * 100;
+    if ( $diff_pct < 15 ) {
+        return null;
+    }
+
+    $w_fmt    = erh_format_spec_number( $w );
+    $l_fmt    = erh_format_spec_number( $l );
+    $unit_str = $unit ? ' ' . $unit : '';
+
+    return sprintf( '+ %s%s vs %s%s', $w_fmt, $unit_str, $l_fmt, $unit_str );
+}
+
+/**
+ * Format array comparison (suspension types, features).
+ *
+ * @param string     $key        Spec key.
+ * @param mixed      $winner_val Winner's array value.
+ * @param mixed      $loser_val  Loser's array value.
+ * @return string|null Formatted comparison or null.
+ */
+function erh_format_array_comparison( string $key, $winner_val, $loser_val ): ?string {
+    // Handle suspension type arrays.
+    if ( strpos( $key, 'suspension' ) !== false ) {
+        $w_str = is_array( $winner_val ) ? implode( ' + ', array_filter( $winner_val ) ) : (string) $winner_val;
+        $l_str = is_array( $loser_val ) ? implode( ' + ', array_filter( $loser_val ) ) : (string) $loser_val;
+
+        // Simplify "None" comparisons.
+        if ( ! $w_str || strtolower( $w_str ) === 'none' ) {
+            return null;
+        }
+        if ( ! $l_str || strtolower( $l_str ) === 'none' ) {
+            $l_str = 'None';
+        }
+
+        return sprintf( '%s vs %s', $w_str, $l_str );
+    }
+
+    // Handle features array (count comparison).
+    if ( $key === 'features' ) {
+        $w_count = is_array( $winner_val ) ? count( $winner_val ) : 0;
+        $l_count = is_array( $loser_val ) ? count( $loser_val ) : 0;
+
+        if ( $w_count > $l_count && $l_count > 0 ) {
+            return sprintf( '%d features vs %d', $w_count, $l_count );
+        }
+        if ( $w_count > 0 && $l_count === 0 ) {
+            return sprintf( '%d features included', $w_count );
+        }
+        return null;
+    }
+
+    return null;
+}
+
+/**
+ * Format a number for spec display.
+ *
+ * @param float $value The value.
+ * @return string Formatted number.
+ */
+function erh_format_spec_number( float $value ): string {
+    // Round to 1 decimal if needed, otherwise whole number.
+    if ( $value == floor( $value ) ) {
+        return number_format( $value, 0 );
+    }
+    return number_format( $value, 1 );
 }
 
 /**
@@ -594,5 +861,39 @@ function erh_render_compare_spec_row( array $row, array $products, string $symbo
             ?>
         <?php endforeach; ?>
     </tr>
+    <?php
+}
+
+/**
+ * Render a mobile spec card for comparison.
+ *
+ * Uses shared component from product-thumb.php for consistent rendering with JS.
+ *
+ * @param array   $row      Row data from erh_build_compare_spec_rows().
+ * @param array[] $products Products array.
+ * @param string  $symbol   Currency symbol.
+ */
+function erh_render_mobile_spec_card( array $row, array $products, string $symbol = '$' ): void {
+    $spec = $row['spec'];
+    ?>
+    <div class="compare-spec-card">
+        <div class="compare-spec-card-label">
+            <?php echo esc_html( $row['label'] ); ?>
+            <?php if ( ! empty( $spec['tooltip'] ) ) : ?>
+                <span class="info-trigger" data-tooltip="<?php echo esc_attr( $spec['tooltip'] ); ?>" data-tooltip-trigger="click">
+                    <?php erh_the_icon( 'info', '', [ 'width' => '14', 'height' => '14' ] ); ?>
+                </span>
+            <?php endif; ?>
+        </div>
+        <div class="compare-spec-card-values">
+            <?php foreach ( $row['values'] as $idx => $value ) :
+                $product   = $products[ $idx ] ?? null;
+                $is_winner = in_array( $idx, $row['winners'], true );
+
+                // Use shared component for consistent rendering with JS.
+                erh_the_mobile_spec_value( $product, $value, $spec, $is_winner );
+            endforeach; ?>
+        </div>
+    </div>
     <?php
 }

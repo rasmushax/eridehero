@@ -30,7 +30,7 @@ use ERH\CacheKeys;
  *         'high_all' => 699.99,
  *         'instock' => true,
  *         'retailer' => 'Amazon',
- *         'tracked_url' => '/go/product-slug/123/',
+ *         'tracked_url' => 'https://example.com/go/product-slug/123/', // Full URL from cache
  *         'updated_at' => '2025-12-17 10:00:00',
  *     ],
  *     'GB' => [...],
