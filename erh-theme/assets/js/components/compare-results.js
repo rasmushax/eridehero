@@ -20,7 +20,6 @@ import { escapeHtml, ensureAbsoluteUrl } from '../utils/dom.js';
 import {
     formatSpecValue,
     compareValues,
-    calculatePercentDiff,
 } from '../config/compare-config.js';
 
 // Import from modular files
@@ -53,6 +52,8 @@ import {
     renderMobileSpecValue as renderMobileValue,
     renderMobileBooleanValue as renderMobileBoolean,
     renderIcon,
+    renderAdvantagesGrid,
+    renderMultiAdvantagesGrid,
 } from './compare/renderers.js';
 
 // =============================================================================
@@ -85,21 +86,8 @@ function getCategoryWeights() {
     return config.categoryWeights || {};
 }
 
-/**
- * Get advantage threshold (min % diff to show as advantage).
- */
-function getAdvantageThreshold() {
-    const config = getSpecConfig();
-    return config.advantageThreshold || 5;
-}
-
-/**
- * Get max advantages to show per product.
- */
-function getMaxAdvantages() {
-    const config = getSpecConfig();
-    return config.maxAdvantages || 5;
-}
+// NOTE: getAdvantageThreshold() and getMaxAdvantages() removed.
+// Advantages now computed server-side via REST API.
 
 // =============================================================================
 // State
@@ -116,6 +104,8 @@ let isNavScrolling = false; // Prevents scroll spy during programmatic navigatio
 let navStuckObserver = null;
 let navStuckSentinel = null;
 let isRendering = false; // Guard to prevent double re-renders
+let ssrHydrated = false; // Tracks if initial SSR hydration is complete
+let dragToScrollCleanups = []; // Cleanup functions for drag-to-scroll handlers
 
 // =============================================================================
 // Product Normalization
@@ -1267,35 +1257,102 @@ function renderOverview() {
     const container = document.querySelector(SELECTORS.overview);
     if (!container || products.length < 2) return;
 
-    // Check if SSR content exists (has radar loading skeleton)
+    // Check if SSR content exists and we haven't hydrated yet
     const ssrRadar = container.querySelector('[data-radar-container]');
     const ssrAdvantages = container.querySelector('.compare-advantages');
 
-    if (ssrRadar && ssrAdvantages) {
-        // SSR hydration mode: Just render radar chart
+    if (ssrRadar && ssrAdvantages && !ssrHydrated) {
+        // SSR hydration mode: Just render radar chart, advantages already rendered by PHP
         // CSS will auto-hide skeleton via .compare-radar-chart:not(:empty) + .compare-radar-loading
+        ssrHydrated = true;
         renderRadarChart();
         return;
     }
 
-    // Client-side mode: Render everything
-    const advantages = products.map((p, i) => {
-        const others = products.filter((_, j) => j !== i);
-        return renderAdvantageCard(p, generateAdvantages(p, others));
-    }).join('');
-
+    // Client-side mode: Render structure first (with loading state for advantages)
     container.innerHTML = `
         <div class="compare-overview-grid">
             <div class="compare-radar">
                 <h3 class="compare-radar-title">Category Scores</h3>
                 <div class="compare-radar-chart" data-radar-chart></div>
             </div>
-            <div class="compare-advantages">${advantages}</div>
+            <div class="compare-advantages compare-advantages--loading">
+                ${products.map(p => `
+                    <div class="compare-advantage">
+                        <div class="skeleton skeleton--text" style="width: 60%; height: 1.2em;"></div>
+                        <div class="skeleton skeleton--text" style="width: 90%; height: 0.9em; margin-top: 0.5em;"></div>
+                        <div class="skeleton skeleton--text" style="width: 85%; height: 0.9em; margin-top: 0.5em;"></div>
+                    </div>
+                `).join('')}
+            </div>
         </div>
     `;
 
     // Initialize radar chart
     renderRadarChart();
+
+    // Fetch and render advantages from API (single source of truth)
+    fetchAndRenderAdvantages();
+}
+
+/**
+ * Fetch advantages from REST API and render them.
+ * Uses PHP's erh_calculate_spec_advantages() as single source of truth.
+ *
+ * Supports three modes:
+ * - single: 1 product (for product pages) - TODO
+ * - head_to_head: 2 products (current implementation)
+ * - multi: 3+ products (for multi-compare) - TODO
+ */
+async function fetchAndRenderAdvantages() {
+    const advantagesContainer = document.querySelector('.compare-advantages');
+    if (!advantagesContainer || products.length < 1) return;
+
+    const productIds = products.map(p => p.id).join(',');
+    const { geo } = await getUserGeo();
+    const { restUrl, nonce } = window.erhData || {};
+
+    if (!restUrl) {
+        console.error('erhData.restUrl not available');
+        advantagesContainer.classList.remove('compare-advantages--loading');
+        return;
+    }
+
+    try {
+        const response = await fetch(`${restUrl}compare/advantages?products=${productIds}&geo=${geo}`, {
+            headers: {
+                'X-WP-Nonce': nonce || '',
+            },
+        });
+
+        if (!response.ok) {
+            throw new Error(`HTTP ${response.status}`);
+        }
+
+        const data = await response.json();
+
+        if (!data.success) {
+            console.error('Advantages API error:', data.message);
+            return;
+        }
+
+        // Handle different modes
+        if (data.mode === 'head_to_head' && data.advantages) {
+            // 2-product comparison - render advantages
+            advantagesContainer.innerHTML = renderAdvantagesGrid(products, data.advantages);
+        } else if (data.mode === 'multi' && data.advantages) {
+            // 3+ products - render "best at" advantages per product
+            advantagesContainer.innerHTML = renderMultiAdvantagesGrid(products, data.advantages);
+        } else if (data.mode === 'single') {
+            // Single product - TODO: implement single product advantages
+            // For now, hide the section
+            advantagesContainer.innerHTML = '';
+        }
+    } catch (err) {
+        console.error('Failed to fetch advantages:', err);
+    } finally {
+        advantagesContainer.classList.remove('compare-advantages--loading');
+    }
 }
 
 /**
@@ -1339,82 +1396,9 @@ function renderRadarChart() {
     radarChart.setData(radarData, categories);
 }
 
-/**
- * Generate advantages for a product.
- */
-function generateAdvantages(product, others) {
-    const advantages = [];
-    const groups = getSpecGroups();
-
-    for (const group of Object.values(groups)) {
-        for (const spec of group.specs || []) {
-            const val = getSpec(product, spec.key);
-            if (val == null || val === '') continue;
-
-            let winsAll = true;
-            let bestDiff = 0;
-            let bestOther = null;
-
-            for (const other of others) {
-                const otherVal = getSpec(other, spec.key);
-                if (otherVal == null || otherVal === '') continue;
-
-                const cmp = compareValues(val, otherVal, spec);
-                if (cmp >= 0) {
-                    winsAll = false;
-                    break;
-                }
-
-                const diff = Math.abs(calculatePercentDiff(val, otherVal, spec.higherBetter !== false));
-                if (diff > bestDiff) {
-                    bestDiff = diff;
-                    bestOther = otherVal;
-                }
-            }
-
-            if (winsAll && bestDiff >= getAdvantageThreshold()) {
-                advantages.push({
-                    label: spec.label,
-                    value: formatSpecValue(val, spec),
-                    otherValue: bestOther != null ? formatSpecValue(bestOther, spec) : null,
-                    diff: Math.round(bestDiff),
-                    better: spec.higherBetter !== false,
-                });
-            }
-        }
-    }
-
-    return advantages.sort((a, b) => b.diff - a.diff).slice(0, getMaxAdvantages());
-}
-
-/**
- * Render advantage card.
- */
-function renderAdvantageCard(product, advantages) {
-    if (!advantages.length) {
-        return `
-            <div class="compare-advantage">
-                <h4 class="compare-advantage-title">${escapeHtml(product.name)}</h4>
-                <p class="compare-advantage-empty">No clear advantages</p>
-            </div>
-        `;
-    }
-
-    const items = advantages.map(a => `
-        <li>
-            <svg class="icon" width="16" height="16"><use href="#icon-check"></use></svg>
-            <span><strong>${a.diff}%</strong> ${a.better ? 'higher' : 'lower'} ${a.label.toLowerCase()}
-            ${a.otherValue ? `<span class="compare-advantage-values">(${a.value} vs ${a.otherValue})</span>` : ''}</span>
-        </li>
-    `).join('');
-
-    return `
-        <div class="compare-advantage">
-            <h4 class="compare-advantage-title">Why ${escapeHtml(product.name)} wins</h4>
-            <ul class="compare-advantage-list">${items}</ul>
-        </div>
-    `;
-}
+// NOTE: generateAdvantages() and renderAdvantageCard() removed.
+// Advantages now fetched from REST API (single source of truth with PHP).
+// See fetchAndRenderAdvantages() above.
 
 /**
  * Render sticky mini-header for specs section.
@@ -2151,6 +2135,9 @@ function setupDiffToggle() {
  * Keeps both in horizontal sync for 4+ product comparisons.
  */
 function setupScrollSync() {
+    // Clean up any existing drag-to-scroll handlers first
+    cleanupDragToScroll();
+
     const miniHeader = document.querySelector('.compare-mini-header');
     const specsScroll = document.querySelector('.compare-specs-scroll');
     if (!miniHeader || !specsScroll) return;
@@ -2173,13 +2160,22 @@ function setupScrollSync() {
         requestAnimationFrame(() => { isSyncing = false; });
     }, { passive: true });
 
-    // Enable drag-to-scroll on both elements
+    // Enable drag-to-scroll on both elements (only if overflow exists)
     setupDragToScroll(specsScroll);
     setupDragToScroll(miniHeader);
 }
 
 /**
+ * Clean up all drag-to-scroll handlers and reset cursor styles.
+ */
+function cleanupDragToScroll() {
+    dragToScrollCleanups.forEach(cleanup => cleanup());
+    dragToScrollCleanups = [];
+}
+
+/**
  * Enable mouse drag to scroll horizontally on an element.
+ * Only enables if element has actual horizontal overflow.
  * Skipped on mobile/touch devices where native touch scroll works.
  * @param {HTMLElement} element - Scrollable element to enable drag on.
  */
@@ -2187,7 +2183,16 @@ function setupDragToScroll(element) {
     if (!element) return;
 
     // Skip on mobile - touch scrolling is native
-    if (window.innerWidth <= 768) return;
+    if (window.innerWidth <= 768) {
+        element.style.cursor = '';
+        return;
+    }
+
+    // Only enable if there's actual horizontal overflow
+    if (element.scrollWidth <= element.clientWidth) {
+        element.style.cursor = '';
+        return;
+    }
 
     let isDown = false;
     let startX = 0;
@@ -2195,7 +2200,7 @@ function setupDragToScroll(element) {
 
     element.style.cursor = 'grab';
 
-    element.addEventListener('mousedown', (e) => {
+    const onMouseDown = (e) => {
         // Don't interfere with clicks on links/buttons
         if (e.target.closest('a, button, input, label')) return;
 
@@ -2204,27 +2209,42 @@ function setupDragToScroll(element) {
         element.style.userSelect = 'none';
         startX = e.pageX - element.offsetLeft;
         scrollLeft = element.scrollLeft;
-    });
+    };
 
-    element.addEventListener('mouseleave', () => {
+    const onMouseLeave = () => {
         if (!isDown) return;
         isDown = false;
         element.style.cursor = 'grab';
         element.style.userSelect = '';
-    });
+    };
 
-    element.addEventListener('mouseup', () => {
+    const onMouseUp = () => {
         isDown = false;
         element.style.cursor = 'grab';
         element.style.userSelect = '';
-    });
+    };
 
-    element.addEventListener('mousemove', (e) => {
+    const onMouseMove = (e) => {
         if (!isDown) return;
         e.preventDefault();
         const x = e.pageX - element.offsetLeft;
         const walk = (x - startX) * 1.5; // Scroll speed multiplier
         element.scrollLeft = scrollLeft - walk;
+    };
+
+    element.addEventListener('mousedown', onMouseDown);
+    element.addEventListener('mouseleave', onMouseLeave);
+    element.addEventListener('mouseup', onMouseUp);
+    element.addEventListener('mousemove', onMouseMove);
+
+    // Store cleanup function
+    dragToScrollCleanups.push(() => {
+        element.removeEventListener('mousedown', onMouseDown);
+        element.removeEventListener('mouseleave', onMouseLeave);
+        element.removeEventListener('mouseup', onMouseUp);
+        element.removeEventListener('mousemove', onMouseMove);
+        element.style.cursor = '';
+        element.style.userSelect = '';
     });
 }
 

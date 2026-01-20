@@ -34,9 +34,28 @@ class SpecConfig {
 
     /**
      * IP rating ranking (higher index = better).
+     *
+     * Comparison rules:
+     * 1. Water rating (second digit) is primary - higher wins
+     * 2. If water equal, having dust rating (IP) beats no dust (IPX)
+     *
+     * Examples: IPX5 > IP54 (water 5 > 4), IP55 > IPX5 (both water 5, but IP55 has dust)
+     *
+     * NOTE: Use erh_normalize_ip_rating() for actual comparisons - it returns
+     * a composite score: water*10 + (has_dust ? 1 : 0)
      */
     public const IP_RATINGS = [
-        'None', 'IPX4', 'IPX5', 'IP54', 'IP55', 'IP56', 'IP65', 'IP66', 'IP67', 'IP68',
+        'None',   // score: 0
+        'IPX4',   // score: 40
+        'IP54',   // score: 41
+        'IPX5',   // score: 50
+        'IP55',   // score: 51
+        'IPX6',   // score: 60
+        'IP56',   // score: 61
+        'IP65',   // score: 51 (rarely used)
+        'IP66',   // score: 61
+        'IP67',   // score: 71
+        'IP68',   // score: 81
     ];
 
     /**
@@ -75,90 +94,531 @@ class SpecConfig {
     public const MAX_ADVANTAGES      = 5;  // Max advantages per product
 
     // =========================================================================
-    // Advantage Specs - What to show when a product wins a category
+    // Spec-Based Comparison - Independent spec advantages (Versus.com style)
     // =========================================================================
 
     /**
-     * Primary and secondary specs to highlight for each category advantage.
-     * Based on scoring algorithm weights - shows what actually drives the score.
+     * Minimum percentage difference to show as an advantage.
+     * Set to 0 - a winner is a winner, any difference matters.
+     */
+    public const SPEC_ADVANTAGE_THRESHOLD = 0;
+
+    /**
+     * Maximum advantages per product.
+     */
+    public const SPEC_ADVANTAGE_MAX = 10;
+
+    /**
+     * Individual specs for comparison with independent winners.
+     *
+     * Each spec can have a different winner - not grouped by category.
+     * Format: "X mph faster top speed" not "23 mph vs 22 mph"
      *
      * Structure:
-     * - primary: The headline spec (most user-relatable)
-     * - secondary: Supporting specs (shown if significantly different)
-     * - headlines: Adjective headlines for different specs
-     * - lowerBetter: Specs where lower values win
+     * - key: ACF field path (dot notation)
+     * - label: Human-readable label for the spec
+     * - unit: Unit string (mph, W, V, etc.)
+     * - diffFormat: How to phrase the difference ('faster', 'more', 'higher', 'lighter')
+     * - higherBetter: Whether higher values win
+     * - tooltip: Explanation of why this spec matters (optional)
+     * - minDiff: Minimum absolute difference to show (optional, overrides percentage)
+     * - category: Grouping for future use (motor, battery, etc.)
+     */
+    public const COMPARISON_SPECS = [
+        // Motor Performance Specs
+        'tested_top_speed' => [
+            'label'        => 'tested top speed',
+            'unit'         => 'mph',
+            'diffFormat'   => 'faster',
+            'higherBetter' => true,
+            'tooltip'      => 'Tested top speed from our real-world testing. More reliable than manufacturer claims.',
+            'category'     => 'motor',
+            'priority'     => 1,
+        ],
+        'manufacturer_top_speed' => [
+            'label'        => 'top speed',
+            'unit'         => 'mph',
+            'diffFormat'   => 'faster',
+            'higherBetter' => true,
+            'tooltip'      => 'Manufacturer-claimed top speed. Actual speed may vary based on rider weight and conditions.',
+            'category'     => 'motor',
+            'priority'     => 2,
+            'fallbackFor'  => 'tested_top_speed', // Only show if tested_top_speed not available
+        ],
+        'motor.power_nominal' => [
+            'label'        => 'motor power',
+            'unit'         => 'W',
+            'diffFormat'   => 'more',
+            'higherBetter' => true,
+            'tooltip'      => 'More motor power provides better hill climbing ability and stronger acceleration.',
+            'category'     => 'motor',
+            'priority'     => 3,
+            'minDiff'      => 50, // At least 50W difference to be meaningful
+        ],
+        'motor.motor_count' => [
+            'label'        => 'motors',
+            'unit'         => '',
+            'diffFormat'   => 'dual_vs_single', // Special format
+            'higherBetter' => true,
+            'tooltip'      => 'Dual motors provide better traction, acceleration, and hill climbing compared to single motor.',
+            'category'     => 'motor',
+            'priority'     => 4,
+        ],
+        'battery.voltage' => [
+            'label'        => 'battery voltage',
+            'unit'         => 'V',
+            'diffFormat'   => 'higher',
+            'higherBetter' => true,
+            'tooltip'      => 'Higher voltage delivers more consistent power output, especially under load and on hills.',
+            'category'     => 'motor',
+            'priority'     => 5,
+            'minDiff'      => 6, // At least 6V difference (e.g., 48V vs 36V)
+        ],
+
+        // Battery & Range Specs
+        'battery.capacity' => [
+            'label'        => 'battery capacity',
+            'unit'         => 'Wh',
+            'diffFormat'   => 'larger',
+            'higherBetter' => true,
+            'tooltip'      => 'Larger battery capacity means more energy stored, which directly translates to longer range potential.',
+            'category'     => 'battery',
+            'priority'     => 10,
+            'minDiff'      => 50, // At least 50Wh difference to be meaningful
+        ],
+        'tested_range_regular' => [
+            'label'        => 'tested range',
+            'unit'         => 'miles',
+            'diffFormat'   => 'longer',
+            'higherBetter' => true,
+            'tooltip'      => 'Range from our real-world testing at regular pace (moderate speed, 175 lbs rider). More accurate than manufacturer claims.',
+            'category'     => 'battery',
+            'priority'     => 11,
+        ],
+
+        // Ride Quality - Composite category
+        // If one product wins by >5 points, show "Better ride quality" consolidated
+        // Loser gets individual bullets for specs they win
+        // If close (<5 points), show all individual specs
+        '_ride_quality' => [
+            'type'         => 'composite',
+            'scoreKey'     => 'ride_quality',  // Category score key
+            'label'        => 'ride quality',
+            'diffFormat'   => 'better',
+            'threshold'    => 5,  // Points difference to declare clear winner
+            'specs'        => [
+                'suspension.type',
+                'wheels.tire_size_front',
+                'wheels.tire_type',
+            ],
+            'tooltip'      => 'Overall ride comfort based on suspension, tire size, and tire type. Better suspension and larger tires absorb bumps for a smoother ride.',
+            'category'     => 'ride',
+            'priority'     => 20,
+        ],
+
+        // Individual ride quality specs (used by composite or shown granularly)
+        // Note: suspension.type requires normalization (raw value is array like ["Front hydraulic", "Rear spring"])
+        // Normalizer returns numeric score for comparison; display uses erh_format_suspension_display()
+        'suspension.type' => [
+            'label'        => 'suspension',
+            'unit'         => '',
+            'diffFormat'   => 'suspension',  // Special format - uses display formatter
+            'higherBetter' => true,
+            'tooltip'      => 'Suspension absorbs bumps and vibrations. Dual suspension provides the smoothest ride.',
+            'category'     => 'ride',
+            'priority'     => 21,
+            'normalizer'   => 'erh_normalize_suspension_level', // Returns numeric score for comparison
+            'displayFormatter' => 'erh_format_suspension_display', // For human-readable output
+            'minDiff'      => 3, // At least 3 points difference (e.g., rubber vs spring)
+        ],
+        'wheels.tire_size_front' => [
+            'label'        => 'tires',
+            'unit'         => '"',
+            'diffFormat'   => 'larger',
+            'higherBetter' => true,
+            'tooltip'      => 'Larger tires roll over cracks and bumps more easily, providing better stability and comfort.',
+            'category'     => 'ride',
+            'priority'     => 22,
+            'minDiff'      => 0.5,  // At least 0.5" difference
+        ],
+        // Note: wheels.tire_type requires normalization (combines tire_type + pneumatic_type + self_healing)
+        'wheels.tire_type' => [
+            'label'        => 'tire type',
+            'unit'         => '',
+            'diffFormat'   => 'tire_type',  // Special format for ride quality context
+            'higherBetter' => true,
+            'tooltip'      => 'Pneumatic (air-filled) tires provide the smoothest ride. Solid tires are maintenance-free but harsher.',
+            'category'     => 'ride',
+            'priority'     => 23,
+            'normalizer'   => 'erh_normalize_tire_type', // Combines multiple fields
+            'normalizerFullSpecs' => true, // Normalizer receives full specs array, not just raw value
+            'ranking'      => [ 'Solid', 'Mixed', 'Self-healing', 'Pneumatic', 'Tubeless' ],
+        ],
+
+        // =====================================================================
+        // Portability Specs (Composite)
+        // If one scooter wins both weight AND footprint → consolidated "More Portable"
+        // If split → granular for each
+        // =====================================================================
+
+        '_portability' => [
+            'type'         => 'composite',
+            'scoreKey'     => 'portability',
+            'label'        => 'portable',
+            'diffFormat'   => 'more',
+            'threshold'    => 0,  // Any difference counts
+            'specs'        => [
+                'dimensions.weight',
+                'folded_footprint',  // Calculated: length × width × height
+            ],
+            'tooltip'      => 'Portability combines weight and folded size. Lighter and smaller = easier to carry and store.',
+            'category'     => 'portability',
+            'priority'     => 30,
+        ],
+        'dimensions.weight' => [
+            'label'        => '',  // No label needed, "lighter" is self-explanatory
+            'unit'         => 'lbs',
+            'diffFormat'   => 'lighter',
+            'higherBetter' => false,  // Lower weight is better
+            'tooltip'      => 'Lighter scooters are easier to carry upstairs, onto public transit, or into your office.',
+            'category'     => 'portability',
+            'priority'     => 31,
+        ],
+        'dimensions.max_load' => [
+            'label'        => 'weight capacity',
+            'unit'         => 'lbs',
+            'diffFormat'   => 'higher',
+            'higherBetter' => true,
+            'tooltip'      => 'Maximum rider weight the scooter can support. Higher capacity accommodates heavier riders.',
+            'category'     => 'portability',
+            'priority'     => 32,
+            'minDiff'      => 10,  // At least 10 lbs difference to be meaningful
+        ],
+        'wh_per_lb' => [
+            'label'        => 'Wh/lb ratio',
+            'unit'         => 'Wh/lb',
+            'diffFormat'   => 'better',
+            'higherBetter' => true,
+            'tooltip'      => 'Battery capacity divided by weight. Higher = more energy storage per pound of scooter.',
+            'category'     => 'portability',
+            'priority'     => 33,
+            'isDerived'    => true,  // Calculated from other specs
+            'format'       => 'decimal',
+        ],
+        'speed_per_lb' => [
+            'label'        => 'mph/lb ratio',
+            'unit'         => 'mph/lb',
+            'diffFormat'   => 'better',
+            'higherBetter' => true,
+            'tooltip'      => 'Top speed divided by weight. Higher = more speed per pound of scooter.',
+            'category'     => 'portability',
+            'priority'     => 34,
+            'isDerived'    => true,  // Calculated from other specs
+            'format'       => 'decimal',
+        ],
+        'folded_footprint' => [
+            'label'        => 'when folded',
+            'unit'         => '',
+            'diffFormat'   => 'smaller',
+            'higherBetter' => false,  // Smaller footprint is better
+            'tooltip'      => 'Folded floor space (length × width). Smaller = easier to fit in car trunks, closets, or under desks.',
+            'category'     => 'portability',
+            'priority'     => 35,
+            'normalizer'   => 'erh_calculate_folded_footprint',
+            'normalizerFullSpecs' => true,
+            'displayFormatter' => 'erh_format_folded_footprint',
+        ],
+
+        // =====================================================================
+        // SAFETY SPECS
+        // =====================================================================
+
+        // Safety - Composite category
+        // If one product wins by >3 points, show "Safer" consolidated
+        // Loser gets individual bullets for specs they win
+        // If close (<3 points), show all individual specs
+        // NOTE: Tire size excluded - already shown in ride quality
+        '_safety' => [
+            'type'         => 'composite',
+            'scoreKey'     => 'safety',  // Category score key
+            'label'        => 'safer',
+            'diffFormat'   => 'safer',   // "Safer" headline
+            'threshold'    => 3,         // Points difference to declare clear winner
+            'specs'        => [
+                'safety.tire_type',
+                'brake_distance',
+            ],
+            'tooltip'      => 'Overall safety based on tire type (pneumatic = better grip) and stopping distance.',
+            'category'     => 'safety',
+            'priority'     => 38,
+        ],
+
+        // Safety tire type - OPPOSITE of maintenance ranking.
+        // For safety: pneumatic > semi-pneumatic > solid (grip, braking, comfort)
+        'safety.tire_type' => [
+            'label'        => 'tires',
+            'unit'         => '',
+            'diffFormat'   => 'safer_tires',  // "Safer tires" headline
+            'higherBetter' => true,
+            'tooltip'      => 'Pneumatic tires provide better grip, shorter braking distances, and safer handling than solid tires.',
+            'category'     => 'safety',
+            'priority'     => 39,
+            'normalizer'   => 'erh_normalize_tire_type_for_safety',
+            'normalizerFullSpecs' => true,
+            // Safety ranking: Pneumatic/Tubeless = best grip, solid = worst
+            'ranking'      => [ 'Solid', 'Mixed', 'Tubeless', 'Pneumatic' ],
+        ],
+
+        // NOTE: Tire size for safety removed - already covered by ride quality's wheels.tire_size_front
+
+        'other.ip_rating' => [
+            'label'        => 'water resistance',
+            'unit'         => '',
+            'diffFormat'   => 'water_resistance',  // "Higher water resistance"
+            'higherBetter' => true,
+            'tooltip'      => 'IP rating indicates dust and water resistance. Higher numbers = better protection.',
+            'category'     => 'maintenance',  // Moved from safety - IP prevents water damage maintenance
+            'priority'     => 58,             // Between maintenance composite and individual specs
+            'normalizer'        => 'erh_normalize_ip_rating',  // Extract numeric score for comparison
+            'displayFormatter'  => 'erh_format_ip_rating_display',  // Show raw IP rating for display
+            'requireValidPair'  => true,  // Skip if either value is none/unknown (normalized to 0)
+        ],
+        'brake_distance' => [
+            'label'        => 'stopping distance',
+            'unit'         => 'ft',
+            'diffFormat'   => 'shorter',
+            'higherBetter' => false,  // Shorter stopping distance is better
+            'tooltip'      => 'Tested brake distance from 15 mph with 175 lbs rider. Shorter = safer.',
+            'category'     => 'safety',
+            'priority'     => 41,
+            'minDiff'      => 1,  // At least 1 foot difference
+        ],
+        'lighting.turn_signals' => [
+            'label'        => 'turn signals',
+            'unit'         => '',
+            'diffFormat'   => 'has_feature',  // Binary: has turn signals vs doesn't
+            'higherBetter' => true,
+            'tooltip'      => 'Built-in turn signals improve visibility and safety when changing lanes.',
+            'category'     => 'safety',
+            'priority'     => 42,
+        ],
+
+        // =====================================================================
+        // FEATURES SPECS
+        // =====================================================================
+
+        'features' => [
+            'label'        => 'features',
+            'unit'         => '',
+            'diffFormat'   => 'feature_count',  // Custom: compare feature arrays
+            'higherBetter' => true,
+            'tooltip'      => 'Additional features like app connectivity, cruise control, swappable battery, etc.',
+            'category'     => 'features',
+            'priority'     => 49,  // Before display_type
+            'minDiff'      => 2,   // Require at least 2 more features to show advantage
+        ],
+        'other.display_type' => [
+            'label'        => 'display',
+            'unit'         => '',
+            'diffFormat'   => 'better',
+            'higherBetter' => true,
+            'tooltip'      => 'Better displays show more information and are easier to read in sunlight.',
+            'category'     => 'features',
+            'priority'     => 50,
+            'ranking'      => [ 'None', 'Basic LED', 'LED', 'LCD', 'Color LCD' ],
+        ],
+        'other.kickstand' => [
+            'label'        => 'kickstand',
+            'unit'         => '',
+            'diffFormat'   => 'has_feature',  // Binary: has kickstand vs doesn't
+            'higherBetter' => true,
+            'tooltip'      => 'A kickstand allows the scooter to stand upright when parked.',
+            'category'     => 'features',
+            'priority'     => 51,
+        ],
+
+        // =====================================================================
+        // MAINTENANCE SPECS (Composite)
+        // If one scooter wins maintenance category → "Lower maintenance"
+        // Note: Tire type ranking is OPPOSITE of ride quality - solid = better for maintenance
+        // =====================================================================
+
+        '_maintenance' => [
+            'type'         => 'composite',
+            'scoreKey'     => 'maintenance',  // Category score key
+            'label'        => 'maintenance',
+            'diffFormat'   => 'lower',
+            'threshold'    => 0,  // Any difference counts
+            'specs'        => [
+                'maintenance.tire_type',
+                'maintenance.brake_type',
+            ],
+            'tooltip'      => 'Overall maintenance based on tire type and brake type. Solid tires and drum brakes require the least maintenance.',
+            'category'     => 'maintenance',
+            'priority'     => 59,  // Before individual maintenance specs
+        ],
+
+        'maintenance.tire_type' => [
+            'label'        => 'tires',
+            'unit'         => '',
+            'diffFormat'   => 'lower',  // "lower maintenance tires"
+            'higherBetter' => true,
+            'tooltip'      => 'Solid and tubeless tires require less maintenance than pneumatic tires.',
+            'category'     => 'maintenance',
+            'priority'     => 60,
+            // Maintenance ranking based on scoring: Solid (50) > Mixed (30) > Self-healing (20) > Tubeless (10) > Pneumatic (0)
+            // Self-healing is +20 bonus, so tubed+self-healing (20) > tubeless (10)
+            'normalizer'   => 'erh_normalize_tire_type',
+            'normalizerFullSpecs' => true,
+            'ranking'      => [ 'Pneumatic', 'Tubeless', 'Self-healing', 'Mixed', 'Solid' ],
+        ],
+        'wheels.self_healing' => [
+            'label'        => 'self-healing tires',
+            'unit'         => '',
+            'diffFormat'   => 'has_feature',  // Binary: has self-healing vs doesn't
+            'higherBetter' => true,
+            'tooltip'      => 'Self-healing tires automatically seal small punctures, reducing flat risk.',
+            'category'     => 'maintenance',
+            'priority'     => 61,
+        ],
+        // Brake type for maintenance (drum = best, disc = worst).
+        // Note: This uses a maintenance-specific normalizer that scores based on least maintenance.
+        'maintenance.brake_type' => [
+            'label'        => 'brakes',
+            'unit'         => '',
+            'diffFormat'   => 'lower',  // "lower maintenance brakes"
+            'higherBetter' => true,
+            'tooltip'      => 'Drum brakes are sealed and maintenance-free. Disc brakes need pad replacements and adjustments.',
+            'category'     => 'maintenance',
+            'priority'     => 62,
+            'normalizer'   => 'erh_normalize_brake_maintenance',
+            'normalizerFullSpecs' => true,
+            // Ranking: Drum best (sealed), Electronic/Foot minimal, Disc worst (needs pads/adjustment).
+            'ranking'      => [ 'Disc', 'Electronic', 'Foot', 'Drum' ],
+        ],
+    ];
+
+    // =========================================================================
+    // Legacy: Category-Based Advantage Specs (kept for backwards compatibility)
+    // =========================================================================
+
+    /**
+     * @deprecated Use COMPARISON_SPECS instead for spec-based advantages.
      */
     public const ADVANTAGE_SPECS = [
         'motor_performance' => [
-            'primary'     => 'manufacturer_top_speed', // Most relatable to users
-            'secondary'   => [ 'motor.power_peak', 'motor.motor_position' ],
+            'specOrder'   => [
+                'tested_top_speed',
+                'manufacturer_top_speed',
+                'motor.power_nominal',
+                'motor.motor_count',
+                'battery.voltage',
+            ],
             'headlines'   => [
-                'manufacturer_top_speed' => 'Faster',
-                'tested_top_speed'       => 'Faster',
-                'motor.power_peak'       => 'More Powerful',
-                'motor.power_nominal'    => 'More Powerful',
-                'motor.motor_position'   => 'Dual Motors',
+                'tested_top_speed'         => 'Faster',
+                'manufacturer_top_speed'   => 'Faster',
+                'motor.power_nominal'      => 'More Powerful',
+                'motor.power_peak'         => 'More Powerful',
+                'motor.motor_count'        => 'Dual Motors',
+                'battery.voltage'          => 'Higher Voltage',
             ],
             'lowerBetter' => [],
+            'maxItems'    => 3,
         ],
         'range_battery' => [
-            'primary'     => 'battery.capacity', // Based on scoring algo (70pts)
-            'secondary'   => [ 'tested_range_regular', 'battery.charging_time' ],
+            'specOrder'   => [
+                'tested_range_regular',
+                'range_claimed',
+                'battery.capacity',
+                'battery.charging_time',
+            ],
             'headlines'   => [
-                'battery.capacity'       => 'Bigger Battery',
                 'tested_range_regular'   => 'More Range',
                 'tested_range_fast'      => 'More Range',
+                'range_claimed'          => 'More Range',
+                'battery.capacity'       => 'Bigger Battery',
                 'battery.charging_time'  => 'Faster Charging',
             ],
             'lowerBetter' => [ 'battery.charging_time' ],
+            'maxItems'    => 3,
         ],
         'ride_quality' => [
-            'primary'     => 'suspension.type', // Biggest factor (40pts)
-            'secondary'   => [ 'wheels.tire_size_front', 'wheels.tire_type' ],
+            // Composite approach: winner gets consolidated "Better ride quality" with specs.
+            'composite'   => '_ride_quality',
+            'specOrder'   => [
+                'suspension.type',
+                'wheels.tire_size_front',
+                'wheels.tire_type',
+            ],
             'headlines'   => [
-                'suspension.type'        => 'Smoother Ride',
+                '_ride_quality'          => 'Better ride quality',
+                'suspension.type'        => 'Better Suspension',
                 'wheels.tire_size_front' => 'Larger Tires',
                 'wheels.tire_type'       => 'Better Tires',
             ],
             'lowerBetter' => [],
+            'maxItems'    => 3,
         ],
         'portability' => [
-            'primary'     => 'dimensions.weight', // Dominant factor (60pts)
-            'secondary'   => [ 'dimensions.max_load' ],
-            'headlines'   => [
-                'dimensions.weight'   => 'Lighter',
-                'dimensions.max_load' => 'Higher Weight Capacity',
+            'specOrder'   => [
+                'dimensions.weight',
+                'dimensions.folded_length',
+                'dimensions.foldable_handlebars',
+                'dimensions.max_load',
+                'dimensions.deck_length',
             ],
-            'lowerBetter' => [ 'dimensions.weight' ],
+            'headlines'   => [
+                'dimensions.weight'              => 'Lighter',
+                'dimensions.folded_length'       => 'More Compact',
+                'dimensions.foldable_handlebars' => 'Foldable Handlebars',
+                'dimensions.max_load'            => 'Higher Weight Capacity',
+                'dimensions.deck_length'         => 'Larger Deck',
+            ],
+            'lowerBetter' => [ 'dimensions.weight', 'dimensions.folded_length' ],
+            'maxItems'    => 3,
         ],
         'safety' => [
-            'primary'     => 'other.ip_rating', // Most user-relatable
-            'secondary'   => [ 'brakes.front', 'lighting.turn_signals' ],
-            'headlines'   => [
-                'other.ip_rating'       => 'Better Protected',
-                'brakes.front'          => 'Better Brakes',
-                'lighting.turn_signals' => 'Turn Signals',
+            // Composite approach: winner gets consolidated "Safer" with supporting specs.
+            // Tire size excluded - already shown in ride quality.
+            // Turn signals handled by features comparison.
+            'composite'   => '_safety',
+            'specOrder'   => [
+                'safety.tire_type',  // Pneumatic > semi > solid (for safety)
+                'brake_distance',    // Only if both have tested data
             ],
-            'lowerBetter' => [],
+            'headlines'   => [
+                '_safety'          => 'Safer',
+                'safety.tire_type' => 'Safer Tires',
+                'brake_distance'   => 'Shorter Stopping',
+            ],
+            'lowerBetter' => [ 'brake_distance' ],
+            'maxItems'    => 2,
         ],
         'features' => [
-            'primary'     => 'features', // Feature count
-            'secondary'   => [ 'other.display_type' ],
+            'specOrder'   => [
+                'features',  // Feature array comparison (requires 2+ difference)
+            ],
             'headlines'   => [
-                'features'          => 'More Features',
-                'other.display_type' => 'Better Display',
+                'features' => 'More Features',
             ],
             'lowerBetter' => [],
+            'maxItems'    => 1,  // Only show feature count advantage
         ],
         'maintenance' => [
-            'primary'     => 'wheels.tire_type', // Dominant factor (45pts)
-            'secondary'   => [ 'other.ip_rating', 'wheels.self_healing' ],
+            'specOrder'   => [
+                'maintenance.tire_type',
+                'other.ip_rating',        // Higher IP = less maintenance from water damage
+                'maintenance.brake_type',
+                'wheels.self_healing',
+            ],
             'headlines'   => [
-                'wheels.tire_type'    => 'Easier Maintenance',
-                'other.ip_rating'     => 'Better Protected',
-                'wheels.self_healing' => 'Self-Healing Tires',
+                'maintenance.tire_type'  => 'Lower Maintenance',
+                'other.ip_rating'        => 'Higher Water Resistance',
+                'maintenance.brake_type' => 'Lower Maintenance Brakes',
+                'wheels.self_healing'    => 'Self-Healing Tires',
             ],
             'lowerBetter' => [],
+            'maxItems'    => 4,
         ],
     ];
 
@@ -170,13 +630,21 @@ class SpecConfig {
         'tested_top_speed'       => 'mph',
         'motor.power_peak'       => 'W',
         'motor.power_nominal'    => 'W',
+        'motor.motor_count'      => '',  // Special handling: "dual motor vs single"
+        'battery.voltage'        => 'V',
         'battery.capacity'       => 'Wh',
         'battery.charging_time'  => 'hrs',
         'tested_range_regular'   => 'mi',
         'tested_range_fast'      => 'mi',
-        'dimensions.weight'      => 'lbs',
-        'dimensions.max_load'    => 'lbs',
-        'wheels.tire_size_front' => '"',
+        'range_claimed'          => 'mi',
+        'dimensions.weight'        => 'lbs',
+        'dimensions.folded_length' => '"',
+        'dimensions.max_load'      => 'lbs',
+        'dimensions.deck_length'   => '"',
+        'wheels.tire_size_front'   => '"',
+        'brake_distance'           => 'ft',
+        'wh_per_lb'                => 'Wh/lb',
+        'speed_per_lb'             => 'mph/lb',
     ];
 
     // =========================================================================

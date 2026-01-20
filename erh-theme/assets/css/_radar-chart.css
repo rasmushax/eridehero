@@ -67,6 +67,7 @@
     stroke-linejoin: round;
     stroke-dasharray: 2000;
     stroke-dashoffset: 2000;
+    transition: opacity var(--radar-transition);
 }
 
 .radar-dot {
@@ -142,6 +143,12 @@
     transform: scale(1.2);
 }
 
+/* Hidden Product State (toggle via legend click) */
+.radar-product.is-hidden {
+    visibility: hidden;
+    pointer-events: none;
+}
+
 /* Legend */
 .radar-chart-legend {
     display: flex;
@@ -161,13 +168,31 @@
     border: 1px solid var(--color-border);
     border-radius: var(--radius-full);
     cursor: pointer;
-    transition: background var(--radar-transition), border-color var(--radar-transition);
+    transition: background var(--radar-transition), border-color var(--radar-transition), opacity var(--radar-transition);
 }
 
 .radar-legend-item:hover,
 .radar-legend-item.is-active {
     background: var(--color-background);
     border-color: var(--color-border-hover);
+}
+
+/* Hidden legend item (product toggled off) */
+.radar-legend-item.is-hidden {
+    opacity: 0.5;
+}
+
+.radar-legend-item.is-hidden .radar-legend-color {
+    background: var(--color-muted);
+}
+
+.radar-legend-item.is-hidden .radar-legend-name {
+    text-decoration: line-through;
+    color: var(--color-muted);
+}
+
+.radar-legend-item.is-hidden:hover {
+    opacity: 0.7;
 }
 
 .radar-legend-color {

@@ -52,6 +52,7 @@ export class RadarChart {
         this.tooltip = null;
         this.legendItems = new Map();
         this.hoveredProduct = null;
+        this.hiddenProducts = new Set(); // Track which products are hidden
 
         this.init();
     }
@@ -258,25 +259,85 @@ export class RadarChart {
     }
 
     /**
-     * Render legend.
+     * Render legend with click-to-toggle functionality.
+     * Note: Single-product charts (product pages) hide the legend via CSS/option.
      */
     renderLegend() {
+        // Can toggle visibility only for multi-product charts
+        const canToggle = this.data.length > 1;
+
         this.legend.innerHTML = this.data.map((product, i) => {
             const color = this.options.colors[i % this.options.colors.length];
+            const isHidden = this.hiddenProducts.has(i);
+            const hiddenClass = isHidden ? ' is-hidden' : '';
+            const title = canToggle ? ' title="Click to toggle visibility"' : '';
+            // Product name is escaped via escapeHtml imported from utils/dom.js
             return `
-                <button class="radar-legend-item" data-product-index="${i}" type="button">
+                <button class="radar-legend-item${hiddenClass}" data-product-index="${i}" type="button"${title}>
                     <span class="radar-legend-color" style="--radar-color: ${color}"></span>
                     <span class="radar-legend-name">${escapeHtml(product.name)}</span>
                 </button>
             `;
         }).join('');
 
-        // Legend hover interactions
+        // Legend interactions
         this.legend.querySelectorAll('.radar-legend-item').forEach(item => {
             const index = parseInt(item.dataset.productIndex, 10);
-            item.addEventListener('mouseenter', () => this.highlightProduct(index));
+
+            // Hover to highlight (only if product is visible)
+            item.addEventListener('mouseenter', () => {
+                if (!this.hiddenProducts.has(index)) {
+                    this.highlightProduct(index);
+                }
+            });
             item.addEventListener('mouseleave', () => this.unhighlightProduct());
+
+            // Click to toggle visibility (only for multi-product charts)
+            if (canToggle) {
+                item.addEventListener('click', (e) => {
+                    e.preventDefault();
+                    this.toggleProduct(index);
+                });
+            }
         });
+    }
+
+    /**
+     * Toggle product visibility in the chart.
+     *
+     * @param {number} index - Product index to toggle
+     */
+    toggleProduct(index) {
+        // Don't allow hiding all products - keep at least one visible
+        const visibleCount = this.data.length - this.hiddenProducts.size;
+        const isCurrentlyHidden = this.hiddenProducts.has(index);
+
+        if (!isCurrentlyHidden && visibleCount <= 1) {
+            // Can't hide the last visible product
+            return;
+        }
+
+        // Toggle hidden state
+        if (isCurrentlyHidden) {
+            this.hiddenProducts.delete(index);
+        } else {
+            this.hiddenProducts.add(index);
+        }
+
+        // Update legend item state
+        const legendItem = this.legend.querySelector(`[data-product-index="${index}"]`);
+        if (legendItem) {
+            legendItem.classList.toggle('is-hidden', !isCurrentlyHidden);
+        }
+
+        // Update chart visibility with animation
+        const productGroup = this.svg.querySelector(`.radar-product-${index}`);
+        if (productGroup) {
+            productGroup.classList.toggle('is-hidden', !isCurrentlyHidden);
+        }
+
+        // Clear any active hover state
+        this.unhighlightProduct();
     }
 
     /**
@@ -420,6 +481,7 @@ export class RadarChart {
     destroy() {
         this.container.innerHTML = '';
         this.container.classList.remove('radar-chart', 'is-animated', 'has-hover', 'is-compact');
+        this.hiddenProducts.clear();
     }
 }
 

@@ -816,32 +816,47 @@
     color: var(--color-success);
 }
 
-/* Stacked content: headline, primary, supporting */
+/* Advantage content wrapper (stacked: text + values) */
 .compare-advantage-content {
     display: flex;
     flex-direction: column;
-    gap: var(--space-1);
+    gap: 2px;
     min-width: 0;
 }
 
-.compare-advantage-headline {
+/* Main advantage text line */
+.compare-advantage-text {
     font-size: var(--text-sm);
-    font-weight: var(--font-semibold);
     color: var(--color-dark);
     line-height: 1.4;
+    display: flex;
+    align-items: center;
+    gap: var(--space-2);
 }
 
-.compare-advantage-primary {
-    font-size: var(--text-sm);
-    color: var(--color-body);
-    line-height: 1.4;
+.compare-advantage-text .info-trigger {
+    flex-shrink: 0;
+    color: var(--color-muted);
+    cursor: pointer;
+    transition: color 0.15s ease;
 }
 
-.compare-advantage-supporting {
+.compare-advantage-text .info-trigger:hover {
+    color: var(--color-primary);
+}
+
+.compare-advantage-text .info-trigger .icon {
+    width: 14px;
+    height: 14px;
+}
+
+/* Comparison values line (e.g., "23.6 mph vs 18.9 mph") */
+.compare-advantage-values {
     font-size: var(--text-xs);
     color: var(--color-muted);
     line-height: 1.4;
 }
+
 
 /* Legacy fallback support (old .compare-advantage-list li styling) */
 .compare-advantage-list li:not(.compare-advantage-item) {
@@ -987,8 +1002,6 @@
     background: var(--color-white);
     width: 200px;
     box-sizing: border-box;
-    /* Shadow to indicate sticky, matching table cells */
-    box-shadow: 2px 0 4px -2px rgba(0, 0, 0, 0.1);
 }
 
 /* Mini-header label cell (diff toggle) sticky to left */
@@ -999,16 +1012,8 @@
     background: var(--color-white);
 }
 
-/* Drag-to-scroll cursor hint for scrollable areas */
-.compare-section--full .compare-specs-scroll,
-.compare-section--full .compare-mini-header {
-    cursor: grab;
-}
-
-.compare-section--full .compare-specs-scroll:active,
-.compare-section--full .compare-mini-header:active {
-    cursor: grabbing;
-}
+/* Drag-to-scroll cursor is handled by JS (setupDragToScroll)
+   which checks for actual overflow before enabling */
 
 .compare-spec-table tbody tr:last-child td {
     border-bottom: none;

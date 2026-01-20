@@ -342,6 +342,184 @@ export function findWinners(values, spec) {
 }
 
 // =============================================================================
+// Advantages Section (matches overview.php advantages output)
+// =============================================================================
+
+/**
+ * Render a single advantage item.
+ *
+ * @param {Object} adv - Advantage object from API
+ * @param {string} adv.text - Headline text (e.g., "Better suspension", "7% Faster")
+ * @param {string} [adv.comparison] - Comparison details (e.g., "Dual hydraulic vs none")
+ * @param {string} [adv.tooltip] - Optional tooltip text
+ * @returns {string} HTML output
+ */
+export function renderAdvantageItem(adv) {
+    const text = escapeHtml(adv.text || '');
+    const comparison = adv.comparison ? escapeHtml(adv.comparison) : '';
+    const tooltip = adv.tooltip ? escapeHtml(adv.tooltip) : '';
+
+    const tooltipHtml = tooltip
+        ? `<span class="info-trigger" data-tooltip="${tooltip}" data-tooltip-trigger="click">${renderIcon('info', 14, 14)}</span>`
+        : '';
+
+    const comparisonHtml = comparison
+        ? `<span class="compare-advantage-values">${comparison}</span>`
+        : '';
+
+    return `
+        <li class="compare-advantage-item">
+            <span class="compare-advantage-check">${renderIcon('check', 16, 16)}</span>
+            <div class="compare-advantage-content">
+                <span class="compare-advantage-text">${text}${tooltipHtml}</span>
+                ${comparisonHtml}
+            </div>
+        </li>
+    `;
+}
+
+/**
+ * Render the advantages section for a single product.
+ *
+ * @param {Object} product - Product object with name
+ * @param {Array} advantages - Array of advantage objects for this product
+ * @returns {string} HTML output
+ */
+export function renderAdvantagesForProduct(product, advantages) {
+    const name = escapeHtml(product.name || 'This product');
+
+    if (!advantages || advantages.length === 0) {
+        return `
+            <div class="compare-advantage">
+                <h4 class="compare-advantage-title">Where ${name} wins</h4>
+                <p class="compare-advantage-empty">No clear advantages</p>
+            </div>
+        `;
+    }
+
+    const itemsHtml = advantages.map(adv => renderAdvantageItem(adv)).join('');
+
+    return `
+        <div class="compare-advantage">
+            <h4 class="compare-advantage-title">Where ${name} wins</h4>
+            <ul class="compare-advantage-list">
+                ${itemsHtml}
+            </ul>
+        </div>
+    `;
+}
+
+/**
+ * Render the full advantages grid for all products.
+ *
+ * @param {Array} products - Array of product objects with names
+ * @param {Array} advantages - Array of advantage arrays (one per product)
+ * @returns {string} HTML output
+ */
+export function renderAdvantagesGrid(products, advantages) {
+    if (!products || products.length < 2) {
+        return '';
+    }
+
+    const sectionsHtml = products.map((product, idx) => {
+        const productAdvantages = advantages[idx] || [];
+        return renderAdvantagesForProduct(product, productAdvantages);
+    }).join('');
+
+    return sectionsHtml;
+}
+
+// =============================================================================
+// Multi-Product Advantages (3+ products)
+// =============================================================================
+
+/**
+ * Render a single advantage item for multi-product mode.
+ * Simpler format: just the label and value, no "vs" comparison.
+ *
+ * @param {Object} adv - Advantage object from API
+ * @param {string} adv.text - Label (e.g., "Fastest", "Lightest")
+ * @param {string} [adv.comparison] - Value details (e.g., "23.6 mph", "39 lbs")
+ * @param {string} [adv.tooltip] - Tooltip text explaining the advantage
+ * @returns {string} HTML output
+ */
+export function renderMultiAdvantageItem(adv) {
+    const text = escapeHtml(adv.text || '');
+    const comparison = adv.comparison ? escapeHtml(adv.comparison) : '';
+    const tooltip = adv.tooltip ? escapeHtml(adv.tooltip) : '';
+
+    const comparisonHtml = comparison
+        ? `<span class="compare-advantage-values">${comparison}</span>`
+        : '';
+
+    const tooltipHtml = tooltip
+        ? `<span class="info-trigger" data-tooltip="${tooltip}" data-tooltip-trigger="click">${renderIcon('info', 14, 14)}</span>`
+        : '';
+
+    return `
+        <li class="compare-advantage-item">
+            <span class="compare-advantage-check">${renderIcon('check', 16, 16)}</span>
+            <div class="compare-advantage-content">
+                <span class="compare-advantage-text">${text}${tooltipHtml}</span>
+                ${comparisonHtml}
+            </div>
+        </li>
+    `;
+}
+
+/**
+ * Render the advantages section for a single product in multi-product mode.
+ * Uses "Best at" framing instead of "Why X is better".
+ *
+ * @param {Object} product - Product object with name
+ * @param {Array} advantages - Array of advantage objects for this product
+ * @returns {string} HTML output
+ */
+export function renderMultiAdvantagesForProduct(product, advantages) {
+    const name = escapeHtml(product.name || 'This product');
+
+    if (!advantages || advantages.length === 0) {
+        return `
+            <div class="compare-advantage compare-advantage--empty">
+                <h4 class="compare-advantage-title">Where ${name} wins</h4>
+                <p class="compare-advantage-empty">No clear advantages</p>
+            </div>
+        `;
+    }
+
+    const itemsHtml = advantages.map(adv => renderMultiAdvantageItem(adv)).join('');
+
+    return `
+        <div class="compare-advantage">
+            <h4 class="compare-advantage-title">Where ${name} wins</h4>
+            <ul class="compare-advantage-list">
+                ${itemsHtml}
+            </ul>
+        </div>
+    `;
+}
+
+/**
+ * Render the full advantages grid for multi-product comparison (3+).
+ *
+ * @param {Array} products - Array of product objects with names
+ * @param {Array} advantages - Array of advantage arrays (one per product)
+ * @returns {string} HTML output
+ */
+export function renderMultiAdvantagesGrid(products, advantages) {
+    if (!products || products.length < 3) {
+        return '';
+    }
+
+    const sectionsHtml = products.map((product, idx) => {
+        const productAdvantages = advantages[idx] || [];
+        return renderMultiAdvantagesForProduct(product, productAdvantages);
+    }).join('');
+
+    return sectionsHtml;
+}
+
+// =============================================================================
 // Default Export
 // =============================================================================
 
@@ -359,4 +537,10 @@ export default {
     renderMobileSpecValue,
     renderMobileBooleanValue,
     findWinners,
+    renderAdvantageItem,
+    renderAdvantagesForProduct,
+    renderAdvantagesGrid,
+    renderMultiAdvantageItem,
+    renderMultiAdvantagesForProduct,
+    renderMultiAdvantagesGrid,
 };

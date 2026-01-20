@@ -176,7 +176,7 @@ function erh_get_product_spec_groups_config( string $category ): array {
                     array( 'key' => 'brakes.regenerative', 'label' => 'Regenerative Braking', 'format' => 'feature_check', 'feature_value' => true, 'tooltip' => $tooltips['regenerative'] ),
                     array( 'key' => 'lighting.lights', 'label' => 'Lights', 'format' => 'array' ),
                     array( 'key' => 'lighting.turn_signals', 'label' => 'Turn Signals', 'format' => 'feature_check', 'feature_value' => true ),
-                    array( 'key' => 'other.ip_rating', 'label' => 'IP Rating', 'tooltip' => $tooltips['ip_rating'] ),
+                    array( 'key' => 'other.ip_rating', 'label' => 'IP Rating', 'format' => 'ip', 'higherBetter' => true, 'tooltip' => $tooltips['ip_rating'] ),
                 ),
             ),
             'Features' => array(

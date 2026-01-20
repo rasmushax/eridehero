@@ -18,10 +18,41 @@
 
 /**
  * IP rating ranking (higher index = better).
+ * NOTE: This array is kept for backward compatibility, but use normalizeIpRating()
+ * for accurate comparisons.
  */
 export const IP_RATINGS = [
-    'None', 'IPX4', 'IPX5', 'IP54', 'IP55', 'IP56', 'IP65', 'IP66', 'IP67', 'IP68',
+    'None', 'IPX4', 'IP54', 'IPX5', 'IP55', 'IPX6', 'IP56', 'IP65', 'IP66', 'IP67', 'IP68',
 ];
+
+/**
+ * Normalize IP rating to numeric score for comparison.
+ *
+ * Comparison rules:
+ * 1. Water rating (second digit) is primary - higher wins
+ * 2. If water equal, having dust rating (IP) beats no dust (IPX)
+ *
+ * Returns composite score: water*10 + (has_dust ? 1 : 0)
+ *
+ * Examples:
+ * - IPX5 (50) > IP54 (41) — water 5 > water 4
+ * - IP55 (51) > IPX5 (50) — both water 5, but IP55 has dust rating
+ *
+ * @param {string} rating - IP rating string (e.g., "IP54", "IPX5")
+ * @returns {number} Composite score (0-81), or 0 if invalid
+ */
+export function normalizeIpRating(rating) {
+    if (!rating) return 0;
+
+    const match = String(rating).toUpperCase().match(/^IP([X0-9])([0-9])$/);
+    if (!match) return 0;
+
+    const dustChar = match[1];
+    const water = parseInt(match[2], 10);
+    const hasDust = dustChar !== 'X';
+
+    return (water * 10) + (hasDust ? 1 : 0);
+}
 
 /**
  * Suspension type ranking (higher index = better).
@@ -54,8 +85,9 @@ export const DISPLAY_TYPES = [
 /**
  * Threshold for declaring a "tie" (percentage difference).
  * If two values are within this percentage, neither wins.
+ * Set to 0 - a winner is a winner, any difference matters.
  */
-export const TIE_THRESHOLD = 3; // 3%
+export const TIE_THRESHOLD = 0;
 
 // =============================================================================
 // Utility Functions
@@ -307,14 +339,14 @@ export function compareValues(valueA, valueB, spec) {
         return boolA ? 1 : -1;
     }
 
-    // IP rating comparison
+    // IP rating comparison - use normalized scores
     if (spec.format === 'ip') {
-        const indexA = IP_RATINGS.indexOf(String(valueA).toUpperCase());
-        const indexB = IP_RATINGS.indexOf(String(valueB).toUpperCase());
-        if (indexA === indexB) return 0;
-        if (indexA === -1) return 1;
-        if (indexB === -1) return -1;
-        return indexA > indexB ? -1 : 1;
+        const scoreA = normalizeIpRating(valueA);
+        const scoreB = normalizeIpRating(valueB);
+        if (scoreA === scoreB) return 0;
+        if (scoreA === 0) return 1;  // A has no valid rating
+        if (scoreB === 0) return -1; // B has no valid rating
+        return scoreA > scoreB ? -1 : 1;
     }
 
     // Suspension comparison (string)
@@ -434,6 +466,7 @@ export function calculatePercentDiff(valueA, valueB, higherBetter = true) {
 
 export default {
     IP_RATINGS,
+    normalizeIpRating,
     SUSPENSION_TYPES,
     TIRE_TYPES,
     BRAKE_TYPES,

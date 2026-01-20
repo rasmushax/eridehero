@@ -495,6 +495,8 @@ function erh_get_compare_url( $product_ids ) {
  * Generate canonical URL for compare page.
  * Used for SEO to normalize comparison order.
  *
+ * Canonical order: lower product ID first (consistent, simple, doesn't change over time).
+ *
  * @param array $product_ids Array of product post IDs.
  * @return string The canonical comparison URL.
  */
@@ -503,22 +505,9 @@ function erh_get_compare_canonical_url( $product_ids ) {
         return home_url( '/compare/' );
     }
 
-    // Sort by popularity (or ID as fallback) for consistent canonical.
-    $products_with_pop = [];
-    foreach ( $product_ids as $id ) {
-        $pop = get_post_meta( $id, '_popularity_score', true ) ?: 0;
-        $products_with_pop[] = [ 'id' => $id, 'pop' => (int) $pop ];
-    }
-
-    // Sort by popularity descending, then by ID ascending.
-    usort( $products_with_pop, function ( $a, $b ) {
-        if ( $a['pop'] === $b['pop'] ) {
-            return $a['id'] - $b['id'];
-        }
-        return $b['pop'] - $a['pop'];
-    } );
-
-    $sorted_ids = array_column( $products_with_pop, 'id' );
+    // Sort by ID ascending for consistent canonical order.
+    $sorted_ids = array_map( 'intval', $product_ids );
+    sort( $sorted_ids, SORT_NUMERIC );
 
     return erh_get_compare_url( $sorted_ids );
 }
@@ -579,8 +568,9 @@ function erh_compare_document_title( $title ) {
                         "SELECT ID FROM {$wpdb->posts}
                         WHERE post_type = 'products'
                         AND post_status = 'publish'
-                        AND post_name IN ({$placeholders})",
-                        ...$slugs
+                        AND post_name IN ({$placeholders})
+                        ORDER BY FIELD(post_name, {$placeholders})",
+                        ...array_merge( $slugs, $slugs )
                     )
                 );
             }
@@ -640,8 +630,9 @@ function erh_compare_og_meta() {
                     "SELECT ID FROM {$wpdb->posts}
                     WHERE post_type = 'products'
                     AND post_status = 'publish'
-                    AND post_name IN ({$placeholders})",
-                    ...$slugs
+                    AND post_name IN ({$placeholders})
+                    ORDER BY FIELD(post_name, {$placeholders})",
+                    ...array_merge( $slugs, $slugs )
                 )
             );
         }
@@ -747,8 +738,9 @@ function erh_get_compare_title_data(): array {
 					"SELECT ID FROM {$wpdb->posts}
 					WHERE post_type = 'products'
 					AND post_status = 'publish'
-					AND post_name IN ({$placeholders})",
-					...$slugs
+					AND post_name IN ({$placeholders})
+					ORDER BY FIELD(post_name, {$placeholders})",
+					...array_merge( $slugs, $slugs )
 				)
 			);
 		}

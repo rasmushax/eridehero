@@ -128,6 +128,30 @@ class RestComparisonViews extends WP_REST_Controller {
                 ],
             ],
         ]);
+
+        // Get comparison advantages: GET /erh/v1/compare/advantages
+        register_rest_route($this->namespace, '/' . $this->rest_base . '/advantages', [
+            [
+                'methods'             => WP_REST_Server::READABLE,
+                'callback'            => [$this, 'get_advantages'],
+                'permission_callback' => '__return_true',
+                'args'                => [
+                    'products' => [
+                        'required'          => true,
+                        'type'              => 'string',
+                        'sanitize_callback' => 'sanitize_text_field',
+                        'description'       => 'Comma-separated product IDs (exactly 2).',
+                    ],
+                    'geo' => [
+                        'required'          => false,
+                        'type'              => 'string',
+                        'default'           => 'US',
+                        'sanitize_callback' => 'sanitize_text_field',
+                        'description'       => 'Geo region code (US, GB, EU, CA, AU).',
+                    ],
+                ],
+            ],
+        ]);
     }
 
     /**
@@ -267,6 +291,89 @@ class RestComparisonViews extends WP_REST_Controller {
         return new WP_REST_Response([
             'success' => true,
             'data'    => $related,
+        ]);
+    }
+
+    /**
+     * Get spec-based advantages for products.
+     *
+     * Returns calculated advantages for each product showing why they win
+     * specific specs (e.g., "Better suspension", "7% Faster").
+     *
+     * Uses product-type-specific calculators via AdvantageCalculatorFactory.
+     *
+     * @param WP_REST_Request $request Request object.
+     * @return WP_REST_Response Response with advantages array.
+     */
+    public function get_advantages(WP_REST_Request $request): WP_REST_Response {
+        $products_param = $request->get_param('products');
+        $geo            = $request->get_param('geo');
+
+        // Parse and validate product IDs.
+        $product_ids = array_filter(array_map('absint', explode(',', $products_param)));
+        $count       = count($product_ids);
+
+        if ($count < 1) {
+            return new WP_REST_Response([
+                'success' => false,
+                'message' => 'At least 1 product ID required.',
+            ], 400);
+        }
+
+        // Validate geo.
+        $valid_geos = ['US', 'GB', 'EU', 'CA', 'AU'];
+        if (!in_array($geo, $valid_geos, true)) {
+            $geo = 'US';
+        }
+
+        // Load the compare helpers if not already loaded.
+        if (!function_exists('erh_get_compare_products')) {
+            $theme_path = get_template_directory() . '/inc/functions/compare-helpers.php';
+            if (file_exists($theme_path)) {
+                require_once $theme_path;
+            } else {
+                return new WP_REST_Response([
+                    'success' => false,
+                    'message' => 'Compare helpers not available.',
+                ], 500);
+            }
+        }
+
+        // Get products data.
+        $products      = erh_get_compare_products($product_ids, $geo);
+        $product_names = array_map(fn($p) => $p['name'] ?? '', $products);
+
+        // Detect product type from first product.
+        $product_type = $products[0]['product_type'] ?? 'escooter';
+
+        // Use the factory to calculate advantages.
+        $advantages = \ERH\Comparison\AdvantageCalculatorFactory::calculate($products, $product_type);
+
+        // Determine mode for response.
+        if ($count === 1) {
+            return new WP_REST_Response([
+                'success'    => true,
+                'mode'       => 'single',
+                'advantages' => $advantages[0] ?? null,
+                'products'   => $product_names,
+            ]);
+        }
+
+        if ($count === 2) {
+            return new WP_REST_Response([
+                'success'    => true,
+                'mode'       => 'head_to_head',
+                'advantages' => $advantages,
+                'products'   => $product_names,
+            ]);
+        }
+
+        // Multi-product comparison mode (3+ products).
+        return new WP_REST_Response([
+            'success'    => true,
+            'mode'       => 'multi',
+            'advantages' => $advantages,
+            'products'   => $product_names,
         ]);
     }
 

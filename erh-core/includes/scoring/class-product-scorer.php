@@ -379,7 +379,9 @@ class ProductScorer {
     /**
      * Score suspension quality.
      *
-     * Front/Rear: Hydraulic +15, Spring/Fork +10, Rubber +7.
+     * Front suspension is weighted more heavily than rear (front absorbs most bumps).
+     * Front: Hydraulic +15, Spring/Fork +10, Rubber +7.
+     * Rear:  Hydraulic +7, Spring/Fork +5, Rubber +3 (roughly half of front).
      * Adjustable bonus: +10.
      *
      * @param mixed $suspension_type Array of suspension types.
@@ -388,20 +390,21 @@ class ProductScorer {
      */
     private function score_suspension($suspension_type, $adjustable): array {
         // Suspension is always scored, even if None (0 points).
+        // Max: 15 front + 7 rear + 10 adjustable = 32.
         if (!is_array($suspension_type) || empty($suspension_type)) {
-            return ['score' => 0, 'max_possible' => 40];
+            return ['score' => 0, 'max_possible' => 32];
         }
 
         $types = array_map(fn($s) => strtolower((string) $s), $suspension_type);
 
         // Check for "None" only.
         if (count($types) === 1 && ($types[0] === 'none' || $types[0] === '')) {
-            return ['score' => 0, 'max_possible' => 40];
+            return ['score' => 0, 'max_possible' => 32];
         }
 
         $score = 0;
 
-        // Front suspension scoring.
+        // Front suspension scoring (full weight - absorbs most bumps).
         $front_hydraulic = $this->array_some($types, fn($t) => strpos($t, 'front') !== false && strpos($t, 'hydraulic') !== false);
         $front_spring    = $this->array_some($types, fn($t) => strpos($t, 'front') !== false && (strpos($t, 'spring') !== false || strpos($t, 'fork') !== false));
         $front_rubber    = $this->array_some($types, fn($t) => strpos($t, 'front') !== false && strpos($t, 'rubber') !== false);
@@ -414,17 +417,17 @@ class ProductScorer {
             $score += 7;
         }
 
-        // Rear suspension scoring.
+        // Rear suspension scoring (half weight - less impact on comfort).
         $rear_hydraulic = $this->array_some($types, fn($t) => strpos($t, 'rear') !== false && strpos($t, 'hydraulic') !== false);
         $rear_spring    = $this->array_some($types, fn($t) => strpos($t, 'rear') !== false && (strpos($t, 'spring') !== false || strpos($t, 'fork') !== false));
         $rear_rubber    = $this->array_some($types, fn($t) => strpos($t, 'rear') !== false && strpos($t, 'rubber') !== false);
 
         if ($rear_hydraulic) {
-            $score += 15;
-        } elseif ($rear_spring) {
-            $score += 10;
-        } elseif ($rear_rubber) {
             $score += 7;
+        } elseif ($rear_spring) {
+            $score += 5;
+        } elseif ($rear_rubber) {
+            $score += 3;
         }
 
         // Handle "Dual" entries (affects both front and rear).
@@ -433,11 +436,11 @@ class ProductScorer {
         $dual_rubber    = $this->array_some($types, fn($t) => strpos($t, 'dual') !== false && strpos($t, 'rubber') !== false);
 
         if ($dual_hydraulic) {
-            $score = max($score, 30);
+            $score = max($score, 22); // 15 front + 7 rear
         } elseif ($dual_spring) {
-            $score = max($score, 20);
+            $score = max($score, 15); // 10 front + 5 rear
         } elseif ($dual_rubber) {
-            $score = max($score, 14);
+            $score = max($score, 10); // 7 front + 3 rear
         }
 
         // Adjustable bonus.
@@ -445,40 +448,40 @@ class ProductScorer {
             $score += 10;
         }
 
-        return ['score' => min(40, $score), 'max_possible' => 40];
+        return ['score' => min(32, $score), 'max_possible' => 32];
     }
 
     /**
      * Score tire type for comfort.
      *
-     * Pneumatic: 20pts, Mixed/Semi: 10pts, Solid/Honeycomb: 0pts.
-     * Tubeless bonus: +5pts (only if pneumatic).
+     * Pneumatic (tubed or tubeless): 20pts, Mixed/Semi: 10pts, Solid/Honeycomb: 0pts.
+     * Tubeless bonus: +2pts (~10% more comfortable - can run lower pressure without pinch flats).
      *
      * @param mixed $tire_type      Tire type string.
      * @param mixed $pneumatic_type Pneumatic type string.
      * @return array{score: float, max_possible: int}
      */
     private function score_tire_type($tire_type, $pneumatic_type): array {
-        $score = 0;
-        $type  = strtolower((string) ($tire_type ?? ''));
+        $score      = 0;
+        $type       = strtolower((string) ($tire_type ?? ''));
+        $p_type     = strtolower((string) ($pneumatic_type ?? ''));
+        $is_tubeless = strpos($type, 'tubeless') !== false || strpos($p_type, 'tubeless') !== false;
 
-        if (strpos($type, 'pneumatic') !== false && strpos($type, 'semi') === false) {
-            $score = 20; // Full pneumatic.
+        // Check for pneumatic (including tubeless which is a type of pneumatic).
+        if ($is_tubeless || (strpos($type, 'pneumatic') !== false && strpos($type, 'semi') === false)) {
+            $score = 20; // Full pneumatic (tubed or tubeless).
         } elseif (strpos($type, 'mixed') !== false || strpos($type, 'semi') !== false) {
             $score = 10; // Mixed or semi-pneumatic.
         } elseif (strpos($type, 'solid') !== false || strpos($type, 'honeycomb') !== false) {
             $score = 0; // Solid/honeycomb = no comfort.
         }
 
-        // Tubeless bonus (only if pneumatic).
-        if ($score >= 20) {
-            $p_type = strtolower((string) ($pneumatic_type ?? ''));
-            if (strpos($p_type, 'tubeless') !== false) {
-                $score += 5;
-            }
+        // Tubeless bonus (~10% more comfortable - can run lower pressure).
+        if ($score >= 20 && $is_tubeless) {
+            $score += 2;
         }
 
-        return ['score' => min(25, $score), 'max_possible' => 25];
+        return ['score' => min(22, $score), 'max_possible' => 22];
     }
 
     /**
@@ -941,75 +944,63 @@ class ProductScorer {
     }
 
     /**
-     * Score tire safety (15 pts max).
+     * Score tire safety (40 pts max).
      *
-     * Considers tire type and size relative to speed.
+     * Tire type: 25 pts (pneumatic safest, solid unsafe)
+     * Tire size: 15 pts (larger = safer, absolute size)
      *
      * @param array $specs Product specs.
      * @return array{score: float, max_possible: int}
      */
     private function score_tire_safety(array $specs): array {
-        $top_speed  = (float) ($this->get_top_level_value($specs, 'manufacturer_top_speed') ?? 20); // Default to moderate.
         $tire_type  = strtolower((string) ($this->get_nested_value($specs, 'wheels.tire_type') ?? ''));
         $front_size = $this->get_nested_value($specs, 'wheels.tire_size_front');
         $rear_size  = $this->get_nested_value($specs, 'wheels.tire_size_rear');
 
         $score = 0;
 
-        // Tire type scoring (10 pts max).
+        // Tire type scoring (25 pts max).
+        // Check for tubeless in tire_type (tubeless is a type of pneumatic).
+        $is_tubeless       = strpos($tire_type, 'tubeless') !== false;
         $is_solid          = strpos($tire_type, 'solid') !== false || strpos($tire_type, 'honeycomb') !== false;
-        $is_pneumatic      = strpos($tire_type, 'pneumatic') !== false && strpos($tire_type, 'semi') === false;
+        $is_pneumatic      = $is_tubeless || (strpos($tire_type, 'pneumatic') !== false && strpos($tire_type, 'semi') === false);
         $is_semi_pneumatic = strpos($tire_type, 'semi') !== false || strpos($tire_type, 'mixed') !== false;
 
         if ($is_pneumatic) {
-            $score += 10; // Pneumatic always safe.
+            $score += 25; // Pneumatic (tubed or tubeless) = safest.
         } elseif ($is_semi_pneumatic) {
-            // Semi-pneumatic: okay up to ~30 mph.
-            if ($top_speed <= 20) {
-                $score += 8;
-            } elseif ($top_speed <= 30) {
-                $score += 6;
-            } else {
-                $score += 4;
-            }
+            $score += 12; // Semi-pneumatic = moderate safety.
         } elseif ($is_solid) {
-            // Solid tires: only acceptable at low speeds.
-            if ($top_speed <= 15) {
-                $score += 8;
-            } elseif ($top_speed <= 25) {
-                $score += 5;
-            } else {
-                $score += 2; // Dangerous at high speed.
-            }
+            $score += 0; // Solid = unsafe at any speed.
         } else {
-            // Unknown tire type - assume moderate.
-            $score += 5;
+            // Unknown tire type - assume semi-pneumatic level.
+            $score += 12;
         }
 
-        // Tire size adequacy (5 pts max).
+        // Tire size scoring (15 pts max) - absolute size, not ratio.
+        // Larger tires = more stable, better obstacle handling.
         $sizes = array_filter(
             [$front_size, $rear_size],
             fn($s) => $s !== null && is_numeric($s) && (float) $s > 0
         );
 
         if (!empty($sizes)) {
-            $avg_size   = array_sum(array_map('floatval', $sizes)) / count($sizes);
-            $size_ratio = $avg_size / $top_speed;
+            $avg_size = array_sum(array_map('floatval', $sizes)) / count($sizes);
 
-            if ($size_ratio >= 0.5) {
-                $score += 5; // Excellent - big tires for speed.
-            } elseif ($size_ratio >= 0.35) {
-                $score += 4; // Good.
-            } elseif ($size_ratio >= 0.25) {
-                $score += 3; // Adequate.
-            } elseif ($size_ratio >= 0.18) {
-                $score += 2; // Marginal.
+            if ($avg_size >= 10) {
+                $score += 15; // 10"+ = excellent.
+            } elseif ($avg_size >= 9) {
+                $score += 11; // 9-10" = very good.
+            } elseif ($avg_size >= 8) {
+                $score += 8; // 8-9" = good.
+            } elseif ($avg_size >= 7) {
+                $score += 5; // 7-8" = adequate.
             } else {
-                $score += 1; // Small tires for speed.
+                $score += 0; // <7" = small, less safe.
             }
         }
 
-        return ['score' => min(15, $score), 'max_possible' => 15];
+        return ['score' => $score, 'max_possible' => 40];
     }
 
     /**
@@ -1154,6 +1145,7 @@ class ProductScorer {
      * Score tire type for maintenance (less flats = better).
      *
      * Note: This is inverse of ride quality - solid tires score HIGH here.
+     * Scores: Solid 50, Mixed 30, Tubeless 10, Tubed 0.
      *
      * @param mixed $tire_type Tire type string.
      * @return array{score: float, max_possible: int}
@@ -1161,19 +1153,18 @@ class ProductScorer {
     private function score_maintenance_tire_type($tire_type): array {
         $type = strtolower((string) ($tire_type ?? ''));
 
-        $score = 15; // Default to tubed (most common, worst maintenance).
+        $score = 0; // Default to tubed (most common, worst maintenance).
 
         if (strpos($type, 'solid') !== false || strpos($type, 'honeycomb') !== false) {
-            $score = 45; // Zero flats ever.
+            $score = 50; // Zero flats ever.
         } elseif (strpos($type, 'mixed') !== false || strpos($type, 'semi') !== false) {
             $score = 30; // Semi-pneumatic.
         } elseif (strpos($type, 'tubeless') !== false) {
-            $score = 25; // Rare flats, easy plug fix.
-        } elseif (strpos($type, 'tubed') !== false || strpos($type, 'pneumatic') !== false) {
-            $score = 15; // Most flats, hardest to fix.
+            $score = 10; // Rare flats, easy plug fix.
         }
+        // Tubed pneumatic = 0 (default).
 
-        return ['score' => $score, 'max_possible' => 45];
+        return ['score' => $score, 'max_possible' => 50];
     }
 
     /**
@@ -1183,7 +1174,7 @@ class ProductScorer {
      * @return array{score: float, max_possible: int}
      */
     private function score_self_healing($self_healing): array {
-        return ['score' => $self_healing === true ? 5 : 0, 'max_possible' => 5];
+        return ['score' => $self_healing === true ? 20 : 0, 'max_possible' => 20];
     }
 
     /**
