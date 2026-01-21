@@ -26,23 +26,17 @@ if ( ! $author_id ) {
 }
 
 // Get author data.
-$author_name = get_the_author_meta( 'display_name', $author_id );
-$author_bio  = get_the_author_meta( 'description', $author_id );
-$author_url  = get_author_posts_url( $author_id );
+$author_name  = get_the_author_meta( 'display_name', $author_id );
+$author_bio   = get_the_author_meta( 'description', $author_id );
+$author_url   = get_author_posts_url( $author_id );
+$author_email = get_the_author_meta( 'user_email', $author_id );
 
 // Get author role from ACF field (user_title).
 $author_role = get_field( 'user_title', 'user_' . $author_id );
 
-// Get social links from ACF user fields.
-$social_linkedin  = get_field( 'social_linkedin', 'user_' . $author_id );
-$social_facebook  = get_field( 'social_facebook', 'user_' . $author_id );
-$social_instagram = get_field( 'social_instagram', 'user_' . $author_id );
-$social_twitter   = get_field( 'social_twitter', 'user_' . $author_id );
-$social_youtube   = get_field( 'social_youtube', 'user_' . $author_id );
-$author_email     = get_the_author_meta( 'user_email', $author_id );
-
-// Check if we have any social links.
-$has_socials = $social_linkedin || $social_facebook || $social_instagram || $social_twitter || $social_youtube || $author_email;
+// Get social links from Rank Math.
+$socials     = erh_get_author_socials( $author_id );
+$has_socials = erh_author_has_socials( $author_id ) || $author_email;
 
 // Get avatar - prefer ACF profile_image, fallback to Gravatar.
 $profile_image = get_field( 'profile_image', 'user_' . $author_id );
@@ -69,28 +63,28 @@ if ( $profile_image && ! empty( $profile_image['url'] ) ) {
             </div>
             <?php if ( $has_socials ) : ?>
                 <div class="author-box-socials">
-                    <?php if ( $social_linkedin ) : ?>
-                        <a href="<?php echo esc_url( $social_linkedin ); ?>" class="author-box-social" aria-label="LinkedIn" target="_blank" rel="noopener">
+                    <?php if ( $socials['linkedin'] ) : ?>
+                        <a href="<?php echo esc_url( $socials['linkedin'] ); ?>" class="author-box-social" aria-label="LinkedIn" target="_blank" rel="noopener">
                             <svg class="icon" aria-hidden="true"><use href="#icon-linkedin"></use></svg>
                         </a>
                     <?php endif; ?>
-                    <?php if ( $social_facebook ) : ?>
-                        <a href="<?php echo esc_url( $social_facebook ); ?>" class="author-box-social" aria-label="Facebook" target="_blank" rel="noopener">
+                    <?php if ( $socials['facebook'] ) : ?>
+                        <a href="<?php echo esc_url( $socials['facebook'] ); ?>" class="author-box-social" aria-label="Facebook" target="_blank" rel="noopener">
                             <svg class="icon" aria-hidden="true"><use href="#icon-facebook"></use></svg>
                         </a>
                     <?php endif; ?>
-                    <?php if ( $social_instagram ) : ?>
-                        <a href="<?php echo esc_url( $social_instagram ); ?>" class="author-box-social" aria-label="Instagram" target="_blank" rel="noopener">
+                    <?php if ( $socials['instagram'] ) : ?>
+                        <a href="<?php echo esc_url( $socials['instagram'] ); ?>" class="author-box-social" aria-label="Instagram" target="_blank" rel="noopener">
                             <svg class="icon" aria-hidden="true"><use href="#icon-instagram"></use></svg>
                         </a>
                     <?php endif; ?>
-                    <?php if ( $social_twitter ) : ?>
-                        <a href="<?php echo esc_url( $social_twitter ); ?>" class="author-box-social" aria-label="X" target="_blank" rel="noopener">
+                    <?php if ( $socials['twitter'] ) : ?>
+                        <a href="<?php echo esc_url( $socials['twitter'] ); ?>" class="author-box-social" aria-label="X" target="_blank" rel="noopener">
                             <svg class="icon" aria-hidden="true"><use href="#icon-twitter"></use></svg>
                         </a>
                     <?php endif; ?>
-                    <?php if ( $social_youtube ) : ?>
-                        <a href="<?php echo esc_url( $social_youtube ); ?>" class="author-box-social" aria-label="YouTube" target="_blank" rel="noopener">
+                    <?php if ( $socials['youtube'] ) : ?>
+                        <a href="<?php echo esc_url( $socials['youtube'] ); ?>" class="author-box-social" aria-label="YouTube" target="_blank" rel="noopener">
                             <svg class="icon" aria-hidden="true"><use href="#icon-youtube"></use></svg>
                         </a>
                     <?php endif; ?>

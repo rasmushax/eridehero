@@ -23,6 +23,9 @@ require_once __DIR__ . '/functions/icons.php';
 // Formatting functions (price, date, text utilities).
 require_once __DIR__ . '/functions/formatting.php';
 
+// Author helpers (social links from Rank Math).
+require_once __DIR__ . '/functions/author-helpers.php';
+
 // Score helpers (labels, attributes).
 require_once __DIR__ . '/functions/scores.php';
 
@@ -50,6 +53,9 @@ require_once __DIR__ . '/functions/compare-helpers.php';
 
 // Listicle block helpers.
 require_once __DIR__ . '/functions/listicle-helpers.php';
+
+// Product schema (Rank Math integration).
+require_once __DIR__ . '/functions/product-schema.php';
 
 // =============================================================================
 // CORE UTILITIES

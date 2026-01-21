@@ -719,6 +719,7 @@ function erh_register_acf_fields(): void {
     // ===========================================
 
     // Author Profile Fields (for all users)
+    // Note: Social links now come from Rank Math SEO user fields
     acf_add_local_field_group( array(
         'key'      => 'group_user_profile',
         'title'    => __( 'Author Profile', 'erh' ),
@@ -731,7 +732,6 @@ function erh_register_acf_fields(): void {
                 'return_format' => 'array',
                 'preview_size'  => 'thumbnail',
                 'instructions'  => __( 'Headshot photo for author bylines and bio sections. Recommended: square, at least 200×200px.', 'erh' ),
-                'wrapper'       => array( 'width' => '100' ),
             ),
             array(
                 'key'           => 'field_user_title',
@@ -740,47 +740,6 @@ function erh_register_acf_fields(): void {
                 'type'          => 'text',
                 'instructions'  => __( 'Your role at ERideHero (e.g., "Founder & Lead Reviewer", "Contributing Writer").', 'erh' ),
                 'placeholder'   => 'e.g., Founder & Lead Reviewer',
-                'wrapper'       => array( 'width' => '50' ),
-            ),
-            array(
-                'key'         => 'field_user_social_linkedin',
-                'label'       => __( 'LinkedIn', 'erh' ),
-                'name'        => 'social_linkedin',
-                'type'        => 'url',
-                'placeholder' => 'https://linkedin.com/in/username',
-                'wrapper'     => array( 'width' => '50' ),
-            ),
-            array(
-                'key'         => 'field_user_social_facebook',
-                'label'       => __( 'Facebook', 'erh' ),
-                'name'        => 'social_facebook',
-                'type'        => 'url',
-                'placeholder' => 'https://facebook.com/username',
-                'wrapper'     => array( 'width' => '50' ),
-            ),
-            array(
-                'key'         => 'field_user_social_instagram',
-                'label'       => __( 'Instagram', 'erh' ),
-                'name'        => 'social_instagram',
-                'type'        => 'url',
-                'placeholder' => 'https://instagram.com/username',
-                'wrapper'     => array( 'width' => '50' ),
-            ),
-            array(
-                'key'         => 'field_user_social_twitter',
-                'label'       => __( 'X (Twitter)', 'erh' ),
-                'name'        => 'social_twitter',
-                'type'        => 'url',
-                'placeholder' => 'https://x.com/username',
-                'wrapper'     => array( 'width' => '50' ),
-            ),
-            array(
-                'key'         => 'field_user_social_youtube',
-                'label'       => __( 'YouTube', 'erh' ),
-                'name'        => 'social_youtube',
-                'type'        => 'url',
-                'placeholder' => 'https://youtube.com/@channel',
-                'wrapper'     => array( 'width' => '50' ),
             ),
         ),
         'location' => array(

@@ -431,6 +431,109 @@
 
 
 /* =============================================
+   Author Archive Header
+   ============================================= */
+
+.author-header {
+    display: flex;
+    gap: var(--space-6);
+    padding: var(--space-14) 0 var(--space-8);
+}
+
+.author-header-avatar {
+    flex-shrink: 0;
+}
+
+.author-header-avatar img {
+    width: 120px;
+    height: 120px;
+    border-radius: var(--radius-full);
+    object-fit: cover;
+}
+
+.author-header-content {
+    flex: 1;
+    min-width: 0;
+}
+
+.author-header-top {
+    display: flex;
+    align-items: flex-start;
+    justify-content: space-between;
+    gap: var(--space-4);
+    margin-bottom: var(--space-3);
+}
+
+.author-header-info {
+    display: flex;
+    flex-direction: column;
+    gap: var(--space-1);
+}
+
+.author-header-name {
+    font-size: var(--text-4xl);
+    font-weight: var(--font-bold);
+    color: var(--color-dark);
+    margin: 0;
+    letter-spacing: var(--tracking-tight);
+}
+
+.author-header-role {
+    font-size: var(--text-base);
+    color: var(--color-muted);
+}
+
+.author-header-socials {
+    display: flex;
+    align-items: center;
+    gap: var(--space-1);
+}
+
+.author-header-social {
+    display: flex;
+    align-items: center;
+    justify-content: center;
+    width: 36px;
+    height: 36px;
+    color: var(--color-muted);
+    border-radius: var(--radius-md);
+    transition: color var(--transition-fast), background-color var(--transition-fast);
+}
+
+.author-header-social:hover {
+    color: var(--color-dark);
+    background-color: var(--color-bg);
+}
+
+.author-header-social .icon {
+    width: 20px;
+    height: 20px;
+}
+
+.author-header-bio {
+    font-size: var(--text-base);
+    color: var(--color-body);
+    line-height: var(--leading-relaxed);
+    margin: 0;
+    max-width: 65ch;
+}
+
+/* Author Archive Card Overrides
+   ------------------------------------------ */
+.author-archive .archive-card {
+    gap: 0;
+}
+
+.author-archive .archive-card-title {
+    margin-top: var(--space-3);
+}
+
+.author-archive .archive-card-meta {
+    margin-top: 0;
+}
+
+
+/* =============================================
    Responsive Styles
    ============================================= */
 
@@ -480,6 +583,20 @@
     .pagination-btn {
         padding: var(--space-3);
     }
+
+    /* Author header responsive */
+    .author-header {
+        padding-top: var(--space-10);
+    }
+
+    .author-header-top {
+        flex-direction: column;
+        gap: var(--space-3);
+    }
+
+    .author-header-name {
+        font-size: var(--text-3xl);
+    }
 }
 
 @media (max-width: 600px) {
@@ -525,5 +642,34 @@
 
     .pagination-ellipsis {
         width: 24px;
+    }
+
+    /* Author header mobile */
+    .author-header {
+        flex-direction: column;
+        align-items: center;
+        text-align: center;
+        gap: var(--space-4);
+    }
+
+    .author-header-avatar img {
+        width: 100px;
+        height: 100px;
+    }
+
+    .author-header-top {
+        align-items: center;
+    }
+
+    .author-header-info {
+        align-items: center;
+    }
+
+    .author-header-name {
+        font-size: var(--text-2xl);
+    }
+
+    .author-header-bio {
+        text-align: center;
     }
 }

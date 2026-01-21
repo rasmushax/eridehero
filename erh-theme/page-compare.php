@@ -511,10 +511,9 @@ window.erhData.specConfig = <?php echo wp_json_encode( \ERH\Config\SpecConfig::e
 // Schema.org JSON-LD for curated comparisons only (indexed pages).
 // Uses US prices since Google crawls as US user.
 if ( $is_curated && ! empty( $compare_products ) ) :
-	// Fetch US pricing directly from cache for schema (compare_products only has user's geo).
-	$product_cache = new ERH\Database\ProductCache();
+	$schema_items = array_map( function( $product, $index ) {
+		$product_id = (int) $product['id'];
 
-	$schema_items = array_map( function( $product, $index ) use ( $product_cache ) {
 		$item = [
 			'@type'    => 'ListItem',
 			'position' => $index + 1,
@@ -526,17 +525,24 @@ if ( $is_curated && ! empty( $compare_products ) ) :
 			],
 		];
 
-		// Get US pricing from cache for schema (not user's geo).
-		$cached_data = $product_cache->get( (int) $product['id'] );
-		$us_pricing  = $cached_data['price_history']['US'] ?? null;
+		// Get all US offers from HFT for schema.
+		$offers = erh_get_product_offers_for_schema( $product_id );
 
-		if ( $us_pricing && ! empty( $us_pricing['current_price'] ) ) {
-			$item['item']['offers'] = [
-				'@type'         => 'Offer',
-				'price'         => $us_pricing['current_price'],
-				'priceCurrency' => 'USD',
-				'availability'  => ! empty( $us_pricing['instock'] ) ? 'https://schema.org/InStock' : 'https://schema.org/OutOfStock',
-			];
+		if ( ! empty( $offers ) ) {
+			if ( count( $offers ) === 1 ) {
+				$item['item']['offers'] = $offers[0];
+			} else {
+				// Multiple offers - use AggregateOffer.
+				$prices = array_column( $offers, 'price' );
+				$item['item']['offers'] = [
+					'@type'         => 'AggregateOffer',
+					'lowPrice'      => min( $prices ),
+					'highPrice'     => max( $prices ),
+					'priceCurrency' => 'USD',
+					'offerCount'    => count( $offers ),
+					'offers'        => $offers,
+				];
+			}
 		}
 
 		return $item;
@@ -591,15 +597,8 @@ if ( $is_curated && ! empty( $compare_products ) ) :
 		$profile_img   = get_field( 'profile_image', 'user_' . $schema_author_id );
 		$author_avatar = $profile_img['url'] ?? get_avatar_url( $schema_author_id, [ 'size' => 200 ] );
 
-		// Collect sameAs social links.
-		$same_as = [];
-		$social_fields = [ 'social_linkedin', 'social_facebook', 'social_instagram', 'social_twitter', 'social_youtube' ];
-		foreach ( $social_fields as $field ) {
-			$url = get_field( $field, 'user_' . $schema_author_id );
-			if ( $url ) {
-				$same_as[] = $url;
-			}
-		}
+		// Collect sameAs social links from Rank Math.
+		$same_as = erh_get_author_sameas_urls( $schema_author_id );
 
 		$author_schema = [
 			'@context'    => 'https://schema.org',
