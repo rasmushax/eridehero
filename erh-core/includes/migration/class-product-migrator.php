@@ -367,11 +367,11 @@ class ProductMigrator {
             'charging_time' => $acf['charging_time'] ?? '',
         ];
 
-        // Brakes group - map old array to front/rear selects.
+        // Brakes group - leave front/rear blank (structure change), keep regen boolean.
         $brakes = $this->normalize_array($acf['brakes'] ?? []);
         $escooter['brakes'] = [
-            'front'        => $this->map_brake_type_select($brakes),
-            'rear'         => $this->map_brake_type_select($brakes),
+            'front'        => '',
+            'rear'         => '',
             'regenerative' => in_array('Electronic', $brakes, true) || in_array('Regen', $brakes, true),
         ];
 
