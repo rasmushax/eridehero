@@ -30,6 +30,7 @@ return array(
     'ERH\\Comparison\\AdvantageCalculatorFactory' => $baseDir . '/includes/comparison/class-advantage-calculator-factory.php',
     'ERH\\Comparison\\AdvantageCalculatorInterface' => $baseDir . '/includes/comparison/interface-advantage-calculator.php',
     'ERH\\Comparison\\Calculators\\EscooterAdvantages' => $baseDir . '/includes/comparison/calculators/class-escooter-advantages.php',
+    'ERH\\Comparison\\PriceBracketConfig' => $baseDir . '/includes/comparison/class-price-bracket-config.php',
     'ERH\\Config\\SpecConfig' => $baseDir . '/includes/config/class-spec-config.php',
     'ERH\\Core' => $baseDir . '/includes/class-core.php',
     'ERH\\Cron\\CacheRebuildJob' => $baseDir . '/includes/cron/class-cache-rebuild-job.php',

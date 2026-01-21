@@ -228,14 +228,15 @@
     color: var(--color-white);
 }
 
-.nav-item .dropdown-content h4 {
+.dropdown-item-title {
+    display: block;
     font-size: var(--text-base);
     font-weight: var(--font-semibold);
     color: var(--color-dark);
     line-height: var(--leading-snug);
 }
 
-.nav-item .dropdown-content span {
+.nav-item .dropdown-content span:not(.dropdown-item-title) {
     font-size: var(--text-sm);
     color: var(--color-muted);
 }
@@ -262,7 +263,7 @@
     margin-bottom: var(--space-6);
 }
 
-.mega-dropdown-header h3 {
+.mega-dropdown-title {
     font-size: var(--text-base);
     font-weight: var(--font-semibold);
     color: var(--color-dark);
@@ -302,8 +303,8 @@
     transition: all var(--transition-fast);
 }
 
-.mega-item:hover .mega-content h4,
-.mega-item:focus .mega-content h4 {
+.mega-item:hover .mega-item-title,
+.mega-item:focus .mega-item-title {
     color: var(--color-primary);
 }
 
@@ -336,14 +337,15 @@
     color: var(--color-white);
 }
 
-.mega-content h4 {
+.mega-item-title {
+    display: block;
     font-size: var(--text-sm);
     font-weight: var(--font-semibold);
     color: var(--color-dark);
     transition: color var(--transition-fast);
 }
 
-.mega-content span {
+.mega-content span:not(.mega-item-title) {
     font-size: var(--text-tiny);
     color: var(--color-body);
 }
@@ -980,8 +982,8 @@
     transition: all var(--transition-fast);
 }
 
-.mobile-submenu-item:hover .mobile-submenu-content h4,
-.mobile-submenu-item:focus .mobile-submenu-content h4 {
+.mobile-submenu-item:hover .mobile-submenu-title,
+.mobile-submenu-item:focus .mobile-submenu-title {
     color: var(--color-primary);
 }
 
@@ -1014,14 +1016,15 @@
     transition: color var(--transition-fast);
 }
 
-.mobile-submenu-content h4 {
+.mobile-submenu-title {
+    display: block;
     font-size: 15px;
     font-weight: var(--font-semibold);
     color: var(--color-dark);
     transition: color var(--transition-fast);
 }
 
-.mobile-submenu-content span {
+.mobile-submenu-content span:not(.mobile-submenu-title) {
     font-size: 13px;
     color: var(--color-muted);
 }
@@ -1319,11 +1322,11 @@
         height: 18px;
     }
 
-    .mobile-submenu-content h4 {
+    .mobile-submenu-title {
         font-size: var(--text-sm);
     }
 
-    .mobile-submenu-content span {
+    .mobile-submenu-content span:not(.mobile-submenu-title) {
         font-size: var(--text-xs);
     }
 }

@@ -22,7 +22,7 @@ if ( ! defined( 'ABSPATH' ) ) {
                 <?php erh_the_icon( 'hoverboard' ); ?>
             </div>
             <div class="dropdown-content">
-                <h4><?php esc_html_e( 'Hoverboards', 'erh' ); ?></h4>
+                <span class="dropdown-item-title"><?php esc_html_e( 'Hoverboards', 'erh' ); ?></span>
                 <span><?php esc_html_e( '10 reviews', 'erh' ); ?></span>
             </div>
         </a>
@@ -31,7 +31,7 @@ if ( ! defined( 'ABSPATH' ) ) {
                 <?php erh_the_icon( 'eskate' ); ?>
             </div>
             <div class="dropdown-content">
-                <h4><?php esc_html_e( 'E-Skateboards', 'erh' ); ?></h4>
+                <span class="dropdown-item-title"><?php esc_html_e( 'E-Skateboards', 'erh' ); ?></span>
                 <span><?php esc_html_e( '8 reviews', 'erh' ); ?></span>
             </div>
         </a>
@@ -40,7 +40,7 @@ if ( ! defined( 'ABSPATH' ) ) {
                 <?php erh_the_icon( 'book' ); ?>
             </div>
             <div class="dropdown-content">
-                <h4><?php esc_html_e( 'Skating', 'erh' ); ?></h4>
+                <span class="dropdown-item-title"><?php esc_html_e( 'Skating', 'erh' ); ?></span>
                 <span><?php esc_html_e( '6 guides', 'erh' ); ?></span>
             </div>
         </a>
@@ -50,7 +50,7 @@ if ( ! defined( 'ABSPATH' ) ) {
                 <?php erh_the_icon( 'book' ); ?>
             </div>
             <div class="dropdown-content">
-                <h4><?php esc_html_e( 'All buying guides', 'erh' ); ?></h4>
+                <span class="dropdown-item-title"><?php esc_html_e( 'All buying guides', 'erh' ); ?></span>
                 <span><?php esc_html_e( '14 guides', 'erh' ); ?></span>
             </div>
         </a>

@@ -12,6 +12,8 @@ declare(strict_types=1);
 namespace ERH\Api;
 
 use ERH\CacheKeys;
+use ERH\Comparison\AdvantageCalculatorFactory;
+use ERH\Database\ProductCache;
 use WP_REST_Controller;
 use WP_REST_Server;
 use WP_REST_Request;
@@ -124,6 +126,28 @@ class RestProducts extends WP_REST_Controller {
                 ],
             ],
         ]);
+
+        // Get product analysis (advantages/weaknesses): GET /erh/v1/products/{id}/analysis?geo=US
+        register_rest_route($this->namespace, '/' . $this->rest_base . '/(?P<id>\d+)/analysis', [
+            [
+                'methods'             => WP_REST_Server::READABLE,
+                'callback'            => [$this, 'get_product_analysis'],
+                'permission_callback' => '__return_true',
+                'args'                => [
+                    'id' => [
+                        'description' => 'Product ID',
+                        'type'        => 'integer',
+                        'required'    => true,
+                    ],
+                    'geo' => [
+                        'description' => 'Region code for pricing (US, GB, EU, CA, AU)',
+                        'type'        => 'string',
+                        'default'     => 'US',
+                        'enum'        => self::SUPPORTED_REGIONS,
+                    ],
+                ],
+            ],
+        ]);
     }
 
     /**
@@ -205,6 +229,120 @@ class RestProducts extends WP_REST_Controller {
         set_transient($cache_key, $response_data, 2 * HOUR_IN_SECONDS);
 
         $response = new WP_REST_Response($response_data, 200);
+        $response->header('X-ERH-Cache', 'MISS');
+        return $response;
+    }
+
+    /**
+     * Get product analysis (advantages and weaknesses).
+     *
+     * Compares a single product against others in its price bracket
+     * to identify strengths and weaknesses.
+     *
+     * @param WP_REST_Request $request The REST request.
+     * @return WP_REST_Response|WP_Error Response with analysis data.
+     */
+    public function get_product_analysis(WP_REST_Request $request) {
+        $product_id = (int) $request->get_param('id');
+        $geo = strtoupper($request->get_param('geo'));
+
+        $this->log('get_product_analysis called', [
+            'product_id' => $product_id,
+            'geo'        => $geo,
+        ]);
+
+        // TEMPORARILY DISABLED: Check transient cache (2 hours).
+        // $cache_key = CacheKeys::productAnalysis($product_id, $geo);
+        // $cached = get_transient($cache_key);
+        // if ($cached !== false) {
+        //     $this->log('Cache HIT', ['cache_key' => $cache_key]);
+        //     $response = new WP_REST_Response($cached, 200);
+        //     $response->header('X-ERH-Cache', 'HIT');
+        //     return $response;
+        // }
+
+        $this->log('Cache DISABLED for debugging');
+
+        // Get product from ProductCache.
+        $cache = new ProductCache();
+        $product = $cache->get($product_id);
+        if (!$product) {
+            $this->log('Product not found in cache', ['product_id' => $product_id]);
+            return new WP_Error(
+                'product_not_found',
+                __('Product not found.', 'erh-core'),
+                ['status' => 404]
+            );
+        }
+
+        // Get product type.
+        $product_type = $product['product_type'] ?? '';
+        $this->log('Product type', ['type' => $product_type]);
+
+        // Currently only escooters are supported.
+        if ($product_type !== 'Electric Scooter') {
+            $this->log('Unsupported product type', ['type' => $product_type]);
+            return new WP_Error(
+                'unsupported_type',
+                __('Analysis is only available for electric scooters at this time.', 'erh-core'),
+                ['status' => 400]
+            );
+        }
+
+        // Get calculator for this product type.
+        $calculator = AdvantageCalculatorFactory::get($product_type);
+        if (!$calculator) {
+            $this->log('No calculator found for type', ['type' => $product_type]);
+            return new WP_Error(
+                'calculator_not_found',
+                __('Unable to analyze this product type.', 'erh-core'),
+                ['status' => 500]
+            );
+        }
+
+        // Calculate analysis.
+        $raw_analysis = $calculator->calculate_single($product, $geo);
+        if ($raw_analysis === null) {
+            $this->log('Calculator returned null');
+            return new WP_Error(
+                'analysis_failed',
+                __('Unable to generate analysis for this product.', 'erh-core'),
+                ['status' => 500]
+            );
+        }
+
+        // Transform to expected response format.
+        $analysis = [
+            'product' => [
+                'id'           => $product_id,
+                'name'         => $product['name'] ?? '',
+                'product_type' => $product['product_type'] ?? '',
+                'scores'       => $product['specs']['scores'] ?? [],
+            ],
+            'price_context' => [
+                'geo'                 => $geo,
+                'currency'            => $this->get_currency_for_geo($geo),
+                'current_price'       => $product['price_history'][$geo]['current_price'] ?? null,
+                'bracket'             => $raw_analysis['bracket'],
+                'products_in_bracket' => $raw_analysis['products_in_set'],
+                'comparison_mode'     => $raw_analysis['comparison_mode'],
+            ],
+            'advantages'     => $raw_analysis['advantages'],
+            'weaknesses'     => $raw_analysis['weaknesses'],
+            'bracket_scores' => $raw_analysis['bracket_scores'] ?? [],
+            'fallback'       => $raw_analysis['fallback'],
+        ];
+
+        $this->log('Analysis complete', [
+            'advantages'  => count($analysis['advantages'] ?? []),
+            'weaknesses'  => count($analysis['weaknesses'] ?? []),
+            'mode'        => $analysis['price_context']['comparison_mode'] ?? 'unknown',
+        ]);
+
+        // TEMPORARILY DISABLED: Cache for 2 hours.
+        // set_transient($cache_key, $analysis, 2 * HOUR_IN_SECONDS);
+
+        $response = new WP_REST_Response($analysis, 200);
         $response->header('X-ERH-Cache', 'MISS');
         return $response;
     }

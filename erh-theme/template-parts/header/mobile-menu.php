@@ -32,7 +32,7 @@ if ( ! defined( 'ABSPATH' ) ) {
                                 <?php erh_the_icon( 'search' ); ?>
                             </div>
                             <div class="mobile-submenu-content">
-                                <h4><?php esc_html_e( 'Product finder', 'erh' ); ?></h4>
+                                <span class="mobile-submenu-title"><?php esc_html_e( 'Product finder', 'erh' ); ?></span>
                                 <span><?php esc_html_e( '200+ scooters', 'erh' ); ?></span>
                             </div>
                         </a>
@@ -41,7 +41,7 @@ if ( ! defined( 'ABSPATH' ) ) {
                                 <?php erh_the_icon( 'star' ); ?>
                             </div>
                             <div class="mobile-submenu-content">
-                                <h4><?php esc_html_e( 'Reviews', 'erh' ); ?></h4>
+                                <span class="mobile-submenu-title"><?php esc_html_e( 'Reviews', 'erh' ); ?></span>
                                 <span><?php esc_html_e( '58 in-depth reviews', 'erh' ); ?></span>
                             </div>
                         </a>
@@ -50,7 +50,7 @@ if ( ! defined( 'ABSPATH' ) ) {
                                 <?php erh_the_icon( 'grid' ); ?>
                             </div>
                             <div class="mobile-submenu-content">
-                                <h4><?php esc_html_e( 'H2H Compare', 'erh' ); ?></h4>
+                                <span class="mobile-submenu-title"><?php esc_html_e( 'H2H Compare', 'erh' ); ?></span>
                                 <span><?php esc_html_e( 'Side-by-side specs', 'erh' ); ?></span>
                             </div>
                         </a>
@@ -59,7 +59,7 @@ if ( ! defined( 'ABSPATH' ) ) {
                                 <?php erh_the_icon( 'book' ); ?>
                             </div>
                             <div class="mobile-submenu-content">
-                                <h4><?php esc_html_e( 'Buying guides', 'erh' ); ?></h4>
+                                <span class="mobile-submenu-title"><?php esc_html_e( 'Buying guides', 'erh' ); ?></span>
                                 <span><?php esc_html_e( 'Expert recommendations', 'erh' ); ?></span>
                             </div>
                         </a>
@@ -94,7 +94,7 @@ if ( ! defined( 'ABSPATH' ) ) {
                                 <?php erh_the_icon( 'search' ); ?>
                             </div>
                             <div class="mobile-submenu-content">
-                                <h4><?php esc_html_e( 'Product finder', 'erh' ); ?></h4>
+                                <span class="mobile-submenu-title"><?php esc_html_e( 'Product finder', 'erh' ); ?></span>
                                 <span><?php esc_html_e( '80+ e-bikes', 'erh' ); ?></span>
                             </div>
                         </a>
@@ -103,7 +103,7 @@ if ( ! defined( 'ABSPATH' ) ) {
                                 <?php erh_the_icon( 'star' ); ?>
                             </div>
                             <div class="mobile-submenu-content">
-                                <h4><?php esc_html_e( 'Reviews', 'erh' ); ?></h4>
+                                <span class="mobile-submenu-title"><?php esc_html_e( 'Reviews', 'erh' ); ?></span>
                                 <span><?php esc_html_e( '12 in-depth reviews', 'erh' ); ?></span>
                             </div>
                         </a>
@@ -112,7 +112,7 @@ if ( ! defined( 'ABSPATH' ) ) {
                                 <?php erh_the_icon( 'grid' ); ?>
                             </div>
                             <div class="mobile-submenu-content">
-                                <h4><?php esc_html_e( 'H2H Compare', 'erh' ); ?></h4>
+                                <span class="mobile-submenu-title"><?php esc_html_e( 'H2H Compare', 'erh' ); ?></span>
                                 <span><?php esc_html_e( 'Side-by-side specs', 'erh' ); ?></span>
                             </div>
                         </a>
@@ -121,7 +121,7 @@ if ( ! defined( 'ABSPATH' ) ) {
                                 <?php erh_the_icon( 'book' ); ?>
                             </div>
                             <div class="mobile-submenu-content">
-                                <h4><?php esc_html_e( 'Buying guides', 'erh' ); ?></h4>
+                                <span class="mobile-submenu-title"><?php esc_html_e( 'Buying guides', 'erh' ); ?></span>
                                 <span><?php esc_html_e( 'Expert recommendations', 'erh' ); ?></span>
                             </div>
                         </a>
@@ -159,7 +159,7 @@ if ( ! defined( 'ABSPATH' ) ) {
                                 <?php erh_the_icon( 'hoverboard' ); ?>
                             </div>
                             <div class="mobile-submenu-content">
-                                <h4><?php esc_html_e( 'Hoverboards', 'erh' ); ?></h4>
+                                <span class="mobile-submenu-title"><?php esc_html_e( 'Hoverboards', 'erh' ); ?></span>
                                 <span><?php esc_html_e( '10 reviews', 'erh' ); ?></span>
                             </div>
                         </a>
@@ -168,7 +168,7 @@ if ( ! defined( 'ABSPATH' ) ) {
                                 <?php erh_the_icon( 'eskate' ); ?>
                             </div>
                             <div class="mobile-submenu-content">
-                                <h4><?php esc_html_e( 'E-Skateboards', 'erh' ); ?></h4>
+                                <span class="mobile-submenu-title"><?php esc_html_e( 'E-Skateboards', 'erh' ); ?></span>
                                 <span><?php esc_html_e( '8 reviews', 'erh' ); ?></span>
                             </div>
                         </a>
@@ -177,7 +177,7 @@ if ( ! defined( 'ABSPATH' ) ) {
                                 <?php erh_the_icon( 'book' ); ?>
                             </div>
                             <div class="mobile-submenu-content">
-                                <h4><?php esc_html_e( 'Skating', 'erh' ); ?></h4>
+                                <span class="mobile-submenu-title"><?php esc_html_e( 'Skating', 'erh' ); ?></span>
                                 <span><?php esc_html_e( '6 guides', 'erh' ); ?></span>
                             </div>
                         </a>
@@ -187,7 +187,7 @@ if ( ! defined( 'ABSPATH' ) ) {
                                 <?php erh_the_icon( 'book' ); ?>
                             </div>
                             <div class="mobile-submenu-content">
-                                <h4><?php esc_html_e( 'All buying guides', 'erh' ); ?></h4>
+                                <span class="mobile-submenu-title"><?php esc_html_e( 'All buying guides', 'erh' ); ?></span>
                                 <span><?php esc_html_e( '14 guides', 'erh' ); ?></span>
                             </div>
                         </a>

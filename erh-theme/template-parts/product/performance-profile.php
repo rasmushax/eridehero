@@ -1,9 +1,9 @@
 <?php
 /**
- * Product Performance Profile
+ * Product Performance Overview
  *
- * Displays a radar chart and "What to Know" insights.
- * Phase 11 TODO: Replace hardcoded insights with real percentile-based data.
+ * Displays a radar chart (category scores + bracket average) and strengths/weaknesses analysis.
+ * Both are geo-dependent (price brackets vary by region) and loaded via JS with skeletons.
  *
  * @package ERideHero
  *
@@ -27,66 +27,89 @@ $category_key = $args['category_key'] ?? 'escooter';
 if ( ! $product_id ) {
     return;
 }
-
-// TODO Phase 11: Replace with real percentile-based insights from database.
-// For now, hardcoded examples to nail the visual design.
-$insights = array(
-    array(
-        'type'  => 'positive',
-        'label' => '40mi range',
-        'note'  => 'above average',
-    ),
-    array(
-        'type'  => 'positive',
-        'label' => 'Tubeless tires',
-        'note'  => 'low maintenance',
-    ),
-    array(
-        'type'  => 'neutral',
-        'label' => '48.7 lbs',
-        'note'  => 'heavier than most',
-    ),
-    array(
-        'type'  => 'neutral',
-        'label' => '6h charge time',
-        'note'  => 'slower than average',
-    ),
-);
 ?>
 
-<section class="content-section performance-profile" id="performance" data-performance-profile data-product-id="<?php echo esc_attr( $product_id ); ?>" data-category="<?php echo esc_attr( $category_key ); ?>">
-    <h2 class="section-title">Performance Profile</h2>
+<section class="content-section performance-overview" id="performance" data-performance-profile data-product-id="<?php echo esc_attr( $product_id ); ?>" data-category="<?php echo esc_attr( $category_key ); ?>">
+    <h2 class="section-title">Performance Overview</h2>
 
-    <div class="performance-profile-content">
-        <!-- Radar Chart Container -->
+    <div class="performance-overview-content">
+        <!-- Radar Chart (geo-dependent for bracket average, loaded via JS) -->
         <div class="performance-radar" data-radar-chart>
-            <!-- Loading state -->
-            <div class="performance-radar-loading" data-radar-loading>
-                <div class="skeleton" style="width: 280px; height: 280px; border-radius: 50%;"></div>
+            <!-- Skeleton loading state -->
+            <div class="performance-radar-skeleton" data-radar-skeleton>
+                <div class="skeleton skeleton--circle" style="width: 280px; height: 280px; margin: 0 auto;"></div>
             </div>
             <!-- Chart rendered by JS -->
+            <div class="performance-radar-content" data-radar-content style="display: none;"></div>
         </div>
 
-        <!-- What to Know Insights -->
-        <div class="performance-insights">
-            <h3 class="performance-insights-title">What to Know</h3>
-            <ul class="performance-insights-list">
-                <?php foreach ( $insights as $insight ) : ?>
-                    <li class="performance-insight performance-insight--<?php echo esc_attr( $insight['type'] ); ?>">
-                        <?php if ( 'positive' === $insight['type'] ) : ?>
-                            <?php echo erh_icon( 'check', 'performance-insight-icon' ); ?>
-                        <?php elseif ( 'negative' === $insight['type'] ) : ?>
-                            <?php echo erh_icon( 'x', 'performance-insight-icon' ); ?>
-                        <?php else : ?>
-                            <?php echo erh_icon( 'info', 'performance-insight-icon' ); ?>
-                        <?php endif; ?>
-                        <span class="performance-insight-text">
-                            <strong><?php echo esc_html( $insight['label'] ); ?></strong>
-                            <span class="performance-insight-note"><?php echo esc_html( $insight['note'] ); ?></span>
-                        </span>
-                    </li>
-                <?php endforeach; ?>
-            </ul>
+        <!-- Strengths & Weaknesses (geo-dependent, loaded via JS) -->
+        <div class="performance-analysis" data-product-analysis>
+            <!-- Skeleton loading state (shown until JS hydrates) -->
+            <div class="performance-analysis-skeleton" data-analysis-skeleton>
+                <div class="performance-analysis-group">
+                    <div class="skeleton skeleton-text" style="width: 80px; height: 16px; margin-bottom: 12px;"></div>
+                    <div class="skeleton skeleton-text" style="width: 100%; height: 44px; margin-bottom: 8px;"></div>
+                    <div class="skeleton skeleton-text" style="width: 100%; height: 44px; margin-bottom: 8px;"></div>
+                    <div class="skeleton skeleton-text" style="width: 100%; height: 44px;"></div>
+                </div>
+                <div class="performance-analysis-group">
+                    <div class="skeleton skeleton-text" style="width: 90px; height: 16px; margin-bottom: 12px;"></div>
+                    <div class="skeleton skeleton-text" style="width: 100%; height: 44px; margin-bottom: 8px;"></div>
+                    <div class="skeleton skeleton-text" style="width: 100%; height: 44px;"></div>
+                </div>
+            </div>
+
+            <!-- Content rendered by JS -->
+            <div class="performance-analysis-content" data-analysis-content style="display: none;">
+                <!-- Strengths -->
+                <div class="analysis-group analysis-strengths">
+                    <h3 class="analysis-group-title">Strengths</h3>
+                    <ul class="analysis-list" data-strengths-list>
+                        <!-- Populated by JS -->
+                    </ul>
+                </div>
+
+                <!-- Weaknesses -->
+                <div class="analysis-group analysis-weaknesses">
+                    <h3 class="analysis-group-title">Weaknesses</h3>
+                    <ul class="analysis-list" data-weaknesses-list>
+                        <!-- Populated by JS -->
+                    </ul>
+                </div>
+
+                <!-- Bracket context with popover -->
+                <div class="analysis-context" data-analysis-context>
+                    <span class="analysis-context-text" data-context-text>
+                        <!-- Populated by JS -->
+                    </span>
+                    <div class="popover-wrapper">
+                        <button type="button" class="btn btn-link btn-sm" data-popover-trigger="bracket-info-popover">
+                            <svg class="icon" aria-hidden="true"><use href="#icon-info"></use></svg>
+                            How we compare
+                        </button>
+                        <div id="bracket-info-popover" class="popover popover--top" aria-hidden="true">
+                            <div class="popover-arrow"></div>
+                            <h4 class="popover-title">Price Bracket Comparison</h4>
+                            <p class="popover-text">Strengths and weaknesses are determined by comparing this scooter against others in the same price range.</p>
+                            <p class="popover-text">This ensures fair comparisons — a budget scooter is measured against budget competitors, not premium models.</p>
+                            <p class="popover-text"><strong>Price Brackets:</strong></p>
+                            <ul class="popover-list">
+                                <li>Budget: Under $500</li>
+                                <li>Mid-Range: $500–$1,000</li>
+                                <li>Performance: $1,000–$1,500</li>
+                                <li>Premium: $1,500–$2,500</li>
+                                <li>Ultra: $2,500+</li>
+                            </ul>
+                        </div>
+                    </div>
+                </div>
+            </div>
+
+            <!-- Error/empty state -->
+            <div class="performance-analysis-empty" data-analysis-empty style="display: none;">
+                <p class="analysis-empty-message">Unable to load comparison data.</p>
+            </div>
         </div>
     </div>
 </section>

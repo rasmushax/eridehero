@@ -309,6 +309,98 @@ const verdict = calculatePriceVerdict(currentPrice, avgPrice);
 
 ---
 
+## Single-Product Analysis System
+
+REST endpoint for analyzing a product's strengths and weaknesses by comparing it against other products in the same price bracket.
+
+### Endpoint
+
+```
+GET /erh/v1/products/{id}/analysis?geo=US
+```
+
+Returns advantages and weaknesses for a single product based on price bracket comparison within its category (escooter only for now).
+
+### Price Brackets
+
+Products are compared against others in the same price range:
+
+| Bracket | Range | Label |
+|---------|-------|-------|
+| `budget` | $0-$500 | Budget |
+| `midrange` | $500-$1,000 | Mid-Range |
+| `performance` | $1,000-$1,500 | Performance |
+| `premium` | $1,500-$2,500 | Premium |
+| `ultra` | $2,500+ | Ultra |
+
+**Minimum bracket size**: 5 products. Falls back to category-wide percentile if fewer.
+
+### Analysis Thresholds
+
+A spec qualifies as a **strength** if:
+- Product is in top 20% (percentile ≥ 80), OR
+- Product is 15%+ better than bracket average
+
+A spec qualifies as a **weakness** if:
+- Product is in bottom 20% (percentile ≤ 20), OR
+- Product is 15%+ worse than bracket average
+
+### Analyzed Specs
+
+| Type | Examples |
+|------|----------|
+| Value Metrics | Battery Value ($/Wh), Motor Value ($/W), Range Value ($/mi), Speed Value ($/mph) |
+| Raw Specs | Tested top speed, tested range, battery capacity, motor power, weight, charging time |
+| Efficiency | Speed-to-weight ratio (mph/lb), energy density (Wh/lb), range efficiency (mi/lb) |
+| Composite Scores | Ride quality, maintenance (compared to bracket average) |
+| Absolute Quality | IP rating (not bracket-compared, absolute thresholds) |
+
+### Key Files
+
+| File | Purpose |
+|------|---------|
+| `erh-core/includes/comparison/class-price-bracket-config.php` | Bracket definitions and threshold constants |
+| `erh-core/includes/comparison/calculators/class-escooter-advantages.php` | Main analysis calculator (`calculate_single()`) |
+| `erh-core/includes/api/class-rest-products.php` | REST endpoint handler |
+| `erh-theme/assets/js/components/product-analysis.js` | Frontend rendering |
+| `erh-theme/assets/js/components/product-page.js` | Page orchestrator (single API call for radar + analysis) |
+| `erh-theme/template-parts/product/performance-profile.php` | PHP template with skeleton states |
+
+### Response Structure
+
+```json
+{
+  "product": { "id": 123, "name": "NIU KQi 300X", "scores": {...} },
+  "price_context": {
+    "geo": "US",
+    "current_price": 749,
+    "bracket": { "key": "midrange", "label": "Mid-Range", "min": 500, "max": 1000 },
+    "products_in_bracket": 23,
+    "comparison_mode": "bracket"
+  },
+  "bracket_scores": { "motor_performance": 72, ... },
+  "advantages": [
+    {
+      "spec_key": "value_metrics.price_per_wh",
+      "label": "Battery Value",
+      "text": "Excellent battery value",
+      "comparison": "$1.23/Wh vs $1.65/Wh avg",
+      "percentile": 92,
+      "pct_vs_avg": -25.5
+    }
+  ],
+  "weaknesses": [...]
+}
+```
+
+### Current Status
+
+- **Caching**: Intentionally disabled during testing for fast iteration
+- **Future work**: Add caching after price data is complete and system is tuned
+- **Category support**: Escooter only (other categories can be added later)
+
+---
+
 ## Compare System Architecture
 
 The compare system uses SSR (PHP) + JS hydration for SEO + interactivity.

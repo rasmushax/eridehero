@@ -31,6 +31,7 @@ class ComposerStaticInitb5e889746c5280811e87a72c161db6db
         'ERH\\Comparison\\AdvantageCalculatorFactory' => __DIR__ . '/../..' . '/includes/comparison/class-advantage-calculator-factory.php',
         'ERH\\Comparison\\AdvantageCalculatorInterface' => __DIR__ . '/../..' . '/includes/comparison/interface-advantage-calculator.php',
         'ERH\\Comparison\\Calculators\\EscooterAdvantages' => __DIR__ . '/../..' . '/includes/comparison/calculators/class-escooter-advantages.php',
+        'ERH\\Comparison\\PriceBracketConfig' => __DIR__ . '/../..' . '/includes/comparison/class-price-bracket-config.php',
         'ERH\\Config\\SpecConfig' => __DIR__ . '/../..' . '/includes/config/class-spec-config.php',
         'ERH\\Core' => __DIR__ . '/../..' . '/includes/class-core.php',
         'ERH\\Cron\\CacheRebuildJob' => __DIR__ . '/../..' . '/includes/cron/class-cache-rebuild-job.php',

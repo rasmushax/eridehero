@@ -811,6 +811,75 @@ template-parts/compare/components/   └── utils.js
 
 ---
 
+## Phase 7E: Single-Product Analysis System - COMPLETE ✅
+
+REST endpoint for analyzing a product's strengths/weaknesses by comparing against others in the same price bracket.
+
+### Configuration
+- [x] Create `erh-core/includes/comparison/class-price-bracket-config.php`
+  - Price brackets: Budget ($0-500), Mid-Range ($500-1000), Performance ($1000-1500), Premium ($1500-2500), Ultra ($2500+)
+  - Threshold constants: Top/bottom 20% percentile OR 15% vs average
+  - Minimum bracket size: 5 products (fallback to category-wide)
+
+### Calculator Implementation
+- [x] Implement `calculate_single()` in `class-escooter-advantages.php`
+  - Fetches products in same price bracket with geo pricing
+  - Calculates percentile and pct_vs_avg for each spec
+  - Dual threshold: percentile-based OR average-based qualification
+  - Sanity checks: best-in-bracket values can't be weaknesses
+
+### Analyzed Specs
+- [x] Value metrics: $/Wh, $/W, $/mi, $/mph (lower is better)
+- [x] Raw specs: top speed, range, battery, motor, weight, charging time
+- [x] Efficiency: Speed-to-weight ratio (mph/lb), energy density (Wh/lb), range efficiency (mi/lb)
+- [x] Composite scores: Ride quality, maintenance (compared to bracket average)
+- [x] Absolute quality: IP rating (not bracket-compared, absolute thresholds)
+- [x] Load capacity: Max load (higher is better)
+
+### Label Generation (PHP → JS Single Source of Truth)
+- [x] PHP generates `text` field with tier + metric (e.g., "Excellent range")
+- [x] PHP generates `comparison` field with formatted values (e.g., "24.8 mph vs 21.1 mph avg")
+- [x] Tier labels: Best (top 5%), Excellent (top 10%), Strong (top 20%), Good
+- [x] Weakness tiers: Very low (bottom 5%), Low (bottom 10%), Below average (bottom 20%), Weak
+- [x] Special labels: "Heaviest in class", "Lightest in class", "Most range", etc.
+- [x] Maintenance details: tire type, brake type, self-healing status
+
+### REST Endpoint
+- [x] Add `GET /erh/v1/products/{id}/analysis?geo=US` endpoint
+- [x] Returns: product info, price_context, bracket_scores, advantages[], weaknesses[]
+- [x] Handles fallback to category-wide when bracket too small
+
+### Frontend Components
+- [x] Create `erh-theme/assets/js/components/product-analysis.js`
+  - Renders strengths/weaknesses lists with icons and tooltips
+  - Shows bracket context with "How we compare" popover
+  - Handles empty state (balanced product), error states
+- [x] Update `erh-theme/assets/js/components/product-page.js`
+  - Single API call for radar chart + analysis (shared data)
+  - Passes pre-fetched data to ProductAnalysis (no duplicate fetch)
+- [x] Update `erh-theme/template-parts/product/performance-profile.php`
+  - Skeleton loading states
+  - Content structure for JS hydration
+  - Bracket info popover with price range explanations
+
+### Fixes Applied
+- [x] Fixed "Heaviest" appearing twice (was matching weight ratios)
+- [x] Fixed maintenance details for weaknesses (tubeless, disc brakes, self-healing)
+- [x] Fixed ambiguous "Above-average maintenance" → "Higher maintenance"
+- [x] Fixed max load showing as weakness when product has max value
+- [x] Renamed "Power-to-Weight" to "Speed-to-weight ratio" (unit is mph/lb)
+- [x] Changed "Heaviest" to "Heaviest in class"
+- [x] Value metrics format: "$34.14/mi vs $28.50/mi avg" (not "34.14 $/mi")
+
+### Current Status
+- **Caching**: Intentionally disabled for fast iteration during testing
+- **Next steps**:
+  1. Run more tests when price data is complete
+  2. Tweak thresholds/labels based on real-world output
+  3. Add transient caching at the end
+
+---
+
 ## Phase 8: JavaScript & Polish (Day 19) - PENDING
 
 - [ ] Bundle all JS into `dist/main.min.js`
@@ -926,6 +995,14 @@ erh-core/
 │   │   ├── class-retailer-registry.php
 │   │   ├── class-retailer-logos.php
 │   │   └── class-deals-finder.php
+│   │
+│   ├── comparison/
+│   │   ├── class-price-bracket-config.php   # Price bracket definitions & thresholds
+│   │   ├── class-advantage-calculator-base.php
+│   │   ├── class-advantage-calculator-factory.php
+│   │   ├── interface-advantage-calculator.php
+│   │   └── calculators/
+│   │       └── class-escooter-advantages.php  # E-scooter analysis (calculate_single)
 │   │
 │   ├── scoring/
 │   │   └── class-product-scorer.php     # Product scoring algorithm
@@ -1054,7 +1131,8 @@ erh-theme/
 │   │       ├── account-tabs.js     # Account page tabs
 │   │       ├── account-settings.js # Account settings form
 │   │       ├── account-trackers.js # User tracker management
-│   │       ├── product-page.js     # Product page interactions
+│   │       ├── product-page.js     # Product page interactions (radar + analysis)
+│   │       ├── product-analysis.js # Strengths/weaknesses analysis component
 │   │       ├── similar-products.js # Similar products carousel
 │   │       ├── listicle-item.js    # Listicle block component
 │   │       ├── onboarding.js       # Onboarding flow

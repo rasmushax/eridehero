@@ -2,19 +2,42 @@
  * Product Page Orchestrator
  *
  * Coordinates all functionality for single product pages:
- * - Loads product data (inline or from finder JSON) for performance profile
- * - Initializes RadarChart for performance profile
+ * - Fetches analysis data (geo-dependent) for radar chart with bracket average
+ * - Initializes ProductAnalysis for strengths/weaknesses (shares API cache)
  * - Manages similar products carousel
  *
  * Note: Hero price is updated by price-intel.js (shares the same API call).
  * Note: Specs and similar products are rendered server-side by PHP.
- * Note: "What to Know" insights are currently hardcoded in PHP.
  *
  * @module components/product-page
  */
 
 import { RadarChart } from './radar-chart.js';
+import { ProductAnalysis } from './product-analysis.js';
 import { initCarousel } from '../utils/carousel.js';
+import { getUserGeo } from '../services/geo-price.js';
+
+// =============================================================================
+// Configuration
+// =============================================================================
+
+/**
+ * Score category configuration.
+ * Maps score keys to display names.
+ */
+const SCORE_CONFIG = {
+    motor_performance: { name: 'Motor', icon: 'zap' },
+    range_battery: { name: 'Range & Battery', icon: 'battery' },
+    ride_quality: { name: 'Ride Quality', icon: 'smile' },
+    portability: { name: 'Portability', icon: 'box' },
+    safety: { name: 'Safety', icon: 'shield' },
+    features: { name: 'Features', icon: 'settings' },
+    maintenance: { name: 'Maintenance', icon: 'tool' },
+};
+
+// =============================================================================
+// ProductPage Class
+// =============================================================================
 
 class ProductPage {
     /**
@@ -26,9 +49,14 @@ class ProductPage {
         this.container = container;
         this.productId = parseInt(container.dataset.productId, 10);
         this.category = container.dataset.category || 'escooter';
-        this.product = null;
         this.radarChart = null;
+        this.productAnalysis = null;
         this.carousel = null;
+
+        // DOM elements for radar
+        this.radarContainer = container.querySelector('[data-radar-chart]');
+        this.radarSkeleton = container.querySelector('[data-radar-skeleton]');
+        this.radarContent = container.querySelector('[data-radar-content]');
 
         this.init();
     }
@@ -36,133 +64,201 @@ class ProductPage {
     /**
      * Initialize all components.
      */
-    init() {
-        // Load product data for performance profile (synchronous - reads from inline data)
-        this.loadProductData();
-
-        if (!this.product) {
-            console.warn('ProductPage: Could not load product data');
-            // Performance profile will show empty state
-        }
-
-        // Initialize components that need product data
-        this.initPerformanceProfile();
+    async init() {
+        // Initialize non-geo components immediately
         this.initSimilarCarousel();
-        // Note: Hero price is updated by price-intel.js to avoid duplicate API calls
+
+        // Initialize geo-dependent components (single API call)
+        await this.initPerformanceSection();
     }
 
     /**
-     * Load product data for performance profile.
-     * Reads inline data from PHP (erhData.productData) - no async fetch needed.
+     * Initialize performance section (radar chart + strengths/weaknesses).
+     * Single API call, data shared between components.
      */
-    loadProductData() {
-        // Get from inline data (provided by PHP via wp_localize_script)
-        if (window.erhData?.productData) {
-            this.product = window.erhData.productData;
+    async initPerformanceSection() {
+        try {
+            const geoData = await getUserGeo();
+            const geo = geoData.geo;
+            const data = await this.fetchAnalysis(geo);
+
+            // Render radar chart with the data
+            this.initRadarChart(data);
+
+            // Pass same data to ProductAnalysis (no duplicate fetch)
+            this.initProductAnalysis(data);
+        } catch (error) {
+            console.error('[ProductPage] Failed to load analysis:', error);
+            this.hideRadarSection();
+            this.showAnalysisError();
         }
     }
 
     /**
-     * Initialize performance profile section (radar chart).
-     * Note: "What to Know" insights are hardcoded in PHP for now.
-     * Phase 11 TODO: Implement dynamic insights based on percentile data.
+     * Initialize radar chart with bracket average.
+     *
+     * @param {Object} data - Analysis data from API
      */
-    initPerformanceProfile() {
-        const profileSection = this.container.querySelector('[data-performance-profile]');
-        if (!profileSection) return;
+    initRadarChart(data) {
+        if (!this.radarContainer || !this.radarContent) return;
 
-        const radarContainer = profileSection.querySelector('[data-radar-chart]');
+        if (data?.product?.scores && Object.keys(data.product.scores).length > 0) {
+            this.renderRadarChart(data);
+        } else {
+            // No scores available - hide the section
+            this.hideRadarSection();
+        }
+    }
 
-        // Calculate category scores
-        const scores = this.calculateCategoryScores();
+    /**
+     * Fetch analysis data from API.
+     *
+     * @param {string} geo - Geo region code
+     * @returns {Promise<Object>} Analysis data
+     */
+    async fetchAnalysis(geo) {
+        const { restUrl, nonce } = window.erhData || {};
 
-        if (!scores || Object.keys(scores).length === 0) {
-            // Hide radar loading if no scores available
-            const loadingEl = profileSection.querySelector('[data-radar-loading]');
-            if (loadingEl) loadingEl.style.display = 'none';
+        if (!restUrl || !this.productId) {
+            throw new Error('Missing required data');
+        }
+
+        const url = `${restUrl}products/${this.productId}/analysis?geo=${geo}`;
+
+        const response = await fetch(url, {
+            headers: {
+                'X-WP-Nonce': nonce,
+            },
+        });
+
+        if (!response.ok) {
+            throw new Error(`API error: ${response.status}`);
+        }
+
+        return response.json();
+    }
+
+    /**
+     * Render radar chart with product scores and bracket average.
+     *
+     * @param {Object} data - Analysis data from API
+     */
+    renderRadarChart(data) {
+        const { product, bracket_scores, price_context } = data;
+
+        // Build categories array from score config
+        const categories = Object.entries(SCORE_CONFIG)
+            .filter(([key]) => product.scores[key] !== undefined)
+            .map(([key, config]) => ({
+                key,
+                name: config.name,
+            }));
+
+        if (categories.length === 0) {
+            this.hideRadarSection();
             return;
         }
 
-        // Render radar chart
-        if (radarContainer) {
-            this.renderRadarChart(radarContainer, scores);
-        }
-    }
+        // Build product data for radar chart
+        // Bracket avg first (drawn behind), product second (drawn in front)
+        const productData = [];
+        const chartColors = [];
 
-    /**
-     * Calculate category scores for the product.
-     * Uses pre-calculated scores from inline product data (specs.scores).
-     *
-     * @returns {Object} Category scores keyed by category id
-     */
-    calculateCategoryScores() {
-        if (!this.product?.specs?.scores) return {};
+        // Add bracket average first (if available) - grey, at the back
+        if (bracket_scores && Object.keys(bracket_scores).length > 0) {
+            const bracket = price_context?.bracket;
+            const bracketLabel = bracket
+                ? `${bracket.label} scooters ($${bracket.min.toLocaleString()}–$${bracket.max >= 2147483647 ? '+' : bracket.max.toLocaleString()})`
+                : 'Bracket average';
 
-        const preCalculatedScores = this.product.specs.scores;
-
-        // Map of score keys to display names and icons
-        const scoreConfig = {
-            motor_performance: { name: 'Motor Performance', icon: 'zap' },
-            range_battery: { name: 'Range & Battery', icon: 'battery' },
-            ride_quality: { name: 'Ride Quality', icon: 'smile' },
-            portability: { name: 'Portability & Fit', icon: 'box' },
-            safety: { name: 'Safety', icon: 'shield' },
-            features: { name: 'Features', icon: 'settings' },
-            maintenance: { name: 'Maintenance', icon: 'tool' },
-        };
-
-        const scores = {};
-
-        for (const [key, config] of Object.entries(scoreConfig)) {
-            if (preCalculatedScores[key] !== undefined && preCalculatedScores[key] !== null) {
-                scores[key] = {
-                    name: config.name,
-                    score: Math.round(preCalculatedScores[key]),
-                    icon: config.icon,
-                };
-            }
+            productData.push({
+                id: 'bracket-avg',
+                name: bracketLabel,
+                scores: bracket_scores,
+            });
+            chartColors.push('var(--color-muted)');
         }
 
-        return scores;
-    }
+        // Add product second - primary color, in front
+        productData.push({
+            id: product.id,
+            name: product.name,
+            scores: product.scores,
+        });
+        chartColors.push('var(--color-primary)');
 
-    /**
-     * Render radar chart.
-     *
-     * @param {HTMLElement} container - Container element
-     * @param {Object} scores - Category scores
-     */
-    renderRadarChart(container, scores) {
-        // Hide loading state
-        const loadingEl = container.querySelector('[data-radar-loading]');
-        if (loadingEl) loadingEl.style.display = 'none';
-
-        // Prepare data for radar chart
-        const categories = Object.entries(scores).map(([key, data]) => ({
-            key,
-            name: data.name,
-        }));
-
-        const productData = [{
-            id: this.productId,
-            name: this.product.name,
-            scores: Object.fromEntries(
-                Object.entries(scores).map(([key, data]) => [key, data.score])
-            ),
-        }];
-
-        // Create radar chart (no legend for single product)
-        this.radarChart = new RadarChart(container, {
+        // Create radar chart with custom colors
+        this.radarChart = new RadarChart(this.radarContent, {
             size: 300,
             maxValue: 100,
-            showLegend: false, // Hide legend for single product view
+            fillOpacity: 0.12,
+            strokeWidth: 2,
+            colors: chartColors,
         });
 
         this.radarChart.setData(productData, categories);
 
-        // Hide legend element if it exists (RadarChart creates it by default)
-        const legend = container.querySelector('.radar-chart-legend');
-        if (legend) legend.style.display = 'none';
+        // Make legend non-interactive (display only, no toggle)
+        const legend = this.radarContent.querySelector('.radar-chart-legend');
+        if (legend) {
+            legend.classList.add('radar-chart-legend--static');
+        }
+
+        // Show content, hide skeleton
+        this.showRadarContent();
+    }
+
+    /**
+     * Show radar content, hide skeleton.
+     */
+    showRadarContent() {
+        if (this.radarSkeleton) this.radarSkeleton.style.display = 'none';
+        if (this.radarContent) this.radarContent.style.display = '';
+    }
+
+    /**
+     * Hide entire radar section on error/no data.
+     */
+    hideRadarSection() {
+        if (this.radarSkeleton) this.radarSkeleton.style.display = 'none';
+        // Could also hide the entire radar container if desired
+    }
+
+    /**
+     * Initialize product analysis (strengths/weaknesses).
+     * Receives pre-fetched data from initPerformanceSection.
+     *
+     * @param {Object} data - Analysis data from API
+     */
+    initProductAnalysis(data) {
+        const analysisContainer = this.container.querySelector('[data-product-analysis]');
+        if (!analysisContainer) return;
+
+        this.productAnalysis = new ProductAnalysis(analysisContainer, {
+            productId: this.productId,
+            category: this.category,
+            data: data, // Pass pre-fetched data, skips duplicate API call
+        });
+    }
+
+    /**
+     * Show error state for analysis section.
+     */
+    showAnalysisError() {
+        const analysisContainer = this.container.querySelector('[data-product-analysis]');
+        if (!analysisContainer) return;
+
+        const skeleton = analysisContainer.querySelector('[data-analysis-skeleton]');
+        const empty = analysisContainer.querySelector('[data-analysis-empty]');
+
+        if (skeleton) skeleton.style.display = 'none';
+        if (empty) {
+            const messageEl = empty.querySelector('.analysis-empty-message');
+            if (messageEl) {
+                messageEl.textContent = 'Unable to load comparison data.';
+            }
+            empty.style.display = '';
+        }
     }
 
     /**
@@ -195,6 +291,9 @@ class ProductPage {
         if (this.radarChart) {
             this.radarChart.destroy();
             this.radarChart = null;
+        }
+        if (this.productAnalysis) {
+            this.productAnalysis = null;
         }
         if (this.carousel) {
             this.carousel.destroy();

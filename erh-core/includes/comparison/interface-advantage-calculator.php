@@ -50,15 +50,16 @@ interface AdvantageCalculatorInterface {
     public function calculate_multi(array $products): ?array;
 
     /**
-     * Calculate advantages for single product display.
+     * Calculate advantages and weaknesses for single product display.
      *
-     * Shows key strengths of a product (for product pages).
-     * Could compare against category averages or similar products.
+     * Compares product against others in the same price bracket.
+     * Returns both strengths and weaknesses for product pages.
      *
-     * @param array $product Single product data array.
-     * @return array|null Advantages array or null if not implemented.
+     * @param array  $product Single product data array with specs and price_history.
+     * @param string $geo     Geo region code for price-based bracketing (US, GB, EU, CA, AU).
+     * @return array|null Analysis array with advantages/weaknesses, or null if not implemented.
      */
-    public function calculate_single(array $product): ?array;
+    public function calculate_single(array $product, string $geo = 'US'): ?array;
 
     /**
      * Get the product type this calculator handles.

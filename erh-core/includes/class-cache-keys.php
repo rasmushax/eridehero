@@ -164,6 +164,7 @@ class CacheKeys {
         self::clearSimilarProducts($product_id);
         self::clearProductSpecs($product_id);
         self::clearProductHasPricing($product_id);
+        self::clearProductAnalysis($product_id);
     }
 
     // -------------------------------------------------------------------------
@@ -234,5 +235,28 @@ class CacheKeys {
      */
     public static function clearProductHasPricing(int $product_id): void {
         delete_transient(self::productHasPricing($product_id));
+    }
+
+    /**
+     * Product analysis cache key (single-product advantages/weaknesses).
+     *
+     * @param int    $product_id Product post ID.
+     * @param string $geo        Geo region code.
+     * @return string Cache key.
+     */
+    public static function productAnalysis(int $product_id, string $geo): string {
+        return self::PREFIX . "product_analysis_{$product_id}_{$geo}";
+    }
+
+    /**
+     * Clear product analysis cache for a product.
+     *
+     * @param int $product_id Product post ID.
+     * @return void
+     */
+    public static function clearProductAnalysis(int $product_id): void {
+        foreach (self::GEOS as $geo) {
+            delete_transient(self::productAnalysis($product_id, $geo));
+        }
     }
 }

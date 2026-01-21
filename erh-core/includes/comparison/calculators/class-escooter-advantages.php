@@ -14,6 +14,7 @@ declare(strict_types=1);
 namespace ERH\Comparison\Calculators;
 
 use ERH\Comparison\AdvantageCalculatorBase;
+use ERH\Comparison\PriceBracketConfig;
 use ERH\Config\SpecConfig;
 
 /**
@@ -945,14 +946,1596 @@ class EscooterAdvantages extends AdvantageCalculatorBase {
     }
 
     /**
-     * Calculate advantages for single product display.
+     * Calculate advantages and weaknesses for single product display.
      *
-     * @param array $product Single product data array.
-     * @return array|null Advantages array or null if not implemented.
+     * Compares product against others in the same price bracket.
+     * Falls back to category-wide percentile if no price or sparse bracket.
+     *
+     * @param array  $product Single product data array with specs and price_history.
+     * @param string $geo     Geo region code for price-based bracketing.
+     * @return array|null Analysis result with advantages, weaknesses, and context.
      */
-    public function calculate_single(array $product): ?array {
-        // TODO: Implement single product advantages.
+    public function calculate_single(array $product, string $geo = 'US'): ?array {
+        $specs = $product['specs'] ?? [];
+
+        // Get regional price for bracketing.
+        $price_history = $product['price_history'] ?? [];
+        $geo_pricing   = $price_history[ $geo ] ?? null;
+        $current_price = $geo_pricing['current_price'] ?? null;
+
+        // Determine comparison mode.
+        $use_bracket   = false;
+        $bracket       = null;
+        $fallback_info = null;
+
+        if ( $current_price && $current_price > 0 ) {
+            $bracket     = PriceBracketConfig::get_bracket( (float) $current_price );
+            $use_bracket = true;
+        } else {
+            $fallback_info = [
+                'reason'  => 'no_regional_price',
+                'message' => "No {$geo} pricing available. Comparing against all electric scooters.",
+            ];
+        }
+
+        // Fetch comparison set.
+        $comparison_set = $this->get_single_comparison_set( $bracket, $geo, $use_bracket );
+
+        // Check if bracket has enough products.
+        if ( $use_bracket && count( $comparison_set ) < PriceBracketConfig::MIN_BRACKET_SIZE ) {
+            $use_bracket   = false;
+            $fallback_info = [
+                'reason'  => 'insufficient_bracket_size',
+                'message' => "Only " . count( $comparison_set ) . " products in bracket. Comparing against all electric scooters.",
+            ];
+            // Re-fetch without bracket filter.
+            $comparison_set = $this->get_single_comparison_set( null, $geo, false );
+        }
+
+        // DEBUG: Log analysis context.
+        $bracket_label = $bracket ? $bracket['label'] : 'All';
+        $product_names = array_map( fn( $p ) => $p['name'] ?? 'Unknown', $comparison_set );
+        // phpcs:ignore WordPress.PHP.DevelopmentFunctions.error_log_error_log
+        error_log( sprintf(
+            "[Analysis] Starting analysis for %s | Price: $%s | Bracket: %s ($%d-$%d) | Mode: %s | Comparison set (%d): %s",
+            $product['name'] ?? 'Unknown',
+            $current_price ?? 'N/A',
+            $bracket_label,
+            $bracket['min'] ?? 0,
+            $bracket['max'] ?? 0,
+            $use_bracket ? 'bracket' : 'category',
+            count( $comparison_set ),
+            implode( ', ', $product_names )
+        ) );
+
+        // Define specs to analyze.
+        $analysis_specs = $this->get_single_analysis_specs();
+
+        $advantages  = [];
+        $weaknesses  = [];
+
+        foreach ( $analysis_specs as $spec_def ) {
+            $result = $this->analyze_single_spec( $product, $comparison_set, $spec_def, $geo );
+
+            if ( ! $result ) {
+                continue;
+            }
+
+            if ( $result['is_advantage'] ) {
+                $advantages[] = $result['item'];
+            } elseif ( $result['is_weakness'] ) {
+                $weaknesses[] = $result['item'];
+            }
+        }
+
+        // Sort by strength of advantage/weakness (percentile distance from threshold).
+        usort( $advantages, fn( $a, $b ) => $b['percentile'] <=> $a['percentile'] );
+        usort( $weaknesses, fn( $a, $b ) => $a['percentile'] <=> $b['percentile'] );
+
+        // Calculate bracket average scores for radar chart.
+        $bracket_scores = $this->calculate_bracket_average_scores( $comparison_set );
+
+        return [
+            'advantages'       => $advantages,
+            'weaknesses'       => $weaknesses,
+            'comparison_mode'  => $use_bracket ? 'bracket' : 'category',
+            'bracket'          => $use_bracket ? $bracket : null,
+            'products_in_set'  => count( $comparison_set ),
+            'bracket_scores'   => $bracket_scores,
+            'fallback'         => $fallback_info,
+        ];
+    }
+
+    /**
+     * Calculate average scores across a comparison set for radar chart.
+     *
+     * @param array $comparison_set Products in the comparison set.
+     * @return array Associative array of score_key => average_value.
+     */
+    private function calculate_bracket_average_scores( array $comparison_set ): array {
+        $score_keys = [
+            'motor_performance',
+            'range_battery',
+            'ride_quality',
+            'portability',
+            'safety',
+            'features',
+            'maintenance',
+        ];
+
+        $averages = [];
+
+        foreach ( $score_keys as $key ) {
+            $values = [];
+
+            foreach ( $comparison_set as $prod ) {
+                $score = $prod['specs']['scores'][ $key ] ?? null;
+                if ( is_numeric( $score ) ) {
+                    $values[] = (float) $score;
+                }
+            }
+
+            if ( ! empty( $values ) ) {
+                $averages[ $key ] = round( array_sum( $values ) / count( $values ), 1 );
+            }
+        }
+
+        return $averages;
+    }
+
+    /**
+     * Get comparison set for single product analysis.
+     *
+     * @param array|null $bracket     Bracket config or null for category-wide.
+     * @param string     $geo         Geo region code.
+     * @param bool       $use_bracket Whether to filter by bracket.
+     * @return array Array of product data arrays.
+     */
+    private function get_single_comparison_set( ?array $bracket, string $geo, bool $use_bracket ): array {
+        // Get all escooters from cache.
+        $cache = new \ERH\Database\ProductCache();
+        $all_products = $cache->get_all( 'Electric Scooter' );
+
+        if ( ! $use_bracket ) {
+            // Category-wide: return all products (no price filter for fallback).
+            return $all_products;
+        }
+
+        // Filter to products in same bracket with geo pricing.
+        $filtered = [];
+        foreach ( $all_products as $prod ) {
+            $price_history = $prod['price_history'] ?? [];
+            $geo_pricing   = $price_history[ $geo ] ?? null;
+            $price         = $geo_pricing['current_price'] ?? null;
+
+            if ( ! $price || $price <= 0 ) {
+                continue;
+            }
+
+            // Check if in same bracket.
+            if ( $price >= $bracket['min'] && $price < $bracket['max'] ) {
+                $filtered[] = $prod;
+            }
+        }
+
+        return $filtered;
+    }
+
+    /**
+     * Get specs to analyze for single product analysis.
+     *
+     * @return array Array of spec definitions.
+     */
+    private function get_single_analysis_specs(): array {
+        return [
+            // Value metrics (from value_metrics - lower is better).
+            [
+                'key'           => 'value_metrics.price_per_wh',
+                'label'         => 'Battery Value',
+                'unit'          => '$/Wh',
+                'higher_better' => false,
+                'is_value'      => true,
+                'tooltip'       => 'Price divided by battery capacity. Lower means more battery for your money.',
+            ],
+            [
+                'key'           => 'value_metrics.price_per_watt',
+                'label'         => 'Motor Value',
+                'unit'          => '$/W',
+                'higher_better' => false,
+                'is_value'      => true,
+                'tooltip'       => 'Price divided by motor power. Lower means more power for your money.',
+            ],
+            [
+                'key'           => 'value_metrics.price_per_tested_mile',
+                'label'         => 'Range Value',
+                'unit'          => '$/mi',
+                'higher_better' => false,
+                'is_value'      => true,
+                'tooltip'       => 'Price divided by tested range. Lower means more range for your money.',
+            ],
+            [
+                'key'           => 'value_metrics.price_per_mph',
+                'label'         => 'Speed Value',
+                'unit'          => '$/mph',
+                'higher_better' => false,
+                'is_value'      => true,
+                'tooltip'       => 'Price divided by top speed. Lower means more speed for your money.',
+            ],
+            // Raw performance specs (higher is better unless noted).
+            [
+                'key'           => 'tested_top_speed',
+                'label'         => 'Top Speed',
+                'unit'          => 'mph',
+                'higher_better' => true,
+                'tooltip'       => 'Tested top speed from our real-world testing.',
+            ],
+            [
+                'key'           => 'tested_range_regular',
+                'label'         => 'Tested Range',
+                'unit'          => 'mi',
+                'higher_better' => true,
+                'tooltip'       => 'Range from our real-world testing at regular pace.',
+            ],
+            [
+                'key'           => 'battery.capacity',
+                'label'         => 'Battery Capacity',
+                'unit'          => 'Wh',
+                'higher_better' => true,
+                'tooltip'       => 'Total battery capacity in watt-hours.',
+            ],
+            [
+                'key'           => 'motor.power_nominal',
+                'label'         => 'Motor Power',
+                'unit'          => 'W',
+                'higher_better' => true,
+                'tooltip'       => 'Nominal motor power. Higher means more hill climbing ability and acceleration.',
+            ],
+            [
+                'key'           => 'dimensions.weight',
+                'label'         => 'Weight',
+                'unit'          => 'lbs',
+                'higher_better' => false,
+                'tooltip'       => 'Total weight. Lighter scooters are easier to carry.',
+            ],
+            [
+                'key'           => 'dimensions.max_load',
+                'label'         => 'Max Load',
+                'unit'          => 'lbs',
+                'higher_better' => true,
+                'tooltip'       => 'Maximum rider weight supported.',
+            ],
+            // Efficiency metrics (from pre-computed values).
+            [
+                'key'           => 'wh_per_lb',
+                'label'         => 'Energy Density',
+                'unit'          => 'Wh/lb',
+                'higher_better' => true,
+                'tooltip'       => 'Battery capacity per pound of weight. Higher means better energy efficiency.',
+            ],
+            [
+                'key'           => 'speed_per_lb',
+                'label'         => 'Speed-to-weight ratio',
+                'unit'          => 'mph/lb',
+                'higher_better' => true,
+                'tooltip'       => 'Top speed per pound of weight. Higher means better performance for the weight.',
+            ],
+            [
+                'key'           => 'tested_range_per_lb',
+                'label'         => 'Range Efficiency',
+                'unit'          => 'mi/lb',
+                'higher_better' => true,
+                'tooltip'       => 'Range per pound of weight. Higher means better range for the weight.',
+            ],
+            // Score-based composite specs (compare category scores vs bracket average).
+            [
+                'key'           => 'ride_quality',
+                'label'         => 'Ride Quality',
+                'higher_better' => true,
+                'is_score_based' => true,
+                'tooltip'       => 'Ride comfort based on suspension, tires, and dimensions.',
+            ],
+            [
+                'key'           => 'maintenance',
+                'label'         => 'Maintenance',
+                'higher_better' => true,
+                'is_score_based' => true,
+                'tooltip'       => 'Low maintenance based on tire type, brakes, and water resistance.',
+            ],
+            // Absolute quality specs (not bracket-relative).
+            [
+                'key'           => 'ip_rating',
+                'label'         => 'Water Resistance',
+                'higher_better' => true,
+                'is_descriptive' => true,
+                'tooltip'       => 'Water and dust resistance rating.',
+            ],
+            [
+                'key'           => 'feature_count',
+                'label'         => 'Features',
+                'unit'          => 'features',
+                'higher_better' => true,
+                'tooltip'       => 'Number of built-in features like app control, lights, cruise control, etc.',
+            ],
+        ];
+    }
+
+    /**
+     * Analyze a single spec against the comparison set.
+     *
+     * @param array  $product        Target product.
+     * @param array  $comparison_set Products to compare against.
+     * @param array  $spec_def       Spec definition.
+     * @param string $geo            Geo region code.
+     * @return array|null Result with is_advantage, is_weakness, and item data.
+     */
+    private function analyze_single_spec( array $product, array $comparison_set, array $spec_def, string $geo ): ?array {
+        $key           = $spec_def['key'];
+        $higher_better = $spec_def['higher_better'] ?? true;
+        $is_value      = $spec_def['is_value'] ?? false;
+
+        // Handle score-based composite specs (ride_quality, maintenance).
+        if ( ! empty( $spec_def['is_score_based'] ) ) {
+            return $this->analyze_score_based_spec( $product, $comparison_set, $spec_def );
+        }
+
+        // Handle descriptive specs (IP rating) differently.
+        if ( ! empty( $spec_def['is_descriptive'] ) ) {
+            return $this->analyze_descriptive_spec( $product, $comparison_set, $spec_def, $geo );
+        }
+
+        // Get product value.
+        $product_value = $this->get_single_spec_value( $product, $key, $geo );
+
+        if ( $product_value === null || ( is_numeric( $product_value ) && $product_value <= 0 ) ) {
+            // DEBUG: Log skipped spec due to null/zero product value.
+            // phpcs:ignore WordPress.PHP.DevelopmentFunctions.error_log_error_log
+            error_log( sprintf(
+                '[Analysis] SKIP %s: product=%s has no value (got: %s)',
+                $spec_def['label'],
+                $product['name'] ?? 'Unknown',
+                var_export( $product_value, true )
+            ) );
+            return null;
+        }
+
+        // Collect values from comparison set (with product names for logging).
+        $values          = [];
+        $values_with_names = [];
+        foreach ( $comparison_set as $comp_product ) {
+            $val = $this->get_single_spec_value( $comp_product, $key, $geo );
+            if ( $val !== null && ( ! is_numeric( $val ) || $val > 0 ) ) {
+                $values[]            = (float) $val;
+                $values_with_names[] = [
+                    'name'  => $comp_product['name'] ?? 'Unknown',
+                    'value' => $val,
+                ];
+            }
+        }
+
+        if ( count( $values ) < 3 ) {
+            // DEBUG: Log skipped spec due to insufficient data.
+            // phpcs:ignore WordPress.PHP.DevelopmentFunctions.error_log_error_log
+            error_log( sprintf(
+                '[Analysis] SKIP %s: only %d products have data (need 3+)',
+                $spec_def['label'],
+                count( $values )
+            ) );
+            return null;
+        }
+
+        // Calculate stats.
+        $avg         = array_sum( $values ) / count( $values );
+        $min         = min( $values );
+        $max         = max( $values );
+        $total_count = count( $values );
+
+        // Skip if all values are equal (no variance to compare).
+        if ( $min === $max ) {
+            // phpcs:ignore WordPress.PHP.DevelopmentFunctions.error_log_error_log
+            error_log( sprintf(
+                '[Analysis] SKIP %s: all values are equal (%.3f)',
+                $spec_def['label'],
+                $min
+            ) );
+            return null;
+        }
+
+        // Calculate percentile.
+        $percentile = $this->calculate_percentile( (float) $product_value, $values, $higher_better );
+
+        // Calculate rank (1 = best).
+        $rank = $this->calculate_rank( (float) $product_value, $values, $higher_better );
+
+        // Calculate percentage vs average.
+        $pct_vs_avg = $avg > 0 ? ( ( $product_value - $avg ) / $avg ) * 100 : 0;
+
+        // Determine if advantage or weakness.
+        $is_advantage = PriceBracketConfig::is_advantage( $percentile, $pct_vs_avg, $higher_better );
+        $is_weakness  = PriceBracketConfig::is_weakness( $percentile, $pct_vs_avg, $higher_better );
+
+        // Sanity check: product with best value can't be a weakness (handles percentile ties).
+        // If higher_better and value = max, not a weakness.
+        // If !higher_better and value = min, not a weakness.
+        if ( $is_weakness ) {
+            if ( $higher_better && (float) $product_value >= $max ) {
+                $is_weakness = false;
+            } elseif ( ! $higher_better && (float) $product_value <= $min ) {
+                $is_weakness = false;
+            }
+        }
+
+        // DEBUG: Log detailed analysis.
+        // phpcs:ignore WordPress.PHP.DevelopmentFunctions.error_log_error_log
+        error_log( sprintf(
+            "[Analysis] %s: product=%s (%.3f), avg=%.3f, min=%.3f, max=%.3f, percentile=%.1f, pct_vs_avg=%.1f%%, higher_better=%s, is_adv=%s, is_weak=%s",
+            $spec_def['label'],
+            $product['name'] ?? 'Unknown',
+            $product_value,
+            $avg,
+            $min,
+            $max,
+            $percentile,
+            $pct_vs_avg,
+            $higher_better ? 'Y' : 'N',
+            $is_advantage ? 'Y' : 'N',
+            $is_weakness ? 'Y' : 'N'
+        ) );
+
+        // Log all bracket values for this spec.
+        // phpcs:ignore WordPress.PHP.DevelopmentFunctions.error_log_error_log
+        error_log( sprintf(
+            "[Analysis] %s bracket values: %s",
+            $spec_def['label'],
+            implode( ', ', array_map( function( $v ) {
+                return sprintf( '%s=%.3f', $v['name'], $v['value'] );
+            }, $values_with_names ) )
+        ) );
+
+        // Skip if neither.
+        if ( ! $is_advantage && ! $is_weakness ) {
+            return null;
+        }
+
+        // Format values for display.
+        $formatted_value = $this->format_analysis_value( $product_value, $spec_def );
+        $formatted_avg   = $this->format_analysis_value( $avg, $spec_def );
+
+        // Format the result.
+        $item = [
+            'spec_key'      => $key,
+            'label'         => $spec_def['label'],
+            'product_value' => $formatted_value,
+            'bracket_avg'   => $formatted_avg,
+            'unit'          => $spec_def['unit'],
+            'percentile'    => round( $percentile, 1 ),
+            'pct_vs_avg'    => round( $pct_vs_avg, 1 ),
+            'tooltip'       => $spec_def['tooltip'] ?? null,
+            'text'          => $this->format_single_text( $spec_def, $percentile, $pct_vs_avg, $is_advantage, $higher_better, $rank, $total_count ),
+            'comparison'    => $this->format_comparison_text( $formatted_value, $formatted_avg, $spec_def ),
+        ];
+
+        return [
+            'is_advantage' => $is_advantage,
+            'is_weakness'  => $is_weakness,
+            'item'         => $item,
+        ];
+    }
+
+    /**
+     * Analyze a score-based composite spec (ride_quality, maintenance).
+     *
+     * Compares product's category score vs bracket average.
+     * Thresholds: 20+ points above avg = Excellent, 14+ = Great, 8+ = Above-average.
+     *
+     * @param array $product        Target product.
+     * @param array $comparison_set Products to compare against.
+     * @param array $spec_def       Spec definition.
+     * @return array|null Result with is_advantage, is_weakness, and item data.
+     */
+    private function analyze_score_based_spec( array $product, array $comparison_set, array $spec_def ): ?array {
+        $key   = $spec_def['key'];
+        $label = $spec_def['label'];
+
+        // Get product's category score.
+        $product_score = $product['specs']['scores'][ $key ] ?? null;
+
+        if ( $product_score === null ) {
+            return null;
+        }
+
+        // Collect scores from comparison set.
+        $scores = [];
+        foreach ( $comparison_set as $comp_product ) {
+            $comp_score = $comp_product['specs']['scores'][ $key ] ?? null;
+            if ( $comp_score !== null ) {
+                $scores[] = (float) $comp_score;
+            }
+        }
+
+        if ( count( $scores ) < 3 ) {
+            return null;
+        }
+
+        $avg  = array_sum( $scores ) / count( $scores );
+        $diff = (float) $product_score - $avg;
+
+        // phpcs:ignore WordPress.PHP.DevelopmentFunctions.error_log_error_log
+        error_log( sprintf(
+            '[Analysis] %s Score: product=%d, avg=%.1f, diff=%.1f',
+            $label,
+            $product_score,
+            $avg,
+            $diff
+        ) );
+
+        // Thresholds: 20+ = Excellent, 14+ = Great, 8+ = Above-average.
+        // Negative: -20 or worse = Very poor, -14 = Poor, -8 = Below-average.
+        $is_advantage = $diff >= 8;
+        $is_weakness  = $diff <= -8;
+
+        if ( ! $is_advantage && ! $is_weakness ) {
+            return null;
+        }
+
+        // Get quality tier and details.
+        if ( $is_advantage ) {
+            $tier = $this->get_score_tier_label( $key, $diff, true );
+        } else {
+            $tier = $this->get_score_tier_label( $key, $diff, false );
+        }
+
+        // Get supporting details based on spec type.
+        $details = '';
+        if ( $key === 'ride_quality' ) {
+            $details = $this->get_ride_quality_details( $product['specs'] ?? [], $is_advantage );
+        } elseif ( $key === 'maintenance' ) {
+            $details = $this->get_maintenance_details( $product['specs'] ?? [], $is_advantage );
+        }
+
+        // Capitalize first letter of details.
+        if ( $details ) {
+            $details = ucfirst( $details );
+        }
+
+        // Format display text.
+        $display_text = $tier;
+
+        // Build the item.
+        $item = [
+            'spec_key'      => $key,
+            'label'         => $label,
+            'product_value' => $product_score,
+            'bracket_avg'   => round( $avg ),
+            'unit'          => 'score',
+            'percentile'    => 0, // Not used for score-based.
+            'pct_vs_avg'    => round( $diff ),
+            'tooltip'       => $spec_def['tooltip'] ?? null,
+            'text'          => $display_text,
+            'comparison'    => $details, // Details shown as comparison text.
+        ];
+
+        return [
+            'is_advantage' => $is_advantage,
+            'is_weakness'  => $is_weakness,
+            'item'         => $item,
+        ];
+    }
+
+    /**
+     * Get tier label based on score difference.
+     *
+     * @param string $key         Spec key (ride_quality, maintenance).
+     * @param float  $diff        Score difference from average.
+     * @param bool   $is_positive Whether the difference is positive (advantage).
+     * @return string Tier label.
+     */
+    private function get_score_tier_label( string $key, float $diff, bool $is_positive ): string {
+        $abs_diff = abs( $diff );
+
+        // Maintenance uses different labels (about low maintenance, not high quality).
+        if ( $key === 'maintenance' ) {
+            if ( $is_positive ) {
+                if ( $abs_diff >= 20 ) {
+                    return 'Very low maintenance';
+                } elseif ( $abs_diff >= 14 ) {
+                    return 'Low maintenance';
+                } else {
+                    return 'Easy maintenance';
+                }
+            } else {
+                if ( $abs_diff >= 20 ) {
+                    return 'High maintenance';
+                } elseif ( $abs_diff >= 14 ) {
+                    return 'Higher maintenance';
+                } else {
+                    return 'More maintenance needed';
+                }
+            }
+        }
+
+        // Ride quality and other scores.
+        if ( $is_positive ) {
+            if ( $abs_diff >= 20 ) {
+                return 'Excellent ride quality';
+            } elseif ( $abs_diff >= 14 ) {
+                return 'Great ride quality';
+            } else {
+                return 'Above-average ride quality';
+            }
+        } else {
+            if ( $abs_diff >= 20 ) {
+                return 'Very poor ride quality';
+            } elseif ( $abs_diff >= 14 ) {
+                return 'Poor ride quality';
+            } else {
+                return 'Below-average ride quality';
+            }
+        }
+    }
+
+    /**
+     * Get ride quality supporting details.
+     *
+     * For strengths: show positive factors (suspension, pneumatic/tubeless tires, large tires).
+     * For weaknesses: show negative factors (no suspension, solid tires, small tires).
+     *
+     * @param array $specs        Product specs.
+     * @param bool  $is_advantage Whether this is a strength.
+     * @return string Supporting details text.
+     */
+    private function get_ride_quality_details( array $specs, bool $is_advantage ): string {
+        $details = [];
+
+        // Suspension type.
+        $suspension = $this->get_nested_spec( $specs, 'suspension.type' )
+            ?? $this->get_nested_spec( $specs, 'e-scooters.suspension.type' );
+
+        $has_suspension = false;
+        if ( ! empty( $suspension ) && is_array( $suspension ) ) {
+            $types = array_filter( $suspension, function( $s ) {
+                return $s && strtolower( (string) $s ) !== 'none';
+            });
+
+            if ( count( $types ) >= 2 ) {
+                $has_suspension = true;
+                if ( $is_advantage ) {
+                    $has_hydraulic = false;
+                    foreach ( $types as $type ) {
+                        if ( strpos( strtolower( (string) $type ), 'hydraulic' ) !== false ) {
+                            $has_hydraulic = true;
+                            break;
+                        }
+                    }
+                    $details[] = $has_hydraulic ? 'dual hydraulic suspension' : 'dual suspension';
+                }
+            } elseif ( count( $types ) === 1 ) {
+                $has_suspension = true;
+                if ( $is_advantage ) {
+                    $type = reset( $types );
+                    if ( strpos( strtolower( (string) $type ), 'hydraulic' ) !== false ) {
+                        $details[] = 'hydraulic suspension';
+                    } elseif ( strpos( strtolower( (string) $type ), 'spring' ) !== false ) {
+                        $details[] = 'spring suspension';
+                    }
+                }
+            }
+        }
+
+        // For weakness: note no suspension.
+        if ( ! $is_advantage && ! $has_suspension ) {
+            $details[] = 'no suspension';
+        }
+
+        // Tire type.
+        $tire_type = $this->get_nested_spec( $specs, 'wheels.tire_type' )
+            ?? $this->get_nested_spec( $specs, 'e-scooters.wheels.tire_type' );
+
+        if ( $tire_type ) {
+            $tire_lower = strtolower( (string) $tire_type );
+            if ( $is_advantage ) {
+                // For strengths: show good tire types.
+                if ( strpos( $tire_lower, 'tubeless' ) !== false ) {
+                    $details[] = 'tubeless tires';
+                } elseif ( strpos( $tire_lower, 'pneumatic' ) !== false ) {
+                    $details[] = 'pneumatic tires';
+                }
+            } else {
+                // For weaknesses: show solid/honeycomb tires (harsh ride).
+                if ( strpos( $tire_lower, 'solid' ) !== false || strpos( $tire_lower, 'honeycomb' ) !== false ) {
+                    $details[] = 'solid tires';
+                }
+            }
+        }
+
+        // Tire size - only show for strengths if large, or weaknesses if small.
+        $tire_front = $this->get_nested_spec( $specs, 'wheels.tire_size_front' )
+            ?? $this->get_nested_spec( $specs, 'e-scooters.wheels.tire_size_front' );
+        $tire_rear = $this->get_nested_spec( $specs, 'wheels.tire_size_rear' )
+            ?? $this->get_nested_spec( $specs, 'e-scooters.wheels.tire_size_rear' );
+
+        $avg_size = 0;
+        $count    = 0;
+        if ( is_numeric( $tire_front ) ) {
+            $avg_size += (float) $tire_front;
+            $count++;
+        }
+        if ( is_numeric( $tire_rear ) ) {
+            $avg_size += (float) $tire_rear;
+            $count++;
+        }
+        if ( $count > 0 ) {
+            $avg_size = $avg_size / $count;
+            if ( $is_advantage && $avg_size >= 10 ) {
+                $details[] = round( $avg_size ) . '" tires';
+            } elseif ( ! $is_advantage && $avg_size < 8 ) {
+                $details[] = 'small ' . round( $avg_size ) . '" tires';
+            }
+        }
+
+        return implode( ', ', $details );
+    }
+
+    /**
+     * Get maintenance supporting details.
+     *
+     * For strengths (low maintenance): show factors that reduce maintenance (solid tires, drum brakes, self-healing).
+     * For weaknesses (high maintenance): show factors that increase maintenance (tubed tires, hydraulic brakes).
+     *
+     * @param array $specs        Product specs.
+     * @param bool  $is_advantage Whether this is a strength (low maintenance).
+     * @return string Supporting details text.
+     */
+    private function get_maintenance_details( array $specs, bool $is_advantage ): string {
+        $details = [];
+
+        // Tire type.
+        $tire_type = $this->get_nested_spec( $specs, 'wheels.tire_type' )
+            ?? $this->get_nested_spec( $specs, 'e-scooters.wheels.tire_type' );
+
+        $is_pneumatic   = false;
+        $is_solid       = false;
+        $is_tubeless    = false;
+
+        if ( $tire_type ) {
+            $tire_lower   = strtolower( (string) $tire_type );
+            $is_solid     = strpos( $tire_lower, 'solid' ) !== false || strpos( $tire_lower, 'honeycomb' ) !== false;
+            $is_tubeless  = strpos( $tire_lower, 'tubeless' ) !== false;
+            // Tubeless implies pneumatic; also check for "pneumatic" or "air" explicitly.
+            $is_pneumatic = $is_tubeless || strpos( $tire_lower, 'pneumatic' ) !== false || strpos( $tire_lower, 'air' ) !== false;
+
+            if ( $is_advantage ) {
+                // For low maintenance strength: show solid/tubeless.
+                if ( $is_solid ) {
+                    $details[] = 'solid tires (no flats)';
+                } elseif ( $is_tubeless ) {
+                    $details[] = 'tubeless tires';
+                }
+            } else {
+                // For high maintenance weakness: show tire type.
+                if ( $is_pneumatic ) {
+                    if ( $is_tubeless ) {
+                        $details[] = 'tubeless tires';
+                    } else {
+                        $details[] = 'tubed air tires';
+                    }
+                }
+            }
+        }
+
+        // Self-healing tires.
+        $self_healing = $this->get_nested_spec( $specs, 'wheels.self_healing' )
+            ?? $this->get_nested_spec( $specs, 'e-scooters.wheels.self_healing' );
+
+        $has_self_healing = $self_healing === true || $self_healing === 'true' || $self_healing === '1' || $self_healing === 1;
+
+        if ( $is_advantage && $has_self_healing ) {
+            $details[] = 'self-healing tires';
+        } elseif ( ! $is_advantage && ! $is_solid && ! $has_self_healing ) {
+            // Show "not self-healing" for any pneumatic/tubeless that isn't solid and doesn't have self-healing.
+            $details[] = 'not self-healing';
+        }
+
+        // Brake type.
+        $front_brake = $this->get_nested_spec( $specs, 'brakes.front' )
+            ?? $this->get_nested_spec( $specs, 'e-scooters.brakes.front' );
+        $rear_brake = $this->get_nested_spec( $specs, 'brakes.rear' )
+            ?? $this->get_nested_spec( $specs, 'e-scooters.brakes.rear' );
+
+        $brakes        = [ $front_brake, $rear_brake ];
+        $has_drum      = false;
+        $has_disc      = false;
+        $has_hydraulic = false;
+
+        foreach ( $brakes as $brake ) {
+            if ( $brake ) {
+                $brake_lower = strtolower( (string) $brake );
+                if ( strpos( $brake_lower, 'drum' ) !== false ) {
+                    $has_drum = true;
+                }
+                if ( strpos( $brake_lower, 'disc' ) !== false ) {
+                    $has_disc = true;
+                }
+                if ( strpos( $brake_lower, 'hydraulic' ) !== false ) {
+                    $has_hydraulic = true;
+                }
+            }
+        }
+
+        if ( $is_advantage ) {
+            if ( $has_drum ) {
+                $details[] = 'drum brakes';
+            }
+        } else {
+            // Disc brakes need pad replacement; hydraulic need bleeding.
+            if ( $has_hydraulic ) {
+                $details[] = 'hydraulic disc brakes';
+            } elseif ( $has_disc ) {
+                $details[] = 'disc brakes';
+            }
+        }
+
+        // IP rating for water resistance (only for strengths).
+        if ( $is_advantage ) {
+            $ip_rating = $this->get_nested_spec( $specs, 'other.ip_rating' )
+                ?? $this->get_nested_spec( $specs, 'e-scooters.other.ip_rating' );
+
+            if ( $ip_rating ) {
+                $water = $this->get_ip_water_rating( $ip_rating );
+                if ( $water >= 6 ) {
+                    $details[] = 'high water resistance';
+                }
+            }
+        }
+
+        return implode( ', ', $details );
+    }
+
+    /**
+     * Analyze a descriptive spec (IP rating).
+     *
+     * These specs use absolute quality-based labels, not bracket comparison.
+     *
+     * @param array  $product        Target product.
+     * @param array  $comparison_set Products to compare against.
+     * @param array  $spec_def       Spec definition.
+     * @param string $geo            Geo region code.
+     * @return array|null Result with is_advantage, is_weakness, and item data.
+     */
+    private function analyze_descriptive_spec( array $product, array $comparison_set, array $spec_def, string $geo ): ?array {
+        $key = $spec_def['key'];
+
+        if ( $key === 'ip_rating' ) {
+            return $this->analyze_ip_rating( $product, $comparison_set, $spec_def );
+        }
+
         return null;
+    }
+
+    /**
+     * Analyze suspension as a descriptive spec.
+     *
+     * Suspension quality levels:
+     * - Dual hydraulic = excellent
+     * - Dual spring/fork = great
+     * - Single hydraulic = good
+     * - Single spring/fork = decent
+     * - None = potential weakness
+     *
+     * @param array $product        Target product.
+     * @param array $comparison_set Products to compare against.
+     * @param array $spec_def       Spec definition.
+     * @return array|null Result with is_advantage, is_weakness, and item data.
+     */
+    private function analyze_suspension( array $product, array $comparison_set, array $spec_def ): ?array {
+        $specs = $product['specs'] ?? [];
+
+        // Get suspension type array.
+        $suspension = $this->get_nested_spec( $specs, 'suspension.type' )
+            ?? $this->get_nested_spec( $specs, 'e-scooters.suspension.type' );
+
+        // Calculate product's suspension score.
+        $score = $this->calculate_suspension_score( $specs );
+
+        // Collect scores from comparison set.
+        $scores = [];
+        foreach ( $comparison_set as $comp_product ) {
+            $comp_score = $this->calculate_suspension_score( $comp_product['specs'] ?? [] );
+            $scores[]   = $comp_score;
+        }
+
+        if ( count( $scores ) < 3 ) {
+            return null;
+        }
+
+        $avg = array_sum( $scores ) / count( $scores );
+        $max = max( $scores );
+        $min = min( $scores );
+
+        // Skip if no variance.
+        if ( $min === $max ) {
+            return null;
+        }
+
+        // Calculate percentile and rank.
+        $percentile = $this->calculate_percentile( (float) $score, $scores, true );
+        $rank       = $this->calculate_rank( (float) $score, $scores, true );
+
+        // Format the suspension display text.
+        $display_text = $this->format_suspension_quality( $suspension, $score );
+
+        // phpcs:ignore WordPress.PHP.DevelopmentFunctions.error_log_error_log
+        error_log( sprintf(
+            '[Analysis] Suspension: score=%d, avg=%.1f, percentile=%.1f, rank=%d, display=%s',
+            $score,
+            $avg,
+            $percentile,
+            $rank,
+            $display_text
+        ) );
+
+        // Determine if advantage or weakness based on score thresholds.
+        // Score 6+ (dual with decent type) = potential strength if above average.
+        // Score 0 (no suspension) = potential weakness only if others in bracket have suspension.
+        $is_advantage = $score >= 6 && $percentile >= 70;
+        $is_weakness  = $score === 0 && $avg >= 3; // Only a weakness if bracket avg suggests others have suspension
+
+        if ( ! $is_advantage && ! $is_weakness ) {
+            return null;
+        }
+
+        // Build the item.
+        $item = [
+            'spec_key'      => 'suspension',
+            'label'         => 'Suspension',
+            'product_value' => $display_text,
+            'bracket_avg'   => $this->format_bracket_suspension_avg( $avg ),
+            'unit'          => '',
+            'percentile'    => round( $percentile, 1 ),
+            'pct_vs_avg'    => 0, // Not applicable for descriptive.
+            'tooltip'       => $spec_def['tooltip'] ?? null,
+            'text'          => $is_advantage ? $display_text : 'No suspension',
+        ];
+
+        return [
+            'is_advantage' => $is_advantage,
+            'is_weakness'  => $is_weakness,
+            'item'         => $item,
+        ];
+    }
+
+    /**
+     * Format suspension quality for display.
+     *
+     * @param array|null $suspension Suspension type array.
+     * @param int        $score      Calculated score.
+     * @return string Display text.
+     */
+    private function format_suspension_quality( $suspension, int $score ): string {
+        if ( ! $suspension || ! is_array( $suspension ) || $score === 0 ) {
+            return 'No suspension';
+        }
+
+        // Filter out "None" entries.
+        $types = array_filter( $suspension, function( $s ) {
+            return $s && strtolower( (string) $s ) !== 'none';
+        });
+
+        if ( empty( $types ) ) {
+            return 'No suspension';
+        }
+
+        // Check for dual suspension.
+        $has_dual  = false;
+        $has_front = false;
+        $has_rear  = false;
+        $best_type = '';
+
+        foreach ( $types as $type ) {
+            $type_lower = strtolower( (string) $type );
+
+            if ( strpos( $type_lower, 'dual' ) !== false ) {
+                $has_dual = true;
+            }
+            if ( strpos( $type_lower, 'front' ) !== false ) {
+                $has_front = true;
+            }
+            if ( strpos( $type_lower, 'rear' ) !== false ) {
+                $has_rear = true;
+            }
+
+            // Track best type.
+            if ( strpos( $type_lower, 'hydraulic' ) !== false ) {
+                $best_type = 'hydraulic';
+            } elseif ( $best_type !== 'hydraulic' && strpos( $type_lower, 'spring' ) !== false ) {
+                $best_type = 'spring';
+            } elseif ( $best_type !== 'hydraulic' && $best_type !== 'spring' && strpos( $type_lower, 'fork' ) !== false ) {
+                $best_type = 'fork';
+            }
+        }
+
+        // Build description.
+        $is_dual = $has_dual || ( $has_front && $has_rear );
+
+        if ( $is_dual ) {
+            if ( $best_type === 'hydraulic' ) {
+                return 'Dual hydraulic suspension';
+            } elseif ( $best_type === 'spring' ) {
+                return 'Dual spring suspension';
+            } else {
+                return 'Dual suspension';
+            }
+        } else {
+            if ( $best_type === 'hydraulic' ) {
+                return 'Hydraulic suspension';
+            } elseif ( $best_type === 'spring' ) {
+                return 'Spring suspension';
+            } elseif ( $best_type === 'fork' ) {
+                return 'Fork suspension';
+            } else {
+                return 'Basic suspension';
+            }
+        }
+    }
+
+    /**
+     * Format bracket average suspension for comparison display.
+     *
+     * @param float $avg Average score.
+     * @return string Display text.
+     */
+    private function format_bracket_suspension_avg( float $avg ): string {
+        if ( $avg >= 6 ) {
+            return 'most have dual';
+        } elseif ( $avg >= 3 ) {
+            return 'most have single';
+        } else {
+            return 'most have none';
+        }
+    }
+
+    /**
+     * Analyze IP rating as an absolute quality spec (not bracket-relative).
+     *
+     * IP rating quality levels (absolute, not bracket-dependent):
+     * - IP*7+ = Excellent water resistance (strength)
+     * - IP*6 = Great water resistance (strength)
+     * - IP*5 = Good water resistance (strength)
+     * - IP*4 = Basic splash resistance (neutral, skip)
+     * - IP*3 or lower = Poor water resistance (weakness)
+     * - None/Unknown = Not tested (weakness)
+     *
+     * @param array $product        Target product.
+     * @param array $comparison_set Products to compare against (unused - absolute analysis).
+     * @param array $spec_def       Spec definition.
+     * @return array|null Result with is_advantage, is_weakness, and item data.
+     */
+    private function analyze_ip_rating( array $product, array $comparison_set, array $spec_def ): ?array {
+        $specs = $product['specs'] ?? [];
+
+        // Get IP rating.
+        $ip_rating = $this->get_nested_spec( $specs, 'other.ip_rating' )
+            ?? $this->get_nested_spec( $specs, 'e-scooters.other.ip_rating' )
+            ?? $this->get_nested_spec( $specs, 'ip_rating' );
+
+        // Get the water rating digit.
+        $water_rating = $this->get_ip_water_rating( $ip_rating );
+
+        // phpcs:ignore WordPress.PHP.DevelopmentFunctions.error_log_error_log
+        error_log( sprintf(
+            '[Analysis] IP Rating (absolute): value=%s, water=%d',
+            $ip_rating ?? 'null',
+            $water_rating
+        ) );
+
+        // Determine quality based on absolute water rating.
+        // IP5+ = strength, IP3 or lower/none = weakness, IP4 = neutral (skip).
+        $is_advantage = $water_rating >= 5;
+        $is_weakness  = empty( $ip_rating ) || $water_rating <= 3;
+
+        // IP4 is neutral - don't show.
+        if ( ! $is_advantage && ! $is_weakness ) {
+            return null;
+        }
+
+        // Get quality label.
+        $quality_label = $this->get_ip_quality_label( $water_rating );
+
+        // Format display text with IP rating in parentheses.
+        if ( $is_advantage ) {
+            $display_text = $quality_label . ' (' . strtoupper( (string) $ip_rating ) . ')';
+        } elseif ( empty( $ip_rating ) ) {
+            $display_text = 'No water resistance rating';
+        } else {
+            $display_text = 'Limited water resistance (' . strtoupper( (string) $ip_rating ) . ')';
+        }
+
+        // Get comparison text explaining what the IP rating means.
+        $comparison = $this->get_ip_rating_details( $water_rating, $is_advantage );
+
+        // Build the item.
+        $item = [
+            'spec_key'      => 'ip_rating',
+            'label'         => 'Water Resistance',
+            'product_value' => '', // Not used for absolute analysis.
+            'bracket_avg'   => '', // No bracket comparison for absolute analysis.
+            'unit'          => '',
+            'percentile'    => 0, // Not applicable for absolute.
+            'pct_vs_avg'    => 0,
+            'tooltip'       => 'Water and dust resistance rating. IP5+ means safe for riding in rain.',
+            'text'          => $display_text,
+            'comparison'    => $comparison,
+        ];
+
+        return [
+            'is_advantage' => $is_advantage,
+            'is_weakness'  => $is_weakness,
+            'item'         => $item,
+        ];
+    }
+
+    /**
+     * Get the water rating digit from an IP rating string.
+     *
+     * @param string|null $ip_rating IP rating (e.g., "IP54", "IPX5").
+     * @return int Water rating (0-9).
+     */
+    private function get_ip_water_rating( ?string $ip_rating ): int {
+        if ( empty( $ip_rating ) ) {
+            return 0;
+        }
+
+        if ( preg_match( '/IP[X\d](\d)/i', $ip_rating, $matches ) ) {
+            return (int) $matches[1];
+        }
+
+        return 0;
+    }
+
+    /**
+     * Get quality label for IP water rating.
+     *
+     * @param int $water_rating Water rating (0-9).
+     * @return string Quality label.
+     */
+    private function get_ip_quality_label( int $water_rating ): string {
+        if ( $water_rating >= 7 ) {
+            return 'Excellent water resistance';
+        } elseif ( $water_rating >= 6 ) {
+            return 'Great water resistance';
+        } elseif ( $water_rating >= 5 ) {
+            return 'Good water resistance';
+        } elseif ( $water_rating >= 4 ) {
+            return 'Basic splash resistance';
+        } else {
+            return 'Limited water resistance';
+        }
+    }
+
+    /**
+     * Get details explaining what an IP water rating means.
+     *
+     * @param int  $water_rating Water rating (0-9).
+     * @param bool $is_advantage Whether this is a strength.
+     * @return string Details text.
+     */
+    private function get_ip_rating_details( int $water_rating, bool $is_advantage ): string {
+        if ( $is_advantage ) {
+            // Strengths: explain what protection you get.
+            if ( $water_rating >= 7 ) {
+                return 'Safe for heavy rain and puddles';
+            } elseif ( $water_rating >= 6 ) {
+                return 'Safe for rain and wet conditions';
+            } else {
+                return 'Safe for light rain';
+            }
+        } else {
+            // Weaknesses: explain the limitation.
+            if ( $water_rating === 0 ) {
+                return 'Avoid wet conditions';
+            } else {
+                return 'Avoid riding in rain';
+            }
+        }
+    }
+
+    /**
+     * Format bracket average IP rating for comparison display.
+     *
+     * @param float $avg Average score.
+     * @return string Display text.
+     */
+    private function format_bracket_ip_avg( float $avg ): string {
+        if ( $avg >= 6 ) {
+            return 'most have IP6+';
+        } elseif ( $avg >= 5 ) {
+            return 'most have IP5';
+        } elseif ( $avg >= 4 ) {
+            return 'most have IP4';
+        } else {
+            return 'most have none';
+        }
+    }
+
+    /**
+     * Get spec value for single product analysis.
+     *
+     * Handles value_metrics (geo-specific) and regular specs.
+     *
+     * @param array  $product Product data.
+     * @param string $key     Spec key.
+     * @param string $geo     Geo region code.
+     * @return mixed Spec value or null.
+     */
+    private function get_single_spec_value( array $product, string $key, string $geo ) {
+        $specs = $product['specs'] ?? [];
+
+        // Handle value_metrics (geo-specific).
+        // Key format: 'value_metrics.price_per_wh' → lookup at specs['value_metrics'][$geo]['price_per_wh']
+        if ( strpos( $key, 'value_metrics.' ) === 0 ) {
+            $metric_key    = str_replace( 'value_metrics.', '', $key );
+            $value_metrics = $specs['value_metrics'][ $geo ] ?? [];
+            return $value_metrics[ $metric_key ] ?? null;
+        }
+
+        // Handle special calculated fields.
+        if ( $key === 'suspension_score' ) {
+            return $this->calculate_suspension_score( $specs );
+        }
+
+        if ( $key === 'ip_score' ) {
+            return $this->calculate_ip_score( $specs );
+        }
+
+        if ( $key === 'feature_count' ) {
+            // Try multiple paths for features.
+            $features = $this->get_nested_spec( $specs, 'features' )
+                ?? $this->get_nested_spec( $specs, 'e-scooters.features' );
+            return is_array( $features ) ? count( $features ) : 0;
+        }
+
+        // Try multiple paths for e-scooter specs.
+        // ACF stores data under 'e-scooters' prefix, but we also check flat keys.
+        $paths_to_try = [
+            $key,                        // Direct path (e.g., 'battery.capacity')
+            'e-scooters.' . $key,        // E-scooter prefixed (e.g., 'e-scooters.battery.capacity')
+        ];
+
+        // Add flat key fallbacks for common specs.
+        $flat_fallbacks = [
+            'battery.capacity'     => 'battery_capacity',
+            'motor.power_nominal'  => 'nominal_motor_wattage',
+            'dimensions.weight'    => 'weight',
+            'dimensions.max_load'  => 'max_weight_capacity',
+        ];
+        if ( isset( $flat_fallbacks[ $key ] ) ) {
+            $paths_to_try[] = $flat_fallbacks[ $key ];
+        }
+
+        foreach ( $paths_to_try as $path ) {
+            $value = $this->get_nested_spec( $specs, $path );
+            if ( $value !== null && $value !== '' ) {
+                return $value;
+            }
+        }
+
+        return null;
+    }
+
+    /**
+     * Calculate suspension score for comparison.
+     *
+     * @param array $specs Product specs.
+     * @return int Score (0-10).
+     */
+    private function calculate_suspension_score( array $specs ): int {
+        // Try multiple paths for suspension.
+        $suspension = $this->get_nested_spec( $specs, 'suspension.type' )
+            ?? $this->get_nested_spec( $specs, 'e-scooters.suspension.type' );
+
+        if ( empty( $suspension ) || ! is_array( $suspension ) ) {
+            return 0;
+        }
+
+        $score = 0;
+        $type_scores = [
+            'hydraulic' => 4,
+            'spring'    => 3,
+            'fork'      => 3,
+            'rubber'    => 1,
+        ];
+
+        foreach ( $suspension as $susp ) {
+            $susp_lower = strtolower( (string) $susp );
+            foreach ( $type_scores as $type => $type_score ) {
+                if ( strpos( $susp_lower, $type ) !== false ) {
+                    $score += $type_score;
+                    break;
+                }
+            }
+        }
+
+        // Bonus for dual suspension.
+        if ( count( $suspension ) >= 2 ) {
+            $score += 2;
+        }
+
+        return min( $score, 10 );
+    }
+
+    /**
+     * Calculate IP rating score for comparison.
+     *
+     * @param array $specs Product specs.
+     * @return int Score (0-10).
+     */
+    private function calculate_ip_score( array $specs ): int {
+        // Try multiple paths for IP rating.
+        $ip_rating = $this->get_nested_spec( $specs, 'other.ip_rating' )
+            ?? $this->get_nested_spec( $specs, 'e-scooters.other.ip_rating' )
+            ?? $this->get_nested_spec( $specs, 'ip_rating' );
+
+        if ( empty( $ip_rating ) ) {
+            return 0;
+        }
+
+        // Parse IP rating (e.g., IP54, IPX5).
+        if ( preg_match( '/IP([X\d])(\d)/i', $ip_rating, $matches ) ) {
+            $dust  = $matches[1] === 'X' ? 0 : (int) $matches[1];
+            $water = (int) $matches[2];
+
+            // Water rating is primary (0-8), dust is secondary bonus.
+            return min( $water + ( $dust > 0 ? 1 : 0 ), 10 );
+        }
+
+        return 0;
+    }
+
+    /**
+     * Calculate percentile rank for a value.
+     *
+     * @param float $value        The value to rank.
+     * @param array $values       All values to compare against.
+     * @param bool  $higher_better Whether higher values are better.
+     * @return float Percentile (0-100).
+     */
+    private function calculate_percentile( float $value, array $values, bool $higher_better ): float {
+        $count = count( $values );
+
+        if ( $count === 0 ) {
+            return 50.0;
+        }
+
+        // Count how many values this beats.
+        $beats = 0;
+        foreach ( $values as $v ) {
+            if ( $higher_better ) {
+                if ( $value > $v ) {
+                    $beats++;
+                }
+            } else {
+                if ( $value < $v ) {
+                    $beats++;
+                }
+            }
+        }
+
+        // Percentile is the percentage of values beaten.
+        return ( $beats / $count ) * 100;
+    }
+
+    /**
+     * Calculate rank for a value (1 = best).
+     *
+     * @param float $value        The value to rank.
+     * @param array $values       All values to compare against.
+     * @param bool  $higher_better Whether higher values are better.
+     * @return int Rank (1 = best).
+     */
+    private function calculate_rank( float $value, array $values, bool $higher_better ): int {
+        $count = count( $values );
+
+        if ( $count === 0 ) {
+            return 1;
+        }
+
+        // Count how many values are better than this one.
+        $better_count = 0;
+        foreach ( $values as $v ) {
+            if ( $higher_better ) {
+                if ( $v > $value ) {
+                    $better_count++;
+                }
+            } else {
+                if ( $v < $value ) {
+                    $better_count++;
+                }
+            }
+        }
+
+        // Rank is 1 + number of items that are better.
+        return $better_count + 1;
+    }
+
+    /**
+     * Format a value for display in analysis.
+     *
+     * Precision rules:
+     * - Value metrics ($/Wh, $/W, etc.): 2 decimals
+     * - Wh/lb (energy density): 1 decimal
+     * - mph/lb, mi/lb (efficiency): 2 decimals
+     * - mph, mi (speed, range): 1 decimal
+     * - Everything else: integer
+     *
+     * @param mixed $value    Value to format.
+     * @param array $spec_def Spec definition.
+     * @return mixed Formatted value.
+     */
+    private function format_analysis_value( $value, array $spec_def ) {
+        if ( ! is_numeric( $value ) ) {
+            return $value;
+        }
+
+        $unit = $spec_def['unit'] ?? '';
+        $key  = $spec_def['key'] ?? '';
+
+        // Value metrics ($/Wh, $/W, $/mi, $/mph) - 2 decimals.
+        if ( ! empty( $spec_def['is_value'] ) ) {
+            return round( (float) $value, 2 );
+        }
+
+        // Wh/lb (energy density) - 1 decimal.
+        if ( $unit === 'Wh/lb' ) {
+            return round( (float) $value, 1 );
+        }
+
+        // mph/lb, mi/lb (efficiency ratios) - 2 decimals.
+        if ( $unit === 'mph/lb' || $unit === 'mi/lb' ) {
+            return round( (float) $value, 2 );
+        }
+
+        // mph (top speed) - 1 decimal.
+        if ( $unit === 'mph' ) {
+            return round( (float) $value, 1 );
+        }
+
+        // mi (range) - 1 decimal.
+        if ( $unit === 'mi' ) {
+            return round( (float) $value, 1 );
+        }
+
+        // lbs (weight) - 1 decimal.
+        if ( $unit === 'lbs' ) {
+            return round( (float) $value, 1 );
+        }
+
+        // Integer for most other specs (power, battery capacity, etc.).
+        return round( (float) $value );
+    }
+
+    /**
+     * Format comparison text for display (e.g., "24.8 mph vs 21.1 mph avg").
+     *
+     * @param mixed $product_value Formatted product value.
+     * @param mixed $bracket_avg   Formatted bracket average.
+     * @param array $spec_def      Spec definition.
+     * @return string Formatted comparison text.
+     */
+    private function format_comparison_text( $product_value, $bracket_avg, array $spec_def ): string {
+        $unit = $spec_def['unit'] ?? '';
+
+        // Value metrics: format as "$1.42/Wh vs $1.65/Wh avg".
+        if ( ! empty( $spec_def['is_value'] ) ) {
+            // Convert unit like "$/Wh" to "$X/Wh" format.
+            $unit_suffix = str_replace( '$/', '/', $unit ); // "$/Wh" → "/Wh"
+            return sprintf(
+                '$%s%s vs $%s%s avg',
+                $product_value,
+                $unit_suffix,
+                $bracket_avg,
+                $unit_suffix
+            );
+        }
+
+        // No unit: just show values.
+        if ( empty( $unit ) ) {
+            return sprintf( '%s vs %s avg', $product_value, $bracket_avg );
+        }
+
+        // Standard format: "24.8 mph vs 21.1 mph avg".
+        return sprintf( '%s %s vs %s %s avg', $product_value, $unit, $bracket_avg, $unit );
+    }
+
+    /**
+     * Format human-readable text for advantage/weakness.
+     *
+     * Uses rank for "Best/Worst" in small brackets where percentile alone
+     * wouldn't reach 95%+ (e.g., #1 of 7 = 85.7% percentile).
+     *
+     * @param array $spec_def      Spec definition.
+     * @param float $percentile    Percentile rank (0-100).
+     * @param float $pct_vs_avg    Percentage vs average.
+     * @param bool  $is_advantage  Whether this is an advantage.
+     * @param bool  $higher_better Whether higher is better.
+     * @param int   $rank          Product's rank (1 = best).
+     * @param int   $total_count   Total products in comparison set.
+     * @return string Formatted text.
+     */
+    private function format_single_text( array $spec_def, float $percentile, float $pct_vs_avg, bool $is_advantage, bool $higher_better, int $rank = 0, int $total_count = 0 ): string {
+        $label       = $spec_def['label'];
+        $label_lower = strtolower( $label );
+        $key         = $spec_def['key'] ?? '';
+
+        // Special handling for weight (use "lighter"/"heavier" instead of "better"/"worse").
+        // Only match actual weight spec, not ratios like "Speed-to-weight".
+        $is_weight = ( $key === 'dimensions.weight' );
+
+        if ( $is_advantage ) {
+            // Rank 1 = literally the best in bracket.
+            if ( $rank === 1 ) {
+                if ( $is_weight ) {
+                    return 'Lightest';
+                }
+                return "Best {$label_lower}";
+            } elseif ( $percentile >= 95 ) {
+                if ( $is_weight ) {
+                    return 'Lightest';
+                }
+                return "Best {$label_lower}";
+            } elseif ( $percentile >= 90 || ( $total_count > 0 && $rank <= max( 2, (int) ceil( $total_count * 0.1 ) ) ) ) {
+                if ( $is_weight ) {
+                    return 'Very light';
+                }
+                return "Excellent {$label_lower}";
+            } elseif ( $percentile >= 80 || ( $total_count > 0 && $rank <= max( 2, (int) ceil( $total_count * 0.2 ) ) ) ) {
+                if ( $is_weight ) {
+                    return 'Light';
+                }
+                return "Strong {$label_lower}";
+            } else {
+                // Triggered by pct_vs_avg threshold.
+                $pct_display = abs( round( $pct_vs_avg ) );
+                if ( $is_weight ) {
+                    return "{$pct_display}% lighter than average";
+                } elseif ( $higher_better ) {
+                    return "{$pct_display}% above average {$label_lower}";
+                } else {
+                    return "{$pct_display}% better {$label_lower}";
+                }
+            }
+        } else {
+            // Last rank = literally the worst in bracket.
+            if ( $rank === $total_count && $total_count > 0 ) {
+                if ( $is_weight ) {
+                    return 'Heaviest in class';
+                }
+                return "Lowest {$label_lower}";
+            } elseif ( $percentile <= 5 ) {
+                if ( $is_weight ) {
+                    return 'Heaviest in class';
+                }
+                return "Lowest {$label_lower}";
+            } elseif ( $percentile <= 10 || ( $total_count > 0 && $rank >= $total_count - max( 1, (int) ceil( $total_count * 0.1 ) ) + 1 ) ) {
+                if ( $is_weight ) {
+                    return 'Very heavy';
+                }
+                return "Low {$label_lower}";
+            } elseif ( $percentile <= 20 || ( $total_count > 0 && $rank >= $total_count - max( 1, (int) ceil( $total_count * 0.2 ) ) + 1 ) ) {
+                if ( $is_weight ) {
+                    return 'Heavy';
+                }
+                return "Below average {$label_lower}";
+            } else {
+                // Triggered by pct_vs_avg threshold.
+                $pct_display = abs( round( $pct_vs_avg ) );
+                if ( $is_weight ) {
+                    return "{$pct_display}% heavier than average";
+                } elseif ( $higher_better ) {
+                    return "{$pct_display}% below average {$label_lower}";
+                } else {
+                    return "{$pct_display}% worse {$label_lower}";
+                }
+            }
+        }
     }
 
     /**

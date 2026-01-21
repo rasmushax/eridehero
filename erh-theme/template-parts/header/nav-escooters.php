@@ -20,7 +20,7 @@ $base_url = home_url( '/e-scooters' );
     </button>
     <div class="dropdown mega-dropdown" id="dropdown-escooters" role="menu" aria-label="<?php esc_attr_e( 'E-scooters submenu', 'erh' ); ?>">
         <div class="mega-dropdown-header">
-            <h3><?php esc_html_e( 'Electric scooters', 'erh' ); ?></h3>
+            <span class="mega-dropdown-title"><?php esc_html_e( 'Electric scooters', 'erh' ); ?></span>
             <a href="<?php echo esc_url( $base_url ); ?>" role="menuitem">
                 <?php esc_html_e( 'View all', 'erh' ); ?>
                 <?php erh_the_icon( 'arrow-right' ); ?>
@@ -32,7 +32,7 @@ $base_url = home_url( '/e-scooters' );
                     <?php erh_the_icon( 'search' ); ?>
                 </div>
                 <div class="mega-content">
-                    <h4><?php esc_html_e( 'Product finder', 'erh' ); ?></h4>
+                    <span class="mega-item-title"><?php esc_html_e( 'Product finder', 'erh' ); ?></span>
                     <span><?php esc_html_e( '200+ scooters', 'erh' ); ?></span>
                 </div>
             </a>
@@ -41,7 +41,7 @@ $base_url = home_url( '/e-scooters' );
                     <?php erh_the_icon( 'star' ); ?>
                 </div>
                 <div class="mega-content">
-                    <h4><?php esc_html_e( 'Reviews', 'erh' ); ?></h4>
+                    <span class="mega-item-title"><?php esc_html_e( 'Reviews', 'erh' ); ?></span>
                     <span><?php esc_html_e( '58 in-depth reviews', 'erh' ); ?></span>
                 </div>
             </a>
@@ -50,7 +50,7 @@ $base_url = home_url( '/e-scooters' );
                     <?php erh_the_icon( 'grid' ); ?>
                 </div>
                 <div class="mega-content">
-                    <h4><?php esc_html_e( 'H2H Compare', 'erh' ); ?></h4>
+                    <span class="mega-item-title"><?php esc_html_e( 'H2H Compare', 'erh' ); ?></span>
                     <span><?php esc_html_e( 'Side-by-side specs', 'erh' ); ?></span>
                 </div>
             </a>
@@ -59,7 +59,7 @@ $base_url = home_url( '/e-scooters' );
                     <?php erh_the_icon( 'book' ); ?>
                 </div>
                 <div class="mega-content">
-                    <h4><?php esc_html_e( 'Buying guides', 'erh' ); ?></h4>
+                    <span class="mega-item-title"><?php esc_html_e( 'Buying guides', 'erh' ); ?></span>
                     <span><?php esc_html_e( 'Expert recommendations', 'erh' ); ?></span>
                 </div>
             </a>
