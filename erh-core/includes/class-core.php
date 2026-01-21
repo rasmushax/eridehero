@@ -42,12 +42,14 @@ use ERH\Admin\LinkPopulator;
 use ERH\Admin\ClickStatsPage;
 use ERH\Admin\ComparisonDashboardWidget;
 use ERH\Admin\PopularComparisonsPage;
+use ERH\Admin\SpecEditor;
 use ERH\Migration\MigrationAdmin;
 use ERH\Api\RestPrices;
 use ERH\Api\RestDeals;
 use ERH\Api\RestProducts;
 use ERH\Api\RestListicle;
 use ERH\Api\RestComparisonViews;
+use ERH\Api\RestSpecEditor;
 use ERH\Api\ContactHandler;
 use ERH\Blocks\BlockManager;
 use ERH\Tracking\ClickRedirector;
@@ -176,6 +178,13 @@ class Core {
      * @var PopularComparisonsPage
      */
     private PopularComparisonsPage $popular_comparisons_page;
+
+    /**
+     * Spec editor admin page instance.
+     *
+     * @var SpecEditor
+     */
+    private SpecEditor $spec_editor;
 
     /**
      * Email template instance.
@@ -490,6 +499,10 @@ class Core {
         // Initialize popular comparisons admin page.
         $this->popular_comparisons_page = new PopularComparisonsPage();
         $this->popular_comparisons_page->init();
+
+        // Initialize spec editor admin page.
+        $this->spec_editor = new SpecEditor();
+        $this->spec_editor->register();
     }
 
     /**
@@ -680,6 +693,10 @@ class Core {
         // Initialize and register REST Comparison Views API.
         $rest_comparison_views = new RestComparisonViews();
         $rest_comparison_views->register_routes();
+
+        // Initialize and register REST Spec Editor API.
+        $rest_spec_editor = new RestSpecEditor();
+        $rest_spec_editor->register_routes();
     }
 
     /**

@@ -1,0 +1,889 @@
+/**
+ * Spec Editor - Admin Dashboard Styles
+ *
+ * Excel-like spreadsheet interface for bulk editing product specifications.
+ *
+ * @package ERH\Admin
+ */
+
+/* ==========================================================================
+   Page Layout
+   ========================================================================== */
+
+.erh-spec-editor {
+    max-width: 100%;
+    margin-right: 20px;
+}
+
+.erh-spec-editor h1 {
+    margin-bottom: 5px;
+}
+
+.erh-spec-editor > .description {
+    margin-bottom: 20px;
+    color: #646970;
+}
+
+/* ==========================================================================
+   Product Type Tabs
+   ========================================================================== */
+
+.erh-se-tabs {
+    display: flex;
+    gap: 0;
+    margin-bottom: 0;
+    border-bottom: 1px solid #c3c4c7;
+    background: #f6f7f7;
+}
+
+.erh-se-tab {
+    padding: 12px 20px;
+    background: transparent;
+    border: none;
+    border-bottom: 3px solid transparent;
+    color: #646970;
+    font-size: 14px;
+    font-weight: 500;
+    cursor: pointer;
+    transition: all 0.15s ease;
+    margin-bottom: -1px;
+}
+
+.erh-se-tab:hover {
+    color: #1d2327;
+    background: #fff;
+}
+
+.erh-se-tab.is-active {
+    color: #2271b1;
+    background: #fff;
+    border-bottom-color: #2271b1;
+}
+
+.erh-se-tab-count {
+    display: inline-block;
+    margin-left: 6px;
+    padding: 2px 8px;
+    background: #dcdcde;
+    border-radius: 10px;
+    font-size: 12px;
+    color: #50575e;
+}
+
+.erh-se-tab.is-active .erh-se-tab-count {
+    background: #2271b1;
+    color: #fff;
+}
+
+/* ==========================================================================
+   Toolbar
+   ========================================================================== */
+
+.erh-se-toolbar {
+    display: flex;
+    justify-content: space-between;
+    align-items: center;
+    gap: 15px;
+    padding: 12px 15px;
+    background: #fff;
+    border: 1px solid #c3c4c7;
+    border-top: none;
+}
+
+.erh-se-toolbar-left {
+    display: flex;
+    align-items: center;
+    gap: 15px;
+    flex: 1;
+}
+
+.erh-se-toolbar-right {
+    display: flex;
+    align-items: center;
+    gap: 10px;
+}
+
+/* Search */
+.erh-se-search {
+    width: 280px;
+    max-width: 100%;
+    padding: 8px 12px;
+    border: 1px solid #c3c4c7;
+    border-radius: 4px;
+    font-size: 14px;
+}
+
+.erh-se-search:focus {
+    border-color: #2271b1;
+    box-shadow: 0 0 0 1px #2271b1;
+    outline: none;
+}
+
+/* Column Picker Dropdown */
+.erh-se-column-picker {
+    position: relative;
+}
+
+.erh-se-columns-btn {
+    display: flex;
+    align-items: center;
+    gap: 5px;
+}
+
+.erh-se-columns-btn .dashicons {
+    font-size: 14px;
+    width: 14px;
+    height: 14px;
+    margin-top: 2px;
+}
+
+.erh-se-columns-dropdown {
+    position: absolute;
+    top: 100%;
+    right: 0;
+    z-index: 100;
+    min-width: 280px;
+    max-height: 400px;
+    overflow-y: auto;
+    margin-top: 5px;
+    background: #fff;
+    border: 1px solid #c3c4c7;
+    border-radius: 4px;
+    box-shadow: 0 3px 10px rgba(0, 0, 0, 0.1);
+}
+
+.erh-se-columns-header {
+    display: flex;
+    justify-content: space-between;
+    align-items: center;
+    padding: 10px 15px;
+    border-bottom: 1px solid #dcdcde;
+    background: #f6f7f7;
+}
+
+.erh-se-columns-header h4 {
+    margin: 0;
+    font-size: 13px;
+    font-weight: 600;
+}
+
+.erh-se-columns-actions {
+    display: flex;
+    gap: 8px;
+}
+
+.erh-se-columns-actions button {
+    padding: 2px 8px;
+    font-size: 11px;
+}
+
+.erh-se-column-group {
+    border-bottom: 1px solid #dcdcde;
+}
+
+.erh-se-column-group:last-child {
+    border-bottom: none;
+}
+
+.erh-se-column-group-header {
+    padding: 8px 15px;
+    background: #f6f7f7;
+    font-size: 11px;
+    font-weight: 600;
+    color: #50575e;
+    text-transform: uppercase;
+    letter-spacing: 0.5px;
+}
+
+.erh-se-column-item {
+    display: flex;
+    align-items: center;
+    padding: 8px 15px;
+}
+
+.erh-se-column-item:hover {
+    background: #f6f7f7;
+}
+
+.erh-se-column-item input {
+    margin-right: 8px;
+}
+
+.erh-se-column-item label {
+    flex: 1;
+    cursor: pointer;
+    font-size: 13px;
+}
+
+/* History Controls */
+.erh-se-history-controls {
+    display: flex;
+    align-items: center;
+    gap: 5px;
+}
+
+.erh-se-undo-btn,
+.erh-se-redo-btn {
+    padding: 4px 8px !important;
+}
+
+.erh-se-undo-btn .dashicons,
+.erh-se-redo-btn .dashicons {
+    font-size: 16px;
+    width: 16px;
+    height: 16px;
+}
+
+.erh-se-history-btn {
+    display: flex;
+    align-items: center;
+    gap: 5px;
+}
+
+.erh-se-history-count {
+    display: inline-flex;
+    align-items: center;
+    justify-content: center;
+    min-width: 20px;
+    height: 20px;
+    padding: 0 6px;
+    background: #dcdcde;
+    border-radius: 10px;
+    font-size: 11px;
+    font-weight: 600;
+    color: #50575e;
+}
+
+.erh-se-history-count.has-changes {
+    background: #2271b1;
+    color: #fff;
+}
+
+/* ==========================================================================
+   History Panel
+   ========================================================================== */
+
+.erh-se-history-panel {
+    position: fixed;
+    top: 32px;
+    right: 0;
+    bottom: 0;
+    z-index: 99999;
+    width: 350px;
+    background: #fff;
+    border-left: 1px solid #c3c4c7;
+    box-shadow: -5px 0 20px rgba(0, 0, 0, 0.1);
+    transform: translateX(100%);
+    transition: transform 0.2s ease;
+}
+
+.erh-se-history-panel.is-open {
+    transform: translateX(0);
+}
+
+.erh-se-history-header {
+    display: flex;
+    justify-content: space-between;
+    align-items: center;
+    padding: 15px;
+    border-bottom: 1px solid #c3c4c7;
+    background: #f6f7f7;
+}
+
+.erh-se-history-header h3 {
+    margin: 0;
+    font-size: 14px;
+}
+
+.erh-se-history-close {
+    background: none;
+    border: none;
+    padding: 5px;
+    cursor: pointer;
+    color: #646970;
+}
+
+.erh-se-history-close:hover {
+    color: #1d2327;
+}
+
+.erh-se-history-list {
+    height: calc(100% - 110px);
+    overflow-y: auto;
+    padding: 10px;
+}
+
+.erh-se-history-empty {
+    padding: 30px;
+    text-align: center;
+    color: #646970;
+}
+
+.erh-se-history-item {
+    padding: 10px 12px;
+    margin-bottom: 8px;
+    background: #f6f7f7;
+    border-radius: 4px;
+    border-left: 3px solid #2271b1;
+}
+
+.erh-se-history-item-header {
+    display: flex;
+    justify-content: space-between;
+    align-items: flex-start;
+    margin-bottom: 5px;
+}
+
+.erh-se-history-product {
+    font-weight: 500;
+    font-size: 13px;
+    color: #1d2327;
+}
+
+.erh-se-history-time {
+    font-size: 11px;
+    color: #646970;
+}
+
+.erh-se-history-field {
+    font-size: 12px;
+    color: #50575e;
+    margin-bottom: 5px;
+}
+
+.erh-se-history-values {
+    display: flex;
+    align-items: center;
+    gap: 8px;
+    font-size: 12px;
+}
+
+.erh-se-history-old {
+    color: #d63638;
+    text-decoration: line-through;
+}
+
+.erh-se-history-arrow {
+    color: #646970;
+}
+
+.erh-se-history-new {
+    color: #00a32a;
+    font-weight: 500;
+}
+
+.erh-se-history-footer {
+    position: absolute;
+    bottom: 0;
+    left: 0;
+    right: 0;
+    padding: 15px;
+    border-top: 1px solid #c3c4c7;
+    background: #f6f7f7;
+}
+
+/* ==========================================================================
+   Table Container
+   ========================================================================== */
+
+.erh-se-table-container {
+    position: relative;
+    overflow: auto;
+    max-height: calc(100vh - 320px);
+    min-height: 400px;
+    background: #fff;
+    border: 1px solid #c3c4c7;
+    border-top: none;
+}
+
+.erh-se-loading {
+    display: flex;
+    align-items: center;
+    justify-content: center;
+    gap: 10px;
+    padding: 60px;
+    color: #646970;
+}
+
+.erh-se-loading .spinner {
+    float: none;
+    margin: 0;
+}
+
+.erh-se-empty {
+    padding: 60px;
+    text-align: center;
+    color: #646970;
+}
+
+/* ==========================================================================
+   Table Styles
+   ========================================================================== */
+
+.erh-se-table {
+    width: 100%;
+    border-collapse: separate;
+    border-spacing: 0;
+    font-size: 13px;
+}
+
+/* Group Header Row */
+.erh-se-group-row th {
+    padding: 6px 12px;
+    background: #f0f0f1;
+    border-bottom: 1px solid #c3c4c7;
+    font-size: 11px;
+    font-weight: 600;
+    color: #50575e;
+    text-transform: uppercase;
+    letter-spacing: 0.5px;
+    text-align: left;
+}
+
+/* Table Header */
+.erh-se-table thead th {
+    position: sticky;
+    top: 0;
+    z-index: 20;
+    padding: 10px 12px;
+    background: #f6f7f7;
+    border-bottom: 2px solid #c3c4c7;
+    font-weight: 600;
+    text-align: left;
+    white-space: nowrap;
+    cursor: pointer;
+    user-select: none;
+}
+
+.erh-se-table thead th:hover {
+    background: #eaeaea;
+}
+
+.erh-se-table thead th.is-sorted {
+    color: #2271b1;
+}
+
+.erh-se-th-content {
+    display: flex;
+    align-items: center;
+    gap: 5px;
+}
+
+.erh-se-sort-icon {
+    font-size: 14px;
+    color: #a7a7a7;
+}
+
+.erh-se-table thead th.is-sorted .erh-se-sort-icon {
+    color: #2271b1;
+}
+
+.erh-se-th-unit {
+    font-weight: normal;
+    color: #646970;
+    font-size: 11px;
+}
+
+/* Pinned Column */
+.erh-se-table th.is-pinned,
+.erh-se-table td.is-pinned {
+    position: sticky;
+    left: 0;
+    z-index: 10;
+    background: #fff;
+    box-shadow: 2px 0 5px rgba(0, 0, 0, 0.05);
+}
+
+.erh-se-table thead th.is-pinned {
+    z-index: 30;
+    background: #f6f7f7;
+}
+
+/* Table Body */
+.erh-se-table tbody tr {
+    transition: background-color 0.15s ease;
+}
+
+.erh-se-table tbody tr:hover {
+    background: #f6f7f7;
+}
+
+.erh-se-table tbody tr:nth-child(even) {
+    background: #fafafa;
+}
+
+.erh-se-table tbody tr:nth-child(even):hover {
+    background: #f0f6fc;
+}
+
+.erh-se-table tbody td {
+    padding: 0;
+    border-bottom: 1px solid #dcdcde;
+    vertical-align: middle;
+    min-width: 100px;
+    max-width: 250px;
+}
+
+.erh-se-table tbody td.is-pinned {
+    min-width: 200px;
+    max-width: 300px;
+}
+
+/* ==========================================================================
+   Cell Content & Editing
+   ========================================================================== */
+
+.erh-se-cell {
+    display: flex;
+    align-items: center;
+    min-height: 38px;
+    padding: 6px 12px;
+    cursor: pointer;
+    transition: background-color 0.1s ease;
+}
+
+.erh-se-cell:hover {
+    background: #f0f6fc;
+}
+
+.erh-se-cell.is-editing {
+    padding: 0;
+    background: #fff;
+}
+
+.erh-se-cell.is-saving {
+    background: #fffbeb;
+}
+
+.erh-se-cell.is-saved {
+    animation: cell-saved 1s ease;
+}
+
+.erh-se-cell.is-error {
+    animation: cell-error 1s ease;
+}
+
+@keyframes cell-saved {
+    0% { background: #edfaef; }
+    100% { background: transparent; }
+}
+
+@keyframes cell-error {
+    0% { background: #fcf0f1; }
+    100% { background: transparent; }
+}
+
+/* Cell Value Display */
+.erh-se-cell-value {
+    overflow: hidden;
+    text-overflow: ellipsis;
+    white-space: nowrap;
+}
+
+.erh-se-cell-value.is-empty {
+    color: #a7a7a7;
+    font-style: italic;
+}
+
+.erh-se-cell-value.is-boolean {
+    display: flex;
+    align-items: center;
+    gap: 5px;
+}
+
+.erh-se-cell-value .dashicons {
+    font-size: 16px;
+    width: 16px;
+    height: 16px;
+}
+
+.erh-se-cell-value .dashicons-yes-alt {
+    color: #00a32a;
+}
+
+.erh-se-cell-value .dashicons-no-alt {
+    color: #d63638;
+}
+
+/* Product Name Column (Pinned) */
+.erh-se-product-name {
+    display: flex;
+    align-items: center;
+    gap: 8px;
+}
+
+.erh-se-product-name a {
+    color: #2271b1;
+    text-decoration: none;
+    font-weight: 500;
+}
+
+.erh-se-product-name a:hover {
+    text-decoration: underline;
+}
+
+.erh-se-product-status {
+    display: inline-block;
+    padding: 2px 6px;
+    border-radius: 3px;
+    font-size: 10px;
+    font-weight: 600;
+    text-transform: uppercase;
+}
+
+.erh-se-product-status.is-draft {
+    background: #fcf9e8;
+    color: #996800;
+}
+
+.erh-se-product-status.is-publish {
+    background: #edfaef;
+    color: #00a32a;
+}
+
+/* Cell Editors */
+.erh-se-editor {
+    width: 100%;
+    height: 100%;
+    min-height: 38px;
+    padding: 6px 12px;
+    border: 2px solid #2271b1;
+    border-radius: 0;
+    font-size: 13px;
+    font-family: inherit;
+    background: #fff;
+    box-sizing: border-box;
+}
+
+.erh-se-editor:focus {
+    outline: none;
+    box-shadow: 0 0 0 1px #2271b1;
+}
+
+.erh-se-editor-select {
+    appearance: none;
+    background-image: url("data:image/svg+xml,%3Csvg xmlns='http://www.w3.org/2000/svg' width='12' height='12' viewBox='0 0 12 12'%3E%3Cpath fill='%23646970' d='M6 8.825L1.175 4 2.35 2.825 6 6.475l3.65-3.65L10.825 4z'/%3E%3C/svg%3E");
+    background-repeat: no-repeat;
+    background-position: right 10px center;
+    padding-right: 30px;
+}
+
+.erh-se-editor-checkbox {
+    display: flex;
+    align-items: center;
+    gap: 5px;
+    padding: 6px 12px;
+    min-height: 38px;
+    border: 2px solid #2271b1;
+    background: #fff;
+}
+
+.erh-se-editor-checkbox input {
+    margin: 0;
+}
+
+.erh-se-editor-checkbox label {
+    font-size: 13px;
+    cursor: pointer;
+}
+
+/* ==========================================================================
+   Pagination
+   ========================================================================== */
+
+.erh-se-pagination {
+    display: flex;
+    justify-content: space-between;
+    align-items: center;
+    padding: 15px;
+    background: #fff;
+    border: 1px solid #c3c4c7;
+    border-top: none;
+}
+
+.erh-se-pagination-info {
+    color: #646970;
+    font-size: 13px;
+}
+
+.erh-se-pagination-controls {
+    display: flex;
+    align-items: center;
+    gap: 10px;
+}
+
+.erh-se-pagination-controls button {
+    display: flex;
+    align-items: center;
+    gap: 5px;
+}
+
+.erh-se-pagination-controls .dashicons {
+    font-size: 16px;
+    width: 16px;
+    height: 16px;
+}
+
+.erh-se-page-numbers {
+    display: flex;
+    gap: 5px;
+}
+
+.erh-se-page-num {
+    min-width: 32px;
+    height: 32px;
+    padding: 0 8px;
+    border: 1px solid #c3c4c7;
+    border-radius: 3px;
+    background: #fff;
+    color: #2271b1;
+    font-size: 13px;
+    cursor: pointer;
+}
+
+.erh-se-page-num:hover {
+    background: #f0f6fc;
+    border-color: #2271b1;
+}
+
+.erh-se-page-num.is-current {
+    background: #2271b1;
+    border-color: #2271b1;
+    color: #fff;
+    cursor: default;
+}
+
+/* ==========================================================================
+   Status Bar
+   ========================================================================== */
+
+.erh-se-status-bar {
+    position: fixed;
+    bottom: 20px;
+    left: 50%;
+    transform: translateX(-50%);
+    z-index: 9999;
+    display: flex;
+    align-items: center;
+    gap: 8px;
+    padding: 10px 20px;
+    background: #1d2327;
+    border-radius: 6px;
+    color: #fff;
+    font-size: 13px;
+    box-shadow: 0 4px 15px rgba(0, 0, 0, 0.2);
+    opacity: 0;
+    transition: opacity 0.2s ease;
+}
+
+.erh-se-status-bar.is-visible {
+    opacity: 1;
+}
+
+.erh-se-status-bar.is-saving {
+    background: #996800;
+}
+
+.erh-se-status-bar.is-success {
+    background: #00a32a;
+}
+
+.erh-se-status-bar.is-error {
+    background: #d63638;
+}
+
+.erh-se-status-icon .spinner {
+    float: none;
+    margin: 0;
+    background-size: 16px 16px;
+    width: 16px;
+    height: 16px;
+}
+
+/* ==========================================================================
+   Column Visibility
+   ========================================================================== */
+
+.erh-se-table th.is-hidden,
+.erh-se-table td.is-hidden {
+    display: none;
+}
+
+/* ==========================================================================
+   Responsive
+   ========================================================================== */
+
+@media screen and (max-width: 1200px) {
+    .erh-se-history-panel {
+        width: 300px;
+    }
+}
+
+@media screen and (max-width: 782px) {
+    .erh-se-toolbar {
+        flex-direction: column;
+        align-items: stretch;
+    }
+
+    .erh-se-toolbar-left,
+    .erh-se-toolbar-right {
+        width: 100%;
+    }
+
+    .erh-se-search {
+        width: 100%;
+    }
+
+    .erh-se-toolbar-right {
+        justify-content: space-between;
+    }
+
+    .erh-se-tabs {
+        overflow-x: auto;
+        white-space: nowrap;
+    }
+
+    .erh-se-table-container {
+        max-height: calc(100vh - 400px);
+    }
+
+    .erh-se-pagination {
+        flex-direction: column;
+        gap: 15px;
+    }
+
+    .erh-se-history-panel {
+        width: 100%;
+    }
+}
+
+/* ==========================================================================
+   Tooltips
+   ========================================================================== */
+
+.erh-se-tooltip {
+    position: absolute;
+    z-index: 1000;
+    padding: 8px 12px;
+    background: #1d2327;
+    color: #fff;
+    font-size: 12px;
+    border-radius: 4px;
+    max-width: 250px;
+    pointer-events: none;
+    opacity: 0;
+    transition: opacity 0.15s ease;
+}
+
+.erh-se-tooltip.is-visible {
+    opacity: 1;
+}
+
+.erh-se-tooltip::after {
+    content: '';
+    position: absolute;
+    top: 100%;
+    left: 20px;
+    border: 6px solid transparent;
+    border-top-color: #1d2327;
+}
