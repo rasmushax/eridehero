@@ -103,6 +103,352 @@ class SpecConfig {
      */
     public const SPEC_ADVANTAGE_THRESHOLD = 0;
 
+    // =========================================================================
+    // Centralized Tooltips - Single Source of Truth
+    // =========================================================================
+
+    /**
+     * Centralized tooltip definitions for all specs.
+     *
+     * Tooltip Tiers:
+     * - methodology: Full explanation of the spec/test protocol (default)
+     * - comparison: Why this matters when comparing products
+     *
+     * Fallback chain: comparison → methodology
+     *
+     * Weight notation: Always use "175-lb rider" (hyphenated compound adjective)
+     */
+    public const TOOLTIPS = [
+        // =====================================================================
+        // Motor Performance
+        // =====================================================================
+        'tested_top_speed' => [
+            'methodology' => 'GPS-verified max speed on flat ground, averaged between two opposite runs. 175-lb rider, 80%+ battery.',
+            'comparison'  => 'Higher top speed means faster travel and more overtaking ability.',
+        ],
+        'manufacturer_top_speed' => [
+            'methodology' => 'Speed claimed by manufacturer. Actual results vary by rider weight and conditions.',
+        ],
+        'motor.power_nominal' => [
+            'methodology' => 'Continuous power the motor can sustain without overheating. Combined total for dual motors.',
+            'comparison'  => 'More motor power provides better hill climbing and acceleration.',
+        ],
+        'motor.power_peak' => [
+            'methodology' => 'Peak power for brief periods (hills, acceleration). Limited duration to prevent overheating.',
+        ],
+        'motor.voltage' => [
+            'methodology' => 'Motor operating voltage. Higher voltage typically means more power and efficiency.',
+        ],
+        'motor.motor_position' => [
+            'methodology' => 'Location and configuration of the motor(s). Hub motors are in the wheels, belt drives use external motors.',
+            'comparison'  => 'Dual motors provide better traction and hill climbing vs single motor.',
+        ],
+        'motor.motor_count' => [
+            'methodology' => 'Single motor is lighter and more efficient. Dual motors provide more power and traction.',
+            'comparison'  => 'Dual motors provide better traction, acceleration, and hill climbing compared to single motor.',
+        ],
+        'hill_climbing' => [
+            'methodology' => 'Average speed climbing 250 ft at 8% grade from kick-off start. Average of 5+ runs. 175-lb rider, 80%+ battery.',
+            'comparison'  => 'Higher hill climb speed means better real-world climbing performance.',
+        ],
+        'max_incline' => [
+            'methodology' => 'Maximum incline angle the manufacturer claims the scooter can climb. Actual results depend on rider weight and battery level.',
+        ],
+        'acceleration_0_15_mph' => [
+            'methodology' => 'Median time from standstill to 15 mph over 10+ runs. Max acceleration setting. 175-lb rider, 80%+ battery.',
+            'comparison'  => 'Faster acceleration means quicker starts from lights and stops.',
+        ],
+        'acceleration_0_20_mph' => [
+            'methodology' => 'Median time from standstill to 20 mph over 10+ runs. Max acceleration setting. 175-lb rider, 80%+ battery.',
+            'comparison'  => 'Faster acceleration means quicker starts from lights and stops.',
+        ],
+        'acceleration_0_25_mph' => [
+            'methodology' => 'Median time from standstill to 25 mph over 10+ runs. Max acceleration setting. 175-lb rider, 80%+ battery.',
+            'comparison'  => 'Faster acceleration means quicker starts from lights and stops.',
+        ],
+        'acceleration_0_30_mph' => [
+            'methodology' => 'Median time from standstill to 30 mph over 10+ runs. Max acceleration setting. 175-lb rider, 80%+ battery.',
+            'comparison'  => 'Faster acceleration means quicker starts from lights and stops.',
+        ],
+        'acceleration_0_to_top' => [
+            'methodology' => 'Median time from standstill to top speed over 10+ runs. Max acceleration setting. 175-lb rider, 80%+ battery.',
+            'comparison'  => 'Faster acceleration means quicker starts from lights and stops.',
+        ],
+
+        // =====================================================================
+        // Range & Battery
+        // =====================================================================
+        'tested_range_fast' => [
+            'methodology' => 'Real-world range on mixed terrain (city, country, minor hills). Speed priority riding from 100% to empty. 175-lb rider.',
+            'comparison'  => 'More range means you can travel further on a single charge.',
+        ],
+        'tested_range_regular' => [
+            'methodology' => 'Real-world range on mixed terrain (city, country, minor hills). Moderate speed riding from 100% to empty. 175-lb rider.',
+            'comparison'  => 'More range means you can travel further on a single charge.',
+        ],
+        'tested_range_slow' => [
+            'methodology' => 'Real-world range on mixed terrain (city, country, minor hills). Range priority riding (eco mode) from 100% to empty. 175-lb rider.',
+            'comparison'  => 'More range means you can travel further on a single charge.',
+        ],
+        'manufacturer_range' => [
+            'methodology' => 'Range claimed by manufacturer. Actual range varies significantly based on rider weight, terrain, and riding style.',
+        ],
+        'battery.capacity' => [
+            'methodology' => 'Total energy storage in Watt-hours (Voltage × Amp-hours). Larger battery = longer range but more weight.',
+            'comparison'  => 'Larger battery capacity means more energy stored, which directly translates to longer range potential.',
+        ],
+        'battery.ah' => [
+            'methodology' => 'Battery capacity in amp-hours. Multiply by voltage to get Wh.',
+        ],
+        'battery.voltage' => [
+            'methodology' => 'Battery voltage affects power delivery and efficiency. Higher voltage systems can deliver more power.',
+            'comparison'  => 'Higher voltage delivers more consistent power output, especially under load and on hills.',
+        ],
+        'battery.charging_time' => [
+            'methodology' => 'Time to charge from empty to full using the included charger. Fast chargers sold separately may reduce this.',
+            'comparison'  => 'Faster charging means less downtime between rides.',
+        ],
+        'battery.battery_type' => [
+            'methodology' => 'Battery chemistry. Li-ion is standard. LiFePO4 lasts longer but weighs more.',
+        ],
+
+        // =====================================================================
+        // Ride Quality
+        // =====================================================================
+        'suspension.type' => [
+            'methodology' => 'Suspension absorbs bumps and vibrations. Hydraulic provides best damping, spring is good, rubber is basic.',
+            'comparison'  => 'Better suspension provides a smoother, more comfortable ride on rough roads.',
+        ],
+        'suspension.adjustable' => [
+            'methodology' => 'Adjustable preload or damping lets you tune firmness for your weight and riding style.',
+            'comparison'  => 'Adjustable suspension lets you tune the ride for your weight and preferences.',
+        ],
+        'wheels.tire_type' => [
+            'methodology' => 'Pneumatic (air-filled) tires provide the smoothest ride. Solid tires are maintenance-free but harsher.',
+            'comparison'  => 'Pneumatic tires absorb bumps better for a smoother ride.',
+        ],
+        'wheels.tire_size_front' => [
+            'methodology' => 'Front tire diameter in inches. Larger tires handle cracks and bumps better.',
+            'comparison'  => 'Larger tires roll over cracks and bumps more easily, providing better stability and comfort.',
+        ],
+        'wheels.tire_size_rear' => [
+            'methodology' => 'Rear tire diameter in inches. May differ from front on some models.',
+        ],
+        'wheels.tire_width' => [
+            'methodology' => 'Tire width affects grip and stability. Wider tires provide more contact with the road.',
+            'comparison'  => 'Wider tires provide more stability and grip.',
+        ],
+        'wheels.pneumatic_type' => [
+            'methodology' => 'Tubed tires are easier to repair but can pinch flat. Tubeless resist punctures better.',
+            'comparison'  => 'Tubeless tires are more resistant to punctures.',
+        ],
+        'wheels.self_healing' => [
+            'methodology' => 'Tires contain sealant that automatically plugs small punctures from glass, thorns, etc.',
+            'comparison'  => 'Self-healing tires automatically seal small punctures, reducing flat risk.',
+        ],
+        'dimensions.deck_length' => [
+            'methodology' => 'Length of the standing platform. Longer decks give more room for repositioning your feet.',
+            'comparison'  => 'Longer deck gives more room for foot positioning.',
+        ],
+        'dimensions.deck_width' => [
+            'methodology' => 'Width of the standing platform. Wider decks feel more stable.',
+            'comparison'  => 'Wider deck provides more stable footing.',
+        ],
+        'dimensions.ground_clearance' => [
+            'methodology' => 'Height from ground to the lowest point (usually deck or motor). Important for curbs and speed bumps.',
+        ],
+        'dimensions.handlebar_height_min' => [
+            'methodology' => 'Minimum handlebar height from ground. Best height depends on rider height and preference.',
+        ],
+        'dimensions.handlebar_height_max' => [
+            'methodology' => 'Maximum handlebar height from ground. Best height depends on rider height and preference.',
+        ],
+        'dimensions.handlebar_width' => [
+            'methodology' => 'Width between handlebar grips. Wider bars provide more leverage for steering.',
+            'comparison'  => 'Wider bars provide more control and stability.',
+        ],
+        'other.footrest' => [
+            'methodology' => 'Rear pegs for a standing passenger. Check local laws for legality.',
+        ],
+        'other.terrain' => [
+            'methodology' => 'Recommended terrain based on tire type, suspension, and ground clearance.',
+        ],
+
+        // =====================================================================
+        // Portability & Fit
+        // =====================================================================
+        'dimensions.weight' => [
+            'methodology' => 'Total weight including battery. Heavier scooters are harder to carry but often more stable.',
+            'comparison'  => 'Lighter scooters are easier to carry upstairs, onto public transit, or into your office.',
+        ],
+        'dimensions.max_load' => [
+            'methodology' => 'Maximum recommended rider weight. Exceeding may reduce performance and void warranty.',
+            'comparison'  => 'Higher weight capacity accommodates heavier riders.',
+        ],
+        'dimensions.folded_length' => [
+            'methodology' => 'Length when folded. Important for fitting in car trunks or storage spaces.',
+            'comparison'  => 'Smaller folded size is easier to store and transport.',
+        ],
+        'dimensions.folded_width' => [
+            'methodology' => 'Width when folded. Usually same as unfolded (handlebar width).',
+        ],
+        'dimensions.folded_height' => [
+            'methodology' => 'Height when folded. Depends on folding mechanism and handlebar design.',
+        ],
+        'dimensions.foldable_handlebars' => [
+            'methodology' => 'Handlebars fold down for more compact storage. Reduces folded height significantly.',
+            'comparison'  => 'Foldable handlebars make the scooter more compact for storage.',
+        ],
+        'other.fold_location' => [
+            'methodology' => 'Where the scooter folds. Stem-fold is most common. Some fold at the deck.',
+        ],
+        'folded_footprint' => [
+            'methodology' => 'Floor space when folded (length × width). Important for closets, car trunks, and under-desk storage.',
+            'comparison'  => 'Smaller folded footprint is easier to fit in car trunks, closets, or under desks.',
+        ],
+        'speed_per_lb' => [
+            'methodology' => 'Top speed divided by weight. Measures performance relative to weight.',
+            'comparison'  => 'Higher ratio means more speed per pound of scooter.',
+        ],
+        'wh_per_lb' => [
+            'methodology' => 'Battery capacity divided by weight. Measures energy efficiency relative to weight.',
+            'comparison'  => 'Higher ratio means more energy storage per pound of scooter.',
+        ],
+        'tested_range_per_lb' => [
+            'methodology' => 'Tested range divided by weight. Measures real-world range efficiency.',
+            'comparison'  => 'Higher ratio means more miles per pound of scooter.',
+        ],
+
+        // =====================================================================
+        // Safety
+        // =====================================================================
+        'brakes.front' => [
+            'methodology' => 'Front brake type. Disc brakes offer more stopping power. Drum brakes are sealed and low-maintenance.',
+        ],
+        'brakes.rear' => [
+            'methodology' => 'Rear brake type. Some scooters use foot brake, electronic brake, or same type as front.',
+        ],
+        'brakes.regenerative' => [
+            'methodology' => 'Electronic braking that recovers energy back to the battery. Extends range slightly and reduces brake wear.',
+        ],
+        'brake_distance' => [
+            'methodology' => 'Average stopping distance from 15 mph with all brakes applied (max force, no lockup). Average of 10+ runs. 175-lb rider.',
+            'comparison'  => 'Shorter stopping distance means better safety in emergency situations.',
+        ],
+        'lighting.lights' => [
+            'methodology' => 'Built-in lights for visibility. Front headlight, rear brake light, and deck lights are common.',
+        ],
+        'lighting.turn_signals' => [
+            'methodology' => 'Built-in turn signal indicators. Usually on handlebars or rear of deck.',
+            'comparison'  => 'Turn signals improve visibility and safety when changing lanes.',
+        ],
+        'other.ip_rating' => [
+            'methodology' => 'IP rating indicates dust and water resistance. First digit = dust (6 = dustproof), second = water (4 = splash, 5 = jets, 6 = powerful jets, 7 = immersion).',
+            'comparison'  => 'Higher IP rating means better protection from water and dust damage.',
+        ],
+
+        // =====================================================================
+        // Features
+        // =====================================================================
+        'features' => [
+            'methodology' => 'Built-in features beyond the basics. Common features include app connectivity, cruise control, speed modes, and alarm.',
+            'comparison'  => 'More features like app connectivity, cruise control, and speed modes add convenience.',
+        ],
+        'other.display_type' => [
+            'methodology' => 'Type of dashboard display. LCD and OLED are easier to read in sunlight. LED is basic.',
+            'comparison'  => 'Better displays show more information and are easier to read in sunlight.',
+        ],
+        'other.throttle_type' => [
+            'methodology' => 'Throttle style. Trigger and thumb are most common. Twist grip is rare on scooters.',
+        ],
+        'other.kickstand' => [
+            'methodology' => 'Built-in kickstand for parking. Side-mount is standard, center-mount is more stable.',
+        ],
+
+        // =====================================================================
+        // Maintenance
+        // =====================================================================
+        'maintenance.tire_type' => [
+            'methodology' => 'Maintenance level based on tire type. Solid = zero maintenance. Tubeless = occasional pressure checks. Tubed = higher puncture risk.',
+            'comparison'  => 'Solid and tubeless tires require less maintenance than pneumatic tires with tubes.',
+        ],
+        'maintenance.brake_type' => [
+            'methodology' => 'Maintenance level based on brake type. Drum = sealed and maintenance-free. Disc = occasional pad replacement and adjustment.',
+            'comparison'  => 'Drum brakes are sealed and maintenance-free. Disc brakes need pad replacements and adjustments.',
+        ],
+
+        // =====================================================================
+        // Composite Categories (for product analysis)
+        // =====================================================================
+        '_ride_quality' => [
+            'methodology' => 'Combined ride comfort score based on suspension quality, tire size, and tire type.',
+            'comparison'  => 'Ride comfort based on suspension, tire size, and tire type. Better = smoother ride over bumps.',
+        ],
+        '_portability' => [
+            'methodology' => 'Combined portability score based on weight and folded dimensions.',
+            'comparison'  => 'Portability combines weight and folded size. Lighter and smaller = easier to carry and store.',
+        ],
+        '_safety' => [
+            'methodology' => 'Combined safety score based on tire grip (pneumatic vs solid) and braking performance.',
+            'comparison'  => 'Safety based on tire type (pneumatic = better grip) and stopping distance.',
+        ],
+        '_maintenance' => [
+            'methodology' => 'Combined maintenance score based on tire type, brake type, and water resistance.',
+            'comparison'  => 'Lower maintenance based on tire type and brake type. Solid tires and drum brakes need the least maintenance.',
+        ],
+
+        // =====================================================================
+        // Value Metrics (geo-specific)
+        // =====================================================================
+        'value_metrics.price_per_wh' => [
+            'methodology' => 'Price divided by battery capacity. Shows how much you pay per Wh of battery.',
+            'comparison'  => 'Lower cost per Wh means better battery value for your money.',
+        ],
+        'value_metrics.price_per_watt' => [
+            'methodology' => 'Price divided by motor power. Shows how much you pay per Watt of power.',
+            'comparison'  => 'Lower cost per Watt means better motor value for your money.',
+        ],
+        'value_metrics.price_per_tested_mile' => [
+            'methodology' => 'Price divided by tested range. Shows how much you pay per mile of range.',
+            'comparison'  => 'Lower cost per mile means better range value for your money.',
+        ],
+        'value_metrics.price_per_mph' => [
+            'methodology' => 'Price divided by top speed. Shows how much you pay per mph of speed.',
+            'comparison'  => 'Lower cost per mph means better speed value for your money.',
+        ],
+
+        // =====================================================================
+        // Score Categories
+        // =====================================================================
+        'overall_score' => [
+            'methodology' => 'ERideHero Score based on performance, value, build quality, and features. Weighted average of all category scores.',
+        ],
+        'motor_performance' => [
+            'methodology' => 'Category score based on top speed, motor power, and acceleration test results.',
+            'comparison'  => 'Motor performance based on top speed, motor power, and acceleration.',
+        ],
+        'range_battery' => [
+            'methodology' => 'Category score based on tested range, battery capacity, and charge time.',
+            'comparison'  => 'Range score based on tested range, battery capacity, and charge time.',
+        ],
+        'ride_quality' => [
+            'methodology' => 'Category score based on suspension type, tire size, tire type, and deck dimensions.',
+            'comparison'  => 'Ride quality based on suspension, tires, and deck dimensions.',
+        ],
+        'portability' => [
+            'methodology' => 'Category score based on weight, folded dimensions, and foldable handlebars.',
+            'comparison'  => 'Portability based on weight, folded dimensions, and foldable handlebars.',
+        ],
+        'safety' => [
+            'methodology' => 'Category score based on brake type, tested stopping distance, and lighting.',
+            'comparison'  => 'Safety based on brake type, stopping distance, and lighting.',
+        ],
+        'maintenance' => [
+            'methodology' => 'Category score based on tire type, brake type, and water resistance rating.',
+            'comparison'  => 'Maintenance based on tire type, brake type, and water resistance.',
+        ],
+    ];
+
     /**
      * Maximum advantages per product.
      */
@@ -126,12 +472,12 @@ class SpecConfig {
      */
     public const COMPARISON_SPECS = [
         // Motor Performance Specs
+        // Tooltips auto-enriched from TOOLTIPS constant via get_comparison_specs().
         'tested_top_speed' => [
             'label'        => 'tested top speed',
             'unit'         => 'mph',
             'diffFormat'   => 'faster',
             'higherBetter' => true,
-            'tooltip'      => 'Tested top speed from our real-world testing. More reliable than manufacturer claims.',
             'category'     => 'motor',
             'priority'     => 1,
         ],
@@ -140,7 +486,6 @@ class SpecConfig {
             'unit'         => 'mph',
             'diffFormat'   => 'faster',
             'higherBetter' => true,
-            'tooltip'      => 'Manufacturer-claimed top speed. Actual speed may vary based on rider weight and conditions.',
             'category'     => 'motor',
             'priority'     => 2,
             'fallbackFor'  => 'tested_top_speed', // Only show if tested_top_speed not available
@@ -150,7 +495,6 @@ class SpecConfig {
             'unit'         => 'W',
             'diffFormat'   => 'more',
             'higherBetter' => true,
-            'tooltip'      => 'More motor power provides better hill climbing ability and stronger acceleration.',
             'category'     => 'motor',
             'priority'     => 3,
             'minDiff'      => 50, // At least 50W difference to be meaningful
@@ -160,7 +504,6 @@ class SpecConfig {
             'unit'         => '',
             'diffFormat'   => 'dual_vs_single', // Special format
             'higherBetter' => true,
-            'tooltip'      => 'Dual motors provide better traction, acceleration, and hill climbing compared to single motor.',
             'category'     => 'motor',
             'priority'     => 4,
         ],
@@ -169,7 +512,6 @@ class SpecConfig {
             'unit'         => 'V',
             'diffFormat'   => 'higher',
             'higherBetter' => true,
-            'tooltip'      => 'Higher voltage delivers more consistent power output, especially under load and on hills.',
             'category'     => 'motor',
             'priority'     => 5,
             'minDiff'      => 6, // At least 6V difference (e.g., 48V vs 36V)
@@ -181,7 +523,6 @@ class SpecConfig {
             'unit'         => 'Wh',
             'diffFormat'   => 'larger',
             'higherBetter' => true,
-            'tooltip'      => 'Larger battery capacity means more energy stored, which directly translates to longer range potential.',
             'category'     => 'battery',
             'priority'     => 10,
             'minDiff'      => 50, // At least 50Wh difference to be meaningful
@@ -191,7 +532,6 @@ class SpecConfig {
             'unit'         => 'miles',
             'diffFormat'   => 'longer',
             'higherBetter' => true,
-            'tooltip'      => 'Range from our real-world testing at regular pace (moderate speed, 175 lbs rider). More accurate than manufacturer claims.',
             'category'     => 'battery',
             'priority'     => 11,
         ],
@@ -211,7 +551,6 @@ class SpecConfig {
                 'wheels.tire_size_front',
                 'wheels.tire_type',
             ],
-            'tooltip'      => 'Overall ride comfort based on suspension, tire size, and tire type. Better suspension and larger tires absorb bumps for a smoother ride.',
             'category'     => 'ride',
             'priority'     => 20,
         ],
@@ -224,7 +563,6 @@ class SpecConfig {
             'unit'         => '',
             'diffFormat'   => 'suspension',  // Special format - uses display formatter
             'higherBetter' => true,
-            'tooltip'      => 'Suspension absorbs bumps and vibrations. Dual suspension provides the smoothest ride.',
             'category'     => 'ride',
             'priority'     => 21,
             'normalizer'   => 'erh_normalize_suspension_level', // Returns numeric score for comparison
@@ -236,7 +574,6 @@ class SpecConfig {
             'unit'         => '"',
             'diffFormat'   => 'larger',
             'higherBetter' => true,
-            'tooltip'      => 'Larger tires roll over cracks and bumps more easily, providing better stability and comfort.',
             'category'     => 'ride',
             'priority'     => 22,
             'minDiff'      => 0.5,  // At least 0.5" difference
@@ -247,7 +584,6 @@ class SpecConfig {
             'unit'         => '',
             'diffFormat'   => 'tire_type',  // Special format for ride quality context
             'higherBetter' => true,
-            'tooltip'      => 'Pneumatic (air-filled) tires provide the smoothest ride. Solid tires are maintenance-free but harsher.',
             'category'     => 'ride',
             'priority'     => 23,
             'normalizer'   => 'erh_normalize_tire_type', // Combines multiple fields
@@ -271,7 +607,6 @@ class SpecConfig {
                 'dimensions.weight',
                 'folded_footprint',  // Calculated: length × width × height
             ],
-            'tooltip'      => 'Portability combines weight and folded size. Lighter and smaller = easier to carry and store.',
             'category'     => 'portability',
             'priority'     => 30,
         ],
@@ -280,7 +615,6 @@ class SpecConfig {
             'unit'         => 'lbs',
             'diffFormat'   => 'lighter',
             'higherBetter' => false,  // Lower weight is better
-            'tooltip'      => 'Lighter scooters are easier to carry upstairs, onto public transit, or into your office.',
             'category'     => 'portability',
             'priority'     => 31,
         ],
@@ -289,7 +623,6 @@ class SpecConfig {
             'unit'         => 'lbs',
             'diffFormat'   => 'higher',
             'higherBetter' => true,
-            'tooltip'      => 'Maximum rider weight the scooter can support. Higher capacity accommodates heavier riders.',
             'category'     => 'portability',
             'priority'     => 32,
             'minDiff'      => 10,  // At least 10 lbs difference to be meaningful
@@ -299,7 +632,6 @@ class SpecConfig {
             'unit'         => 'Wh/lb',
             'diffFormat'   => 'better',
             'higherBetter' => true,
-            'tooltip'      => 'Battery capacity divided by weight. Higher = more energy storage per pound of scooter.',
             'category'     => 'portability',
             'priority'     => 33,
             'isDerived'    => true,  // Calculated from other specs
@@ -310,7 +642,6 @@ class SpecConfig {
             'unit'         => 'mph/lb',
             'diffFormat'   => 'better',
             'higherBetter' => true,
-            'tooltip'      => 'Top speed divided by weight. Higher = more speed per pound of scooter.',
             'category'     => 'portability',
             'priority'     => 34,
             'isDerived'    => true,  // Calculated from other specs
@@ -321,7 +652,6 @@ class SpecConfig {
             'unit'         => '',
             'diffFormat'   => 'smaller',
             'higherBetter' => false,  // Smaller footprint is better
-            'tooltip'      => 'Folded floor space (length × width). Smaller = easier to fit in car trunks, closets, or under desks.',
             'category'     => 'portability',
             'priority'     => 35,
             'normalizer'   => 'erh_calculate_folded_footprint',
@@ -348,7 +678,6 @@ class SpecConfig {
                 'safety.tire_type',
                 'brake_distance',
             ],
-            'tooltip'      => 'Overall safety based on tire type (pneumatic = better grip) and stopping distance.',
             'category'     => 'safety',
             'priority'     => 38,
         ],
@@ -360,7 +689,6 @@ class SpecConfig {
             'unit'         => '',
             'diffFormat'   => 'safer_tires',  // "Safer tires" headline
             'higherBetter' => true,
-            'tooltip'      => 'Pneumatic tires provide better grip, shorter braking distances, and safer handling than solid tires.',
             'category'     => 'safety',
             'priority'     => 39,
             'normalizer'   => 'erh_normalize_tire_type_for_safety',
@@ -376,7 +704,6 @@ class SpecConfig {
             'unit'         => '',
             'diffFormat'   => 'water_resistance',  // "Higher water resistance"
             'higherBetter' => true,
-            'tooltip'      => 'IP rating indicates dust and water resistance. Higher numbers = better protection.',
             'category'     => 'maintenance',  // Moved from safety - IP prevents water damage maintenance
             'priority'     => 58,             // Between maintenance composite and individual specs
             'normalizer'        => 'erh_normalize_ip_rating',  // Extract numeric score for comparison
@@ -388,7 +715,6 @@ class SpecConfig {
             'unit'         => 'ft',
             'diffFormat'   => 'shorter',
             'higherBetter' => false,  // Shorter stopping distance is better
-            'tooltip'      => 'Tested brake distance from 15 mph with 175 lbs rider. Shorter = safer.',
             'category'     => 'safety',
             'priority'     => 41,
             'minDiff'      => 1,  // At least 1 foot difference
@@ -398,7 +724,6 @@ class SpecConfig {
             'unit'         => '',
             'diffFormat'   => 'has_feature',  // Binary: has turn signals vs doesn't
             'higherBetter' => true,
-            'tooltip'      => 'Built-in turn signals improve visibility and safety when changing lanes.',
             'category'     => 'safety',
             'priority'     => 42,
         ],
@@ -412,7 +737,6 @@ class SpecConfig {
             'unit'         => '',
             'diffFormat'   => 'feature_count',  // Custom: compare feature arrays
             'higherBetter' => true,
-            'tooltip'      => 'Additional features like app connectivity, cruise control, swappable battery, etc.',
             'category'     => 'features',
             'priority'     => 49,  // Before display_type
             'minDiff'      => 2,   // Require at least 2 more features to show advantage
@@ -422,7 +746,6 @@ class SpecConfig {
             'unit'         => '',
             'diffFormat'   => 'better',
             'higherBetter' => true,
-            'tooltip'      => 'Better displays show more information and are easier to read in sunlight.',
             'category'     => 'features',
             'priority'     => 50,
             'ranking'      => [ 'None', 'Basic LED', 'LED', 'LCD', 'Color LCD' ],
@@ -432,7 +755,6 @@ class SpecConfig {
             'unit'         => '',
             'diffFormat'   => 'has_feature',  // Binary: has kickstand vs doesn't
             'higherBetter' => true,
-            'tooltip'      => 'A kickstand allows the scooter to stand upright when parked.',
             'category'     => 'features',
             'priority'     => 51,
         ],
@@ -453,7 +775,6 @@ class SpecConfig {
                 'maintenance.tire_type',
                 'maintenance.brake_type',
             ],
-            'tooltip'      => 'Overall maintenance based on tire type and brake type. Solid tires and drum brakes require the least maintenance.',
             'category'     => 'maintenance',
             'priority'     => 59,  // Before individual maintenance specs
         ],
@@ -463,7 +784,6 @@ class SpecConfig {
             'unit'         => '',
             'diffFormat'   => 'lower',  // "lower maintenance tires"
             'higherBetter' => true,
-            'tooltip'      => 'Solid and tubeless tires require less maintenance than pneumatic tires.',
             'category'     => 'maintenance',
             'priority'     => 60,
             // Maintenance ranking based on scoring: Solid (50) > Mixed (30) > Self-healing (20) > Tubeless (10) > Pneumatic (0)
@@ -477,7 +797,6 @@ class SpecConfig {
             'unit'         => '',
             'diffFormat'   => 'has_feature',  // Binary: has self-healing vs doesn't
             'higherBetter' => true,
-            'tooltip'      => 'Self-healing tires automatically seal small punctures, reducing flat risk.',
             'category'     => 'maintenance',
             'priority'     => 61,
         ],
@@ -488,7 +807,6 @@ class SpecConfig {
             'unit'         => '',
             'diffFormat'   => 'lower',  // "lower maintenance brakes"
             'higherBetter' => true,
-            'tooltip'      => 'Drum brakes are sealed and maintenance-free. Disc brakes need pad replacements and adjustments.',
             'category'     => 'maintenance',
             'priority'     => 62,
             'normalizer'   => 'erh_normalize_brake_maintenance',
@@ -696,13 +1014,54 @@ class SpecConfig {
      * Get spec groups for a category.
      *
      * This is the single source of truth for all spec metadata.
+     * Tooltips are automatically enriched from the TOOLTIPS constant.
      *
      * @param string $category Category key (escooter, ebike, etc.).
-     * @return array Spec groups configuration.
+     * @return array Spec groups configuration with tooltips.
      */
     public static function get_spec_groups( string $category ): array {
         $groups = self::get_all_spec_groups();
-        return $groups[ $category ] ?? [];
+        $category_groups = $groups[ $category ] ?? [];
+
+        // Enrich specs with tooltips from centralized TOOLTIPS constant.
+        return self::enrich_with_tooltips( $category_groups );
+    }
+
+    /**
+     * Enrich spec groups with tooltips from TOOLTIPS constant.
+     *
+     * Adds 'tooltip' (methodology tier - full explanation) to each spec
+     * from the centralized TOOLTIPS constant.
+     *
+     * @param array $groups Spec groups array.
+     * @return array Enriched spec groups with tooltips.
+     */
+    private static function enrich_with_tooltips( array $groups ): array {
+        foreach ( $groups as $group_name => &$group ) {
+            if ( empty( $group['specs'] ) || ! is_array( $group['specs'] ) ) {
+                continue;
+            }
+
+            foreach ( $group['specs'] as &$spec ) {
+                $key = $spec['key'] ?? '';
+                if ( empty( $key ) ) {
+                    continue;
+                }
+
+                // Get tooltip from centralized constant (skip if already set inline).
+                // Uses 'methodology' tier which provides full explanations.
+                if ( ! isset( $spec['tooltip'] ) ) {
+                    $tooltip = self::get_tooltip( $key, 'methodology' );
+                    if ( $tooltip ) {
+                        $spec['tooltip'] = $tooltip;
+                    }
+                }
+            }
+            unset( $spec );
+        }
+        unset( $group );
+
+        return $groups;
     }
 
     /**
@@ -731,19 +1090,20 @@ class SpecConfig {
                 'showScore' => true,
                 'scoreKey'  => 'motor_performance',
                 'specs'     => [
-                    [ 'key' => 'tested_top_speed', 'label' => 'Top Speed (Tested)', 'unit' => 'mph', 'higherBetter' => true, 'tooltip' => 'Our real-world test result with a 175 lbs rider' ],
-                    [ 'key' => 'manufacturer_top_speed', 'label' => 'Top Speed (Claimed)', 'unit' => 'mph', 'higherBetter' => true, 'tooltip' => 'What the manufacturer claims' ],
-                    [ 'key' => 'motor.power_nominal', 'label' => 'Nominal Power', 'unit' => 'W', 'higherBetter' => true, 'tooltip' => 'Combined if dual motors' ],
-                    [ 'key' => 'motor.power_peak', 'label' => 'Peak Power', 'unit' => 'W', 'higherBetter' => true, 'tooltip' => 'Maximum output under load' ],
+                    // Tooltips auto-enriched from TOOLTIPS constant.
+                    [ 'key' => 'tested_top_speed', 'label' => 'Top Speed (Tested)', 'unit' => 'mph', 'higherBetter' => true ],
+                    [ 'key' => 'manufacturer_top_speed', 'label' => 'Top Speed (Claimed)', 'unit' => 'mph', 'higherBetter' => true ],
+                    [ 'key' => 'motor.power_nominal', 'label' => 'Motor Power', 'unit' => 'W', 'higherBetter' => true ],
+                    [ 'key' => 'motor.power_peak', 'label' => 'Peak Power', 'unit' => 'W', 'higherBetter' => true ],
                     [ 'key' => 'motor.voltage', 'label' => 'Voltage', 'unit' => 'V', 'higherBetter' => true ],
-                    [ 'key' => 'motor.motor_position', 'label' => 'Motor Config', 'tooltip' => 'Single rear, dual, etc.' ],
-                    [ 'key' => 'hill_climbing', 'label' => 'Hill Climb (Tested)', 'unit' => 's', 'higherBetter' => false, 'tooltip' => 'Time to climb our 250ft test hill at 8% average grade. 175 lbs rider' ],
-                    [ 'key' => 'max_incline', 'label' => 'Hill Grade (Claimed)', 'unit' => '°', 'higherBetter' => true, 'tooltip' => 'Maximum incline the manufacturer claims' ],
-                    [ 'key' => 'acceleration_0_15_mph', 'label' => '0-15 mph (Tested)', 'unit' => 's', 'higherBetter' => false, 'tooltip' => 'Average across 10+ test runs. 175 lbs rider' ],
-                    [ 'key' => 'acceleration_0_20_mph', 'label' => '0-20 mph (Tested)', 'unit' => 's', 'higherBetter' => false, 'tooltip' => 'Average across 10+ test runs. 175 lbs rider' ],
-                    [ 'key' => 'acceleration_0_25_mph', 'label' => '0-25 mph (Tested)', 'unit' => 's', 'higherBetter' => false, 'tooltip' => 'Average across 10+ test runs. 175 lbs rider' ],
-                    [ 'key' => 'acceleration_0_30_mph', 'label' => '0-30 mph (Tested)', 'unit' => 's', 'higherBetter' => false, 'tooltip' => 'Average across 10+ test runs. 175 lbs rider' ],
-                    [ 'key' => 'acceleration_0_to_top', 'label' => '0-Top Speed (Tested)', 'unit' => 's', 'higherBetter' => false, 'tooltip' => 'Average across 10+ test runs. 175 lbs rider' ],
+                    [ 'key' => 'motor.motor_position', 'label' => 'Motor Config' ],
+                    [ 'key' => 'hill_climbing', 'label' => 'Hill Climb', 'unit' => 's', 'higherBetter' => false ],
+                    [ 'key' => 'max_incline', 'label' => 'Hill Grade', 'unit' => '°', 'higherBetter' => true ],
+                    [ 'key' => 'acceleration_0_15_mph', 'label' => '0-15 mph', 'unit' => 's', 'higherBetter' => false ],
+                    [ 'key' => 'acceleration_0_20_mph', 'label' => '0-20 mph', 'unit' => 's', 'higherBetter' => false ],
+                    [ 'key' => 'acceleration_0_25_mph', 'label' => '0-25 mph', 'unit' => 's', 'higherBetter' => false ],
+                    [ 'key' => 'acceleration_0_30_mph', 'label' => '0-30 mph', 'unit' => 's', 'higherBetter' => false ],
+                    [ 'key' => 'acceleration_0_to_top', 'label' => '0-Top', 'unit' => 's', 'higherBetter' => false ],
                 ],
             ],
 
@@ -753,14 +1113,14 @@ class SpecConfig {
                 'showScore' => true,
                 'scoreKey'  => 'range_battery',
                 'specs'     => [
-                    [ 'key' => 'tested_range_fast', 'label' => 'Range - Fast (Tested)', 'unit' => 'mi', 'higherBetter' => true, 'tooltip' => 'Range at high speed riding. 175 lbs rider' ],
-                    [ 'key' => 'tested_range_regular', 'label' => 'Range - Regular (Tested)', 'unit' => 'mi', 'higherBetter' => true, 'tooltip' => 'Range at normal riding pace. 175 lbs rider' ],
-                    [ 'key' => 'tested_range_slow', 'label' => 'Range - Slow (Tested)', 'unit' => 'mi', 'higherBetter' => true, 'tooltip' => 'Range in eco mode, prioritizing distance over speed. 175 lbs rider' ],
-                    [ 'key' => 'manufacturer_range', 'label' => 'Range (Claimed)', 'unit' => 'mi', 'higherBetter' => true, 'tooltip' => 'What the manufacturer claims. Wh is often a better comparison metric' ],
-                    [ 'key' => 'battery.capacity', 'label' => 'Battery Capacity', 'unit' => 'Wh', 'higherBetter' => true, 'tooltip' => 'Watt-hours = Voltage × Amp-hours' ],
-                    [ 'key' => 'battery.ah', 'label' => 'Amp Hours', 'unit' => 'Ah', 'higherBetter' => true, 'tooltip' => 'Battery capacity in amp-hours' ],
-                    [ 'key' => 'battery.voltage', 'label' => 'Battery Voltage', 'unit' => 'V', 'higherBetter' => true ],
-                    [ 'key' => 'battery.charging_time', 'label' => 'Charge Time', 'unit' => 'h', 'higherBetter' => false, 'tooltip' => 'Time to full charge with the included charger' ],
+                    [ 'key' => 'tested_range_fast', 'label' => 'Range (Fast)', 'unit' => 'mi', 'higherBetter' => true ],
+                    [ 'key' => 'tested_range_regular', 'label' => 'Range (Tested)', 'unit' => 'mi', 'higherBetter' => true ],
+                    [ 'key' => 'tested_range_slow', 'label' => 'Range (Slow)', 'unit' => 'mi', 'higherBetter' => true ],
+                    [ 'key' => 'manufacturer_range', 'label' => 'Range (Claimed)', 'unit' => 'mi', 'higherBetter' => true ],
+                    [ 'key' => 'battery.capacity', 'label' => 'Battery Capacity', 'unit' => 'Wh', 'higherBetter' => true ],
+                    [ 'key' => 'battery.ah', 'label' => 'Amp Hours', 'unit' => 'Ah', 'higherBetter' => true ],
+                    [ 'key' => 'battery.voltage', 'label' => 'Voltage', 'unit' => 'V', 'higherBetter' => true ],
+                    [ 'key' => 'battery.charging_time', 'label' => 'Charge Time', 'unit' => 'h', 'higherBetter' => false ],
                     [ 'key' => 'battery.battery_type', 'label' => 'Battery Type' ],
                 ],
             ],
@@ -771,7 +1131,7 @@ class SpecConfig {
                 'showScore' => true,
                 'scoreKey'  => 'ride_quality',
                 'specs'     => [
-                    [ 'key' => 'suspension.type', 'label' => 'Suspension', 'higherBetter' => true, 'format' => 'suspensionArray', 'tooltip' => 'Dual suspension wins, then hydraulic, spring, rubber' ],
+                    [ 'key' => 'suspension.type', 'label' => 'Suspension', 'higherBetter' => true, 'format' => 'suspensionArray' ],
                     [ 'key' => 'suspension.adjustable', 'label' => 'Adjustable Suspension', 'format' => 'boolean', 'higherBetter' => true ],
                     [ 'key' => 'wheels.tire_type', 'label' => 'Tire Type', 'format' => 'tire' ],
                     [ 'key' => 'wheels.tire_size_front', 'label' => 'Front Tire Size', 'unit' => '"', 'higherBetter' => true ],
@@ -779,10 +1139,10 @@ class SpecConfig {
                     [ 'key' => 'wheels.tire_width', 'label' => 'Tire Width', 'unit' => '"', 'higherBetter' => true ],
                     [ 'key' => 'dimensions.deck_length', 'label' => 'Deck Length', 'unit' => '"', 'higherBetter' => true ],
                     [ 'key' => 'dimensions.deck_width', 'label' => 'Deck Width', 'unit' => '"', 'higherBetter' => true ],
-                    [ 'key' => 'dimensions.ground_clearance', 'label' => 'Ground Clearance', 'unit' => '"', 'tooltip' => 'More is not always better - depends on riding style' ],
-                    [ 'key' => 'dimensions.handlebar_height_min', 'label' => 'Handlebar Height (min)', 'unit' => '"', 'tooltip' => 'Personal preference - depends on rider height' ],
-                    [ 'key' => 'dimensions.handlebar_height_max', 'label' => 'Handlebar Height (max)', 'unit' => '"', 'tooltip' => 'Personal preference - depends on rider height' ],
-                    [ 'key' => 'dimensions.handlebar_width', 'label' => 'Handlebar Width', 'unit' => '"', 'higherBetter' => true, 'tooltip' => 'Wider bars provide more control and stability' ],
+                    [ 'key' => 'dimensions.ground_clearance', 'label' => 'Ground Clearance', 'unit' => '"' ],
+                    [ 'key' => 'dimensions.handlebar_height_min', 'label' => 'Handlebar Height (min)', 'unit' => '"' ],
+                    [ 'key' => 'dimensions.handlebar_height_max', 'label' => 'Handlebar Height (max)', 'unit' => '"' ],
+                    [ 'key' => 'dimensions.handlebar_width', 'label' => 'Handlebar Width', 'unit' => '"', 'higherBetter' => true ],
                     [ 'key' => 'other.footrest', 'label' => 'Footrest', 'format' => 'boolean', 'higherBetter' => true ],
                     [ 'key' => 'other.terrain', 'label' => 'Terrain Type' ],
                 ],
@@ -801,9 +1161,9 @@ class SpecConfig {
                     [ 'key' => 'dimensions.folded_height', 'label' => 'Folded Height', 'unit' => '"', 'higherBetter' => false ],
                     [ 'key' => 'dimensions.foldable_handlebars', 'label' => 'Foldable Bars', 'format' => 'boolean', 'higherBetter' => true ],
                     [ 'key' => 'other.fold_location', 'label' => 'Fold Mechanism' ],
-                    [ 'key' => 'speed_per_lb', 'label' => 'mph/lb', 'format' => 'decimal', 'higherBetter' => true, 'tooltip' => 'Top speed divided by weight. Higher = more speed per pound of scooter', 'valueUnit' => 'mph/lb' ],
-                    [ 'key' => 'wh_per_lb', 'label' => 'Wh/lb', 'format' => 'decimal', 'higherBetter' => true, 'tooltip' => 'Battery capacity divided by weight. Higher = more energy storage per pound', 'valueUnit' => 'Wh/lb' ],
-                    [ 'key' => 'tested_range_per_lb', 'label' => 'mi/lb', 'format' => 'decimal', 'higherBetter' => true, 'tooltip' => 'Tested range divided by weight. Higher = more miles per pound of scooter', 'valueUnit' => 'mi/lb' ],
+                    [ 'key' => 'speed_per_lb', 'label' => 'mph/lb', 'format' => 'decimal', 'higherBetter' => true, 'valueUnit' => 'mph/lb' ],
+                    [ 'key' => 'wh_per_lb', 'label' => 'Wh/lb', 'format' => 'decimal', 'higherBetter' => true, 'valueUnit' => 'Wh/lb' ],
+                    [ 'key' => 'tested_range_per_lb', 'label' => 'mi/lb', 'format' => 'decimal', 'higherBetter' => true, 'valueUnit' => 'mi/lb' ],
                 ],
             ],
 
@@ -813,10 +1173,10 @@ class SpecConfig {
                 'showScore' => true,
                 'scoreKey'  => 'safety',
                 'specs'     => [
-                    [ 'key' => 'brakes.front', 'label' => 'Front Brake', 'format' => 'brakeType', 'tooltip' => 'Best brake type depends on scooter speed and weight', 'noWinner' => true ],
-                    [ 'key' => 'brakes.rear', 'label' => 'Rear Brake', 'format' => 'brakeType', 'tooltip' => 'Best brake type depends on scooter speed and weight', 'noWinner' => true ],
+                    [ 'key' => 'brakes.front', 'label' => 'Front Brake', 'format' => 'brakeType', 'noWinner' => true ],
+                    [ 'key' => 'brakes.rear', 'label' => 'Rear Brake', 'format' => 'brakeType', 'noWinner' => true ],
                     [ 'key' => 'brakes.regenerative', 'label' => 'Regen Braking', 'format' => 'boolean', 'higherBetter' => true ],
-                    [ 'key' => 'brake_distance', 'label' => 'Brake Distance (Tested)', 'unit' => 'ft', 'higherBetter' => false, 'tooltip' => 'Stopping distance from 15 mph. 175 lbs rider' ],
+                    [ 'key' => 'brake_distance', 'label' => 'Brake Distance', 'unit' => 'ft', 'higherBetter' => false ],
                     [ 'key' => 'lighting.lights', 'label' => 'Lights', 'format' => 'array' ],
                     [ 'key' => 'lighting.turn_signals', 'label' => 'Turn Signals', 'format' => 'boolean', 'higherBetter' => true ],
                 ],
@@ -842,9 +1202,9 @@ class SpecConfig {
                 'scoreKey'    => 'maintenance',
                 'contextNote' => 'Score also factors in brake type (see Safety)',
                 'specs'       => [
-                    [ 'key' => 'wheels.tire_type', 'label' => 'Tire Type', 'format' => 'tire', 'tooltip' => 'Solid = no flats, Pneumatic = more comfort' ],
+                    [ 'key' => 'wheels.tire_type', 'label' => 'Tire Type', 'format' => 'tire' ],
                     [ 'key' => 'wheels.self_healing', 'label' => 'Self-Healing Tires', 'format' => 'boolean', 'higherBetter' => true ],
-                    [ 'key' => 'other.ip_rating', 'label' => 'IP Rating', 'format' => 'ip', 'higherBetter' => true, 'tooltip' => 'Water/dust resistance' ],
+                    [ 'key' => 'other.ip_rating', 'label' => 'IP Rating', 'format' => 'ip', 'higherBetter' => true ],
                 ],
             ],
 
@@ -854,10 +1214,10 @@ class SpecConfig {
                 'showScore'      => false,
                 'isValueSection' => true,
                 'specs'          => [
-                    [ 'key' => 'value_metrics.{geo}.price_per_tested_mile', 'label' => '{symbol}/mi', 'higherBetter' => false, 'format' => 'currency', 'geoAware' => true, 'tooltip' => 'Price divided by tested range (regular). Lower = more miles for your money', 'valueUnit' => '/mi' ],
-                    [ 'key' => 'value_metrics.{geo}.price_per_mph', 'label' => '{symbol}/mph', 'higherBetter' => false, 'format' => 'currency', 'geoAware' => true, 'tooltip' => 'Price divided by claimed top speed. Lower = more speed for your money', 'valueUnit' => '/mph' ],
-                    [ 'key' => 'value_metrics.{geo}.price_per_watt', 'label' => '{symbol}/W', 'higherBetter' => false, 'format' => 'currency', 'geoAware' => true, 'tooltip' => 'Price divided by nominal motor power. Lower = more power for your money', 'valueUnit' => '/W' ],
-                    [ 'key' => 'value_metrics.{geo}.price_per_wh', 'label' => '{symbol}/Wh', 'higherBetter' => false, 'format' => 'currency', 'geoAware' => true, 'tooltip' => 'Price divided by battery capacity (Wh). Lower = more energy storage for your money', 'valueUnit' => '/Wh' ],
+                    [ 'key' => 'value_metrics.{geo}.price_per_tested_mile', 'label' => '{symbol}/mi', 'higherBetter' => false, 'format' => 'currency', 'geoAware' => true, 'valueUnit' => '/mi' ],
+                    [ 'key' => 'value_metrics.{geo}.price_per_mph', 'label' => '{symbol}/mph', 'higherBetter' => false, 'format' => 'currency', 'geoAware' => true, 'valueUnit' => '/mph' ],
+                    [ 'key' => 'value_metrics.{geo}.price_per_watt', 'label' => '{symbol}/W', 'higherBetter' => false, 'format' => 'currency', 'geoAware' => true, 'valueUnit' => '/W' ],
+                    [ 'key' => 'value_metrics.{geo}.price_per_wh', 'label' => '{symbol}/Wh', 'higherBetter' => false, 'format' => 'currency', 'geoAware' => true, 'valueUnit' => '/Wh' ],
                 ],
             ],
         ];
@@ -1156,5 +1516,206 @@ class SpecConfig {
      */
     public static function is_supported( string $category ): bool {
         return in_array( $category, self::get_supported_categories(), true );
+    }
+
+    /**
+     * Get flat list of specs for buying guide table column picker.
+     *
+     * Returns an associative array suitable for ACF checkbox/select fields:
+     * [ 'spec_key' => 'Label (unit)' ]
+     *
+     * @param string $category Category key (escooter, ebike, etc.).
+     * @return array Flat list of spec choices.
+     */
+    public static function get_table_column_choices( string $category ): array {
+        $groups  = self::get_spec_groups( $category );
+        $choices = [];
+
+        foreach ( $groups as $group_name => $group ) {
+            // Skip value analysis sections.
+            if ( ! empty( $group['isValueSection'] ) ) {
+                continue;
+            }
+
+            foreach ( $group['specs'] as $spec ) {
+                $key   = $spec['key'];
+                $label = $spec['label'];
+
+                // Append unit if present.
+                if ( ! empty( $spec['unit'] ) ) {
+                    $label .= ' (' . $spec['unit'] . ')';
+                }
+
+                $choices[ $key ] = $label;
+            }
+        }
+
+        return $choices;
+    }
+
+    /**
+     * Get spec definition by key.
+     *
+     * @param string $category Category key.
+     * @param string $spec_key Spec key to find.
+     * @return array|null Spec definition or null if not found.
+     */
+    public static function get_spec_definition( string $category, string $spec_key ): ?array {
+        $groups = self::get_spec_groups( $category );
+
+        foreach ( $groups as $group ) {
+            foreach ( $group['specs'] as $spec ) {
+                if ( $spec['key'] === $spec_key ) {
+                    return $spec;
+                }
+            }
+        }
+
+        return null;
+    }
+
+    /**
+     * Get tooltip for a spec.
+     *
+     * @deprecated Use get_tooltip() instead for centralized tooltips.
+     *
+     * @param string $category Category key (no longer used).
+     * @param string $spec_key Spec key to find.
+     * @param bool   $long     No longer used - methodology tier is always returned.
+     * @return string|null Tooltip text or null if not found.
+     */
+    public static function get_spec_tooltip( string $category, string $spec_key, bool $long = false ): ?string {
+        // Delegate to centralized get_tooltip() - always returns methodology (full explanation).
+        return self::get_tooltip( $spec_key, 'methodology' );
+    }
+
+    // =========================================================================
+    // Centralized Tooltip Methods
+    // =========================================================================
+
+    /**
+     * Get tooltip for a spec key with fallback chain.
+     *
+     * Fallback chain by tier:
+     * - 'comparison': comparison → methodology
+     * - 'methodology': methodology only (default)
+     *
+     * @param string $spec_key Spec key (e.g., 'tested_top_speed', 'motor.power_nominal').
+     * @param string $tier     Tooltip tier: 'methodology' (default) or 'comparison'.
+     * @return string|null Tooltip text or null if not found.
+     */
+    public static function get_tooltip( string $spec_key, string $tier = 'methodology' ): ?string {
+        // Normalize spec key - strip any geo placeholders.
+        $normalized_key = preg_replace( '/\.\{geo\}\./', '.', $spec_key );
+        // Also handle value_metrics.US.price_per_wh → value_metrics.price_per_wh
+        $normalized_key = preg_replace( '/\.(US|GB|EU|CA|AU)\./', '.', $normalized_key );
+
+        // Check if spec exists in TOOLTIPS.
+        if ( ! isset( self::TOOLTIPS[ $normalized_key ] ) ) {
+            return null;
+        }
+
+        $tooltip_data = self::TOOLTIPS[ $normalized_key ];
+
+        // Apply fallback chain based on tier.
+        // comparison → methodology (comparison context falls back to standard explanation)
+        // methodology is the default (full explanation)
+        switch ( $tier ) {
+            case 'comparison':
+                return $tooltip_data['comparison']
+                    ?? $tooltip_data['methodology']
+                    ?? null;
+
+            case 'methodology':
+            default:
+                return $tooltip_data['methodology'] ?? null;
+        }
+    }
+
+    /**
+     * Export tooltips for JavaScript.
+     *
+     * Returns the full TOOLTIPS structure for use with wp_localize_script().
+     *
+     * @return array Tooltips keyed by spec key, each with methodology/comparison.
+     */
+    public static function export_tooltips(): array {
+        return self::TOOLTIPS;
+    }
+
+    /**
+     * Export tooltips for a specific tier only.
+     *
+     * Useful when you only need one tier in JS (e.g., just 'comparison' tooltips).
+     * Applies fallback chain for each spec.
+     *
+     * @param string $tier Tooltip tier: 'methodology' (default) or 'comparison'.
+     * @return array Flat array of tooltips keyed by spec key.
+     */
+    public static function export_tooltips_flat( string $tier = 'methodology' ): array {
+        $result = [];
+
+        foreach ( array_keys( self::TOOLTIPS ) as $spec_key ) {
+            $tooltip = self::get_tooltip( $spec_key, $tier );
+            if ( $tooltip ) {
+                $result[ $spec_key ] = $tooltip;
+            }
+        }
+
+        return $result;
+    }
+
+    // =========================================================================
+    // Comparison Specs Methods
+    // =========================================================================
+
+    /**
+     * Get comparison specs with tooltips enriched from TOOLTIPS constant.
+     *
+     * This is the preferred way to access COMPARISON_SPECS as it ensures
+     * tooltips are pulled from the centralized TOOLTIPS constant.
+     *
+     * @return array Comparison specs with tooltips from centralized source.
+     */
+    public static function get_comparison_specs(): array {
+        $specs = self::COMPARISON_SPECS;
+
+        foreach ( $specs as $key => &$spec ) {
+            // Skip composite specs (they use 'type' => 'composite').
+            // Their tooltips are pulled from TOOLTIPS for the composite key itself.
+            if ( ! isset( $spec['tooltip'] ) ) {
+                $tooltip = self::get_tooltip( $key, 'comparison' );
+                if ( $tooltip ) {
+                    $spec['tooltip'] = $tooltip;
+                }
+            }
+        }
+        unset( $spec );
+
+        return $specs;
+    }
+
+    /**
+     * Get a single comparison spec definition with tooltip enriched.
+     *
+     * @param string $spec_key Spec key (e.g., 'tested_top_speed').
+     * @return array|null Spec definition with tooltip, or null if not found.
+     */
+    public static function get_comparison_spec( string $spec_key ): ?array {
+        if ( ! isset( self::COMPARISON_SPECS[ $spec_key ] ) ) {
+            return null;
+        }
+
+        $spec = self::COMPARISON_SPECS[ $spec_key ];
+
+        // Enrich with tooltip if not already set.
+        if ( ! isset( $spec['tooltip'] ) ) {
+            $tooltip = self::get_tooltip( $spec_key, 'comparison' );
+            if ( $tooltip ) {
+                $spec['tooltip'] = $tooltip;
+            }
+        }
+
+        return $spec;
     }
 }

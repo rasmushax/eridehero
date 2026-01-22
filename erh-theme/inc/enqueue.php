@@ -97,6 +97,11 @@ function erh_enqueue_assets(): void {
         'searchJsonUrl' => $upload_dir['baseurl'] . '/search_items.json' . ( $search_json_version ? '?v=' . $search_json_version : '' ),
     );
 
+    // Add centralized tooltips (single source of truth for JS).
+    if ( class_exists( 'ERH\Config\SpecConfig' ) ) {
+        $erh_data['tooltips'] = \ERH\Config\SpecConfig::export_tooltips();
+    }
+
     // Add product data for single product pages (avoids loading finder JSON).
     if ( is_singular( 'products' ) ) {
         $product_data = erh_get_inline_product_data( get_the_ID() );

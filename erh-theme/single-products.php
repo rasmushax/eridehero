@@ -147,3 +147,12 @@ while ( have_posts() ) :
 endwhile;
 
 get_footer();
+
+// Inject spec config for JS components (tooltips, analysis).
+// This enables product-analysis.js to use SpecConfig tooltips.
+?>
+<script>
+window.erhData = window.erhData || {};
+window.erhData.specConfig = <?php echo wp_json_encode( \ERH\Config\SpecConfig::export_compare_config( $category_key ), JSON_HEX_TAG | JSON_HEX_AMP ); ?>;
+</script>
+<?php

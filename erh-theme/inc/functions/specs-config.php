@@ -64,39 +64,26 @@ function erh_get_compare_spec_groups( string $category ): array {
  * logical groupings that match how users search for specs.
  * This is intentionally different from SpecConfig to serve product page needs.
  *
+ * Tooltips are now fetched from SpecConfig::get_tooltip() (single source of truth).
+ *
  * @param string $category Category key ('escooter', 'ebike', etc.).
  * @return array Spec groups configuration with tooltips.
  */
 function erh_get_product_spec_groups_config( string $category ): array {
-    // Tooltips for specs that need clarification.
-    $tooltips = array(
-        'nominal_power'     => 'Continuous power the motor can sustain. Higher = more consistent performance.',
-        'peak_power'        => 'Maximum burst power for hills and acceleration. Used briefly to avoid overheating.',
-        'battery_capacity'  => 'Total energy storage in Watt-hours. Larger battery = longer range but more weight.',
-        'voltage'           => 'Higher voltage typically means more power and efficiency.',
-        'charge_time'       => 'Time to charge from empty to full using the included charger.',
-        'ip_rating'         => 'Ingress Protection rating. First digit = dust, second = water. IP54 = splash resistant, IP67 = submersible.',
-        'regenerative'      => 'Recovers energy when braking to extend range slightly.',
-        'tested_top_speed'  => 'GPS-verified max speed on flat ground. 175 lb rider, 80%+ battery.',
-        'tested_range'      => 'Real-world range on mixed terrain. 175 lb rider, three tests at different intensities.',
-        'brake_distance'    => 'Stopping distance from 15 mph with max braking. Average of 10+ runs.',
-        'hill_climb'        => 'Average speed climbing 250 ft at 8% grade. 175 lb rider.',
-        'acceleration'      => 'Median time from standstill to target speed over 10+ runs.',
-        'suspension_type'   => 'Spring = traditional coil, Hydraulic = oil-damped for smoother ride.',
-        'tire_type'         => 'Pneumatic = air-filled (comfort, grip). Solid = puncture-proof (less comfort).',
-        'self_healing'      => 'Tires contain sealant that automatically plugs small punctures.',
-        'ground_clearance'  => 'Height from ground to lowest point. Important for curbs and obstacles.',
-        'max_load'          => 'Maximum recommended rider weight. Exceeding may void warranty.',
-    );
+    // Helper to get tooltip from centralized SpecConfig.
+    // Uses 'methodology' tier for product page (detailed explanations).
+    $get_tooltip = function( string $spec_key ) {
+        return SpecConfig::get_tooltip( $spec_key, 'methodology' );
+    };
 
     $configs = array(
         'escooter' => array(
             'Motor & Power' => array(
                 'icon'  => 'zap',
                 'specs' => array(
-                    array( 'key' => 'motor.power_nominal', 'label' => 'Nominal Power', 'unit' => 'W', 'tooltip' => $tooltips['nominal_power'] ),
-                    array( 'key' => 'motor.power_peak', 'label' => 'Peak Power', 'unit' => 'W', 'tooltip' => $tooltips['peak_power'] ),
-                    array( 'key' => 'motor.voltage', 'label' => 'Voltage', 'unit' => 'V', 'tooltip' => $tooltips['voltage'] ),
+                    array( 'key' => 'motor.power_nominal', 'label' => 'Nominal Power', 'unit' => 'W', 'tooltip' => $get_tooltip( 'motor.power_nominal' ) ),
+                    array( 'key' => 'motor.power_peak', 'label' => 'Peak Power', 'unit' => 'W', 'tooltip' => $get_tooltip( 'motor.power_peak' ) ),
+                    array( 'key' => 'motor.voltage', 'label' => 'Voltage', 'unit' => 'V', 'tooltip' => $get_tooltip( 'motor.voltage' ) ),
                     array( 'key' => 'motor.motor_position', 'label' => 'Motor Configuration' ),
                     array( 'key' => 'motor.motor_type', 'label' => 'Motor Type' ),
                 ),
@@ -104,12 +91,12 @@ function erh_get_product_spec_groups_config( string $category ): array {
             'Battery & Charging' => array(
                 'icon'  => 'battery',
                 'specs' => array(
-                    array( 'key' => 'battery.capacity', 'label' => 'Battery Capacity', 'unit' => 'Wh', 'tooltip' => $tooltips['battery_capacity'] ),
+                    array( 'key' => 'battery.capacity', 'label' => 'Battery Capacity', 'unit' => 'Wh', 'tooltip' => $get_tooltip( 'battery.capacity' ) ),
                     array( 'key' => 'battery.voltage', 'label' => 'Battery Voltage', 'unit' => 'V' ),
                     array( 'key' => 'battery.amphours', 'label' => 'Amp Hours', 'unit' => 'Ah' ),
                     array( 'key' => 'battery.battery_type', 'label' => 'Battery Type' ),
                     array( 'key' => 'battery.brand', 'label' => 'Battery Brand' ),
-                    array( 'key' => 'battery.charging_time', 'label' => 'Charge Time', 'unit' => 'hrs', 'tooltip' => $tooltips['charge_time'] ),
+                    array( 'key' => 'battery.charging_time', 'label' => 'Charge Time', 'unit' => 'hrs', 'tooltip' => $get_tooltip( 'battery.charging_time' ) ),
                 ),
             ),
             'Claimed Performance' => array(
@@ -123,26 +110,26 @@ function erh_get_product_spec_groups_config( string $category ): array {
             'ERideHero Test Results' => array(
                 'icon'  => 'clipboard-check',
                 'specs' => array(
-                    array( 'key' => 'tested_top_speed', 'label' => 'Top Speed (Tested)', 'unit' => 'mph', 'tooltip' => $tooltips['tested_top_speed'] ),
-                    array( 'key' => 'tested_range_regular', 'label' => 'Range (Regular Riding)', 'unit' => 'mi', 'tooltip' => $tooltips['tested_range'] ),
+                    array( 'key' => 'tested_top_speed', 'label' => 'Top Speed (Tested)', 'unit' => 'mph', 'tooltip' => $get_tooltip( 'tested_top_speed' ) ),
+                    array( 'key' => 'tested_range_regular', 'label' => 'Range (Regular Riding)', 'unit' => 'mi', 'tooltip' => $get_tooltip( 'tested_range_regular' ) ),
                     array( 'key' => 'tested_range_fast', 'label' => 'Range (Fast Riding)', 'unit' => 'mi' ),
                     array( 'key' => 'tested_range_slow', 'label' => 'Range (Eco Mode)', 'unit' => 'mi' ),
-                    array( 'key' => 'acceleration_0_15_mph', 'label' => '0–15 mph', 'unit' => 's', 'tooltip' => $tooltips['acceleration'] ),
+                    array( 'key' => 'acceleration_0_15_mph', 'label' => '0–15 mph', 'unit' => 's', 'tooltip' => $get_tooltip( 'acceleration_0_15_mph' ) ),
                     array( 'key' => 'acceleration_0_20_mph', 'label' => '0–20 mph', 'unit' => 's' ),
                     array( 'key' => 'acceleration_0_25_mph', 'label' => '0–25 mph', 'unit' => 's' ),
                     array( 'key' => 'acceleration_0_30_mph', 'label' => '0–30 mph', 'unit' => 's' ),
-                    array( 'key' => 'hill_climbing', 'label' => 'Hill Climb Speed', 'unit' => 'mph', 'tooltip' => $tooltips['hill_climb'] ),
-                    array( 'key' => 'brake_distance', 'label' => 'Braking Distance', 'unit' => 'ft', 'tooltip' => $tooltips['brake_distance'] ),
+                    array( 'key' => 'hill_climbing', 'label' => 'Hill Climb Speed', 'unit' => 'mph', 'tooltip' => $get_tooltip( 'hill_climbing' ) ),
+                    array( 'key' => 'brake_distance', 'label' => 'Braking Distance', 'unit' => 'ft', 'tooltip' => $get_tooltip( 'brake_distance' ) ),
                 ),
             ),
             'Weight & Dimensions' => array(
                 'icon'  => 'box',
                 'specs' => array(
                     array( 'key' => 'dimensions.weight', 'label' => 'Weight', 'unit' => 'lbs' ),
-                    array( 'key' => 'dimensions.max_load', 'label' => 'Max Rider Weight', 'unit' => 'lbs', 'tooltip' => $tooltips['max_load'] ),
+                    array( 'key' => 'dimensions.max_load', 'label' => 'Max Rider Weight', 'unit' => 'lbs', 'tooltip' => $get_tooltip( 'dimensions.max_load' ) ),
                     array( 'key' => 'dimensions.deck_length', 'label' => 'Deck Length', 'unit' => '"' ),
                     array( 'key' => 'dimensions.deck_width', 'label' => 'Deck Width', 'unit' => '"' ),
-                    array( 'key' => 'dimensions.ground_clearance', 'label' => 'Ground Clearance', 'unit' => '"', 'tooltip' => $tooltips['ground_clearance'] ),
+                    array( 'key' => 'dimensions.ground_clearance', 'label' => 'Ground Clearance', 'unit' => '"', 'tooltip' => $get_tooltip( 'dimensions.ground_clearance' ) ),
                     array( 'key' => 'dimensions.handlebar_height_min', 'label' => 'Handlebar Height (Min)', 'unit' => '"' ),
                     array( 'key' => 'dimensions.handlebar_height_max', 'label' => 'Handlebar Height (Max)', 'unit' => '"' ),
                     array( 'key' => 'dimensions.handlebar_width', 'label' => 'Handlebar Width', 'unit' => '"' ),
@@ -158,13 +145,13 @@ function erh_get_product_spec_groups_config( string $category ): array {
             'Wheels & Suspension' => array(
                 'icon'  => 'circle',
                 'specs' => array(
-                    array( 'key' => 'wheels.tire_type', 'label' => 'Tire Type', 'tooltip' => $tooltips['tire_type'] ),
+                    array( 'key' => 'wheels.tire_type', 'label' => 'Tire Type', 'tooltip' => $get_tooltip( 'wheels.tire_type' ) ),
                     array( 'key' => 'wheels.tire_size_front', 'label' => 'Front Tire Size', 'unit' => '"' ),
                     array( 'key' => 'wheels.tire_size_rear', 'label' => 'Rear Tire Size', 'unit' => '"' ),
                     array( 'key' => 'wheels.tire_width', 'label' => 'Tire Width', 'unit' => '"' ),
                     array( 'key' => 'wheels.pneumatic_type', 'label' => 'Pneumatic Type' ),
-                    array( 'key' => 'wheels.self_healing', 'label' => 'Self-Healing Tires', 'format' => 'feature_check', 'feature_value' => true, 'tooltip' => $tooltips['self_healing'] ),
-                    array( 'key' => 'suspension.type', 'label' => 'Suspension', 'format' => 'array', 'tooltip' => $tooltips['suspension_type'] ),
+                    array( 'key' => 'wheels.self_healing', 'label' => 'Self-Healing Tires', 'format' => 'feature_check', 'feature_value' => true, 'tooltip' => $get_tooltip( 'wheels.self_healing' ) ),
+                    array( 'key' => 'suspension.type', 'label' => 'Suspension', 'format' => 'array', 'tooltip' => $get_tooltip( 'suspension.type' ) ),
                     array( 'key' => 'suspension.adjustable', 'label' => 'Adjustable Suspension', 'format' => 'feature_check', 'feature_value' => true ),
                 ),
             ),
@@ -173,10 +160,10 @@ function erh_get_product_spec_groups_config( string $category ): array {
                 'specs' => array(
                     array( 'key' => 'brakes.front', 'label' => 'Front Brake' ),
                     array( 'key' => 'brakes.rear', 'label' => 'Rear Brake' ),
-                    array( 'key' => 'brakes.regenerative', 'label' => 'Regenerative Braking', 'format' => 'feature_check', 'feature_value' => true, 'tooltip' => $tooltips['regenerative'] ),
+                    array( 'key' => 'brakes.regenerative', 'label' => 'Regenerative Braking', 'format' => 'feature_check', 'feature_value' => true, 'tooltip' => $get_tooltip( 'brakes.regenerative' ) ),
                     array( 'key' => 'lighting.lights', 'label' => 'Lights', 'format' => 'array' ),
                     array( 'key' => 'lighting.turn_signals', 'label' => 'Turn Signals', 'format' => 'feature_check', 'feature_value' => true ),
-                    array( 'key' => 'other.ip_rating', 'label' => 'IP Rating', 'format' => 'ip', 'higherBetter' => true, 'tooltip' => $tooltips['ip_rating'] ),
+                    array( 'key' => 'other.ip_rating', 'label' => 'IP Rating', 'format' => 'ip', 'higherBetter' => true, 'tooltip' => $get_tooltip( 'other.ip_rating' ) ),
                 ),
             ),
             'Features' => array(
@@ -210,8 +197,8 @@ function erh_get_product_spec_groups_config( string $category ): array {
             'Motor & Power' => array(
                 'icon'  => 'zap',
                 'specs' => array(
-                    array( 'key' => 'motor.power_nominal', 'label' => 'Nominal Power', 'unit' => 'W', 'tooltip' => $tooltips['nominal_power'] ),
-                    array( 'key' => 'motor.power_peak', 'label' => 'Peak Power', 'unit' => 'W', 'tooltip' => $tooltips['peak_power'] ),
+                    array( 'key' => 'motor.power_nominal', 'label' => 'Nominal Power', 'unit' => 'W', 'tooltip' => $get_tooltip( 'motor.power_nominal' ) ),
+                    array( 'key' => 'motor.power_peak', 'label' => 'Peak Power', 'unit' => 'W', 'tooltip' => $get_tooltip( 'motor.power_peak' ) ),
                     array( 'key' => 'motor.torque', 'label' => 'Torque', 'unit' => 'Nm' ),
                     array( 'key' => 'motor.type', 'label' => 'Motor Type' ),
                     array( 'key' => 'motor.position', 'label' => 'Motor Position' ),
@@ -220,10 +207,10 @@ function erh_get_product_spec_groups_config( string $category ): array {
             'Battery & Range' => array(
                 'icon'  => 'battery',
                 'specs' => array(
-                    array( 'key' => 'battery.capacity', 'label' => 'Battery Capacity', 'unit' => 'Wh', 'tooltip' => $tooltips['battery_capacity'] ),
+                    array( 'key' => 'battery.capacity', 'label' => 'Battery Capacity', 'unit' => 'Wh', 'tooltip' => $get_tooltip( 'battery.capacity' ) ),
                     array( 'key' => 'battery.voltage', 'label' => 'Voltage', 'unit' => 'V' ),
                     array( 'key' => 'battery.range_claimed', 'label' => 'Range (Claimed)', 'unit' => 'mi' ),
-                    array( 'key' => 'battery.charging_time', 'label' => 'Charge Time', 'unit' => 'hrs', 'tooltip' => $tooltips['charge_time'] ),
+                    array( 'key' => 'battery.charging_time', 'label' => 'Charge Time', 'unit' => 'hrs', 'tooltip' => $get_tooltip( 'battery.charging_time' ) ),
                     array( 'key' => 'battery.removable', 'label' => 'Removable Battery', 'format' => 'boolean' ),
                 ),
             ),
@@ -240,7 +227,7 @@ function erh_get_product_spec_groups_config( string $category ): array {
                 'icon'  => 'box',
                 'specs' => array(
                     array( 'key' => 'frame.weight', 'label' => 'Weight', 'unit' => 'lbs' ),
-                    array( 'key' => 'frame.max_load', 'label' => 'Max Load', 'unit' => 'lbs', 'tooltip' => $tooltips['max_load'] ),
+                    array( 'key' => 'frame.max_load', 'label' => 'Max Load', 'unit' => 'lbs', 'tooltip' => $get_tooltip( 'dimensions.max_load' ) ),
                     array( 'key' => 'frame.material', 'label' => 'Frame Material' ),
                     array( 'key' => 'frame.type', 'label' => 'Frame Type' ),
                     array( 'key' => 'frame.suspension', 'label' => 'Suspension' ),

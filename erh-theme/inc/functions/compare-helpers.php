@@ -14,6 +14,7 @@ if ( ! defined( 'ABSPATH' ) ) {
 }
 
 use ERH\CategoryConfig;
+use ERH\Config\SpecConfig;
 
 /**
  * Get currency symbol for geo region.
@@ -237,7 +238,7 @@ function erh_calculate_spec_advantages( array $products ): array {
 
     // 2-product comparison uses the detailed logic below.
 
-    $spec_config = \ERH\Config\SpecConfig::COMPARISON_SPECS;
+    $spec_config = \ERH\Config\SpecConfig::get_comparison_specs();
     $threshold   = \ERH\Config\SpecConfig::SPEC_ADVANTAGE_THRESHOLD;
     $max_adv     = \ERH\Config\SpecConfig::SPEC_ADVANTAGE_MAX;
 
@@ -492,7 +493,7 @@ function erh_process_composite_advantage( string $spec_key, array $spec, array $
     }
 
     // Collect individual spec wins for the comparison line.
-    $spec_config = \ERH\Config\SpecConfig::COMPARISON_SPECS;
+    $spec_config = \ERH\Config\SpecConfig::get_comparison_specs();
     $winner_details = [];
 
     foreach ( $child_specs as $child_key ) {
@@ -642,7 +643,7 @@ function erh_process_portability_composite( array $spec, array $products, array 
             'comparison' => erh_format_spec_number( $winner_weight ) . ' lbs vs ' . erh_format_spec_number( $loser_weight ) . ' lbs',
             'winner'     => $weight_winner,
             'spec_key'   => 'dimensions.weight',
-            'tooltip'    => 'Lighter scooters are easier to carry upstairs, onto public transit, or into your office.',
+            'tooltip'    => SpecConfig::get_tooltip( 'dimensions.weight', 'comparison' ),
         ];
         $handled_specs[] = 'dimensions.weight';
     }
@@ -657,7 +658,7 @@ function erh_process_portability_composite( array $spec, array $products, array 
             'comparison' => erh_format_folded_footprint( $winner_footprint ) . ' vs ' . erh_format_folded_footprint( $loser_footprint ),
             'winner'     => $footprint_winner,
             'spec_key'   => 'folded_footprint',
-            'tooltip'    => 'Smaller folded size makes it easier to fit in car trunks, closets, or under desks.',
+            'tooltip'    => SpecConfig::get_tooltip( 'folded_footprint', 'comparison' ),
         ];
         $handled_specs[] = 'folded_footprint';
     }
@@ -1373,8 +1374,8 @@ function erh_get_composite_advantage_details( array $adv_specs, array $winner, a
     $composite_key = $adv_specs['composite'];
     $max_items     = $adv_specs['maxItems'] ?? 4;
 
-    // Get the composite spec config from COMPARISON_SPECS.
-    $composite_spec = \ERH\Config\SpecConfig::COMPARISON_SPECS[ $composite_key ] ?? null;
+    // Get the composite spec config from centralized source.
+    $composite_spec = \ERH\Config\SpecConfig::get_comparison_spec( $composite_key );
     if ( ! $composite_spec ) {
         return null;
     }
@@ -1394,14 +1395,14 @@ function erh_get_composite_advantage_details( array $adv_specs, array $winner, a
             break;
         }
 
-        $spec_config = \ERH\Config\SpecConfig::COMPARISON_SPECS[ $spec_key ] ?? null;
-        if ( ! $spec_config ) {
+        $child_spec_config = \ERH\Config\SpecConfig::get_comparison_spec( $spec_key );
+        if ( ! $child_spec_config ) {
             continue;
         }
 
         // Get normalized values for comparison.
-        $val_winner = erh_get_normalized_spec_value( $winner['specs'], $spec_key, $spec_config );
-        $val_loser  = erh_get_normalized_spec_value( $loser['specs'], $spec_key, $spec_config );
+        $val_winner = erh_get_normalized_spec_value( $winner['specs'], $spec_key, $child_spec_config );
+        $val_loser  = erh_get_normalized_spec_value( $loser['specs'], $spec_key, $child_spec_config );
 
         // Skip if either value is missing.
         if ( $val_winner === null || $val_winner === '' || $val_loser === null || $val_loser === '' ) {
@@ -1409,7 +1410,7 @@ function erh_get_composite_advantage_details( array $adv_specs, array $winner, a
         }
 
         // Determine who wins this spec.
-        $spec_winner = erh_compare_spec_values( $val_winner, $val_loser, $spec_config );
+        $spec_winner = erh_compare_spec_values( $val_winner, $val_loser, $child_spec_config );
 
         // Only include specs where the category winner (product 0) wins.
         if ( $spec_winner !== 0 ) {
@@ -1417,12 +1418,12 @@ function erh_get_composite_advantage_details( array $adv_specs, array $winner, a
         }
 
         // For specs with displayFormatter (like suspension), pass raw values for nice display.
-        if ( ! empty( $spec_config['displayFormatter'] ) ) {
+        if ( ! empty( $child_spec_config['displayFormatter'] ) ) {
             $raw_winner = erh_get_nested_spec( $winner['specs'], $spec_key );
             $raw_loser  = erh_get_nested_spec( $loser['specs'], $spec_key );
-            $detail = erh_format_composite_detail( $spec_key, $spec_config, $raw_winner, $raw_loser, 0 );
+            $detail = erh_format_composite_detail( $spec_key, $child_spec_config, $raw_winner, $raw_loser, 0 );
         } else {
-            $detail = erh_format_composite_detail( $spec_key, $spec_config, $val_winner, $val_loser, 0 );
+            $detail = erh_format_composite_detail( $spec_key, $child_spec_config, $val_winner, $val_loser, 0 );
         }
         if ( $detail ) {
             $comparisons[] = $detail;

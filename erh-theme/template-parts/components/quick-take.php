@@ -18,6 +18,8 @@ if ( ! defined( 'ABSPATH' ) ) {
     exit;
 }
 
+use ERH\Config\SpecConfig;
+
 // Get arguments with defaults
 $text       = $args['text'] ?? '';
 $score      = $args['score'] ?? null;
@@ -32,6 +34,10 @@ if ( empty( $text ) ) {
 // Get score label and attribute
 $score_label = $score ? erh_get_score_label( (float) $score ) : '';
 $score_attr  = $score ? erh_get_score_attr( (float) $score ) : '';
+
+// Get score tooltip from centralized tooltips
+$score_tooltip = SpecConfig::get_tooltip( 'overall_score', 'methodology' )
+    ?? __( 'ERideHero Score based on performance, value, build quality and features', 'erh' );
 ?>
 
 <section class="review-verdict" id="<?php echo esc_attr( $section_id ); ?>">
@@ -42,7 +48,7 @@ $score_attr  = $score ? erh_get_score_attr( (float) $score ) : '';
             <div
                 class="review-verdict-score"
                 data-score="<?php echo esc_attr( $score_attr ); ?>"
-                data-tooltip="<?php esc_attr_e( 'ERideHero Score based on performance, value, build quality and features', 'erh' ); ?>"
+                data-tooltip="<?php echo esc_attr( $score_tooltip ); ?>"
                 data-tooltip-trigger="click"
                 data-tooltip-position="bottom"
             >

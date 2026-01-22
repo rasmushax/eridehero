@@ -38,42 +38,35 @@ const WEAKNESS_TIERS = [
 ];
 
 /**
- * Tooltip definitions for each metric.
- * Explains what the metric measures.
+ * Get tooltip with fallback chain from centralized tooltips.
+ *
+ * Fallback chain: erhData.tooltips[key].comparison → .methodology
+ *
+ * @param {string} specKey - Spec key
+ * @param {string} tier - Tooltip tier ('comparison', 'methodology')
+ * @returns {string|null} Tooltip text
  */
-const METRIC_TOOLTIPS = {
-    // Value metrics (lower is better)
-    'value_metrics.price_per_wh': 'Cost per watt-hour of battery capacity. Lower means better value for your money.',
-    'value_metrics.price_per_watt': 'Cost per watt of motor power. Lower means better value.',
-    'value_metrics.price_per_tested_mile': 'Cost per mile of tested range. Lower means better range value.',
-    'value_metrics.price_per_mph': 'Cost per mph of top speed. Lower means better speed value.',
+function getTooltipFromCentralized(specKey, tier = 'comparison') {
+    const tooltips = window.erhData?.tooltips;
+    if (!tooltips) return null;
 
-    // Raw specs (higher is better)
-    'tested_top_speed': 'Maximum speed achieved in real-world testing with a 175 lb rider.',
-    'tested_range_regular': 'Distance traveled on a single charge at moderate speed in testing.',
-    'battery.capacity': 'Total battery energy storage in watt-hours. Higher means more range potential.',
-    'motor.power_nominal': 'Continuous motor output in watts. Higher means more torque and hill-climbing ability.',
+    // Normalize geo-specific keys: value_metrics.US.price_per_wh → value_metrics.price_per_wh
+    const normalizedKey = specKey.replace(/\.(US|GB|EU|CA|AU)\./, '.');
 
-    // Raw specs (lower is better)
-    'dimensions.weight': 'Total scooter weight. Lower is easier to carry and maneuver.',
-    'charging.time_to_full': 'Time to fully charge from empty. Lower is more convenient.',
+    const tooltipData = tooltips[normalizedKey];
+    if (!tooltipData) return null;
 
-    // Score-based composite specs
-    'ride_quality': 'Ride comfort score based on suspension, tires, and dimensions. Compared to other scooters in the same price range.',
-    'maintenance': 'Maintenance requirements score based on tire type, brakes, and water resistance. Higher means less hassle.',
-
-    // Descriptive specs (absolute quality)
-    'ip_rating': 'Water and dust resistance rating. IP5+ means safe for riding in rain.',
-    'features': 'Number of features like app connectivity, lights, display, etc.',
-
-    // Efficiency metrics
-    'wh_per_lb': 'Battery capacity relative to weight. Higher means better energy density.',
-    'speed_per_lb': 'Top speed relative to weight. Higher means better power-to-weight ratio.',
-    'tested_range_per_lb': 'Range relative to weight. Higher means better range efficiency.',
-
-    // Load capacity
-    'load.max_load': 'Maximum recommended rider weight. Higher accommodates more riders.',
-};
+    // Apply fallback chain based on tier
+    // comparison → methodology (comparison context falls back to full explanation)
+    // methodology is the default (full explanation)
+    switch (tier) {
+        case 'comparison':
+            return tooltipData.comparison || tooltipData.methodology || null;
+        case 'methodology':
+        default:
+            return tooltipData.methodology || null;
+    }
+}
 
 // =============================================================================
 // Helper Functions
@@ -114,11 +107,21 @@ function getWeaknessTier(percentile) {
 /**
  * Get tooltip text for a metric.
  *
+ * Uses centralized tooltips from erhData.tooltips with 'comparison' tier
+ * (appropriate for product analysis context - explains why spec matters).
+ *
  * @param {string} specKey - Spec key (e.g., 'tested_top_speed')
  * @returns {string} Tooltip text
  */
 function getMetricTooltip(specKey) {
-    return METRIC_TOOLTIPS[specKey] || 'Performance metric compared against similar scooters.';
+    // Use centralized tooltips with 'comparison' tier for analysis context
+    const tooltip = getTooltipFromCentralized(specKey, 'comparison');
+    if (tooltip) {
+        return tooltip;
+    }
+
+    // Fallback for any specs not in centralized tooltips
+    return 'Performance metric compared against similar scooters.';
 }
 
 /**

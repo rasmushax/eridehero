@@ -49,7 +49,7 @@ class EscooterAdvantages extends AdvantageCalculatorBase {
             return array_fill(0, count($products), []);
         }
 
-        $spec_config = SpecConfig::COMPARISON_SPECS;
+        $spec_config = SpecConfig::get_comparison_specs();
         $threshold = SpecConfig::SPEC_ADVANTAGE_THRESHOLD;
         $this->max_advantages = SpecConfig::SPEC_ADVANTAGE_MAX;
         $this->threshold = $threshold;
@@ -281,6 +281,7 @@ class EscooterAdvantages extends AdvantageCalculatorBase {
     private function get_multi_comparison_specs(): array {
         return [
             // Top speed - prefer tested, fallback to manufacturer.
+            // Tooltips auto-fetched from centralized SpecConfig::TOOLTIPS via get_tooltip().
             [
                 'key'           => 'tested_top_speed',
                 'fallback'      => 'manufacturer_top_speed',
@@ -288,7 +289,7 @@ class EscooterAdvantages extends AdvantageCalculatorBase {
                 'unit'          => 'mph',
                 'higher_better' => true,
                 'format'        => 'speed',
-                'tooltip'       => 'Highest top speed (tested if available, otherwise manufacturer claim)',
+                'tooltip'       => SpecConfig::get_tooltip('tested_top_speed', 'comparison'),
             ],
             // Battery capacity (Wh) - always use this, not range claimed.
             [
@@ -297,7 +298,7 @@ class EscooterAdvantages extends AdvantageCalculatorBase {
                 'unit'          => 'Wh',
                 'higher_better' => true,
                 'format'        => 'numeric',
-                'tooltip'       => 'Largest battery capacity in watt-hours',
+                'tooltip'       => SpecConfig::get_tooltip('battery.capacity', 'comparison'),
             ],
             // Tested range - only if all have it.
             [
@@ -307,7 +308,7 @@ class EscooterAdvantages extends AdvantageCalculatorBase {
                 'higher_better' => true,
                 'format'        => 'numeric',
                 'require_all'   => true,
-                'tooltip'       => 'Longest range in our real-world test (175 lbs rider, mixed terrain)',
+                'tooltip'       => SpecConfig::get_tooltip('tested_range_regular', 'comparison'),
             ],
             // Weight - lighter is better.
             [
@@ -316,7 +317,7 @@ class EscooterAdvantages extends AdvantageCalculatorBase {
                 'unit'          => 'lbs',
                 'higher_better' => false,
                 'format'        => 'numeric',
-                'tooltip'       => 'Lowest weight for easier carrying and transport',
+                'tooltip'       => SpecConfig::get_tooltip('dimensions.weight', 'comparison'),
             ],
             // Max load capacity.
             [
@@ -325,7 +326,7 @@ class EscooterAdvantages extends AdvantageCalculatorBase {
                 'unit'          => 'lbs',
                 'higher_better' => true,
                 'format'        => 'numeric',
-                'tooltip'       => 'Highest maximum rider weight supported',
+                'tooltip'       => SpecConfig::get_tooltip('dimensions.max_load', 'comparison'),
             ],
             // Wh per pound - efficiency metric.
             [
@@ -334,7 +335,7 @@ class EscooterAdvantages extends AdvantageCalculatorBase {
                 'unit'          => 'Wh/lb',
                 'higher_better' => true,
                 'format'        => 'decimal',
-                'tooltip'       => 'Battery capacity divided by weight. Higher = more energy per pound of scooter',
+                'tooltip'       => SpecConfig::get_tooltip('wh_per_lb', 'comparison'),
             ],
             // mph per pound - power-to-weight metric.
             [
@@ -343,7 +344,7 @@ class EscooterAdvantages extends AdvantageCalculatorBase {
                 'unit'          => 'mph/lb',
                 'higher_better' => true,
                 'format'        => 'decimal',
-                'tooltip'       => 'Top speed divided by weight. Higher = more speed per pound of scooter',
+                'tooltip'       => SpecConfig::get_tooltip('speed_per_lb', 'comparison'),
             ],
             // Suspension - best type wins.
             [
@@ -351,7 +352,7 @@ class EscooterAdvantages extends AdvantageCalculatorBase {
                 'label'         => 'Best suspension',
                 'higher_better' => true,
                 'format'        => 'suspension',
-                'tooltip'       => 'Best suspension system for absorbing bumps and improving ride comfort',
+                'tooltip'       => SpecConfig::get_tooltip('suspension.type', 'comparison'),
             ],
             // IP rating.
             [
@@ -359,7 +360,7 @@ class EscooterAdvantages extends AdvantageCalculatorBase {
                 'label'         => 'Best water resistance',
                 'higher_better' => true,
                 'format'        => 'ip_rating',
-                'tooltip'       => 'Highest IP water resistance rating for riding in wet conditions',
+                'tooltip'       => SpecConfig::get_tooltip('other.ip_rating', 'comparison'),
             ],
             // Features count.
             [
@@ -367,7 +368,7 @@ class EscooterAdvantages extends AdvantageCalculatorBase {
                 'label'         => 'Most features',
                 'higher_better' => true,
                 'format'        => 'feature_count',
-                'tooltip'       => 'Most built-in features like app control, lights, cruise control, etc.',
+                'tooltip'       => SpecConfig::get_tooltip('features', 'comparison'),
             ],
         ];
     }
@@ -822,7 +823,7 @@ class EscooterAdvantages extends AdvantageCalculatorBase {
                     'text'       => 'Lowest maintenance',
                     'comparison' => implode(', ', $reasons),
                     'spec_key'   => '_maintenance',
-                    'tooltip'    => 'Lowest maintenance requirements based on tire type, self-healing, and water resistance',
+                    'tooltip'    => SpecConfig::get_tooltip('_maintenance', 'comparison'),
                 ];
             }
         }
@@ -835,7 +836,7 @@ class EscooterAdvantages extends AdvantageCalculatorBase {
                 'text'       => 'Smallest folded footprint',
                 'comparison' => $this->format_folded_footprint($footprint),
                 'spec_key'   => 'folded_footprint',
-                'tooltip'    => 'Folded floor space (length × width). Smaller = easier to store and transport.',
+                'tooltip'    => SpecConfig::get_tooltip('folded_footprint', 'comparison'),
             ];
         }
     }
@@ -1127,6 +1128,7 @@ class EscooterAdvantages extends AdvantageCalculatorBase {
      * @return array Array of spec definitions.
      */
     private function get_single_analysis_specs(): array {
+        // Tooltips auto-fetched from centralized SpecConfig::TOOLTIPS via get_tooltip().
         return [
             // Value metrics (from value_metrics - lower is better).
             [
@@ -1135,7 +1137,7 @@ class EscooterAdvantages extends AdvantageCalculatorBase {
                 'unit'          => '$/Wh',
                 'higher_better' => false,
                 'is_value'      => true,
-                'tooltip'       => 'Price divided by battery capacity. Lower means more battery for your money.',
+                'tooltip'       => SpecConfig::get_tooltip('value_metrics.price_per_wh', 'comparison'),
             ],
             [
                 'key'           => 'value_metrics.price_per_watt',
@@ -1143,7 +1145,7 @@ class EscooterAdvantages extends AdvantageCalculatorBase {
                 'unit'          => '$/W',
                 'higher_better' => false,
                 'is_value'      => true,
-                'tooltip'       => 'Price divided by motor power. Lower means more power for your money.',
+                'tooltip'       => SpecConfig::get_tooltip('value_metrics.price_per_watt', 'comparison'),
             ],
             [
                 'key'           => 'value_metrics.price_per_tested_mile',
@@ -1151,7 +1153,7 @@ class EscooterAdvantages extends AdvantageCalculatorBase {
                 'unit'          => '$/mi',
                 'higher_better' => false,
                 'is_value'      => true,
-                'tooltip'       => 'Price divided by tested range. Lower means more range for your money.',
+                'tooltip'       => SpecConfig::get_tooltip('value_metrics.price_per_tested_mile', 'comparison'),
             ],
             [
                 'key'           => 'value_metrics.price_per_mph',
@@ -1159,7 +1161,7 @@ class EscooterAdvantages extends AdvantageCalculatorBase {
                 'unit'          => '$/mph',
                 'higher_better' => false,
                 'is_value'      => true,
-                'tooltip'       => 'Price divided by top speed. Lower means more speed for your money.',
+                'tooltip'       => SpecConfig::get_tooltip('value_metrics.price_per_mph', 'comparison'),
             ],
             // Raw performance specs (higher is better unless noted).
             [
@@ -1167,42 +1169,42 @@ class EscooterAdvantages extends AdvantageCalculatorBase {
                 'label'         => 'Top Speed',
                 'unit'          => 'mph',
                 'higher_better' => true,
-                'tooltip'       => 'Tested top speed from our real-world testing.',
+                'tooltip'       => SpecConfig::get_tooltip('tested_top_speed', 'comparison'),
             ],
             [
                 'key'           => 'tested_range_regular',
                 'label'         => 'Tested Range',
                 'unit'          => 'mi',
                 'higher_better' => true,
-                'tooltip'       => 'Range from our real-world testing at regular pace.',
+                'tooltip'       => SpecConfig::get_tooltip('tested_range_regular', 'comparison'),
             ],
             [
                 'key'           => 'battery.capacity',
                 'label'         => 'Battery Capacity',
                 'unit'          => 'Wh',
                 'higher_better' => true,
-                'tooltip'       => 'Total battery capacity in watt-hours.',
+                'tooltip'       => SpecConfig::get_tooltip('battery.capacity', 'comparison'),
             ],
             [
                 'key'           => 'motor.power_nominal',
                 'label'         => 'Motor Power',
                 'unit'          => 'W',
                 'higher_better' => true,
-                'tooltip'       => 'Nominal motor power. Higher means more hill climbing ability and acceleration.',
+                'tooltip'       => SpecConfig::get_tooltip('motor.power_nominal', 'comparison'),
             ],
             [
                 'key'           => 'dimensions.weight',
                 'label'         => 'Weight',
                 'unit'          => 'lbs',
                 'higher_better' => false,
-                'tooltip'       => 'Total weight. Lighter scooters are easier to carry.',
+                'tooltip'       => SpecConfig::get_tooltip('dimensions.weight', 'comparison'),
             ],
             [
                 'key'           => 'dimensions.max_load',
                 'label'         => 'Max Load',
                 'unit'          => 'lbs',
                 'higher_better' => true,
-                'tooltip'       => 'Maximum rider weight supported.',
+                'tooltip'       => SpecConfig::get_tooltip('dimensions.max_load', 'comparison'),
             ],
             // Efficiency metrics (from pre-computed values).
             [
@@ -1210,21 +1212,21 @@ class EscooterAdvantages extends AdvantageCalculatorBase {
                 'label'         => 'Energy Density',
                 'unit'          => 'Wh/lb',
                 'higher_better' => true,
-                'tooltip'       => 'Battery capacity per pound of weight. Higher means better energy efficiency.',
+                'tooltip'       => SpecConfig::get_tooltip('wh_per_lb', 'comparison'),
             ],
             [
                 'key'           => 'speed_per_lb',
                 'label'         => 'Speed-to-weight ratio',
                 'unit'          => 'mph/lb',
                 'higher_better' => true,
-                'tooltip'       => 'Top speed per pound of weight. Higher means better performance for the weight.',
+                'tooltip'       => SpecConfig::get_tooltip('speed_per_lb', 'comparison'),
             ],
             [
                 'key'           => 'tested_range_per_lb',
                 'label'         => 'Range Efficiency',
                 'unit'          => 'mi/lb',
                 'higher_better' => true,
-                'tooltip'       => 'Range per pound of weight. Higher means better range for the weight.',
+                'tooltip'       => SpecConfig::get_tooltip('tested_range_per_lb', 'comparison'),
             ],
             // Score-based composite specs (compare category scores vs bracket average).
             [
@@ -1232,14 +1234,14 @@ class EscooterAdvantages extends AdvantageCalculatorBase {
                 'label'         => 'Ride Quality',
                 'higher_better' => true,
                 'is_score_based' => true,
-                'tooltip'       => 'Ride comfort based on suspension, tires, and dimensions.',
+                'tooltip'       => SpecConfig::get_tooltip('ride_quality', 'comparison'),
             ],
             [
                 'key'           => 'maintenance',
                 'label'         => 'Maintenance',
                 'higher_better' => true,
                 'is_score_based' => true,
-                'tooltip'       => 'Low maintenance based on tire type, brakes, and water resistance.',
+                'tooltip'       => SpecConfig::get_tooltip('maintenance', 'comparison'),
             ],
             // Absolute quality specs (not bracket-relative).
             [
@@ -1247,14 +1249,14 @@ class EscooterAdvantages extends AdvantageCalculatorBase {
                 'label'         => 'Water Resistance',
                 'higher_better' => true,
                 'is_descriptive' => true,
-                'tooltip'       => 'Water and dust resistance rating.',
+                'tooltip'       => SpecConfig::get_tooltip('other.ip_rating', 'comparison'),
             ],
             [
                 'key'           => 'feature_count',
                 'label'         => 'Features',
                 'unit'          => 'features',
                 'higher_better' => true,
-                'tooltip'       => 'Number of built-in features like app control, lights, cruise control, etc.',
+                'tooltip'       => SpecConfig::get_tooltip('features', 'comparison'),
             ],
         ];
     }
@@ -2061,7 +2063,7 @@ class EscooterAdvantages extends AdvantageCalculatorBase {
             'unit'          => '',
             'percentile'    => 0, // Not applicable for absolute.
             'pct_vs_avg'    => 0,
-            'tooltip'       => 'Water and dust resistance rating. IP5+ means safe for riding in rain.',
+            'tooltip'       => SpecConfig::get_tooltip('other.ip_rating', 'comparison'),
             'text'          => $display_text,
             'comparison'    => $comparison,
         ];
@@ -2586,7 +2588,7 @@ class EscooterAdvantages extends AdvantageCalculatorBase {
         }
 
         // Collect individual spec wins for the comparison line.
-        $spec_config = SpecConfig::COMPARISON_SPECS;
+        $spec_config = SpecConfig::get_comparison_specs();
         $winner_details = [];
 
         foreach ($child_specs as $child_key) {
@@ -2725,7 +2727,7 @@ class EscooterAdvantages extends AdvantageCalculatorBase {
                 'comparison' => $this->format_spec_number((float) $winner_weight) . ' lbs vs ' . $this->format_spec_number((float) $loser_weight) . ' lbs',
                 'winner'     => $weight_winner,
                 'spec_key'   => 'dimensions.weight',
-                'tooltip'    => 'Lighter scooters are easier to carry upstairs, onto public transit, or into your office.',
+                'tooltip'    => SpecConfig::get_tooltip('dimensions.weight', 'comparison'),
             ];
             $handled_specs[] = 'dimensions.weight';
         }
@@ -2739,7 +2741,7 @@ class EscooterAdvantages extends AdvantageCalculatorBase {
                 'comparison' => $this->format_folded_footprint($winner_footprint) . ' vs ' . $this->format_folded_footprint($loser_footprint),
                 'winner'     => $footprint_winner,
                 'spec_key'   => 'folded_footprint',
-                'tooltip'    => 'Folded floor space (length × width). Smaller = easier to store and transport.',
+                'tooltip'    => SpecConfig::get_tooltip('folded_footprint', 'comparison'),
             ];
             $handled_specs[] = 'folded_footprint';
         }

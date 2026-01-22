@@ -294,6 +294,13 @@ import { Toast } from './components/toast.js'; // For programmatic toasts
         });
     }
 
+    // Buying Guide Table blocks - comparison tables with geo pricing
+    if (document.querySelector('[data-buying-guide-table]')) {
+        import('./components/buying-guide-table.js').then(module => {
+            module.initBuyingGuideTables();
+        });
+    }
+
     // Account page - tabs, settings, and trackers
     if (document.querySelector('.account-page')) {
         import('./components/account-tabs.js');

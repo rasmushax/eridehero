@@ -83,6 +83,9 @@ class BlockManager {
 
         // Register listicle item block.
         $this->register_listicle_item_block();
+
+        // Register buying guide table block.
+        $this->register_buying_guide_table_block();
     }
 
     /**
@@ -218,6 +221,7 @@ class BlockManager {
         $this->register_checklist_fields();
         $this->register_video_fields();
         $this->register_listicle_item_fields();
+        $this->register_buying_guide_table_fields();
     }
 
     /**
@@ -764,6 +768,158 @@ class BlockManager {
                 $block_url . 'listicle-item.css',
                 [],
                 ERH_VERSION
+            );
+        }
+    }
+
+    /**
+     * Register the buying guide table block.
+     *
+     * @return void
+     */
+    private function register_buying_guide_table_block(): void {
+        acf_register_block_type([
+            'name'            => 'buying-guide-table',
+            'title'           => __('Buying Guide Table', 'erh-core'),
+            'description'     => __('Comparison table for buying guides with geo-aware pricing.', 'erh-core'),
+            'category'        => 'formatting',
+            'icon'            => 'editor-table',
+            'keywords'        => ['table', 'comparison', 'buying guide', 'products', 'specs'],
+            'mode'            => 'preview',
+            'supports'        => [
+                'align'  => ['wide', 'full'],
+                'anchor' => true,
+            ],
+            'render_callback' => [$this, 'render_buying_guide_table_block'],
+            'enqueue_assets'  => [$this, 'enqueue_buying_guide_table_assets'],
+        ]);
+
+        $this->blocks['buying-guide-table'] = [
+            'name' => 'buying-guide-table',
+            'dir'  => $this->blocks_dir . 'buying-guide-table/',
+            'url'  => $this->blocks_url . 'buying-guide-table/',
+        ];
+    }
+
+    /**
+     * Register buying guide table block ACF fields.
+     *
+     * @return void
+     */
+    private function register_buying_guide_table_fields(): void {
+        // Get column choices from SpecConfig (escooter for now).
+        $column_choices = \ERH\Config\SpecConfig::get_table_column_choices('escooter');
+
+        acf_add_local_field_group([
+            'key'      => 'group_buying_guide_table',
+            'title'    => 'Block - Buying Guide Table',
+            'fields'   => [
+                [
+                    'key'          => 'field_bgt_products',
+                    'label'        => 'Products',
+                    'name'         => 'products',
+                    'type'         => 'repeater',
+                    'instructions' => 'Add products to compare in the table.',
+                    'layout'       => 'block',
+                    'button_label' => 'Add Product',
+                    'min'          => 2,
+                    'max'          => 10,
+                    'sub_fields'   => [
+                        [
+                            'key'           => 'field_bgt_product',
+                            'label'         => 'Product',
+                            'name'          => 'product',
+                            'type'          => 'post_object',
+                            'post_type'     => ['products'],
+                            'post_status'   => ['publish'],
+                            'return_format' => 'id',
+                            'ui'            => 1,
+                            'wrapper'       => ['width' => '60'],
+                        ],
+                        [
+                            'key'         => 'field_bgt_highlight',
+                            'label'       => 'Highlight Text',
+                            'name'        => 'highlight_text',
+                            'type'        => 'text',
+                            'placeholder' => 'e.g., Best for Commuters',
+                            'wrapper'     => ['width' => '40'],
+                        ],
+                    ],
+                ],
+                [
+                    'key'           => 'field_bgt_visible_columns',
+                    'label'         => 'Visible Columns',
+                    'name'          => 'visible_columns',
+                    'type'          => 'checkbox',
+                    'instructions'  => 'Select which specs to show as table columns.',
+                    'choices'       => $column_choices,
+                    'default_value' => [
+                        'top_speed_tested',
+                        'range_tested',
+                        'battery_capacity',
+                        'motor_power',
+                        'weight',
+                    ],
+                    'layout'        => 'vertical',
+                    'toggle'        => 1,
+                ],
+            ],
+            'location' => [
+                [
+                    [
+                        'param'    => 'block',
+                        'operator' => '==',
+                        'value'    => 'acf/buying-guide-table',
+                    ],
+                ],
+            ],
+        ]);
+    }
+
+    /**
+     * Render the buying guide table block.
+     *
+     * @param array  $block      The block settings.
+     * @param string $content    The block content (empty for ACF blocks).
+     * @param bool   $is_preview True during AJAX preview in editor.
+     * @param int    $post_id    The post ID.
+     * @return void
+     */
+    public function render_buying_guide_table_block(array $block, string $content = '', bool $is_preview = false, int $post_id = 0): void {
+        $template = $this->blocks_dir . 'buying-guide-table/template.php';
+
+        if (file_exists($template)) {
+            include $template;
+        }
+    }
+
+    /**
+     * Enqueue buying guide table block assets.
+     *
+     * @return void
+     */
+    public function enqueue_buying_guide_table_assets(): void {
+        $block_url = $this->blocks_url . 'buying-guide-table/';
+        $block_dir = $this->blocks_dir . 'buying-guide-table/';
+
+        // Enqueue CSS.
+        if (file_exists($block_dir . 'buying-guide-table.css')) {
+            wp_enqueue_style(
+                'erh-block-buying-guide-table',
+                $block_url . 'buying-guide-table.css',
+                [],
+                ERH_VERSION
+            );
+        }
+
+        // Enqueue JS (frontend only, not in editor).
+        if (!is_admin() && file_exists($block_dir . 'buying-guide-table.js')) {
+            wp_enqueue_script(
+                'erh-block-buying-guide-table',
+                $block_url . 'buying-guide-table.js',
+                [],
+                ERH_VERSION,
+                true
             );
         }
     }

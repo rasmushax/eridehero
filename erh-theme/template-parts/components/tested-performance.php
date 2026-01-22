@@ -16,6 +16,8 @@ if ( ! defined( 'ABSPATH' ) ) {
     exit;
 }
 
+use ERH\Config\SpecConfig;
+
 $product_id = $args['product_id'] ?? 0;
 
 if ( ! $product_id ) {
@@ -52,13 +54,14 @@ $has_range = $range_slow || $range_regular || $range_fast;
 // Check if we have acceleration data.
 $has_accel = $accel_0_15 || $accel_0_20 || $accel_0_25 || $accel_0_30;
 
-// Tooltips for test methodology.
+// Get tooltips from SpecConfig (single source of truth).
+// Using 'methodology' tier for detailed test protocol explanations.
 $tooltips = array(
-    'top_speed'   => 'GPS-verified max speed on flat ground, averaged between two opposite runs. 175 lb rider, 80%+ battery.',
-    'range'       => 'Real-world range on mixed terrain (city, country, minor hills). Three tests at different riding intensities from 100% to empty. 175 lb rider.',
-    'accel'       => 'Median time from standstill to target speed over 10+ runs. Max acceleration setting. 175 lb rider, 80%+ battery.',
-    'hill'        => 'Avg speed climbing 250 ft at 8% grade from kick-off start. Average of 5+ runs. 175 lb rider, 80%+ battery.',
-    'braking'     => 'Avg stopping distance from 15 mph with all brakes applied (max force, no lockup). Average of 10+ runs. 175 lb rider.',
+    'top_speed' => SpecConfig::get_tooltip( 'tested_top_speed', 'methodology' ),
+    'range'     => SpecConfig::get_tooltip( 'tested_range_regular', 'methodology' ),
+    'accel'     => SpecConfig::get_tooltip( 'acceleration_0_15_mph', 'methodology' ),
+    'hill'      => SpecConfig::get_tooltip( 'hill_climbing', 'methodology' ),
+    'braking'   => SpecConfig::get_tooltip( 'brake_distance', 'methodology' ),
 );
 ?>
 
