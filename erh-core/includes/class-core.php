@@ -12,6 +12,7 @@ namespace ERH;
 use ERH\PostTypes\Product;
 use ERH\PostTypes\Tool;
 use ERH\PostTypes\Comparison;
+use ERH\PostTypes\Newsletter;
 use ERH\PostTypes\Taxonomies;
 use ERH\Database\Schema;
 use ERH\Database\ProductCache;
@@ -36,6 +37,10 @@ use ERH\Cron\ComparisonJsonJob;
 use ERH\Cron\FinderJsonJob;
 use ERH\Cron\NotificationJob;
 use ERH\Cron\YouTubeSyncJob;
+use ERH\Cron\EmailQueueJob;
+use ERH\Cron\NewsletterJob;
+use ERH\Database\EmailQueue;
+use ERH\Database\EmailQueueRepository;
 use ERH\Scoring\ProductScorer;
 use ERH\Admin\SettingsPage;
 use ERH\Admin\LinkPopulator;
@@ -43,6 +48,8 @@ use ERH\Admin\ClickStatsPage;
 use ERH\Admin\ComparisonDashboardWidget;
 use ERH\Admin\PopularComparisonsPage;
 use ERH\Admin\SpecEditor;
+use ERH\Admin\EmailTestPage;
+use ERH\Admin\NewsletterAdmin;
 use ERH\Migration\MigrationAdmin;
 use ERH\Api\RestPrices;
 use ERH\Api\RestDeals;
@@ -80,6 +87,13 @@ class Core {
      * @var Comparison
      */
     private Comparison $comparison_post_type;
+
+    /**
+     * Newsletter post type handler.
+     *
+     * @var Newsletter
+     */
+    private Newsletter $newsletter_post_type;
 
     /**
      * Taxonomies handler.
@@ -185,6 +199,20 @@ class Core {
      * @var SpecEditor
      */
     private SpecEditor $spec_editor;
+
+    /**
+     * Email test page instance.
+     *
+     * @var EmailTestPage
+     */
+    private EmailTestPage $email_test_page;
+
+    /**
+     * Newsletter admin instance.
+     *
+     * @var NewsletterAdmin
+     */
+    private NewsletterAdmin $newsletter_admin;
 
     /**
      * Email template instance.
@@ -446,6 +474,9 @@ class Core {
         $this->comparison_post_type = new Comparison();
         $this->comparison_post_type->register();
 
+        $this->newsletter_post_type = new Newsletter();
+        $this->newsletter_post_type->register();
+
         $this->taxonomies = new Taxonomies();
         $this->taxonomies->register();
     }
@@ -503,6 +534,14 @@ class Core {
         // Initialize spec editor admin page.
         $this->spec_editor = new SpecEditor();
         $this->spec_editor->register();
+
+        // Initialize email test page.
+        $this->email_test_page = new EmailTestPage();
+        $this->email_test_page->register();
+
+        // Initialize newsletter admin.
+        $this->newsletter_admin = new NewsletterAdmin();
+        $this->newsletter_admin->register();
     }
 
     /**
@@ -652,7 +691,7 @@ class Core {
             new NotificationJob(
                 $price_fetcher,
                 $price_tracker_db,
-                $this->email_sender,
+                $price_history,
                 $this->user_repo,
                 $this->cron_manager
             )
@@ -661,6 +700,19 @@ class Core {
         $this->cron_manager->add_job(
             'youtube-sync',
             new YouTubeSyncJob($this->cron_manager)
+        );
+
+        $this->cron_manager->add_job(
+            'email-queue',
+            new EmailQueueJob(
+                new EmailQueueRepository(),
+                $this->cron_manager
+            )
+        );
+
+        $this->cron_manager->add_job(
+            'newsletter',
+            new NewsletterJob($this->cron_manager)
         );
 
         // Register the cron manager.
@@ -832,5 +884,38 @@ class Core {
      */
     public function get_click_redirector(): ClickRedirector {
         return $this->click_redirector;
+    }
+
+    /**
+     * Queue an email for sending.
+     *
+     * Emails are processed in batches by the EmailQueueJob cron.
+     *
+     * @param string   $to       Recipient email address.
+     * @param string   $subject  Email subject.
+     * @param string   $body     Email body (HTML).
+     * @param string   $type     Email type (see EmailQueue constants).
+     * @param int      $priority Priority level (1=critical, 5=normal, 10=low).
+     * @param int|null $user_id  Associated user ID (optional).
+     * @return int|false The queued email ID or false on failure.
+     */
+    public function queue_email(
+        string $to,
+        string $subject,
+        string $body,
+        string $type = EmailQueue::TYPE_GENERAL,
+        int $priority = EmailQueue::PRIORITY_NORMAL,
+        ?int $user_id = null
+    ): int|false {
+        $repo = new EmailQueueRepository();
+        return $repo->queue([
+            'email_type'        => $type,
+            'recipient_email'   => $to,
+            'recipient_user_id' => $user_id,
+            'subject'           => $subject,
+            'body'              => $body,
+            'headers'           => ['Content-Type: text/html; charset=UTF-8'],
+            'priority'          => $priority,
+        ]);
     }
 }

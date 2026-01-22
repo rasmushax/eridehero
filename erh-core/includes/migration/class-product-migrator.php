@@ -140,11 +140,19 @@ class ProductMigrator {
     public function migrate_product(array $old_data): ?int {
         $title = $old_data['title']['rendered'] ?? $old_data['title'] ?? '';
         $slug = $old_data['slug'] ?? '';
+        $source_id = $old_data['id'] ?? 0;
 
-        $this->log('info', "Migrating: {$title}");
+        $this->log('info', "Migrating: {$title} (source ID: {$source_id})");
 
-        // Check if product already exists by slug.
-        $existing = get_page_by_path($slug, OBJECT, 'products');
+        // Check if product already exists by ID first (for import_id), then by slug.
+        $existing = $source_id ? get_post($source_id) : null;
+        if ($existing && $existing->post_type !== 'products') {
+            // ID exists but is a different post type - fall back to slug match.
+            $existing = null;
+        }
+        if (!$existing) {
+            $existing = get_page_by_path($slug, OBJECT, 'products');
+        }
         $post_id = $existing ? $existing->ID : null;
 
         $acf = $old_data['acf'] ?? [];
@@ -172,7 +180,7 @@ class ProductMigrator {
         ];
 
         if ($this->dry_run) {
-            $this->log('dry-run', "Would create/update: {$title}");
+            $this->log('dry-run', "Would create/update: {$title} (ID: {$source_id})");
             return null;
         }
 
@@ -181,6 +189,10 @@ class ProductMigrator {
             $post_data['ID'] = $post_id;
             $result = wp_update_post($post_data, true);
         } else {
+            // Use import_id to preserve source site's post ID.
+            if ($source_id) {
+                $post_data['import_id'] = $source_id;
+            }
             $result = wp_insert_post($post_data, true);
         }
 

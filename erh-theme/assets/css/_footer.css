@@ -106,6 +106,96 @@
     color: var(--color-body);
 }
 
+.footer-right {
+    display: flex;
+    align-items: center;
+    gap: var(--space-6);
+}
+
+/* ===== FOOTER REGION PICKER ===== */
+
+.footer-region {
+    position: relative;
+}
+
+.footer-region-trigger {
+    display: flex;
+    align-items: center;
+    gap: var(--space-2);
+    padding: 0;
+    background: transparent;
+    border: none;
+    font-size: var(--text-sm);
+    color: var(--color-muted);
+    cursor: pointer;
+    transition: color var(--transition-fast);
+}
+
+.footer-region-trigger:hover {
+    color: var(--color-body);
+}
+
+.footer-region-flag {
+    width: 15px;
+    height: 15px;
+    object-fit: cover;
+    border-radius: 50%;
+    flex-shrink: 0;
+}
+
+.footer-region-label {
+    white-space: nowrap;
+}
+
+.footer-region-chevron {
+    width: 14px;
+    height: 14px;
+    flex-shrink: 0;
+    transition: transform var(--transition-fast);
+}
+
+.footer-region-trigger[aria-expanded="true"] .footer-region-chevron {
+    transform: rotate(180deg);
+}
+
+.footer-region-dropdown {
+    position: absolute;
+    bottom: 100%;
+    right: 0;
+    margin-bottom: var(--space-2);
+    min-width: 200px;
+    background: var(--color-white);
+    border: 1px solid var(--color-border);
+    border-radius: var(--radius-lg);
+    box-shadow: var(--shadow-lg);
+    z-index: var(--z-dropdown);
+    overflow: hidden;
+}
+
+.footer-region-option {
+    display: flex;
+    align-items: center;
+    gap: var(--space-3);
+    width: 100%;
+    padding: var(--space-3) var(--space-4);
+    background: transparent;
+    border: none;
+    font-size: var(--text-sm);
+    color: var(--color-body);
+    text-align: left;
+    cursor: pointer;
+    transition: background var(--transition-fast);
+}
+
+.footer-region-option:hover {
+    background: var(--color-gray-50);
+}
+
+.footer-region-option:focus {
+    outline: none;
+    background: var(--color-gray-100);
+}
+
 
 /* ===== RESPONSIVE ===== */
 
@@ -140,7 +230,17 @@
         justify-content: center;
     }
 
+    .footer-right {
+        flex-direction: column;
+        gap: var(--space-4);
+    }
+
     .footer-links {
         justify-content: center;
+    }
+
+    .footer-region-dropdown {
+        right: 50%;
+        transform: translateX(50%);
     }
 }

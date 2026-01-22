@@ -47,9 +47,7 @@ if ( ! defined( 'ABSPATH' ) ) {
                                     <span class="chart-callout-label"><?php esc_html_e( 'All-time low', 'erh' ); ?></span>
                                     <span class="chart-callout-value">
                                         <?php esc_html_e( '28% off', 'erh' ); ?>
-                                        <svg class="chart-callout-triangle" viewBox="0 0 8 6" aria-hidden="true">
-                                            <path d="M4 6 L0 0 L8 0 Z" fill="currentColor"/>
-                                        </svg>
+                                        <svg class="chart-callout-triangle" width="12" height="12" aria-hidden="true"><use href="#icon-arrow-down"></use></svg>
                                     </span>
                                 </span>
                             </span>
@@ -86,9 +84,7 @@ if ( ! defined( 'ABSPATH' ) ) {
                             <span class="feature-notification-title"><?php esc_html_e( 'Price dropped!', 'erh' ); ?></span>
                             <span class="feature-notification-text">
                                 <strong>$499</strong>
-                                <svg class="feature-notification-triangle" viewBox="0 0 8 6" aria-hidden="true">
-                                    <path d="M4 6 L0 0 L8 0 Z" fill="currentColor"/>
-                                </svg>
+                                <svg class="feature-notification-triangle" width="12" height="12" aria-hidden="true"><use href="#icon-arrow-down"></use></svg>
                                 <s>$699</s>
                             </span>
                         </div>

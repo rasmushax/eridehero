@@ -159,6 +159,42 @@ $user = $args['user'] ?? wp_get_current_user();
 		</form>
 	</section>
 
+	<!-- Region & Currency -->
+	<section class="settings-card" data-settings-region>
+		<h2 class="settings-card-title">Region & Currency</h2>
+		<p class="settings-description">Choose your region to see prices in your local currency and receive region-specific deals in email digests.</p>
+
+		<form class="settings-form" data-geo-form>
+			<div class="form-group">
+				<label for="geo-preference" class="form-label">Your Region</label>
+				<select
+					id="geo-preference"
+					name="geo"
+					class="form-select custom-select-sm"
+					data-custom-select
+					data-geo-select
+				>
+					<option value="US">United States (USD)</option>
+					<option value="GB">United Kingdom (GBP)</option>
+					<option value="EU">Europe (EUR)</option>
+					<option value="CA">Canada (CAD)</option>
+					<option value="AU">Australia (AUD)</option>
+				</select>
+			</div>
+
+			<div class="form-error" data-geo-error hidden></div>
+
+			<button type="submit" class="btn btn-primary" data-geo-submit>
+				<span class="btn-text">Save Region</span>
+				<span class="btn-loading" hidden>
+					<svg class="spinner" viewBox="0 0 24 24" width="20" height="20">
+						<circle cx="12" cy="12" r="10" stroke="currentColor" stroke-width="3" fill="none" stroke-dasharray="31.4" stroke-linecap="round"/>
+					</svg>
+				</span>
+			</button>
+		</form>
+	</section>
+
 	<!-- Email Preferences -->
 	<section class="settings-card" data-settings-preferences>
 		<h2 class="settings-card-title">Email Preferences</h2>

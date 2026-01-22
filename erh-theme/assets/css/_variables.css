@@ -26,10 +26,10 @@
 
     /* Semantic */
     --color-success: #00b572;
-    --color-success-light: rgba(0, 181, 114, 0.08);
+    --color-success-light: rgb(235 249 244);
     --color-warning: #ffd700;
     --color-error: #dc3545;
-    --color-error-light: rgba(220, 53, 69, 0.08);
+    --color-error-light: rgb(252 239 240);
     --color-info: #fd7e14;
 
     /* Rating Colors (for score badges) */

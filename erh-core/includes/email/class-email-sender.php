@@ -142,11 +142,12 @@ class EmailSender {
     }
 
     /**
-     * Send a deals digest email.
+     * Send a deals digest email (legacy - single category).
      *
      * @param string $to Recipient email address.
      * @param array $deals Array of deal products.
      * @return bool True on success, false on failure.
+     * @deprecated Use send_deals_digest_v2() for multi-category support.
      */
     public function send_deals_digest(string $to, array $deals): bool {
         if (empty($deals)) {
@@ -196,6 +197,75 @@ class EmailSender {
         );
 
         return $this->send($to, $subject, $content);
+    }
+
+    /**
+     * Send a multi-category deals digest email using the new template.
+     *
+     * @param string               $to                 Recipient email address.
+     * @param array<string, array> $deals_by_category  Deals grouped by category slug (escooter, ebike, etc.).
+     * @param string               $geo                User's geo region.
+     * @param string               $unsubscribe_url    Unsubscribe URL for footer.
+     * @return bool True on success, false on failure.
+     */
+    public function send_deals_digest_v2(
+        string $to,
+        array $deals_by_category,
+        string $geo = 'US',
+        string $unsubscribe_url = ''
+    ): bool {
+        if (empty($deals_by_category)) {
+            return false;
+        }
+
+        // Count total deals.
+        $total_deals = 0;
+        foreach ($deals_by_category as $deals) {
+            $total_deals += count($deals);
+        }
+
+        if ($total_deals === 0) {
+            return false;
+        }
+
+        // Generate subject based on categories.
+        $category_count = count($deals_by_category);
+        if ($category_count === 1) {
+            $category_names = [
+                'escooter'   => 'E-Scooter',
+                'ebike'      => 'E-Bike',
+                'euc'        => 'EUC',
+                'eskate'     => 'E-Skate',
+                'hoverboard' => 'Hoverboard',
+            ];
+            $slug = array_key_first($deals_by_category);
+            $name = $category_names[$slug] ?? 'Electric Ride';
+            $subject = sprintf(__("This Week's Best %s Deals", 'erh-core'), $name);
+        } else {
+            $subject = __('Your Weekly Deals Roundup', 'erh-core');
+        }
+
+        // Generate HTML using new template.
+        $digest_template = new DealsDigestTemplate($geo);
+        $html_content    = $digest_template->render($deals_by_category, $unsubscribe_url);
+
+        // Set headers.
+        $headers = [
+            'Content-Type: text/html; charset=UTF-8',
+            'From: ' . $this->get_from_header(),
+        ];
+
+        // Send email directly (not through the old wrapper).
+        $sent = wp_mail($to, $subject, $html_content, $headers);
+
+        if (!$sent) {
+            error_log(sprintf(
+                '[ERH Email] Failed to send deals digest v2 to %s',
+                $to
+            ));
+        }
+
+        return $sent;
     }
 
     /**

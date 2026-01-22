@@ -46,6 +46,14 @@ class DealsFinder {
     public const DEFAULT_GEO = 'US';
 
     /**
+     * Default discount threshold (5% below average).
+     * Used consistently across deals pages, API, and emails.
+     *
+     * @var float
+     */
+    public const DEFAULT_THRESHOLD = -5.0;
+
+    /**
      * Cache duration in seconds (30 minutes).
      * Deals data only changes when cache rebuild cron runs (every 2 hours),
      * so a longer TTL is safe and reduces redundant processing.

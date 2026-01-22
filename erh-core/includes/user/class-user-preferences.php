@@ -80,6 +80,10 @@ class UserPreferences {
                     ],
                 ],
                 'newsletter_subscription' => ['type' => 'boolean'],
+                'geo'                     => [
+                    'type' => 'string',
+                    'enum' => \ERH\GeoConfig::REGIONS,
+                ],
             ],
         ]);
 
@@ -154,6 +158,9 @@ class UserPreferences {
         $user_id = get_current_user_id();
         $preferences = $this->user_repo->get_preferences($user_id);
 
+        // Add geo preference.
+        $preferences['geo'] = $this->user_repo->get_geo_preference($user_id);
+
         return new \WP_REST_Response([
             'success'     => true,
             'preferences' => $preferences,
@@ -195,10 +202,19 @@ class UserPreferences {
 
         $this->user_repo->update_preferences($user_id, $preferences);
 
+        // Handle geo preference separately (not part of standard preferences).
+        if (isset($params['geo'])) {
+            $this->user_repo->set_geo_preference($user_id, $params['geo']);
+        }
+
+        // Build response preferences including geo.
+        $response_prefs = $this->user_repo->get_preferences($user_id);
+        $response_prefs['geo'] = $this->user_repo->get_geo_preference($user_id);
+
         return new \WP_REST_Response([
             'success'     => true,
             'message'     => 'Preferences updated successfully.',
-            'preferences' => $this->user_repo->get_preferences($user_id),
+            'preferences' => $response_prefs,
         ], 200);
     }
 

@@ -9,6 +9,8 @@ declare(strict_types=1);
 
 namespace ERH\Database;
 
+use ERH\Database\EmailQueue;
+
 /**
  * Handles database table creation and migrations.
  */
@@ -53,6 +55,9 @@ class Schema {
         $this->create_product_views_table();
         $this->create_clicks_table();
         $this->create_comparison_views_table();
+
+        // Email queue table (uses its own static method).
+        EmailQueue::create_table();
     }
 
     /**
@@ -84,6 +89,13 @@ class Schema {
         if (version_compare($current_version, '1.4.0', '<')) {
             $this->upgrade_clicks_add_is_bot();
             update_option('erh_db_version', '1.4.0');
+        }
+
+        // Upgrade to add email queue table.
+        if (version_compare($current_version, '1.5.0', '<')) {
+            EmailQueue::create_table();
+            update_option('erh_db_version', '1.5.0');
+            error_log('[ERH Schema] Created email queue table');
         }
 
         // Re-run table creation to ensure all tables and columns exist.

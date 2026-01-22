@@ -1,0 +1,163 @@
+/**
+ * Newsletter Admin Styles
+ */
+
+/* Status badges in list table */
+.erh-status {
+    display: inline-block;
+    padding: 4px 10px;
+    border-radius: 4px;
+    font-size: 12px;
+    font-weight: 500;
+    line-height: 1.4;
+}
+
+.erh-status--draft {
+    background: #f0f0f0;
+    color: #50575e;
+}
+
+.erh-status--scheduled {
+    background: #e7f3ff;
+    color: #0073aa;
+}
+
+.erh-status--sending {
+    background: #fff3cd;
+    color: #856404;
+    animation: erh-pulse 1.5s ease-in-out infinite;
+}
+
+.erh-status--sent {
+    background: #d4edda;
+    color: #155724;
+}
+
+@keyframes erh-pulse {
+    0%, 100% {
+        opacity: 1;
+    }
+    50% {
+        opacity: 0.6;
+    }
+}
+
+/* Meta box controls */
+.erh-newsletter-controls {
+    padding: 0;
+}
+
+.erh-newsletter-subscriber-count {
+    margin: 0 0 16px;
+    font-size: 13px;
+    color: #50575e;
+}
+
+.erh-newsletter-section {
+    margin-bottom: 16px;
+}
+
+.erh-newsletter-section label {
+    display: block;
+    margin-bottom: 6px;
+    font-weight: 500;
+    color: #1d2327;
+}
+
+.erh-newsletter-input-group {
+    display: flex;
+    gap: 8px;
+}
+
+.erh-newsletter-input-group input[type="email"],
+.erh-newsletter-input-group input[type="datetime-local"] {
+    flex: 1;
+    min-width: 0;
+}
+
+.erh-newsletter-result {
+    margin: 8px 0 0;
+    font-size: 12px;
+    min-height: 18px;
+}
+
+.erh-newsletter-result.success {
+    color: #00a32a;
+}
+
+.erh-newsletter-result.error {
+    color: #d63638;
+}
+
+.erh-newsletter-result.loading {
+    color: #2271b1;
+}
+
+/* Notice boxes */
+.erh-newsletter-notice {
+    margin: 0 0 16px;
+    padding: 12px;
+    border-radius: 4px;
+    font-size: 13px;
+    line-height: 1.5;
+}
+
+.erh-newsletter-notice--success {
+    background: #d4edda;
+    border-left: 4px solid #28a745;
+    color: #155724;
+}
+
+.erh-newsletter-notice--info {
+    background: #fff3cd;
+    border-left: 4px solid #ffc107;
+    color: #856404;
+}
+
+.erh-newsletter-notice--scheduled {
+    background: #e7f3ff;
+    border-left: 4px solid #0073aa;
+    color: #0073aa;
+}
+
+/* Stats table */
+.erh-newsletter-stats-table {
+    width: 100%;
+    border-collapse: collapse;
+}
+
+.erh-newsletter-stats-table th,
+.erh-newsletter-stats-table td {
+    padding: 8px 0;
+    text-align: left;
+    border-bottom: 1px solid #f0f0f0;
+    font-size: 13px;
+}
+
+.erh-newsletter-stats-table th {
+    color: #50575e;
+    font-weight: 400;
+}
+
+.erh-newsletter-stats-table td {
+    color: #1d2327;
+    font-weight: 500;
+}
+
+.erh-newsletter-stats-table tr:last-child th,
+.erh-newsletter-stats-table tr:last-child td {
+    border-bottom: none;
+}
+
+/* Horizontal rule in meta box */
+.erh-newsletter-controls hr {
+    border: none;
+    border-top: 1px solid #f0f0f0;
+    margin: 16px 0;
+}
+
+/* Button loading state */
+.erh-newsletter-controls button.loading {
+    opacity: 0.7;
+    pointer-events: none;
+}

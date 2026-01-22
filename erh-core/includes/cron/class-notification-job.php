@@ -11,7 +11,10 @@ namespace ERH\Cron;
 
 use ERH\Pricing\PriceFetcher;
 use ERH\Database\PriceTracker;
-use ERH\Email\EmailSender;
+use ERH\Database\PriceHistory;
+use ERH\Database\EmailQueue;
+use ERH\Database\EmailQueueRepository;
+use ERH\Email\PriceAlertTemplate;
 use ERH\User\UserRepository;
 
 /**
@@ -39,11 +42,11 @@ class NotificationJob implements CronJobInterface {
     private PriceTracker $price_tracker;
 
     /**
-     * Email sender instance.
+     * Price history database instance.
      *
-     * @var EmailSender
+     * @var PriceHistory
      */
-    private EmailSender $email_sender;
+    private PriceHistory $price_history;
 
     /**
      * User repository instance.
@@ -62,22 +65,22 @@ class NotificationJob implements CronJobInterface {
     /**
      * Constructor.
      *
-     * @param PriceFetcher $price_fetcher Price fetcher instance.
-     * @param PriceTracker $price_tracker Price tracker database instance.
-     * @param EmailSender $email_sender Email sender instance.
-     * @param UserRepository $user_repo User repository instance.
-     * @param CronManager $cron_manager Cron manager instance.
+     * @param PriceFetcher   $price_fetcher Price fetcher instance.
+     * @param PriceTracker   $price_tracker Price tracker database instance.
+     * @param PriceHistory   $price_history Price history database instance.
+     * @param UserRepository $user_repo     User repository instance.
+     * @param CronManager    $cron_manager  Cron manager instance.
      */
     public function __construct(
         PriceFetcher $price_fetcher,
         PriceTracker $price_tracker,
-        EmailSender $email_sender,
+        PriceHistory $price_history,
         UserRepository $user_repo,
         CronManager $cron_manager
     ) {
         $this->price_fetcher = $price_fetcher;
         $this->price_tracker = $price_tracker;
-        $this->email_sender = $email_sender;
+        $this->price_history = $price_history;
         $this->user_repo = $user_repo;
         $this->cron_manager = $cron_manager;
     }
@@ -255,9 +258,18 @@ class NotificationJob implements CronJobInterface {
                 $thumbnail_id = $acf_fields['big_thumbnail'] ?? get_post_thumbnail_id($product_id);
                 $image_url = $thumbnail_id ? wp_get_attachment_image_url($thumbnail_id, 'thumbnail') : '';
 
-                // Calculate savings.
+                // Calculate savings vs previous price.
                 $savings = $compare_price - $current_price;
                 $savings_percent = round(($savings / $compare_price) * 100);
+
+                // Get 6-month average price for "below avg" display.
+                $stats = $this->price_history->get_statistics($product_id, 180, $tracker_geo, $price_currency);
+                $average_price = $stats['average_price'] ?? null;
+                $percent_below_avg = null;
+
+                if ($average_price && $average_price > 0 && $current_price < $average_price) {
+                    $percent_below_avg = round((($average_price - $current_price) / $average_price) * 100);
+                }
 
                 // Get tracking users count (for social proof).
                 $tracking_users = $this->price_tracker->count_for_product($product_id);
@@ -269,6 +281,8 @@ class NotificationJob implements CronJobInterface {
                     'compare_price'     => $compare_price,
                     'savings'           => $savings,
                     'savings_percent'   => $savings_percent,
+                    'average_price'     => $average_price,
+                    'percent_below_avg' => $percent_below_avg,
                     'notification_type' => $notification_type,
                     'image_url'         => $image_url,
                     'url'               => get_permalink($product_id),
@@ -284,38 +298,61 @@ class NotificationJob implements CronJobInterface {
     }
 
     /**
-     * Send notification email to user.
+     * Send notification email to user via the email queue.
      *
-     * @param \WP_User $user The user object.
-     * @param array $deals Array of deals to include.
-     * @return bool True if email was sent.
+     * @param \WP_User $user  The user object.
+     * @param array    $deals Array of deals to include.
+     * @return bool True if email was queued successfully.
      */
     private function send_notification(\WP_User $user, array $deals): bool {
         if (empty($deals)) {
             return false;
         }
 
-        $user_name = $user->first_name ?: $user->display_name;
+        $user_name = $user->first_name ?: $user->display_name ?: $user->user_login;
 
-        // Send the email.
-        $sent = $this->email_sender->send_price_drop_notification(
-            $user->user_email,
-            $user_name,
-            $deals
-        );
+        // Generate branded HTML using the new template.
+        // Use the first deal's geo for template currency display.
+        $geo = $deals[0]['geo'] ?? 'US';
+        $template = new PriceAlertTemplate($geo);
+        $html = $template->render($user_name, $deals);
 
-        if ($sent) {
+        // Build the email subject - include product name for single-product alerts.
+        $deal_count = count($deals);
+        $product_name = $deal_count === 1 ? ($deals[0]['product_name'] ?? null) : null;
+        $subject = PriceAlertTemplate::get_subject($deal_count, $product_name);
+
+        // Queue the email instead of sending directly.
+        $queue_repo = new EmailQueueRepository();
+        $queued_id = $queue_repo->queue([
+            'email_type'        => EmailQueue::TYPE_PRICE_ALERT,
+            'recipient_email'   => $user->user_email,
+            'recipient_user_id' => $user->ID,
+            'subject'           => $subject,
+            'body'              => $html,
+            'headers'           => ['Content-Type: text/html; charset=UTF-8'],
+            'priority'          => EmailQueue::PRIORITY_NORMAL,
+        ]);
+
+        if ($queued_id) {
             // Update last notified price for all deals.
+            // We update this immediately as the notification is queued successfully.
             $this->update_last_notified_prices($user->ID, $deals);
 
             error_log(sprintf(
-                '[ERH Cron] Notification sent to %s with %d deal(s).',
+                '[ERH Cron] Price alert queued (ID: %d) for %s with %d deal(s).',
+                $queued_id,
                 $user->user_email,
                 count($deals)
             ));
+        } else {
+            error_log(sprintf(
+                '[ERH Cron] Failed to queue price alert for %s.',
+                $user->user_email
+            ));
         }
 
-        return $sent;
+        return (bool) $queued_id;
     }
 
     /**

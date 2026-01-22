@@ -172,8 +172,8 @@
 }
 
 .chart-callout-triangle {
-    width: 8px;
-    height: 6px;
+    width: 12px;
+    height: 12px;
     color: var(--color-success);
     flex-shrink: 0;
 }
@@ -337,10 +337,9 @@
 }
 
 .feature-notification-triangle {
-    width: 8px;
-    height: 6px;
+    width: 12px;
+    height: 12px;
     color: var(--color-success);
-    transform: translateY(-2px);
 }
 
 .feature-notification-text s {

@@ -123,12 +123,29 @@ export async function getUserGeo() {
 
 /**
  * Internal function to detect user's geo (called once, result cached)
- * @returns {Promise<{geo: string, currency: string, symbol: string, region: string, country: string|null}>}
+ * @returns {Promise<{geo: string, currency: string, symbol: string, region: string, country: string|null, isUserPreference: boolean}>}
  */
 async function detectUserGeo() {
     const startTime = performance.now();
 
-    // Check for manual override first (user selected a different region)
+    // 1. If logged in with user preference from database, use it (source of truth)
+    if (window.erhData?.user?.geo) {
+        const userGeo = window.erhData.user.geo;
+        if (isValidRegion(userGeo)) {
+            const config = getRegionConfig(userGeo);
+            log('Using database user preference', { region: userGeo, time_ms: (performance.now() - startTime).toFixed(2) });
+            return {
+                geo: userGeo,
+                region: userGeo,
+                currency: config.currency,
+                symbol: config.symbol,
+                country: userGeo, // For logged-in users, country = region
+                isUserPreference: true,
+            };
+        }
+    }
+
+    // 2. Check for manual override (user selected a different region via localStorage)
     const override = getRegionOverride();
     if (override) {
         const config = getRegionConfig(override);
@@ -139,14 +156,15 @@ async function detectUserGeo() {
             currency: config.currency,
             symbol: config.symbol,
             country: null,
+            isUserPreference: false,
         };
     }
 
-    // Check cached region
+    // 3. Check cached region
     const cached = getCachedRegion();
     if (cached) {
         log('Using cached region', { region: cached.region, time_ms: (performance.now() - startTime).toFixed(2) });
-        return cached;
+        return { ...cached, isUserPreference: false };
     }
 
     // Detect via IPInfo
@@ -185,6 +203,7 @@ async function detectUserGeo() {
         currency: config.currency,
         symbol: config.symbol,
         country: detectedCountry,
+        isUserPreference: false,
     };
 
     cacheRegion(regionData);
@@ -403,6 +422,92 @@ export function clearUserRegion() {
  */
 export function hasRegionOverride() {
     return getRegionOverride() !== null;
+}
+
+/**
+ * Set user geo preference (updates database for logged-in users, localStorage for guests)
+ *
+ * @param {string} regionCode - Region code (US, GB, EU, CA, AU)
+ * @returns {Promise<{success: boolean, method: 'database'|'localStorage'}>}
+ */
+export async function setUserGeoPreference(regionCode) {
+    if (!isValidRegion(regionCode)) {
+        console.warn(`[GeoPriceService] Invalid region code: ${regionCode}`);
+        return { success: false, method: null };
+    }
+
+    // Not logged in - use localStorage override
+    if (!window.erhData?.isLoggedIn) {
+        const result = setUserRegion(regionCode);
+        return { success: result, method: 'localStorage' };
+    }
+
+    // Logged in - update via REST API
+    try {
+        const response = await fetch(`${window.erhData.restUrl}user/preferences`, {
+            method: 'PUT',
+            headers: {
+                'Content-Type': 'application/json',
+                'X-WP-Nonce': window.erhData.nonce,
+            },
+            credentials: 'same-origin',
+            body: JSON.stringify({ geo: regionCode }),
+        });
+
+        if (response.ok) {
+            // Update local state immediately
+            if (window.erhData.user) {
+                window.erhData.user.geo = regionCode;
+            }
+
+            // Clear window-level geo cache so next getUserGeo() returns new region
+            delete window.erhUserGeoData;
+
+            // Clear price caches (they're geo-specific)
+            priceCache.clear();
+
+            // Also update cookie for server-side reads
+            setCookie('erh_geo', regionCode, 365);
+
+            // Clear localStorage override (database is now source of truth)
+            try {
+                localStorage.removeItem(REGION_OVERRIDE_KEY);
+            } catch (e) {
+                // Ignore
+            }
+
+            // Dispatch event for components to update
+            const config = getRegionConfig(regionCode);
+            window.dispatchEvent(new CustomEvent('erh:region-changed', {
+                detail: {
+                    region: regionCode,
+                    currency: config.currency,
+                    symbol: config.symbol,
+                },
+            }));
+
+            log('User geo preference saved to database', { region: regionCode });
+            return { success: true, method: 'database' };
+        }
+
+        console.error('[GeoPriceService] Failed to save geo preference:', response.status);
+        return { success: false, method: null };
+    } catch (error) {
+        console.error('[GeoPriceService] Error saving geo preference:', error);
+        return { success: false, method: null };
+    }
+}
+
+/**
+ * Set a cookie with given name, value, and days until expiry
+ * @param {string} name
+ * @param {string} value
+ * @param {number} days
+ */
+function setCookie(name, value, days) {
+    const expires = new Date();
+    expires.setDate(expires.getDate() + days);
+    document.cookie = `${name}=${value}; expires=${expires.toUTCString()}; path=/; SameSite=Lax`;
 }
 
 /**
@@ -769,6 +874,7 @@ export default {
     // Region detection
     getUserGeo,
     setUserRegion,
+    setUserGeoPreference,
     clearUserRegion,
     hasRegionOverride,
     getAvailableRegions,

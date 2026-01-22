@@ -102,12 +102,57 @@ if ( ! defined( 'ABSPATH' ) ) {
                     <a href="<?php echo esc_url( home_url( '/disclaimers/' ) ); ?>"><?php esc_html_e( 'Disclaimers', 'erh' ); ?></a>
                 </nav>
             </div>
-            <nav class="footer-links" aria-label="<?php esc_attr_e( 'Footer navigation', 'erh' ); ?>">
-                <a href="<?php echo esc_url( home_url( '/about/' ) ); ?>"><?php esc_html_e( 'About', 'erh' ); ?></a>
-                <a href="<?php echo esc_url( home_url( '/contact/' ) ); ?>"><?php esc_html_e( 'Contact', 'erh' ); ?></a>
-                <a href="<?php echo esc_url( home_url( '/how-we-test/' ) ); ?>"><?php esc_html_e( 'How we test', 'erh' ); ?></a>
-                <a href="<?php echo esc_url( home_url( '/editorial/' ) ); ?>"><?php esc_html_e( 'Editorial', 'erh' ); ?></a>
-            </nav>
+            <div class="footer-right">
+                <?php
+                // Region picker - available for all users
+                $flag_base = ERH_THEME_URI . '/assets/images/countries/';
+                $regions   = array(
+                    'US' => array(
+                        'label' => 'United States (USD)',
+                        'flag'  => 'united-states.svg',
+                    ),
+                    'GB' => array(
+                        'label' => 'United Kingdom (GBP)',
+                        'flag'  => 'united-kingdom.svg',
+                    ),
+                    'EU' => array(
+                        'label' => 'Europe (EUR)',
+                        'flag'  => 'european-union.svg',
+                    ),
+                    'CA' => array(
+                        'label' => 'Canada (CAD)',
+                        'flag'  => 'canada.svg',
+                    ),
+                    'AU' => array(
+                        'label' => 'Australia (AUD)',
+                        'flag'  => 'australia.svg',
+                    ),
+                );
+                ?>
+                <nav class="footer-links" aria-label="<?php esc_attr_e( 'Footer navigation', 'erh' ); ?>">
+                    <a href="<?php echo esc_url( home_url( '/about/' ) ); ?>"><?php esc_html_e( 'About', 'erh' ); ?></a>
+                    <a href="<?php echo esc_url( home_url( '/contact/' ) ); ?>"><?php esc_html_e( 'Contact', 'erh' ); ?></a>
+                    <a href="<?php echo esc_url( home_url( '/how-we-test/' ) ); ?>"><?php esc_html_e( 'How we test', 'erh' ); ?></a>
+                    <a href="<?php echo esc_url( home_url( '/editorial/' ) ); ?>"><?php esc_html_e( 'Editorial', 'erh' ); ?></a>
+                </nav>
+
+                <div class="footer-region" data-region-picker-wrapper>
+                    <button type="button" class="footer-region-trigger" data-region-picker-trigger aria-expanded="false" aria-haspopup="listbox">
+                        <img src="<?php echo esc_url( $flag_base . 'united-states.svg' ); ?>" alt="" class="footer-region-flag" data-current-flag width="15" height="15">
+                        <span class="footer-region-label" data-current-region>United States (USD)</span>
+                        <?php erh_the_icon( 'chevron-down', 'footer-region-chevron' ); ?>
+                    </button>
+
+                    <div class="footer-region-dropdown" data-region-picker role="listbox" hidden>
+                        <?php foreach ( $regions as $code => $region ) : ?>
+                        <button type="button" class="footer-region-option" data-region="<?php echo esc_attr( $code ); ?>" role="option">
+                            <img src="<?php echo esc_url( $flag_base . $region['flag'] ); ?>" alt="" class="footer-region-flag" width="15" height="15">
+                            <span><?php echo esc_html( $region['label'] ); ?></span>
+                        </button>
+                        <?php endforeach; ?>
+                    </div>
+                </div>
+            </div>
         </div>
     </div>
 </footer>

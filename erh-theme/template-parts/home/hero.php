@@ -15,9 +15,6 @@ if ( ! defined( 'ABSPATH' ) ) {
     <div class="container">
         <div class="hero-content">
             <div class="hero-left">
-                <div class="eyebrow hero-eyebrow">
-                    <?php esc_html_e( '120+ products · 12,000+ miles tested', 'erh' ); ?>
-                </div>
                 <h1><?php esc_html_e( 'Find your perfect', 'erh' ); ?> <span><?php esc_html_e( 'electric ride', 'erh' ); ?></span></h1>
                 <p class="hero-subtitle"><?php esc_html_e( 'Data-driven reviews and comparison tools to help you choose the right e-scooter, e-bike, or EUC.', 'erh' ); ?></p>
 

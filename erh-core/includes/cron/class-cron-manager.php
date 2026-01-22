@@ -86,6 +86,12 @@ class CronManager {
      * @return array Modified schedules.
      */
     public function add_cron_schedules(array $schedules): array {
+        // Every 2 minutes (for email queue processing).
+        $schedules['erh_two_minutes'] = [
+            'interval' => 2 * MINUTE_IN_SECONDS,
+            'display'  => __('Every 2 Minutes', 'erh-core'),
+        ];
+
         // Every 2 hours (for JSON generation).
         $schedules['erh_two_hours'] = [
             'interval' => 2 * HOUR_IN_SECONDS,

@@ -84,7 +84,7 @@ if ( ! $product_id ) {
                         <!-- Populated by JS -->
                     </span>
                     <div class="popover-wrapper">
-                        <button type="button" class="btn btn-link btn-sm" data-popover-trigger="bracket-info-popover">
+                        <button type="button" class="btn btn-link btn-xs" data-popover-trigger="bracket-info-popover">
                             <svg class="icon" aria-hidden="true"><use href="#icon-info"></use></svg>
                             How we compare
                         </button>

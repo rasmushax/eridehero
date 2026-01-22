@@ -9,6 +9,9 @@ declare(strict_types=1);
 
 namespace ERH\User;
 
+use ERH\Email\WelcomeEmailTemplate;
+use ERH\Email\PasswordResetTemplate;
+
 /**
  * Handles user authentication via email/password.
  */
@@ -415,6 +418,9 @@ class AuthHandler {
         // Store registration IP.
         $this->user_repo->set_registration_ip($user_id, $ip);
 
+        // Auto-set geo preference from cookie (set by IPInfo detection).
+        $this->user_repo->ensure_geo_preference($user_id);
+
         // Log the user in.
         wp_set_current_user($user_id);
         wp_set_auth_cookie($user_id);
@@ -784,6 +790,9 @@ class AuthHandler {
         // Store registration IP.
         $this->user_repo->set_registration_ip($user_id, RateLimiter::get_client_ip());
 
+        // Auto-set geo preference from cookie (set by IPInfo detection).
+        $this->user_repo->ensure_geo_preference($user_id);
+
         // Trigger welcome email.
         do_action('erh_user_registered', $user_id, $user);
 
@@ -906,31 +915,14 @@ class AuthHandler {
      * @return array Modified email data.
      */
     public function custom_new_user_email(array $email, \WP_User $user, string $blogname): array {
-        $site_url = home_url();
-        $user_login = $user->user_login;
+        $username = $user->display_name ?: $user->user_login;
 
-        // Build welcome email content.
-        $content = $this->generate_email_paragraph(sprintf('Welcome to %s!', $blogname));
-        $content .= $this->generate_email_paragraph(sprintf('Hello %s,', $user_login));
-        $content .= $this->generate_email_paragraph(
-            'Thank you for joining our community of e-mobility enthusiasts! Your account has been created.'
-        );
+        // Generate branded HTML using the new template.
+        $template = new WelcomeEmailTemplate();
+        $html = $template->render($username);
 
-        $content .= $this->generate_email_paragraph("Here's what you can do on ERideHero:");
-
-        $content .= '<ul style="padding-left: 20px; margin-bottom: 16px;">';
-        $content .= '<li style="margin-bottom: 8px;"><b>Product Finder:</b> Search and compare models using filters.</li>';
-        $content .= '<li style="margin-bottom: 8px;"><b>Price Trackers:</b> Get notified when prices drop.</li>';
-        $content .= '<li style="margin-bottom: 8px;"><b>User Reviews:</b> Share your experience with the community.</li>';
-        $content .= '<li style="margin-bottom: 8px;"><b>Deals:</b> Find real discounts based on historical data.</li>';
-        $content .= '</ul>';
-
-        $content .= $this->generate_email_button($site_url, 'Visit ERideHero');
-        $content .= $this->generate_email_paragraph('Ride on!');
-        $content .= $this->generate_email_paragraph('The ERideHero Team');
-
-        $email['subject'] = sprintf('Welcome to %s!', $blogname);
-        $email['message'] = $this->wrap_email_content($content);
+        $email['subject'] = WelcomeEmailTemplate::get_subject();
+        $email['message'] = $html;
         $email['headers'] = ['Content-Type: text/html; charset=UTF-8'];
 
         return $email;
@@ -1004,18 +996,13 @@ class AuthHandler {
      * @return bool True if sent.
      */
     private function send_password_reset_email(\WP_User $user, string $reset_url): bool {
-        $blogname = wp_specialchars_decode(get_option('blogname'), ENT_QUOTES);
-        $subject = sprintf('[%s] Password Reset', $blogname);
+        $username = $user->display_name ?: $user->user_login;
 
-        $content = $this->generate_email_paragraph('Someone has requested a password reset for the following account:');
-        $content .= $this->generate_email_paragraph(sprintf('Username: %s', $user->user_login));
-        $content .= $this->generate_email_paragraph('If this was a mistake, just ignore this email and nothing will happen.');
-        $content .= $this->generate_email_paragraph('To reset your password, click the button below:');
-        $content .= $this->generate_email_button($reset_url, 'Reset Password');
-        $content .= $this->generate_email_paragraph('If the button doesn\'t work, copy and paste this URL into your browser:');
-        $content .= $this->generate_email_paragraph(sprintf('<a href="%s">%s</a>', esc_url($reset_url), esc_html($reset_url)));
+        // Generate branded HTML using the new template.
+        $template = new PasswordResetTemplate();
+        $html = $template->render($username, $reset_url);
 
-        $html = $this->wrap_email_content($content);
+        $subject = PasswordResetTemplate::get_subject();
         $headers = ['Content-Type: text/html; charset=UTF-8'];
 
         return wp_mail($user->user_email, $subject, $html, $headers);
@@ -1057,64 +1044,4 @@ class AuthHandler {
         return home_url('/reset-password/');
     }
 
-    /**
-     * Generate an email paragraph.
-     *
-     * @param string $text The text.
-     * @return string HTML paragraph.
-     */
-    private function generate_email_paragraph(string $text): string {
-        return sprintf(
-            '<p style="font-family: Helvetica, sans-serif; font-size: 16px; font-weight: normal; margin: 0; margin-bottom: 16px;">%s</p>',
-            $text
-        );
-    }
-
-    /**
-     * Generate an email button.
-     *
-     * @param string $url  The URL.
-     * @param string $text The button text.
-     * @return string HTML button.
-     */
-    private function generate_email_button(string $url, string $text): string {
-        return sprintf(
-            '<table role="presentation" border="0" cellpadding="0" cellspacing="0" style="border-collapse: separate; width: auto; margin-bottom: 16px;">
-                <tr>
-                    <td style="border-radius: 4px; background-color: #5e2ced; text-align: center;">
-                        <a href="%s" target="_blank" style="border: solid 2px #5e2ced; border-radius: 4px; box-sizing: border-box; cursor: pointer; display: inline-block; font-size: 16px; font-weight: bold; margin: 0; padding: 12px 24px; text-decoration: none; background-color: #5e2ced; color: #ffffff;">%s</a>
-                    </td>
-                </tr>
-            </table>',
-            esc_url($url),
-            esc_html($text)
-        );
-    }
-
-    /**
-     * Wrap email content in the template.
-     *
-     * @param string $content The email content.
-     * @return string The wrapped content.
-     */
-    private function wrap_email_content(string $content): string {
-        // Use the email template function if available.
-        if (function_exists('erh_get_email_template')) {
-            return erh_get_email_template($content);
-        }
-
-        // Basic wrapper fallback.
-        return sprintf(
-            '<!DOCTYPE html>
-            <html>
-            <head><meta charset="UTF-8"></head>
-            <body style="font-family: Helvetica, sans-serif; background-color: #f4f4f4; padding: 20px;">
-                <div style="max-width: 600px; margin: 0 auto; background: white; padding: 30px; border-radius: 8px;">
-                    %s
-                </div>
-            </body>
-            </html>',
-            $content
-        );
-    }
 }

@@ -4,6 +4,7 @@
  */
 
 import { Toast } from './toast.js';
+import { setUserGeoPreference } from '../services/geo-price.js';
 
 // Use erhData.restUrl which includes correct site path (e.g., /eridehero/wp-json/erh/v1/)
 const getApiBase = () => (window.erhData?.restUrl || '/wp-json/erh/v1/').replace(/\/$/, '');
@@ -14,6 +15,7 @@ export function initAccountSettings() {
     initPasswordToggles();
     initEmailForm();
     initPasswordForm();
+    initGeoForm();
     initPreferencesForm();
     initConnectedAccounts();
     initLogout();
@@ -151,6 +153,46 @@ function initPasswordForm() {
             Toast.success('Password updated successfully');
             form.reset();
 
+        } catch (error) {
+            showError(errorEl, error.message);
+        } finally {
+            setLoading(submitBtn, false);
+        }
+    });
+}
+
+/**
+ * Region/Geo preference form
+ */
+function initGeoForm() {
+    const form = document.querySelector('[data-geo-form]');
+    const select = form?.querySelector('[data-geo-select]');
+    if (!form || !select) return;
+
+    const errorEl = form.querySelector('[data-geo-error]');
+    const submitBtn = form.querySelector('[data-geo-submit]');
+
+    // Set current value from erhData (injected by PHP)
+    const currentGeo = window.erhData?.user?.geo || 'US';
+    select.value = currentGeo;
+    // Trigger change to sync custom select UI
+    select.dispatchEvent(new Event('change', { bubbles: true }));
+
+    form.addEventListener('submit', async (e) => {
+        e.preventDefault();
+        clearError(errorEl);
+        setLoading(submitBtn, true);
+
+        const newGeo = select.value;
+
+        try {
+            const result = await setUserGeoPreference(newGeo);
+
+            if (result.success) {
+                Toast.success('Region updated successfully');
+            } else {
+                throw new Error('Failed to update region');
+            }
         } catch (error) {
             showError(errorEl, error.message);
         } finally {

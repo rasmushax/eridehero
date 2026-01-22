@@ -26,6 +26,7 @@ class UserRepository {
     public const META_EMAIL_PREFERENCES_SET = 'email_preferences_set';
     public const META_LAST_DEALS_EMAIL_SENT = 'last_deals_email_sent';
     public const META_PASSWORD_RESET_KEY_AGE = 'password_reset_key_age';
+    public const META_GEO_PREFERENCE = 'erh_geo_preference';
 
     // Social login meta keys.
     public const META_GOOGLE_ID = 'erh_google_id';
@@ -395,6 +396,72 @@ class UserRepository {
                 ],
             ],
         ]);
+    }
+
+    /**
+     * Get user's geo preference.
+     *
+     * @param int $user_id The user ID.
+     * @return string Region code (US, GB, EU, CA, AU). Defaults to 'US' if not set or invalid.
+     */
+    public function get_geo_preference(int $user_id): string {
+        $geo = get_user_meta($user_id, self::META_GEO_PREFERENCE, true);
+        return \ERH\GeoConfig::is_valid_region($geo) ? strtoupper($geo) : 'US';
+    }
+
+    /**
+     * Set user's geo preference.
+     *
+     * @param int    $user_id The user ID.
+     * @param string $geo     Region code (US, GB, EU, CA, AU).
+     * @return bool True if set successfully.
+     */
+    public function set_geo_preference(int $user_id, string $geo): bool {
+        $geo = strtoupper($geo);
+        if (!\ERH\GeoConfig::is_valid_region($geo)) {
+            return false;
+        }
+        update_user_meta($user_id, self::META_GEO_PREFERENCE, $geo);
+        return true;
+    }
+
+    /**
+     * Ensure user has a geo preference set.
+     *
+     * If user doesn't have a geo preference, auto-set from erh_geo cookie.
+     * This handles imported users and users who registered before geo tracking.
+     *
+     * @param int $user_id The user ID.
+     * @return string The user's geo preference (existing or newly set).
+     */
+    public function ensure_geo_preference(int $user_id): string {
+        $existing = get_user_meta($user_id, self::META_GEO_PREFERENCE, true);
+
+        // If valid preference exists, return it.
+        if (!empty($existing) && \ERH\GeoConfig::is_valid_region($existing)) {
+            return strtoupper($existing);
+        }
+
+        // Auto-set from cookie (set by IPInfo detection in JS).
+        $cookie_geo = isset($_COOKIE['erh_geo'])
+            ? strtoupper(sanitize_text_field(wp_unslash($_COOKIE['erh_geo'])))
+            : 'US';
+
+        $geo = \ERH\GeoConfig::is_valid_region($cookie_geo) ? $cookie_geo : 'US';
+        $this->set_geo_preference($user_id, $geo);
+
+        return $geo;
+    }
+
+    /**
+     * Check if user has a geo preference set.
+     *
+     * @param int $user_id The user ID.
+     * @return bool True if geo preference is set.
+     */
+    public function has_geo_preference(int $user_id): bool {
+        $geo = get_user_meta($user_id, self::META_GEO_PREFERENCE, true);
+        return !empty($geo) && \ERH\GeoConfig::is_valid_region($geo);
     }
 
     /**

@@ -11,6 +11,7 @@ import { initSearch } from './components/search.js';
 import { initDropdowns } from './components/dropdown.js';
 import { initCustomSelects } from './components/custom-select.js';
 import { initHeaderScroll } from './components/header-scroll.js';
+import { initRegionPicker } from './components/region-picker.js';
 import './components/popover.js'; // Auto-initializes popovers
 import './components/modal.js'; // Auto-initializes modals
 import './components/tooltip.js'; // Auto-initializes tooltips
@@ -29,6 +30,7 @@ import { Toast } from './components/toast.js'; // For programmatic toasts
     const dropdowns = initDropdowns();
     const customSelects = initCustomSelects();
     const headerScroll = initHeaderScroll();
+    initRegionPicker(); // Footer region picker
 
     // ===========================================
     // URL PARAM HANDLERS

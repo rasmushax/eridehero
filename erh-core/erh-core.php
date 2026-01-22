@@ -3,7 +3,7 @@
  * Plugin Name: ERideHero Core
  * Plugin URI: https://eridehero.com
  * Description: Core functionality for ERideHero - product management, pricing, reviews, and user system.
- * Version: 1.0.0
+ * Version: 1.0.1
  * Author: ERideHero
  * Author URI: https://eridehero.com
  * License: GPL-2.0-or-later
@@ -24,7 +24,7 @@ if (!defined('ABSPATH')) {
 }
 
 // Plugin constants.
-define('ERH_VERSION', '1.0.0');
+define('ERH_VERSION', '1.0.1');
 define('ERH_PLUGIN_FILE', __FILE__);
 define('ERH_PLUGIN_DIR', plugin_dir_path(__FILE__));
 define('ERH_PLUGIN_URL', plugin_dir_url(__FILE__));
@@ -197,6 +197,10 @@ function erh_activate(): void {
     $schema = new ERH\Database\Schema();
     $schema->create_tables();
 
+    // Create email queue table.
+    require_once ERH_PLUGIN_DIR . 'includes/database/class-email-queue.php';
+    ERH\Database\EmailQueue::create_table();
+
     // Add click tracking rewrite rules.
     require_once ERH_PLUGIN_DIR . 'includes/tracking/class-click-redirector.php';
     ERH\Tracking\ClickRedirector::flush_rules();
@@ -216,11 +220,46 @@ function erh_deactivate(): void {
     wp_clear_scheduled_hook('erh_search_json_update');
     wp_clear_scheduled_hook('erh_price_tracker_check');
     wp_clear_scheduled_hook('erh_deals_email');
+    wp_clear_scheduled_hook('erh_cron_email_queue');
 
     // Flush rewrite rules.
     flush_rewrite_rules();
 }
 register_deactivation_hook(__FILE__, 'erh_deactivate');
+
+/**
+ * Queue an email for sending via the email queue system.
+ *
+ * Helper function for easy access to the email queue.
+ * Emails are processed in batches by the EmailQueueJob cron.
+ *
+ * @param string   $to       Recipient email address.
+ * @param string   $subject  Email subject.
+ * @param string   $body     Email body (HTML).
+ * @param string   $type     Email type (price_alert, deals_digest, newsletter, welcome, password_reset, general).
+ * @param int      $priority Priority level (1=critical, 5=normal, 10=low).
+ * @param int|null $user_id  Associated user ID (optional).
+ * @return int|false The queued email ID or false on failure.
+ */
+function erh_queue_email(
+    string $to,
+    string $subject,
+    string $body,
+    string $type = 'general',
+    int $priority = 5,
+    ?int $user_id = null
+): int|false {
+    $repo = new ERH\Database\EmailQueueRepository();
+    return $repo->queue([
+        'email_type'        => $type,
+        'recipient_email'   => $to,
+        'recipient_user_id' => $user_id,
+        'subject'           => $subject,
+        'body'              => $body,
+        'headers'           => ['Content-Type: text/html; charset=UTF-8'],
+        'priority'          => $priority,
+    ]);
+}
 
 /**
  * Plugin uninstall hook is handled in uninstall.php.

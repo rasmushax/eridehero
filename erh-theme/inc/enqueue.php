@@ -102,6 +102,26 @@ function erh_enqueue_assets(): void {
         $erh_data['tooltips'] = \ERH\Config\SpecConfig::export_tooltips();
     }
 
+    // Add user data for logged-in users (geo preference, email preferences).
+    if ( is_user_logged_in() && class_exists( '\ERH\User\UserRepository' ) ) {
+        $user_repo = new \ERH\User\UserRepository();
+        $user_id   = get_current_user_id();
+
+        // Ensure geo preference is set (handles imported users on first visit).
+        $user_geo = $user_repo->ensure_geo_preference( $user_id );
+
+        // Get email preferences for confirmation logic (e.g., deals digest confirmation).
+        $prefs = $user_repo->get_preferences( $user_id );
+
+        $erh_data['user'] = array(
+            'id'          => $user_id,
+            'geo'         => $user_geo,
+            'preferences' => array(
+                'sales_roundup_emails' => (bool) ( $prefs['sales_roundup_emails'] ?? false ),
+            ),
+        );
+    }
+
     // Add product data for single product pages (avoids loading finder JSON).
     if ( is_singular( 'products' ) ) {
         $product_data = erh_get_inline_product_data( get_the_ID() );
