@@ -19,29 +19,69 @@ use ERH\User\UserRepository;
 class NewsletterSender {
 
     /**
+     * Email queue repository instance.
+     *
+     * @var EmailQueueRepository|null
+     */
+    private ?EmailQueueRepository $queue_repo = null;
+
+    /**
+     * Get queue repository (lazy-loaded singleton).
+     *
+     * @return EmailQueueRepository
+     */
+    private function get_queue_repo(): EmailQueueRepository {
+        if ($this->queue_repo === null) {
+            $this->queue_repo = new EmailQueueRepository();
+        }
+        return $this->queue_repo;
+    }
+
+    /**
      * Get count of newsletter subscribers.
+     *
+     * Uses optimized count query instead of fetching all users.
      *
      * @return int Subscriber count.
      */
     public function get_subscriber_count(): int {
-        return count($this->get_subscribers());
+        global $wpdb;
+
+        $count = $wpdb->get_var($wpdb->prepare(
+            "SELECT COUNT(*) FROM {$wpdb->usermeta}
+             WHERE meta_key = %s AND meta_value = %s",
+            UserRepository::META_NEWSLETTER_SUBSCRIPTION,
+            '1'
+        ));
+
+        return (int) $count;
     }
 
     /**
-     * Get all newsletter subscribers.
+     * Get all newsletter subscribers (minimal data).
      *
-     * @return array<\WP_User> Array of user objects.
+     * Only fetches ID and email to minimize memory usage.
+     *
+     * @return array Array of stdClass with ID and user_email.
      */
     public function get_subscribers(): array {
-        return get_users([
-            'meta_key'   => UserRepository::META_NEWSLETTER_SUBSCRIPTION,
-            'meta_value' => '1',
-            'fields'     => 'all',
-        ]);
+        global $wpdb;
+
+        // phpcs:ignore WordPress.DB.PreparedSQL.InterpolatedNotPrepared
+        return $wpdb->get_results($wpdb->prepare(
+            "SELECT u.ID, u.user_email
+             FROM {$wpdb->users} u
+             INNER JOIN {$wpdb->usermeta} um ON u.ID = um.user_id
+             WHERE um.meta_key = %s AND um.meta_value = %s",
+            UserRepository::META_NEWSLETTER_SUBSCRIPTION,
+            '1'
+        )) ?: [];
     }
 
     /**
      * Queue a newsletter to all subscribers.
+     *
+     * Uses batch insert for efficiency with large subscriber lists.
      *
      * @param int $newsletter_id The newsletter post ID.
      * @return array{total: int, queued: int} Results.
@@ -51,12 +91,16 @@ class NewsletterSender {
         $html        = $template->render($newsletter_id);
         $subject     = get_the_title($newsletter_id);
         $subscribers = $this->get_subscribers();
+        $total       = count($subscribers);
 
-        $queue_repo = new EmailQueueRepository();
-        $queued     = 0;
+        if ($total === 0) {
+            return ['total' => 0, 'queued' => 0];
+        }
 
+        // Build batch of emails.
+        $emails = [];
         foreach ($subscribers as $user) {
-            $result = $queue_repo->queue([
+            $emails[] = [
                 'email_type'        => EmailQueue::TYPE_NEWSLETTER,
                 'recipient_email'   => $user->user_email,
                 'recipient_user_id' => $user->ID,
@@ -64,15 +108,14 @@ class NewsletterSender {
                 'body'              => $html,
                 'headers'           => ['Content-Type: text/html; charset=UTF-8'],
                 'priority'          => EmailQueue::PRIORITY_LOW,
-            ]);
-
-            if ($result) {
-                $queued++;
-            }
+            ];
         }
 
+        // Queue all at once using batch insert.
+        $queued = $this->get_queue_repo()->queue_batch($emails);
+
         return [
-            'total'  => count($subscribers),
+            'total'  => $total,
             'queued' => $queued,
         ];
     }

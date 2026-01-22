@@ -78,13 +78,15 @@ class EmailQueue {
             retry_count tinyint(1) NOT NULL DEFAULT 0,
             next_retry_at datetime DEFAULT NULL,
             created_at datetime NOT NULL DEFAULT CURRENT_TIMESTAMP,
+            claimed_at datetime DEFAULT NULL,
             processed_at datetime DEFAULT NULL,
             error_message text DEFAULT NULL,
             PRIMARY KEY (id),
             KEY status_priority (status, priority, created_at),
             KEY email_type (email_type),
             KEY recipient_user_id (recipient_user_id),
-            KEY next_retry (status, next_retry_at)
+            KEY next_retry (status, next_retry_at),
+            KEY stale_check (status, claimed_at)
         ) {$charset};";
 
         require_once ABSPATH . 'wp-admin/includes/upgrade.php';

@@ -435,7 +435,14 @@ class EmailTestPage {
     }
 
     /**
+     * Maximum test emails allowed per hour per user.
+     */
+    private const TEST_EMAIL_LIMIT = 20;
+
+    /**
      * AJAX handler to send a test email.
+     *
+     * Rate limited to prevent abuse (20 emails per user per hour).
      *
      * @return void
      */
@@ -448,6 +455,19 @@ class EmailTestPage {
 
         $this->clear_logs();
         $this->log('Starting email send process...', 'info');
+
+        // Rate limiting: max 20 test emails per user per hour.
+        $user_id       = get_current_user_id();
+        $transient_key = 'erh_email_test_count_' . $user_id;
+        $count         = (int) get_transient($transient_key);
+
+        if ($count >= self::TEST_EMAIL_LIMIT) {
+            $this->log('Rate limit exceeded', 'error');
+            wp_send_json_error([
+                'message' => __('Rate limit exceeded. Please wait before sending more test emails.', 'erh-core'),
+                'logs'    => $this->get_logs(),
+            ]);
+        }
 
         $template = isset($_POST['email_template']) ? sanitize_key($_POST['email_template']) : '';
         $recipient = isset($_POST['recipient_email']) ? sanitize_email($_POST['recipient_email']) : '';
@@ -466,6 +486,8 @@ class EmailTestPage {
         $result = $this->send_email($template, $recipient);
 
         if ($result['success']) {
+            // Increment counter with 1-hour expiry.
+            set_transient($transient_key, $count + 1, HOUR_IN_SECONDS);
             wp_send_json_success([
                 'message' => $result['message'],
                 'logs'    => $this->get_logs(),

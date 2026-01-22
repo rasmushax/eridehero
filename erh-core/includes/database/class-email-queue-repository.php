@@ -74,6 +74,85 @@ class EmailQueueRepository {
     }
 
     /**
+     * Queue multiple emails in a single batch insert.
+     *
+     * Much more efficient than individual inserts for bulk operations.
+     * Processes in chunks of 100 to avoid query size limits.
+     *
+     * @param array $emails Array of email data arrays (same format as queue()).
+     * @return int Number of successfully queued emails.
+     */
+    public function queue_batch(array $emails): int {
+        if (empty($emails)) {
+            return 0;
+        }
+
+        global $wpdb;
+        $table = EmailQueue::get_table_name();
+        $chunk_size = 100;
+        $queued = 0;
+
+        // Process in chunks to avoid query size limits.
+        $chunks = array_chunk($emails, $chunk_size);
+
+        foreach ($chunks as $chunk) {
+            $values = [];
+            $placeholders = [];
+
+            foreach ($chunk as $email) {
+                // Validate required fields.
+                if (empty($email['recipient_email']) || empty($email['subject']) || empty($email['body'])) {
+                    continue;
+                }
+
+                // Prepare data with defaults.
+                $email_type = $email['email_type'] ?? EmailQueue::TYPE_GENERAL;
+                $recipient_email = $email['recipient_email'];
+                $recipient_user_id = $email['recipient_user_id'] ?? null;
+                $subject = $email['subject'];
+                $body = $email['body'];
+                $headers = is_array($email['headers'] ?? null) ? implode("\r\n", $email['headers']) : ($email['headers'] ?? null);
+                $priority = $email['priority'] ?? EmailQueue::PRIORITY_NORMAL;
+                $created_at = current_time('mysql');
+
+                $values[] = $email_type;
+                $values[] = $recipient_email;
+                $values[] = $recipient_user_id;
+                $values[] = $subject;
+                $values[] = $body;
+                $values[] = $headers;
+                $values[] = EmailQueue::STATUS_PENDING;
+                $values[] = $priority;
+                $values[] = 0; // retry_count
+                $values[] = $created_at;
+
+                $placeholders[] = '(%s, %s, %d, %s, %s, %s, %s, %d, %d, %s)';
+            }
+
+            if (empty($placeholders)) {
+                continue;
+            }
+
+            $columns = 'email_type, recipient_email, recipient_user_id, subject, body, headers, status, priority, retry_count, created_at';
+
+            // phpcs:ignore WordPress.DB.PreparedSQL.InterpolatedNotPrepared,WordPress.DB.PreparedSQLPlaceholders.UnfinishedPrepare
+            $sql = $wpdb->prepare(
+                "INSERT INTO {$table} ({$columns}) VALUES " . implode(', ', $placeholders),
+                $values
+            );
+
+            // phpcs:ignore WordPress.DB.PreparedSQL.NotPrepared
+            $result = $wpdb->query($sql);
+
+            if ($result !== false) {
+                $queued += $result;
+            }
+        }
+
+        return $queued;
+    }
+
+    /**
      * Get pending emails ready for processing.
      *
      * Returns emails that are pending and either have no retry time
@@ -122,6 +201,7 @@ class EmailQueueRepository {
      * Claim an email for processing (prevents double-send).
      *
      * Uses atomic update to ensure only one process can claim the email.
+     * Sets claimed_at timestamp for stale detection.
      *
      * @param int $id The email ID.
      * @return bool True if claimed successfully, false if already claimed or not found.
@@ -133,9 +213,10 @@ class EmailQueueRepository {
         // phpcs:ignore WordPress.DB.PreparedSQL.InterpolatedNotPrepared
         $result = $wpdb->query($wpdb->prepare(
             "UPDATE {$table}
-             SET status = %s
+             SET status = %s, claimed_at = %s
              WHERE id = %d AND status = %s",
             EmailQueue::STATUS_PROCESSING,
+            current_time('mysql'),
             $id,
             EmailQueue::STATUS_PENDING
         ));
@@ -365,6 +446,7 @@ class EmailQueueRepository {
      * Release stale processing emails (stuck for more than X minutes).
      *
      * This handles cases where processing crashed before completing.
+     * Uses claimed_at timestamp to accurately detect stale emails.
      *
      * @param int $minutes Minutes after which processing is considered stale.
      * @return int Number of emails released.
@@ -373,16 +455,13 @@ class EmailQueueRepository {
         global $wpdb;
         $table = EmailQueue::get_table_name();
 
-        // We can't track when processing started easily, so we look at
-        // created_at + a buffer time for emails stuck in processing.
-        // In practice, emails shouldn't be in processing for more than a few seconds.
-
         // phpcs:ignore WordPress.DB.PreparedSQL.InterpolatedNotPrepared
         $result = $wpdb->query($wpdb->prepare(
             "UPDATE {$table}
-             SET status = %s
+             SET status = %s, claimed_at = NULL
              WHERE status = %s
-               AND created_at < DATE_SUB(%s, INTERVAL %d MINUTE)",
+               AND claimed_at IS NOT NULL
+               AND claimed_at < DATE_SUB(%s, INTERVAL %d MINUTE)",
             EmailQueue::STATUS_PENDING,
             EmailQueue::STATUS_PROCESSING,
             current_time('mysql'),

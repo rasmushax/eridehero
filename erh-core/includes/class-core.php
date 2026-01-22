@@ -25,7 +25,6 @@ use ERH\User\UserTracker;
 use ERH\User\RateLimiter;
 use ERH\User\UserRepository;
 use ERH\User\SocialAuth;
-use ERH\Email\EmailTemplate;
 use ERH\Email\EmailSender;
 use ERH\Pricing\PriceFetcher;
 use ERH\Pricing\ExchangeRateService;
@@ -213,13 +212,6 @@ class Core {
      * @var NewsletterAdmin
      */
     private NewsletterAdmin $newsletter_admin;
-
-    /**
-     * Email template instance.
-     *
-     * @var EmailTemplate
-     */
-    private EmailTemplate $email_template;
 
     /**
      * Email sender instance.
@@ -615,8 +607,7 @@ class Core {
      * @return void
      */
     private function init_email(): void {
-        $this->email_template = new EmailTemplate();
-        $this->email_sender = new EmailSender($this->email_template);
+        $this->email_sender = new EmailSender();
 
         // Send welcome email on user registration.
         add_action('erh_user_registered', [$this, 'send_welcome_email'], 10, 2);
@@ -830,15 +821,6 @@ class Core {
      */
     public function get_settings_page(): SettingsPage {
         return $this->settings_page;
-    }
-
-    /**
-     * Get the email template instance.
-     *
-     * @return EmailTemplate
-     */
-    public function get_email_template(): EmailTemplate {
-        return $this->email_template;
     }
 
     /**

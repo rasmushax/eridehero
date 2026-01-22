@@ -413,7 +413,14 @@ class NewsletterAdmin {
     }
 
     /**
+     * Maximum test emails allowed per hour per user.
+     */
+    private const TEST_EMAIL_LIMIT = 10;
+
+    /**
      * AJAX: Send test email.
+     *
+     * Rate limited to prevent abuse (10 emails per user per hour).
      *
      * @return void
      */
@@ -427,6 +434,17 @@ class NewsletterAdmin {
             wp_send_json_error(['message' => __('Invalid request.', 'erh-core')]);
         }
 
+        // Rate limiting: max 10 test emails per user per hour.
+        $user_id       = get_current_user_id();
+        $transient_key = 'erh_test_email_count_' . $user_id;
+        $count         = (int) get_transient($transient_key);
+
+        if ($count >= self::TEST_EMAIL_LIMIT) {
+            wp_send_json_error([
+                'message' => __('Rate limit exceeded. Please wait before sending more test emails.', 'erh-core'),
+            ]);
+        }
+
         // Save the post first to ensure latest content is rendered.
         if (isset($_POST['post_data'])) {
             // ACF fields will be saved separately.
@@ -436,6 +454,8 @@ class NewsletterAdmin {
         $result = $sender->send_test($post_id, $email);
 
         if ($result) {
+            // Increment counter with 1-hour expiry.
+            set_transient($transient_key, $count + 1, HOUR_IN_SECONDS);
             wp_send_json_success(['message' => __('Test email sent!', 'erh-core')]);
         } else {
             wp_send_json_error(['message' => __('Failed to send test email.', 'erh-core')]);
