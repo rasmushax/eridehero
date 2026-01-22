@@ -87,9 +87,10 @@ class ComparisonViews {
      *
      * @param array<int> $product_ids Array of product IDs being compared.
      * @param string     $user_agent  The visitor user agent (for bot filtering).
+     * @param string     $ip_address  The visitor IP address (for daily deduplication).
      * @return int Number of pairs tracked.
      */
-    public function record_view(array $product_ids, string $user_agent = ''): int {
+    public function record_view(array $product_ids, string $user_agent = '', string $ip_address = ''): int {
         // Filter to valid product IDs.
         $product_ids = array_filter(array_map('absint', $product_ids));
 
@@ -106,8 +107,20 @@ class ComparisonViews {
         $pairs = $this->extract_pairs($product_ids);
         $tracked = 0;
 
+        // Hash IP for privacy (if provided).
+        $ip_hash = $ip_address ? $this->hash_ip($ip_address) : '';
+
         foreach ($pairs as $pair) {
+            // Skip if this IP already viewed this pair today.
+            if ($ip_hash && $this->has_viewed_today($pair[0], $pair[1], $ip_hash)) {
+                continue;
+            }
+
             if ($this->upsert_pair($pair[0], $pair[1])) {
+                // Mark as viewed for this IP today.
+                if ($ip_hash) {
+                    $this->mark_viewed_today($pair[0], $pair[1], $ip_hash);
+                }
                 $tracked++;
             }
         }
@@ -144,10 +157,22 @@ class ComparisonViews {
     }
 
     /**
+     * Decay period in days for popularity weighting.
+     * Views older than this get weight approaching 0.
+     */
+    private const DECAY_DAYS = 60;
+
+    /**
+     * Cleanup threshold in days.
+     * Records older than this are deleted during cleanup.
+     */
+    private const CLEANUP_DAYS = 90;
+
+    /**
      * Get popular comparison pairs.
      *
-     * Uses time-weighted formula: views * (1 - days_since_last_view / 90)
-     * Comparisons older than 90 days get weight approaching 0.
+     * Uses time-weighted formula: views * (1 - days_since_last_view / DECAY_DAYS)
+     * Comparisons older than DECAY_DAYS get weight approaching 0.
      *
      * @param string|null $category Optional category filter (escooter, ebike, etc.).
      * @param int         $limit    Maximum results.
@@ -155,6 +180,7 @@ class ComparisonViews {
      */
     public function get_popular(?string $category = null, int $limit = 10): array {
         $posts_table = $this->wpdb->posts;
+        $decay_days = self::DECAY_DAYS;
 
         $sql = "
             SELECT
@@ -164,7 +190,7 @@ class ComparisonViews {
                 v.last_viewed,
                 p1.post_title AS product_1_name,
                 p2.post_title AS product_2_name,
-                (v.view_count * GREATEST(0, 1 - DATEDIFF(NOW(), v.last_viewed) / 90)) AS weighted_score
+                (v.view_count * GREATEST(0, 1 - DATEDIFF(NOW(), v.last_viewed) / {$decay_days})) AS weighted_score
             FROM {$this->table_name} v
             INNER JOIN {$posts_table} p1 ON v.product_1_id = p1.ID
             INNER JOIN {$posts_table} p2 ON v.product_2_id = p2.ID
@@ -185,7 +211,7 @@ class ComparisonViews {
                     v.last_viewed,
                     p1.post_title AS product_1_name,
                     p2.post_title AS product_2_name,
-                    (v.view_count * GREATEST(0, 1 - DATEDIFF(NOW(), v.last_viewed) / 90)) AS weighted_score
+                    (v.view_count * GREATEST(0, 1 - DATEDIFF(NOW(), v.last_viewed) / {$decay_days})) AS weighted_score
                 FROM {$this->table_name} v
                 INNER JOIN {$posts_table} p1 ON v.product_1_id = p1.ID
                 INNER JOIN {$posts_table} p2 ON v.product_2_id = p2.ID
@@ -315,12 +341,26 @@ class ComparisonViews {
     /**
      * Check if a curated comparison exists for a pair.
      *
+     * Checks publish, draft, and pending statuses since editors may
+     * have started creating a comparison but not published it yet.
+     *
+     * ACF relationship fields store values as serialized arrays like:
+     * a:1:{i:0;i:123;} or a:1:{i:0;s:3:"123";}
+     * So we use LIKE with patterns to match the serialized format.
+     *
      * @param int $product_1_id First product ID.
      * @param int $product_2_id Second product ID.
      * @return int|null Comparison post ID or null.
      */
     public function get_curated_comparison(int $product_1_id, int $product_2_id): ?int {
-        // Check both orderings.
+        // ACF relationship fields store as serialized arrays.
+        // Match patterns like: i:123; (integer) or "123" (string in serialized).
+        $pattern_1_int = '%i:' . $product_1_id . ';%';
+        $pattern_1_str = '%"' . $product_1_id . '"%';
+        $pattern_2_int = '%i:' . $product_2_id . ';%';
+        $pattern_2_str = '%"' . $product_2_id . '"%';
+
+        // Check both orderings and multiple statuses.
         $result = $this->wpdb->get_var(
             $this->wpdb->prepare(
                 "SELECT p.ID
@@ -328,16 +368,26 @@ class ComparisonViews {
                  INNER JOIN {$this->wpdb->postmeta} pm1 ON p.ID = pm1.post_id AND pm1.meta_key = 'product_1'
                  INNER JOIN {$this->wpdb->postmeta} pm2 ON p.ID = pm2.post_id AND pm2.meta_key = 'product_2'
                  WHERE p.post_type = 'comparison'
-                 AND p.post_status = 'publish'
+                 AND p.post_status IN ('publish', 'draft', 'pending')
                  AND (
-                     (pm1.meta_value = %d AND pm2.meta_value = %d)
-                     OR (pm1.meta_value = %d AND pm2.meta_value = %d)
+                     (
+                         (pm1.meta_value LIKE %s OR pm1.meta_value LIKE %s)
+                         AND (pm2.meta_value LIKE %s OR pm2.meta_value LIKE %s)
+                     )
+                     OR (
+                         (pm1.meta_value LIKE %s OR pm1.meta_value LIKE %s)
+                         AND (pm2.meta_value LIKE %s OR pm2.meta_value LIKE %s)
+                     )
                  )
                  LIMIT 1",
-                $product_1_id,
-                $product_2_id,
-                $product_2_id,
-                $product_1_id
+                $pattern_1_int,
+                $pattern_1_str,
+                $pattern_2_int,
+                $pattern_2_str,
+                $pattern_2_int,
+                $pattern_2_str,
+                $pattern_1_int,
+                $pattern_1_str
             )
         );
 
@@ -388,6 +438,66 @@ class ComparisonViews {
     }
 
     /**
+     * Hash IP address for privacy.
+     *
+     * Uses a daily salt so hashes can't be tracked across days.
+     *
+     * @param string $ip_address The IP address.
+     * @return string Hashed IP (32 chars).
+     */
+    private function hash_ip(string $ip_address): string {
+        // Use date as salt so hashes can't be correlated across days.
+        $salt = wp_salt('auth') . gmdate('Y-m-d');
+        return substr(hash('sha256', $ip_address . $salt), 0, 32);
+    }
+
+    /**
+     * Check if IP has already viewed this pair today.
+     *
+     * Uses transients for lightweight deduplication without schema changes.
+     *
+     * @param int    $product_1_id First product ID.
+     * @param int    $product_2_id Second product ID.
+     * @param string $ip_hash      Hashed IP address.
+     * @return bool True if already viewed today.
+     */
+    private function has_viewed_today(int $product_1_id, int $product_2_id, string $ip_hash): bool {
+        $key = $this->get_dedup_key($product_1_id, $product_2_id, $ip_hash);
+        return (bool) get_transient($key);
+    }
+
+    /**
+     * Mark this pair as viewed by this IP today.
+     *
+     * @param int    $product_1_id First product ID.
+     * @param int    $product_2_id Second product ID.
+     * @param string $ip_hash      Hashed IP address.
+     * @return void
+     */
+    private function mark_viewed_today(int $product_1_id, int $product_2_id, string $ip_hash): void {
+        $key = $this->get_dedup_key($product_1_id, $product_2_id, $ip_hash);
+        // Expire at end of day (max 24 hours).
+        set_transient($key, 1, DAY_IN_SECONDS);
+    }
+
+    /**
+     * Get deduplication transient key for a pair + IP.
+     *
+     * @param int    $product_1_id First product ID.
+     * @param int    $product_2_id Second product ID.
+     * @param string $ip_hash      Hashed IP address.
+     * @return string Transient key.
+     */
+    private function get_dedup_key(int $product_1_id, int $product_2_id, string $ip_hash): string {
+        // Normalize: always use lower ID first.
+        $ids = [$product_1_id, $product_2_id];
+        sort($ids);
+        // Use short hash of IP to keep key under 172 char limit.
+        $short_ip = substr($ip_hash, 0, 8);
+        return "erh_cv_{$ids[0]}_{$ids[1]}_{$short_ip}";
+    }
+
+    /**
      * Get product_type taxonomy slug from category key.
      *
      * @param string $category Category key (escooter, ebike, etc.).
@@ -403,5 +513,42 @@ class ComparisonViews {
         ];
 
         return $map[$category] ?? 'electric-scooter';
+    }
+
+    /**
+     * Clean up old comparison view records.
+     *
+     * Deletes records older than CLEANUP_DAYS to prevent table bloat.
+     * Records this old have zero weighted_score anyway due to decay formula.
+     *
+     * @return int Number of rows deleted.
+     */
+    public function cleanup(): int {
+        $result = $this->wpdb->query(
+            $this->wpdb->prepare(
+                "DELETE FROM {$this->table_name}
+                 WHERE last_viewed < DATE_SUB(NOW(), INTERVAL %d DAY)",
+                self::CLEANUP_DAYS
+            )
+        );
+
+        return $result !== false ? (int) $result : 0;
+    }
+
+    /**
+     * Maybe run cleanup (probabilistic).
+     *
+     * Runs cleanup with 1% probability to avoid running on every request.
+     * Call this after record_view() operations.
+     *
+     * @return int Number of rows deleted (0 if cleanup didn't run).
+     */
+    public function maybe_cleanup(): int {
+        // 1% chance to run cleanup.
+        if (wp_rand(1, 100) !== 1) {
+            return 0;
+        }
+
+        return $this->cleanup();
     }
 }

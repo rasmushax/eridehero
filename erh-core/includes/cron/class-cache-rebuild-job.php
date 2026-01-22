@@ -377,9 +377,10 @@ class CacheRebuildJob implements CronJobInterface {
             $product_data['popularity_score'] += 5;
         }
 
-        // Popularity boost from tracker count.
-        $tracker_count = $this->price_tracker->count_for_product($product_id);
-        $product_data['popularity_score'] += $tracker_count * 2;
+        // Note: Tracker count removed from popularity formula to prevent echo chamber.
+        // Products shown in finder (sorted by popularity) would get more trackers,
+        // which would increase their popularity, keeping them at the top forever.
+        // Tracker count is still shown in admin (Popular Products page) as editorial insight.
 
         // Popularity boost from views (logarithmic scale).
         $view_count = $this->view_tracker->get_view_count($product_id, 30);

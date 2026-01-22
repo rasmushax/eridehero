@@ -908,6 +908,48 @@ function erh_compare_rankmath_description( string $description ): string {
 add_filter( 'rank_math/frontend/description', 'erh_compare_rankmath_description', 20 );
 
 /**
+ * Set robots meta for compare pages.
+ *
+ * - Curated comparisons (CPT): INDEX (editorial content, SEO value)
+ * - Dynamic comparisons: NOINDEX (thin content, no editorial value)
+ * - Hub page: INDEX (good landing page)
+ * - Category pages: INDEX (useful category landing)
+ *
+ * @param mixed $robots The robots directives.
+ * @return array Modified robots.
+ */
+function erh_compare_rankmath_robots( $robots ): array {
+	// Ensure we have an array (RankMath may pass different types).
+	if ( ! is_array( $robots ) ) {
+		$robots = [];
+	}
+
+	if ( ! erh_is_compare_page() ) {
+		return $robots;
+	}
+
+	// Allow curated comparisons to be indexed (editorial content).
+	if ( is_singular( 'comparison' ) ) {
+		return $robots;
+	}
+
+	// Allow hub page to be indexed.
+	$compare_slugs = get_query_var( 'compare_slugs', '' );
+	$products      = get_query_var( 'products', '' );
+	if ( empty( $compare_slugs ) && empty( $products ) ) {
+		// No products specified = hub or category page, allow indexing.
+		return $robots;
+	}
+
+	// Dynamic comparison with products - noindex to avoid thin content.
+	$robots['index']  = 'noindex';
+	$robots['follow'] = 'follow'; // Still follow internal links.
+
+	return $robots;
+}
+add_filter( 'rank_math/frontend/robots', 'erh_compare_rankmath_robots', 20 );
+
+/**
  * Remove RankMath breadcrumbs on compare pages (we add our own with full category hierarchy).
  *
  * @param array $data The JSON-LD data.

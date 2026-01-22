@@ -163,13 +163,50 @@ class RestComparisonViews extends WP_REST_Controller {
     public function track_view(WP_REST_Request $request): WP_REST_Response {
         $product_ids = $request->get_param('product_ids');
         $user_agent  = $request->get_header('user_agent') ?? '';
+        $ip_address  = $this->get_client_ip();
 
-        $tracked = $this->views_db->record_view($product_ids, $user_agent);
+        $tracked = $this->views_db->record_view($product_ids, $user_agent, $ip_address);
+
+        // Probabilistic cleanup (1% chance).
+        $this->views_db->maybe_cleanup();
 
         return new WP_REST_Response([
             'success' => true,
             'tracked' => $tracked,
         ]);
+    }
+
+    /**
+     * Get client IP address from request headers.
+     *
+     * Checks proxy headers first, then falls back to REMOTE_ADDR.
+     *
+     * @return string Client IP address.
+     */
+    private function get_client_ip(): string {
+        // Check common proxy headers (Cloudflare, load balancers).
+        $headers = [
+            'HTTP_CF_CONNECTING_IP',  // Cloudflare.
+            'HTTP_X_FORWARDED_FOR',   // Standard proxy.
+            'HTTP_X_REAL_IP',         // Nginx.
+            'REMOTE_ADDR',            // Direct connection.
+        ];
+
+        foreach ($headers as $header) {
+            if (!empty($_SERVER[$header])) {
+                $ip = sanitize_text_field(wp_unslash($_SERVER[$header]));
+                // X-Forwarded-For can contain multiple IPs, take first.
+                if (strpos($ip, ',') !== false) {
+                    $ip = trim(explode(',', $ip)[0]);
+                }
+                // Validate IP format.
+                if (filter_var($ip, FILTER_VALIDATE_IP)) {
+                    return $ip;
+                }
+            }
+        }
+
+        return '';
     }
 
     /**

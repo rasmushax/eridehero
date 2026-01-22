@@ -10,6 +10,7 @@ declare(strict_types=1);
 namespace ERH\Email;
 
 use ERH\GeoConfig;
+use ERH\User\UserTracker;
 
 /**
  * Generates price drop alert emails for user's tracked products.
@@ -113,6 +114,15 @@ class PriceAlertTemplate extends EmailBuilder {
         $url = $deal['url'] ?? '#';
         $tracking_users = $deal['tracking_users'] ?? 0;
         $currency = $deal['currency'] ?? 'USD';
+        $tracker_id = $deal['tracker_id'] ?? 0;
+        $user_id = $deal['user_id'] ?? 0;
+        $product_id = $deal['product_id'] ?? 0;
+
+        // Generate one-click unsubscribe URL.
+        $stop_tracking_url = '';
+        if ($tracker_id && $user_id && $product_id) {
+            $stop_tracking_url = UserTracker::get_unsubscribe_url($tracker_id, $user_id, $product_id);
+        }
 
         $currency_symbol = GeoConfig::get_symbol($currency);
 
@@ -168,9 +178,12 @@ class PriceAlertTemplate extends EmailBuilder {
                                 </table>
                                 <table role="presentation" cellpadding="0" cellspacing="0" border="0" style="margin-top: 12px;">
                                     <tr>
-                                        <td>
+                                        <td style="padding-right: 12px;">
                                             <a href="' . esc_url($url) . '" style="display: inline-block; padding: 8px 16px; background-color: ' . self::COLOR_DARK . '; color: #ffffff; font-size: 13px; font-weight: 600; text-decoration: none; border-radius: 6px;">View Deal</a>
                                         </td>
+                                        ' . ($stop_tracking_url ? '<td>
+                                            <a href="' . esc_url($stop_tracking_url) . '" style="font-size: 12px; color: ' . self::COLOR_MUTED . '; text-decoration: underline;">Stop tracking</a>
+                                        </td>' : '') . '
                                     </tr>
                                 </table>
                             </td>

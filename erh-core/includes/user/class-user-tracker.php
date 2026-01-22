@@ -57,6 +57,54 @@ class UserTracker {
     public const REST_NAMESPACE = 'erh/v1';
 
     /**
+     * Salt for HMAC unsubscribe token generation.
+     */
+    private const UNSUBSCRIBE_SALT = 'erh_tracker_unsubscribe';
+
+    /**
+     * Generate an HMAC token for one-click unsubscribe links.
+     *
+     * @param int $tracker_id The tracker ID.
+     * @param int $user_id    The user ID.
+     * @param int $product_id The product ID.
+     * @return string The HMAC token.
+     */
+    public static function generate_unsubscribe_token(int $tracker_id, int $user_id, int $product_id): string {
+        $data = sprintf('%d:%d:%d', $tracker_id, $user_id, $product_id);
+        return hash_hmac('sha256', $data, wp_salt('secure_auth') . self::UNSUBSCRIBE_SALT);
+    }
+
+    /**
+     * Verify an HMAC unsubscribe token.
+     *
+     * @param string $token      The token to verify.
+     * @param int    $tracker_id The tracker ID.
+     * @param int    $user_id    The user ID.
+     * @param int    $product_id The product ID.
+     * @return bool True if valid.
+     */
+    public static function verify_unsubscribe_token(string $token, int $tracker_id, int $user_id, int $product_id): bool {
+        return hash_equals(self::generate_unsubscribe_token($tracker_id, $user_id, $product_id), $token);
+    }
+
+    /**
+     * Generate a one-click unsubscribe URL for a tracker.
+     *
+     * @param int $tracker_id The tracker ID.
+     * @param int $user_id    The user ID.
+     * @param int $product_id The product ID.
+     * @return string The unsubscribe URL.
+     */
+    public static function get_unsubscribe_url(int $tracker_id, int $user_id, int $product_id): string {
+        return add_query_arg([
+            'tracker' => $tracker_id,
+            'user'    => $user_id,
+            'product' => $product_id,
+            'token'   => self::generate_unsubscribe_token($tracker_id, $user_id, $product_id),
+        ], rest_url(self::REST_NAMESPACE . '/trackers/unsubscribe'));
+    }
+
+    /**
      * Constructor.
      *
      * @param RateLimiter|null    $rate_limiter Optional rate limiter instance.
@@ -218,6 +266,35 @@ class UserTracker {
                     'type'              => 'string',
                     'default'           => 'US',
                     'enum'              => ['US', 'GB', 'EU', 'CA', 'AU'],
+                    'sanitize_callback' => 'sanitize_text_field',
+                ],
+            ],
+        ]);
+
+        // One-click unsubscribe from price tracker (no auth required - uses HMAC).
+        register_rest_route(self::REST_NAMESPACE, '/trackers/unsubscribe', [
+            'methods'             => ['GET', 'POST'],
+            'callback'            => [$this, 'unsubscribe_tracker'],
+            'permission_callback' => '__return_true',
+            'args'                => [
+                'tracker' => [
+                    'required'          => true,
+                    'type'              => 'integer',
+                    'sanitize_callback' => 'absint',
+                ],
+                'user' => [
+                    'required'          => true,
+                    'type'              => 'integer',
+                    'sanitize_callback' => 'absint',
+                ],
+                'product' => [
+                    'required'          => true,
+                    'type'              => 'integer',
+                    'sanitize_callback' => 'absint',
+                ],
+                'token' => [
+                    'required'          => true,
+                    'type'              => 'string',
                     'sanitize_callback' => 'sanitize_text_field',
                 ],
             ],
@@ -742,6 +819,59 @@ class UserTracker {
             'currency'       => $best_price['currency'],
             'in_stock'       => $best_price['in_stock'],
             'geo'            => $geo,
+        ], 200);
+    }
+
+    /**
+     * Handle one-click unsubscribe from price tracker via email link.
+     *
+     * Uses HMAC verification instead of authentication for frictionless unsubscribe.
+     *
+     * @param \WP_REST_Request $request The request object.
+     * @return \WP_REST_Response|\WP_Error Response or error.
+     */
+    public function unsubscribe_tracker(\WP_REST_Request $request) {
+        $tracker_id = (int) $request->get_param('tracker');
+        $user_id    = (int) $request->get_param('user');
+        $product_id = (int) $request->get_param('product');
+        $token      = $request->get_param('token');
+
+        // Rate limit to prevent abuse.
+        $rate_check = $this->rate_limiter->check_and_record('tracker_unsubscribe', RateLimiter::get_client_ip());
+        if (!$rate_check['allowed']) {
+            return new \WP_Error('rate_limited', $rate_check['message'], ['status' => 429]);
+        }
+
+        // Verify HMAC token.
+        if (!self::verify_unsubscribe_token($token, $tracker_id, $user_id, $product_id)) {
+            return new \WP_Error('invalid_token', 'Invalid or expired unsubscribe link.', ['status' => 403]);
+        }
+
+        // Check if tracker exists and matches the parameters.
+        $tracker = $this->wpdb->get_row($this->wpdb->prepare(
+            "SELECT id FROM {$this->table_name} WHERE id = %d AND user_id = %d AND product_id = %d",
+            $tracker_id,
+            $user_id,
+            $product_id
+        ), ARRAY_A);
+
+        // If tracker doesn't exist, return success anyway (idempotent).
+        if (!$tracker) {
+            return new \WP_REST_Response([
+                'success' => true,
+                'message' => 'Price tracker removed.',
+            ], 200);
+        }
+
+        // Delete the tracker.
+        $this->wpdb->delete($this->table_name, ['id' => $tracker_id], ['%d']);
+
+        $product_name = get_the_title($product_id) ?: 'the product';
+
+        return new \WP_REST_Response([
+            'success'      => true,
+            'message'      => sprintf('You will no longer receive price alerts for %s.', $product_name),
+            'product_name' => $product_name,
         ], 200);
     }
 

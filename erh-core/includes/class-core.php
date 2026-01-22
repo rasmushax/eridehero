@@ -46,6 +46,8 @@ use ERH\Admin\LinkPopulator;
 use ERH\Admin\ClickStatsPage;
 use ERH\Admin\ComparisonDashboardWidget;
 use ERH\Admin\PopularComparisonsPage;
+use ERH\Admin\ProductPopularityPage;
+use ERH\Admin\ProductPopularityWidget;
 use ERH\Admin\SpecEditor;
 use ERH\Admin\EmailTestPage;
 use ERH\Admin\NewsletterAdmin;
@@ -191,6 +193,20 @@ class Core {
      * @var PopularComparisonsPage
      */
     private PopularComparisonsPage $popular_comparisons_page;
+
+    /**
+     * Product popularity admin page instance.
+     *
+     * @var ProductPopularityPage
+     */
+    private ProductPopularityPage $product_popularity_page;
+
+    /**
+     * Product popularity dashboard widget instance.
+     *
+     * @var ProductPopularityWidget
+     */
+    private ProductPopularityWidget $product_popularity_widget;
 
     /**
      * Spec editor admin page instance.
@@ -414,6 +430,12 @@ class Core {
         // Clean up user data when user is deleted from WP admin.
         // Note: User meta is automatically deleted by WordPress.
         add_action('delete_user', [$this, 'cleanup_user_data']);
+
+        // Clean up price trackers when a product is deleted.
+        add_action('before_delete_post', [$this, 'cleanup_product_trackers']);
+
+        // Clean up product views when a product is deleted.
+        add_action('before_delete_post', [$this, 'cleanup_product_views']);
     }
 
     /**
@@ -434,6 +456,55 @@ class Core {
                 '[ERH] Cleaned up %d price tracker(s) for deleted user #%d',
                 $deleted_count,
                 $user_id
+            ));
+        }
+    }
+
+    /**
+     * Clean up price trackers when a product is deleted.
+     *
+     * Removes all trackers associated with a deleted product to prevent orphaned data.
+     *
+     * @param int $post_id The ID of the post being deleted.
+     * @return void
+     */
+    public function cleanup_product_trackers(int $post_id): void {
+        if (get_post_type($post_id) !== 'products') {
+            return;
+        }
+
+        $tracker_db = new Database\PriceTracker();
+        $deleted_count = $tracker_db->delete_for_product($post_id);
+
+        if ($deleted_count > 0) {
+            error_log(sprintf(
+                '[ERH] Cleaned up %d price tracker(s) for deleted product #%d',
+                $deleted_count,
+                $post_id
+            ));
+        }
+    }
+
+    /**
+     * Clean up product views when a product is deleted.
+     *
+     * Removes all view records associated with a deleted product to prevent orphaned data.
+     *
+     * @param int $post_id The ID of the post being deleted.
+     * @return void
+     */
+    public function cleanup_product_views(int $post_id): void {
+        if (get_post_type($post_id) !== 'products') {
+            return;
+        }
+
+        $view_tracker = new Database\ViewTracker();
+        $deleted = $view_tracker->delete_for_product($post_id);
+
+        if ($deleted) {
+            error_log(sprintf(
+                '[ERH] Cleaned up views for deleted product #%d',
+                $post_id
             ));
         }
     }
@@ -522,6 +593,14 @@ class Core {
         // Initialize popular comparisons admin page.
         $this->popular_comparisons_page = new PopularComparisonsPage();
         $this->popular_comparisons_page->init();
+
+        // Initialize product popularity admin page.
+        $this->product_popularity_page = new ProductPopularityPage();
+        $this->product_popularity_page->init();
+
+        // Initialize product popularity dashboard widget.
+        $this->product_popularity_widget = new ProductPopularityWidget();
+        $this->product_popularity_widget->init();
 
         // Initialize spec editor admin page.
         $this->spec_editor = new SpecEditor();

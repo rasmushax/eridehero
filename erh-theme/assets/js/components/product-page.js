@@ -65,11 +65,60 @@ class ProductPage {
      * Initialize all components.
      */
     async init() {
+        // Track product view (fire-and-forget, doesn't block page)
+        this.trackProductView();
+
         // Initialize non-geo components immediately
         this.initSimilarCarousel();
 
         // Initialize geo-dependent components (single API call)
         await this.initPerformanceSection();
+    }
+
+    /**
+     * Track product view via AJAX.
+     *
+     * Uses AJAX to bypass page caching (LiteSpeed/Cloudflare).
+     * Session deduplication prevents multiple counts per visit.
+     */
+    trackProductView() {
+        if (!this.productId || typeof this.productId !== 'number') return;
+
+        // Session deduplication - only track once per session per product
+        const sessionKey = `erh_viewed_${this.productId}`;
+        try {
+            if (sessionStorage.getItem(sessionKey)) {
+                return;
+            }
+        } catch (e) {
+            // sessionStorage may be disabled (private browsing, security settings)
+            // Continue with tracking - server-side will handle deduplication
+        }
+
+        const { restUrl, nonce } = window.erhData || {};
+        if (!restUrl) return;
+
+        // Fire-and-forget request
+        fetch(`${restUrl}products/${this.productId}/view`, {
+            method: 'POST',
+            headers: {
+                'Content-Type': 'application/json',
+                'X-WP-Nonce': nonce,
+            },
+        })
+            .then(response => {
+                if (response.ok) {
+                    // Mark as tracked for this session
+                    try {
+                        sessionStorage.setItem(sessionKey, '1');
+                    } catch (e) {
+                        // Storage may be disabled - that's fine
+                    }
+                }
+            })
+            .catch(() => {
+                // Silent fail - view tracking is non-critical
+            });
     }
 
     /**

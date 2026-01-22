@@ -213,6 +213,11 @@ class NotificationJob implements CronJobInterface {
                 continue;
             }
 
+            // Skip out-of-stock products.
+            if (empty($prices[0]['in_stock'])) {
+                continue;
+            }
+
             $current_price = (float) $prices[0]['price'];
             $price_currency = $prices[0]['currency'] ?? $tracker_currency;
 
@@ -229,14 +234,30 @@ class NotificationJob implements CronJobInterface {
                 continue;
             }
 
+            // If price is above target, record it for future re-notification.
+            if ($target_price !== null && $current_price > $target_price) {
+                $this->price_tracker->record_above_target($tracker['id']);
+                continue;
+            }
+
             // Check if notification criteria are met.
             $should_notify = false;
             $notification_type = '';
 
-            if ($target_price !== null && $current_price <= $target_price && $current_price < $compare_price) {
-                // Target price reached and price is lower than before.
-                $should_notify = true;
-                $notification_type = 'target';
+            if ($target_price !== null && $current_price <= $target_price) {
+                // Target price with re-notification support.
+                $last_seen_above = $tracker['last_seen_above_target'];
+                $last_notified = $tracker['last_notification_time'];
+
+                $never_notified = $last_notified === null;
+                $price_lower = $last_notified_price !== null && $current_price < $last_notified_price;
+                $rebounded = $last_seen_above !== null && $last_notified !== null
+                             && strtotime($last_seen_above) > strtotime($last_notified);
+
+                if ($never_notified || $price_lower || $rebounded) {
+                    $should_notify = true;
+                    $notification_type = 'target';
+                }
             } elseif ($price_drop !== null) {
                 // Check for price drop threshold.
                 $price_difference = $compare_price - $current_price;
@@ -288,6 +309,7 @@ class NotificationJob implements CronJobInterface {
                     'url'               => get_permalink($product_id),
                     'tracking_users'    => $tracking_users,
                     'tracker_id'        => $tracker['id'],
+                    'user_id'           => $user_id,
                     'geo'               => $tracker_geo,
                     'currency'          => $price_currency,
                 ];

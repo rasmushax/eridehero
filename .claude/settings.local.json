@@ -26,7 +26,8 @@
       "WebFetch(domain:www.geotab.com)",
       "WebFetch(domain:xbenbike.com)",
       "Bash(wc:*)",
-      "Bash(git checkout:*)"
+      "Bash(git checkout:*)",
+      "Bash(wp db query:*)"
     ]
   }
 }

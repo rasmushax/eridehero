@@ -307,6 +307,152 @@ class ViewTracker {
     }
 
     /**
+     * Get popular products with enriched data for admin display.
+     *
+     * @param int         $days         Time period (7, 30, 90). 0 not supported.
+     * @param string|null $product_type Filter by product type (e.g., 'Electric Scooter').
+     * @param int         $limit        Max results.
+     * @param int         $offset       Results offset for pagination.
+     * @return array Products with view counts and metadata.
+     */
+    public function get_popular_products(int $days = 30, ?string $product_type = null, int $limit = 100, int $offset = 0): array {
+        // Build WHERE clause.
+        $where_clauses = [
+            "p.post_type = 'products'",
+            "p.post_status = 'publish'",
+        ];
+        $params = [];
+
+        // Always require a time period for this method (no all-time option).
+        if ($days > 0) {
+            $where_clauses[] = 'v.view_date >= DATE_SUB(NOW(), INTERVAL %d DAY)';
+            $params[] = $days;
+        }
+
+        if ($product_type) {
+            $where_clauses[] = 'pt.meta_value = %s';
+            $params[] = $product_type;
+        }
+
+        $where_sql = implode(' AND ', $where_clauses);
+
+        // phpcs:ignore WordPress.DB.PreparedSQL.InterpolatedNotPrepared
+        $sql = "SELECT
+                    p.ID as product_id,
+                    p.post_title as product_name,
+                    pt.meta_value as product_type,
+                    COUNT(v.id) as view_count,
+                    MAX(v.view_date) as last_viewed
+                FROM {$this->wpdb->posts} p
+                LEFT JOIN {$this->table_name} v ON p.ID = v.product_id
+                    AND v.view_date >= DATE_SUB(NOW(), INTERVAL %d DAY)
+                LEFT JOIN {$this->wpdb->postmeta} pt ON p.ID = pt.post_id AND pt.meta_key = 'product_type'
+                WHERE {$where_sql}
+                GROUP BY p.ID
+                ORDER BY view_count DESC, last_viewed DESC
+                LIMIT %d OFFSET %d";
+
+        // Add the days param for the LEFT JOIN condition.
+        array_unshift($params, $days);
+        $params[] = $limit;
+        $params[] = $offset;
+
+        // phpcs:ignore WordPress.DB.PreparedSQL.NotPrepared
+        return $this->wpdb->get_results(
+            $this->wpdb->prepare($sql, $params),
+            ARRAY_A
+        ) ?: [];
+    }
+
+    /**
+     * Get total count of products with views for pagination.
+     *
+     * @param int         $days         Time period.
+     * @param string|null $product_type Filter by product type.
+     * @return int Total count.
+     */
+    public function get_popular_products_count(int $days = 30, ?string $product_type = null): int {
+        $where_clauses = [
+            "p.post_type = 'products'",
+            "p.post_status = 'publish'",
+        ];
+        $params = [];
+
+        if ($days > 0) {
+            $where_clauses[] = 'v.view_date >= DATE_SUB(NOW(), INTERVAL %d DAY)';
+            $params[] = $days;
+        }
+
+        if ($product_type) {
+            $where_clauses[] = 'pt.meta_value = %s';
+            $params[] = $product_type;
+        }
+
+        $where_sql = implode(' AND ', $where_clauses);
+
+        // phpcs:ignore WordPress.DB.PreparedSQL.InterpolatedNotPrepared
+        $sql = "SELECT COUNT(DISTINCT p.ID)
+                FROM {$this->wpdb->posts} p
+                LEFT JOIN {$this->table_name} v ON p.ID = v.product_id
+                LEFT JOIN {$this->wpdb->postmeta} pt ON p.ID = pt.post_id AND pt.meta_key = 'product_type'
+                WHERE {$where_sql}";
+
+        if (empty($params)) {
+            // phpcs:ignore WordPress.DB.PreparedSQL.NotPrepared
+            return (int) $this->wpdb->get_var($sql);
+        }
+
+        // phpcs:ignore WordPress.DB.PreparedSQL.NotPrepared
+        return (int) $this->wpdb->get_var($this->wpdb->prepare($sql, $params));
+    }
+
+    /**
+     * Get total views across all products for a time period.
+     *
+     * @param int $days Number of days (0 = all time).
+     * @return int Total view count.
+     */
+    public function get_total_views(int $days = 0): int {
+        $sql = "SELECT COUNT(*) FROM {$this->table_name}";
+
+        if ($days > 0) {
+            // phpcs:ignore WordPress.DB.PreparedSQL.NotPrepared
+            return (int) $this->wpdb->get_var(
+                $this->wpdb->prepare(
+                    $sql . ' WHERE view_date >= DATE_SUB(NOW(), INTERVAL %d DAY)',
+                    $days
+                )
+            );
+        }
+
+        // phpcs:ignore WordPress.DB.PreparedSQL.NotPrepared
+        return (int) $this->wpdb->get_var($sql);
+    }
+
+    /**
+     * Get count of unique products that have been viewed in time period.
+     *
+     * @param int $days Number of days (0 = all time).
+     * @return int Count of unique products viewed.
+     */
+    public function get_viewed_product_count(int $days = 0): int {
+        $sql = "SELECT COUNT(DISTINCT product_id) FROM {$this->table_name}";
+
+        if ($days > 0) {
+            // phpcs:ignore WordPress.DB.PreparedSQL.NotPrepared
+            return (int) $this->wpdb->get_var(
+                $this->wpdb->prepare(
+                    $sql . ' WHERE view_date >= DATE_SUB(NOW(), INTERVAL %d DAY)',
+                    $days
+                )
+            );
+        }
+
+        // phpcs:ignore WordPress.DB.PreparedSQL.NotPrepared
+        return (int) $this->wpdb->get_var($sql);
+    }
+
+    /**
      * Hash an IP address for privacy.
      *
      * @param string $ip_address The IP address.

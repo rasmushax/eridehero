@@ -20,11 +20,12 @@ class RateLimiter {
      * @var array<string, array{max_attempts: int, window: int}>
      */
     private const DEFAULT_LIMITS = [
-        'login'          => ['max_attempts' => 5, 'window' => 900],      // 5 attempts per 15 min
-        'register'       => ['max_attempts' => 3, 'window' => 3600],     // 3 attempts per hour
-        'password_reset' => ['max_attempts' => 3, 'window' => 3600],     // 3 attempts per hour
-        'tracker_create' => ['max_attempts' => 10, 'window' => 3600],    // 10 per hour
-        'review_submit'  => ['max_attempts' => 5, 'window' => 3600],     // 5 per hour
+        'login'               => ['max_attempts' => 5, 'window' => 900],   // 5 attempts per 15 min
+        'register'            => ['max_attempts' => 3, 'window' => 3600],  // 3 attempts per hour
+        'password_reset'      => ['max_attempts' => 3, 'window' => 3600],  // 3 attempts per hour
+        'tracker_create'      => ['max_attempts' => 10, 'window' => 3600], // 10 per hour
+        'tracker_unsubscribe' => ['max_attempts' => 20, 'window' => 3600], // 20 per hour
+        'review_submit'       => ['max_attempts' => 5, 'window' => 3600],  // 5 per hour
     ];
 
     /**

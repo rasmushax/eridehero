@@ -98,6 +98,12 @@ class Schema {
             error_log('[ERH Schema] Created email queue table');
         }
 
+        // Upgrade to add last_seen_above_target column for re-notification support.
+        if (version_compare($current_version, '1.6.0', '<')) {
+            $this->upgrade_price_trackers_renotify();
+            update_option('erh_db_version', '1.6.0');
+        }
+
         // Re-run table creation to ensure all tables and columns exist.
         $this->create_tables();
     }
@@ -350,6 +356,40 @@ class Schema {
     }
 
     /**
+     * Upgrade price_trackers table to add last_seen_above_target column.
+     *
+     * This enables re-notification when price rebounds below target after
+     * previously going above target.
+     *
+     * @return void
+     */
+    private function upgrade_price_trackers_renotify(): void {
+        $table_name = $this->get_table_name(ERH_TABLE_PRICE_TRACKERS);
+
+        // Check if table exists.
+        $table_exists = $this->wpdb->get_var(
+            $this->wpdb->prepare('SHOW TABLES LIKE %s', $table_name)
+        );
+
+        if (!$table_exists) {
+            return; // Table will be created by create_tables().
+        }
+
+        // Add last_seen_above_target column if missing.
+        $column_exists = $this->wpdb->get_var(
+            "SHOW COLUMNS FROM {$table_name} LIKE 'last_seen_above_target'"
+        );
+        if (!$column_exists) {
+            $this->wpdb->query(
+                "ALTER TABLE {$table_name} ADD COLUMN last_seen_above_target datetime DEFAULT NULL AFTER last_notification_time"
+            );
+            error_log('[ERH Schema] Added last_seen_above_target column to price_trackers');
+        }
+
+        error_log('[ERH Schema] Price trackers table upgraded with re-notification support');
+    }
+
+    /**
      * Create the product_data table (Finder tool cache).
      *
      * This table stores pre-computed product data for the finder tool
@@ -441,6 +481,7 @@ class Schema {
             created_at datetime DEFAULT CURRENT_TIMESTAMP,
             updated_at datetime DEFAULT CURRENT_TIMESTAMP ON UPDATE CURRENT_TIMESTAMP,
             last_notification_time datetime DEFAULT NULL,
+            last_seen_above_target datetime DEFAULT NULL,
             PRIMARY KEY  (id),
             KEY user_id (user_id),
             KEY product_id (product_id),

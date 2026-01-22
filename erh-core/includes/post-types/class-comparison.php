@@ -42,6 +42,10 @@ class Comparison {
         add_filter('manage_' . self::POST_TYPE . '_posts_columns', [$this, 'add_admin_columns']);
         add_action('manage_' . self::POST_TYPE . '_posts_custom_column', [$this, 'render_admin_columns'], 10, 2);
         add_filter('acf/validate_value/name=product_2', [$this, 'validate_products'], 10, 4);
+
+        // Pre-populate ACF fields from URL params when creating new comparison.
+        add_filter('acf/load_value/name=product_1', [$this, 'prefill_product_field'], 10, 3);
+        add_filter('acf/load_value/name=product_2', [$this, 'prefill_product_field'], 10, 3);
     }
 
     /**
@@ -419,7 +423,59 @@ class Comparison {
     }
 
     /**
+     * Pre-fill product relationship fields from URL params.
+     *
+     * When clicking "Create" from Popular Comparisons admin page,
+     * the URL contains product_1 and product_2 params that should
+     * pre-populate the ACF relationship fields.
+     *
+     * @param mixed  $value   The field value.
+     * @param int    $post_id The post ID.
+     * @param array  $field   The field array.
+     * @return mixed The modified value.
+     */
+    public function prefill_product_field($value, $post_id, array $field) {
+        // Only on new post screen.
+        global $pagenow;
+        if ($pagenow !== 'post-new.php') {
+            return $value;
+        }
+
+        // Only if value is empty (not already set).
+        if (!empty($value)) {
+            return $value;
+        }
+
+        // Check for URL param matching field name.
+        $field_name = $field['name'] ?? '';
+        // phpcs:ignore WordPress.Security.NonceVerification.Recommended
+        if ($field_name === 'product_1' && isset($_GET['product_1'])) {
+            // phpcs:ignore WordPress.Security.NonceVerification.Recommended
+            $product_id = absint($_GET['product_1']);
+            if ($product_id && get_post_type($product_id) === self::PRODUCT_POST_TYPE) {
+                // Return as array since relationship field expects array format.
+                return [$product_id];
+            }
+        }
+
+        // phpcs:ignore WordPress.Security.NonceVerification.Recommended
+        if ($field_name === 'product_2' && isset($_GET['product_2'])) {
+            // phpcs:ignore WordPress.Security.NonceVerification.Recommended
+            $product_id = absint($_GET['product_2']);
+            if ($product_id && get_post_type($product_id) === self::PRODUCT_POST_TYPE) {
+                return [$product_id];
+            }
+        }
+
+        return $value;
+    }
+
+    /**
      * Find existing comparison for a product pair.
+     *
+     * ACF relationship fields store values as serialized arrays like:
+     * a:1:{i:0;i:123;} or a:1:{i:0;s:3:"123";}
+     * So we use LIKE with patterns to match the serialized format.
      *
      * @param int $product_1_id First product ID.
      * @param int $product_2_id Second product ID.
@@ -427,6 +483,13 @@ class Comparison {
      */
     public function find_existing_comparison(int $product_1_id, int $product_2_id): ?int {
         global $wpdb;
+
+        // ACF relationship fields store as serialized arrays.
+        // Match patterns like: i:123; (integer) or "123" (string in serialized).
+        $pattern_1_int = '%i:' . $product_1_id . ';%';
+        $pattern_1_str = '%"' . $product_1_id . '"%';
+        $pattern_2_int = '%i:' . $product_2_id . ';%';
+        $pattern_2_str = '%"' . $product_2_id . '"%';
 
         // Check both orderings (A vs B and B vs A).
         $sql = $wpdb->prepare(
@@ -437,15 +500,25 @@ class Comparison {
              WHERE p.post_type = %s
              AND p.post_status IN ('publish', 'draft', 'pending')
              AND (
-                 (pm1.meta_value = %d AND pm2.meta_value = %d)
-                 OR (pm1.meta_value = %d AND pm2.meta_value = %d)
+                 (
+                     (pm1.meta_value LIKE %s OR pm1.meta_value LIKE %s)
+                     AND (pm2.meta_value LIKE %s OR pm2.meta_value LIKE %s)
+                 )
+                 OR (
+                     (pm1.meta_value LIKE %s OR pm1.meta_value LIKE %s)
+                     AND (pm2.meta_value LIKE %s OR pm2.meta_value LIKE %s)
+                 )
              )
              LIMIT 1",
             self::POST_TYPE,
-            $product_1_id,
-            $product_2_id,
-            $product_2_id,
-            $product_1_id
+            $pattern_1_int,
+            $pattern_1_str,
+            $pattern_2_int,
+            $pattern_2_str,
+            $pattern_2_int,
+            $pattern_2_str,
+            $pattern_1_int,
+            $pattern_1_str
         );
 
         $result = $wpdb->get_var($sql);
@@ -464,6 +537,11 @@ class Comparison {
             return;
         }
 
+        // ACF relationship fields store as serialized arrays.
+        // Match patterns like: i:123; (integer) or "123" (string in serialized).
+        $pattern_int = 'i:' . $post_id . ';';
+        $pattern_str = '"' . $post_id . '"';
+
         // Find comparisons referencing this product.
         $comparisons = get_posts([
             'post_type'      => self::POST_TYPE,
@@ -473,13 +551,23 @@ class Comparison {
                 'relation' => 'OR',
                 [
                     'key'     => 'product_1',
-                    'value'   => $post_id,
-                    'compare' => '=',
+                    'value'   => $pattern_int,
+                    'compare' => 'LIKE',
+                ],
+                [
+                    'key'     => 'product_1',
+                    'value'   => $pattern_str,
+                    'compare' => 'LIKE',
                 ],
                 [
                     'key'     => 'product_2',
-                    'value'   => $post_id,
-                    'compare' => '=',
+                    'value'   => $pattern_int,
+                    'compare' => 'LIKE',
+                ],
+                [
+                    'key'     => 'product_2',
+                    'value'   => $pattern_str,
+                    'compare' => 'LIKE',
                 ],
             ],
             'fields'         => 'ids',

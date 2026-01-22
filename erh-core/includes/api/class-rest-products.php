@@ -14,6 +14,8 @@ namespace ERH\Api;
 use ERH\CacheKeys;
 use ERH\Comparison\AdvantageCalculatorFactory;
 use ERH\Database\ProductCache;
+use ERH\Database\ViewTracker;
+use ERH\User\RateLimiter;
 use WP_REST_Controller;
 use WP_REST_Server;
 use WP_REST_Request;
@@ -144,6 +146,24 @@ class RestProducts extends WP_REST_Controller {
                         'type'        => 'string',
                         'default'     => 'US',
                         'enum'        => self::SUPPORTED_REGIONS,
+                    ],
+                ],
+            ],
+        ]);
+
+        // Record product view: POST /erh/v1/products/{id}/view
+        // Used for AJAX-based view tracking to bypass page caching.
+        register_rest_route($this->namespace, '/' . $this->rest_base . '/(?P<id>\d+)/view', [
+            [
+                'methods'             => WP_REST_Server::CREATABLE,
+                'callback'            => [$this, 'record_product_view'],
+                'permission_callback' => '__return_true', // Public endpoint
+                'args'                => [
+                    'id' => [
+                        'description'       => 'Product ID',
+                        'type'              => 'integer',
+                        'required'          => true,
+                        'sanitize_callback' => 'absint',
                     ],
                 ],
             ],
@@ -345,6 +365,43 @@ class RestProducts extends WP_REST_Controller {
         $response = new WP_REST_Response($analysis, 200);
         $response->header('X-ERH-Cache', 'MISS');
         return $response;
+    }
+
+    /**
+     * Record a product view.
+     *
+     * This endpoint is called via AJAX from product pages to track views.
+     * AJAX tracking bypasses page caching (LiteSpeed/Cloudflare) to ensure
+     * accurate view counts.
+     *
+     * @param WP_REST_Request $request The REST request.
+     * @return WP_REST_Response Response with success status.
+     */
+    public function record_product_view(WP_REST_Request $request): WP_REST_Response {
+        $product_id = (int) $request->get_param('id');
+
+        // Verify product exists and is published.
+        $product = get_post($product_id);
+        if (!$product || $product->post_type !== 'products' || $product->post_status !== 'publish') {
+            return new WP_REST_Response([
+                'success'  => false,
+                'recorded' => false,
+                'message'  => 'Product not found',
+            ], 404);
+        }
+
+        // Get client info for deduplication.
+        $ip = RateLimiter::get_client_ip();
+        $user_agent = $request->get_header('user_agent') ?? '';
+
+        // Record the view.
+        $view_tracker = new ViewTracker();
+        $recorded = $view_tracker->record_view($product_id, $ip, $user_agent);
+
+        return new WP_REST_Response([
+            'success'  => true,
+            'recorded' => $recorded, // false if duplicate or bot
+        ], 200);
     }
 
     /**

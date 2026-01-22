@@ -335,6 +335,45 @@ class PriceTracker {
     }
 
     /**
+     * Delete all trackers for a product.
+     *
+     * Used when a product is deleted to clean up orphaned trackers.
+     *
+     * @param int $product_id The product post ID.
+     * @return int Number of trackers deleted.
+     */
+    public function delete_for_product(int $product_id): int {
+        $result = $this->wpdb->delete(
+            $this->table_name,
+            ['product_id' => $product_id],
+            ['%d']
+        );
+        return $result !== false ? (int)$result : 0;
+    }
+
+    /**
+     * Record that the price was seen above the target.
+     *
+     * This enables re-notification when the price rebounds below target.
+     *
+     * @param int $tracker_id The tracker ID.
+     * @return bool True on success.
+     */
+    public function record_above_target(int $tracker_id): bool {
+        $result = $this->wpdb->update(
+            $this->table_name,
+            [
+                'last_seen_above_target' => current_time('mysql'),
+                'updated_at'             => current_time('mysql'),
+            ],
+            ['id' => $tracker_id],
+            ['%s', '%s'],
+            ['%d']
+        );
+        return $result !== false;
+    }
+
+    /**
      * Check if a tracker should trigger a notification.
      *
      * @param array<string, mixed> $tracker      The tracker data.
@@ -397,6 +436,51 @@ class PriceTracker {
     }
 
     /**
+     * Get tracker counts for multiple products in a single query.
+     *
+     * Avoids N+1 query problem when displaying lists of products.
+     *
+     * @param array<int> $product_ids Array of product IDs.
+     * @return array<int, int> Map of product_id => tracker_count.
+     */
+    public function get_counts_bulk(array $product_ids): array {
+        if (empty($product_ids)) {
+            return [];
+        }
+
+        // Sanitize IDs.
+        $product_ids = array_map('absint', $product_ids);
+        $product_ids = array_filter($product_ids);
+
+        if (empty($product_ids)) {
+            return [];
+        }
+
+        // Build placeholders.
+        $placeholders = implode(',', array_fill(0, count($product_ids), '%d'));
+
+        // phpcs:ignore WordPress.DB.PreparedSQL.InterpolatedNotPrepared
+        $results = $this->wpdb->get_results(
+            $this->wpdb->prepare(
+                "SELECT product_id, COUNT(*) as tracker_count
+                 FROM {$this->table_name}
+                 WHERE product_id IN ({$placeholders})
+                 GROUP BY product_id",
+                $product_ids
+            ),
+            ARRAY_A
+        );
+
+        // Convert to map.
+        $counts = [];
+        foreach ($results ?: [] as $row) {
+            $counts[(int) $row['product_id']] = (int) $row['tracker_count'];
+        }
+
+        return $counts;
+    }
+
+    /**
      * Cast numeric fields in a row.
      *
      * @param array<string, mixed> $row Database row.
@@ -414,6 +498,8 @@ class PriceTracker {
         $row['target_price'] = $row['target_price'] !== null ? (float)$row['target_price'] : null;
         $row['price_drop'] = $row['price_drop'] !== null ? (float)$row['price_drop'] : null;
         $row['last_notified_price'] = $row['last_notified_price'] !== null ? (float)$row['last_notified_price'] : null;
+        $row['last_notification_time'] = $row['last_notification_time'] ?? null;
+        $row['last_seen_above_target'] = $row['last_seen_above_target'] ?? null;
         return $row;
     }
 }
