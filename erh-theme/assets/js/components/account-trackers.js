@@ -14,6 +14,15 @@ import { formatPrice } from '../services/geo-price.js';
 const getApiBase = () => (window.erhData?.restUrl || '/wp-json/erh/v1/').replace(/\/$/, '');
 const getNonce = () => window.erhData?.nonce || '';
 
+// Geo to flag mapping
+const GEO_FLAGS = {
+    US: 'united-states.svg',
+    GB: 'united-kingdom.svg',
+    EU: 'european-union.svg',
+    CA: 'canada.svg',
+    AU: 'australia.svg'
+};
+
 // State
 let trackers = [];
 let sortColumn = 'name';
@@ -260,8 +269,10 @@ function renderTable() {
  * Render a single table row
  */
 function renderRow(tracker) {
-    // Price trackers currently stored in USD
     const currency = tracker.currency || 'USD';
+    const geo = tracker.geo || 'US';
+    const flagFile = GEO_FLAGS[geo] || GEO_FLAGS.US;
+    const flagUrl = (window.erhData?.themeUrl || '') + '/assets/images/countries/' + flagFile;
     const trackerType = tracker.target_price
         ? `Price ${formatPrice(tracker.target_price, currency)}`
         : `Drop ${formatPrice(tracker.price_drop, currency)}`;
@@ -276,9 +287,12 @@ function renderRow(tracker) {
                         class="trackers-product-image"
                         loading="lazy"
                     >
-                    <a href="${escapeHtml(tracker.product_url || '#')}" class="trackers-product-name">
-                        ${escapeHtml(tracker.product_name)}
-                    </a>
+                    <div class="trackers-product-info">
+                        <a href="${escapeHtml(tracker.product_url || '#')}" class="trackers-product-name">
+                            ${escapeHtml(tracker.product_name)}
+                        </a>
+                        <span class="trackers-product-geo"><img src="${escapeHtml(flagUrl)}" alt="" class="trackers-geo-flag"> Tracking ${escapeHtml(geo)} price</span>
+                    </div>
                 </div>
             </td>
             <td class="trackers-td trackers-td--start">

@@ -352,6 +352,28 @@
     color: var(--color-primary);
 }
 
+.trackers-product-info {
+    display: flex;
+    align-items: flex-start;
+    gap: 0;
+    flex-wrap: wrap;
+    flex-direction: column;
+    line-height: 1.3;
+}
+
+.trackers-product-geo {
+    display: inline-flex;
+    align-items: center;
+    gap: var(--space-1);
+    font-size: var(--text-xs);
+    color: var(--color-muted);
+}
+
+.trackers-geo-flag {
+    width: 14px;
+    height: 14px;
+}
+
 .trackers-price {
     font-size: var(--text-base);
     font-weight: var(--font-medium);

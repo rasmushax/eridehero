@@ -24,6 +24,15 @@ import { getUserGeo, formatPrice, getCurrencySymbol } from '../services/geo-pric
 
 const REST_URL = window.erhData?.restUrl || '/wp-json/erh/v1/';
 
+// Geo to flag mapping
+const GEO_FLAGS = {
+    US: 'united-states.svg',
+    GB: 'united-kingdom.svg',
+    EU: 'european-union.svg',
+    CA: 'canada.svg',
+    AU: 'australia.svg'
+};
+
 class PriceAlertModalManager {
     constructor() {
         this.modal = null;
@@ -341,14 +350,12 @@ class PriceAlertModalManager {
             if (trackerGeo !== userGeo) {
                 const regionNames = { US: 'US', GB: 'UK', EU: 'EU', CA: 'Canada', AU: 'Australia' };
                 const trackerRegionName = regionNames[trackerGeo] || trackerGeo;
+                const flagFile = GEO_FLAGS[trackerGeo] || GEO_FLAGS.US;
+                const flagUrl = (window.erhData?.themeUrl || '') + '/assets/images/countries/' + flagFile;
                 geoMismatchNotice = `
                     <div class="price-alert-geo-notice">
-                        <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2">
-                            <circle cx="12" cy="12" r="10"></circle>
-                            <line x1="12" y1="8" x2="12" y2="12"></line>
-                            <line x1="12" y1="16" x2="12.01" y2="16"></line>
-                        </svg>
-                        <span>You're tracking <strong>${trackerRegionName} prices</strong> for this product. To track prices in your current region, delete this alert and create a new one.</span>
+                        <svg class="icon price-alert-geo-notice-icon" aria-hidden="true"><use href="#icon-info"></use></svg>
+                        <span>You're tracking <img src="${flagUrl}" alt="" class="price-alert-geo-flag"> <strong>${trackerRegionName}</strong> prices for this product. To track prices in your current region, delete this alert and create a new one.</span>
                     </div>
                 `;
             }
