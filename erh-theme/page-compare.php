@@ -62,7 +62,17 @@ $category_name = 'E-Scooters';
 $category_slug = 'escooter';
 
 if ( ! empty( $product_ids[0] ) ) {
+	// Try ACF field first.
 	$product_type = get_field( 'product_type', $product_ids[0] );
+
+	// Fallback to product_type taxonomy if ACF field is empty.
+	if ( empty( $product_type ) ) {
+		$product_type_terms = get_the_terms( $product_ids[0], 'product_type' );
+		if ( ! empty( $product_type_terms ) && ! is_wp_error( $product_type_terms ) ) {
+			$product_type = $product_type_terms[0]->name;
+		}
+	}
+
 	if ( $product_type ) {
 		$category_data = erh_get_category_from_type( $product_type );
 		$category      = $category_data['key'];

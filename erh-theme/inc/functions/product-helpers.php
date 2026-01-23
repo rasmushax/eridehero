@@ -286,6 +286,11 @@ function erh_get_similar_products( int $product_id, int $count = 4, bool $exclud
         $candidate_specs = maybe_unserialize( $candidate['specs'] );
         $score = erh_calculate_similarity_score( $source_specs, $candidate_specs, $spec_config );
 
+        // Add e-bike specific match bonuses (category, class, motor type, frame style).
+        if ( 'Electric Bike' === $source_type ) {
+            $score += erh_calculate_ebike_match_bonus( $source_specs, $candidate_specs );
+        }
+
         // Add popularity as a tiebreaker (small weight).
         $score += ( (int) $candidate['popularity_score'] / 100 );
 
@@ -355,25 +360,120 @@ function erh_get_similarity_spec_config( string $product_type ): array {
     // Adjust for other product types as needed.
     if ( 'Electric Bike' === $product_type ) {
         $config = array(
-            'range' => array(
-                'paths'  => array( 'e-bikes.battery.range_claimed' ),
-                'range'  => 15,
-                'weight' => 1.0,
-            ),
+            // Numeric comparisons (uses range-based scoring).
             'motor' => array(
                 'paths'  => array( 'e-bikes.motor.power_nominal' ),
-                'range'  => 100,
-                'weight' => 0.8,
+                'range'  => 150,   // ±150W for 100 points.
+                'weight' => 0.6,
+            ),
+            'torque' => array(
+                'paths'  => array( 'e-bikes.motor.torque' ),
+                'range'  => 20,    // ±20Nm for 100 points.
+                'weight' => 0.5,
             ),
             'battery' => array(
-                'paths'  => array( 'e-bikes.battery.capacity' ),
-                'range'  => 150,
-                'weight' => 0.7,
+                'paths'  => array( 'e-bikes.battery.battery_capacity' ),
+                'range'  => 200,   // ±200Wh for 100 points.
+                'weight' => 0.5,
+            ),
+            'weight' => array(
+                'paths'  => array( 'e-bikes.weight_and_capacity.weight' ),
+                'range'  => 15,    // ±15 lbs for 100 points.
+                'weight' => 0.4,
             ),
         );
     }
 
     return $config;
+}
+
+/**
+ * Calculate e-bike specific similarity bonuses for category, class, and motor type.
+ *
+ * @param array $source_specs    Source product specs.
+ * @param array $candidate_specs Candidate product specs.
+ * @return float Bonus score (0-100 scale additions).
+ */
+function erh_calculate_ebike_match_bonus( array $source_specs, array $candidate_specs ): float {
+    $bonus = 0;
+
+    $source_ebike    = $source_specs['e-bikes'] ?? array();
+    $candidate_ebike = $candidate_specs['e-bikes'] ?? array();
+
+    if ( empty( $source_ebike ) || empty( $candidate_ebike ) ) {
+        return 0;
+    }
+
+    // Helper to get array/string value and normalize.
+    $get_array = function ( array $ebike, string $path ): array {
+        $keys    = explode( '.', $path );
+        $current = $ebike;
+        foreach ( $keys as $key ) {
+            if ( ! is_array( $current ) || ! isset( $current[ $key ] ) ) {
+                return array();
+            }
+            $current = $current[ $key ];
+        }
+        if ( is_array( $current ) ) {
+            return array_map( 'strtolower', array_filter( $current ) );
+        }
+        if ( is_string( $current ) && ! empty( $current ) && strtolower( $current ) !== 'unknown' ) {
+            return array( strtolower( $current ) );
+        }
+        return array();
+    };
+
+    // 1. Category match (CRITICAL - Fat Tire should match Fat Tire).
+    // Full match = +50, partial overlap = +25, no match = 0.
+    $source_cat    = $get_array( $source_ebike, 'category' );
+    $candidate_cat = $get_array( $candidate_ebike, 'category' );
+    if ( ! empty( $source_cat ) && ! empty( $candidate_cat ) ) {
+        $overlap = array_intersect( $source_cat, $candidate_cat );
+        if ( count( $overlap ) === count( $source_cat ) && count( $overlap ) === count( $candidate_cat ) ) {
+            $bonus += 50; // Exact match.
+        } elseif ( ! empty( $overlap ) ) {
+            $bonus += 25; // Partial match.
+        }
+        // No match = no bonus (but not a penalty, they might still be similar).
+    }
+
+    // 2. Class match (HIGH - same legal/use implications).
+    // Full match = +30, partial overlap = +15, no match = 0.
+    $source_class    = $get_array( $source_ebike, 'speed_and_class.class' );
+    $candidate_class = $get_array( $candidate_ebike, 'speed_and_class.class' );
+    if ( ! empty( $source_class ) && ! empty( $candidate_class ) ) {
+        $overlap = array_intersect( $source_class, $candidate_class );
+        if ( ! empty( $overlap ) ) {
+            if ( count( $overlap ) === count( $source_class ) && count( $overlap ) === count( $candidate_class ) ) {
+                $bonus += 30; // Exact match.
+            } else {
+                $bonus += 15; // Partial match.
+            }
+        }
+    }
+
+    // 3. Motor type match (MEDIUM - hub vs mid-drive is big difference).
+    // Match = +20, no match = 0.
+    $source_motor_type    = $get_array( $source_ebike, 'motor.motor_type' );
+    $candidate_motor_type = $get_array( $candidate_ebike, 'motor.motor_type' );
+    if ( ! empty( $source_motor_type ) && ! empty( $candidate_motor_type ) ) {
+        if ( $source_motor_type === $candidate_motor_type ) {
+            $bonus += 20;
+        }
+    }
+
+    // 4. Frame style match (MEDIUM - step-through vs diamond matters for accessibility).
+    // Match = +10, no match = 0.
+    $source_frame    = $get_array( $source_ebike, 'frame_and_geometry.frame_style' );
+    $candidate_frame = $get_array( $candidate_ebike, 'frame_and_geometry.frame_style' );
+    if ( ! empty( $source_frame ) && ! empty( $candidate_frame ) ) {
+        $overlap = array_intersect( $source_frame, $candidate_frame );
+        if ( ! empty( $overlap ) ) {
+            $bonus += 10;
+        }
+    }
+
+    return $bonus;
 }
 
 /**
@@ -435,18 +535,30 @@ function erh_calculate_similarity_score( array $source_specs, array $candidate_s
  * @return string Formatted specs line.
  */
 function erh_format_card_specs( array $specs ): string {
+    // Detect product type from specs structure.
+    if ( isset( $specs['e-bikes'] ) && is_array( $specs['e-bikes'] ) ) {
+        return erh_format_ebike_card_specs( $specs );
+    }
+
+    // Default: e-scooter format.
+    return erh_format_escooter_card_specs( $specs );
+}
+
+/**
+ * Format e-scooter specs for card display.
+ *
+ * @param array $specs Product specs.
+ * @return string Formatted specs line.
+ */
+function erh_format_escooter_card_specs( array $specs ): string {
     $parts = array();
 
     // Helper to get value from flat key or nested e-scooters path.
-    // Checks flat key first, then nested path.
     $get_value = function ( string ...$paths ) use ( $specs ) {
         foreach ( $paths as $path ) {
-            // Check flat key first.
             if ( isset( $specs[ $path ] ) && $specs[ $path ] !== '' && $specs[ $path ] !== null ) {
                 return $specs[ $path ];
             }
-
-            // Check nested path (e.g., 'e-scooters.battery.capacity').
             if ( strpos( $path, '.' ) !== false ) {
                 $value = erh_get_nested_value( $specs, $path );
                 if ( $value !== null && $value !== '' ) {
@@ -457,19 +569,19 @@ function erh_format_card_specs( array $specs ): string {
         return null;
     };
 
-    // Top speed (flat only for e-scooters).
+    // Top speed.
     $speed = $get_value( 'manufacturer_top_speed' );
     if ( $speed && is_numeric( $speed ) ) {
         $parts[] = round( (float) $speed ) . ' mph';
     }
 
-    // Battery capacity - check flat AND nested.
+    // Battery capacity.
     $battery = $get_value( 'battery_capacity', 'e-scooters.battery.capacity' );
     if ( $battery && is_numeric( $battery ) ) {
         $parts[] = round( (float) $battery ) . ' Wh';
     }
 
-    // Motor power (peak preferred, then nominal) - check flat AND nested.
+    // Motor power (peak preferred, then nominal).
     $motor = $get_value(
         'peak_motor_wattage',
         'e-scooters.motor.power_peak',
@@ -480,28 +592,145 @@ function erh_format_card_specs( array $specs ): string {
         $parts[] = round( (float) $motor ) . 'W';
     }
 
-    // Weight - check flat AND nested.
+    // Weight.
     $weight = $get_value( 'weight', 'e-scooters.dimensions.weight' );
     if ( $weight && is_numeric( $weight ) ) {
         $parts[] = round( (float) $weight ) . ' lbs';
     }
 
-    // Max load (weight limit) - check flat AND nested.
+    // Max load (weight limit).
     $max_load = $get_value( 'max_weight_capacity', 'e-scooters.dimensions.max_load' );
     if ( $max_load && is_numeric( $max_load ) ) {
         $parts[] = round( (float) $max_load ) . ' lbs limit';
     }
 
-    // Voltage - check flat AND nested.
+    // Voltage.
     $voltage = $get_value( 'voltage', 'e-scooters.battery.voltage' );
     if ( $voltage && is_numeric( $voltage ) ) {
         $parts[] = round( (float) $voltage ) . 'V';
     }
 
-    // Tire type - check flat AND nested (consolidated by cache-rebuild-job).
+    // Tire type.
     $tires = $get_value( 'tire_type', 'e-scooters.wheels.tire_type' );
     if ( $tires && is_string( $tires ) && ! empty( $tires ) ) {
         $parts[] = $tires;
+    }
+
+    return implode( ', ', $parts );
+}
+
+/**
+ * Format e-bike specs for card display.
+ *
+ * Order: Category, Motor (power + type), Torque, Battery, Weight, Frame, Wheels
+ *
+ * @param array $specs Product specs.
+ * @return string Formatted specs line.
+ */
+function erh_format_ebike_card_specs( array $specs ): string {
+    $parts = array();
+    $ebike = $specs['e-bikes'] ?? array();
+
+    // Helper to safely get nested value.
+    $get = function ( string $path ) use ( $ebike ) {
+        $keys    = explode( '.', $path );
+        $current = $ebike;
+        foreach ( $keys as $key ) {
+            if ( ! is_array( $current ) || ! isset( $current[ $key ] ) ) {
+                return null;
+            }
+            $current = $current[ $key ];
+        }
+        // Return null for empty/unknown values.
+        if ( $current === '' || $current === null ) {
+            return null;
+        }
+        if ( is_string( $current ) && strtolower( $current ) === 'unknown' ) {
+            return null;
+        }
+        return $current;
+    };
+
+    // 1. Category (Fat Tire, Commuter, etc.).
+    $category = $get( 'category' );
+    if ( $category ) {
+        $cat_str = is_array( $category ) ? implode( '/', $category ) : $category;
+        if ( ! empty( $cat_str ) ) {
+            $parts[] = $cat_str;
+        }
+    }
+
+    // 2. Motor power + type (750W hub, 500W mid-drive).
+    $motor_power = $get( 'motor.power_nominal' );
+    $motor_type  = $get( 'motor.motor_type' );
+    if ( $motor_power && is_numeric( $motor_power ) ) {
+        $motor_str = round( (float) $motor_power ) . 'W';
+        if ( $motor_type ) {
+            $type_lower = strtolower( $motor_type );
+            if ( $type_lower === 'hub' ) {
+                $motor_str .= ' hub';
+            } elseif ( $type_lower === 'mid-drive' ) {
+                $motor_str .= ' mid-drive';
+            }
+        }
+        $parts[] = $motor_str;
+    }
+
+    // 3. Torque (90Nm).
+    $torque = $get( 'motor.torque' );
+    if ( $torque && is_numeric( $torque ) ) {
+        $parts[] = round( (float) $torque ) . 'Nm';
+    }
+
+    // 4. Battery (960Wh).
+    $battery = $get( 'battery.battery_capacity' );
+    if ( $battery && is_numeric( $battery ) ) {
+        $parts[] = round( (float) $battery ) . 'Wh';
+    }
+
+    // 5. Weight (79 lbs).
+    $weight = $get( 'weight_and_capacity.weight' );
+    if ( $weight && is_numeric( $weight ) ) {
+        $parts[] = round( (float) $weight ) . ' lbs';
+    }
+
+    // 6. Frame (aluminum step-through).
+    $frame_material = $get( 'frame_and_geometry.frame_material' );
+    $frame_style    = $get( 'frame_and_geometry.frame_style' );
+    $frame_parts    = array();
+    if ( $frame_material ) {
+        $mat = is_array( $frame_material ) ? implode( '/', $frame_material ) : $frame_material;
+        $frame_parts[] = strtolower( $mat );
+    }
+    if ( $frame_style ) {
+        $style = is_array( $frame_style ) ? implode( '/', $frame_style ) : $frame_style;
+        $frame_parts[] = strtolower( $style );
+    }
+    if ( ! empty( $frame_parts ) ) {
+        $parts[] = implode( ' ', $frame_parts );
+    }
+
+    // 7. Wheels/Tires (26"×4" fat).
+    $wheel_front = $get( 'wheels_and_tires.wheel_size' );
+    $wheel_rear  = $get( 'wheels_and_tires.wheel_size_rear' );
+    $tire_width  = $get( 'wheels_and_tires.tire_width' );
+    $tire_type   = $get( 'wheels_and_tires.tire_type' );
+    if ( $wheel_front ) {
+        // Handle front/rear size difference.
+        if ( $wheel_rear && $wheel_rear != $wheel_front ) {
+            $wheel_str = $wheel_front . '"/' . $wheel_rear . '"';
+        } else {
+            $wheel_str = $wheel_front . '"';
+        }
+        // Add width if available.
+        if ( $tire_width ) {
+            $wheel_str .= '×' . $tire_width . '"';
+        }
+        // Add type if available.
+        if ( $tire_type ) {
+            $wheel_str .= ' ' . strtolower( $tire_type );
+        }
+        $parts[] = $wheel_str;
     }
 
     return implode( ', ', $parts );
@@ -933,37 +1162,175 @@ function erh_get_hero_key_specs( int $product_id, string $product_type ): array 
             break;
 
         case 'ebike':
-            // Product type
-            $result[] = 'Electric Bike';
-
-            // Motor power
-            $motor = $get( 'motor.power_nominal' );
-            if ( $motor ) {
-                $result[] = $motor . 'W motor';
+            // 1. Class - "Class 2/3 E-Bike" or just "E-Bike" if unknown
+            $class = $get( 'speed_and_class.class' );
+            if ( $class && is_array( $class ) ) {
+                $class_filtered = array_filter( $class, function( $c ) {
+                    return ! empty( $c ) && strtolower( $c ) !== 'unknown';
+                } );
+                if ( ! empty( $class_filtered ) ) {
+                    // Extract class numbers/names: "Class 1", "Class 2" -> "1/2"
+                    $class_nums = array_map( function( $c ) {
+                        return str_ireplace( 'class ', '', trim( $c ) );
+                    }, $class_filtered );
+                    $result[] = 'Class ' . implode( '/', $class_nums ) . ' E-Bike';
+                } else {
+                    $result[] = 'E-Bike';
+                }
+            } else {
+                $result[] = 'E-Bike';
             }
 
-            // Range
-            $range = $get( 'battery.range_claimed' );
-            if ( $range ) {
-                $result[] = '(' . $range . ' mi range)';
-            }
-
-            // Battery capacity
-            $battery = $get( 'battery.capacity' );
-            if ( $battery ) {
-                $result[] = $battery . 'Wh battery';
-            }
-
-            // Weight
-            $weight = $get( 'frame.weight' );
-            if ( $weight ) {
+            // 2. Weight - "79 lbs"
+            $weight = $get( 'weight_and_capacity.weight' );
+            if ( $weight && is_numeric( $weight ) ) {
                 $result[] = $weight . ' lbs';
             }
 
-            // Class
-            $class = $get( 'motor.class' );
-            if ( $class ) {
-                $result[] = 'Class ' . $class;
+            // 3. Motor - "750W 90Nm rear hub" (power + torque + position + type)
+            $motor_power    = $get( 'motor.power_nominal' );
+            $motor_torque   = $get( 'motor.torque' );
+            $motor_position = $get( 'motor.motor_position' );
+            $motor_type     = $get( 'motor.motor_type' );
+            if ( $motor_power ) {
+                $motor_str = $motor_power . 'W';
+                if ( $motor_torque ) {
+                    $motor_str .= ' ' . $motor_torque . 'Nm';
+                }
+                // Position: "Rear Hub" -> "rear", "Mid" -> "mid", "Front Hub" -> "front"
+                if ( $motor_position && strtolower( $motor_position ) !== 'unknown' ) {
+                    $pos_lower = strtolower( $motor_position );
+                    $pos_short = str_replace( ' hub', '', $pos_lower );
+                    $motor_str .= ' ' . $pos_short;
+                }
+                // Type: "Hub" or "Mid-Drive"
+                if ( $motor_type && strtolower( $motor_type ) !== 'unknown' ) {
+                    $type_lower = strtolower( $motor_type );
+                    if ( $type_lower === 'hub' ) {
+                        $motor_str .= ' hub';
+                    } elseif ( $type_lower === 'mid-drive' ) {
+                        $motor_str .= ' mid-drive';
+                    }
+                }
+                $result[] = $motor_str;
+            }
+
+            // 4. Battery - "960Wh (48V × 20Ah) battery"
+            $battery_wh = $get( 'battery.battery_capacity' );
+            $battery_v  = $get( 'battery.voltage' );
+            $battery_ah = $get( 'battery.amphours' );
+            if ( $battery_wh ) {
+                $battery_str = $battery_wh . 'Wh';
+                if ( $battery_v && $battery_ah ) {
+                    $battery_str .= ' (' . $battery_v . 'V × ' . $battery_ah . 'Ah)';
+                }
+                $battery_str .= ' battery';
+                $result[] = $battery_str;
+            }
+
+            // 5. Brakes - "Gemma GA-1000 hydraulic disc" (brand + model + type)
+            $brake_type  = $get( 'brakes.brake_type' );
+            $brake_brand = $get( 'brakes.brake_brand' );
+            $brake_model = $get( 'brakes.brake_model' );
+            if ( $brake_type ) {
+                $type_str = is_array( $brake_type ) ? implode( '/', $brake_type ) : $brake_type;
+                $type_str = strtolower( $type_str );
+                // Skip if unknown/none
+                if ( $type_str && ! in_array( $type_str, array( 'unknown', 'none', '' ), true ) ) {
+                    $brake_str = '';
+                    if ( $brake_brand && strtolower( $brake_brand ) !== 'unknown' ) {
+                        $brake_str .= $brake_brand;
+                        if ( $brake_model && strtolower( $brake_model ) !== 'unknown' ) {
+                            $brake_str .= ' ' . $brake_model;
+                        }
+                        $brake_str .= ' ';
+                    }
+                    $brake_str .= $type_str;
+                    $result[] = trim( $brake_str );
+                }
+            }
+
+            // 6. Frame - "aluminum step-through" (material + style)
+            $frame_material = $get( 'frame_and_geometry.frame_material' );
+            $frame_style    = $get( 'frame_and_geometry.frame_style' );
+            $frame_parts    = array();
+            if ( $frame_material ) {
+                $mat = is_array( $frame_material ) ? implode( '/', $frame_material ) : $frame_material;
+                if ( strtolower( $mat ) !== 'unknown' ) {
+                    $frame_parts[] = strtolower( $mat );
+                }
+            }
+            if ( $frame_style ) {
+                $style = is_array( $frame_style ) ? implode( '/', $frame_style ) : $frame_style;
+                if ( strtolower( $style ) !== 'unknown' ) {
+                    $frame_parts[] = strtolower( $style );
+                }
+            }
+            if ( ! empty( $frame_parts ) ) {
+                $result[] = implode( ' ', $frame_parts ) . ' frame';
+            }
+
+            // 7. Fork/Front Suspension - "86mm air fork"
+            $front_susp   = $get( 'suspension.front_suspension' );
+            $front_travel = $get( 'suspension.front_travel' );
+            if ( $front_susp && strtolower( $front_susp ) !== 'none' && strtolower( $front_susp ) !== 'unknown' ) {
+                $fork_str = '';
+                if ( $front_travel ) {
+                    $fork_str .= $front_travel . 'mm ';
+                }
+                $fork_str .= strtolower( $front_susp ) . ' fork';
+                $result[] = $fork_str;
+            }
+
+            // 8. Wheels/Tires - "26"×4" Innova fat tires"
+            $wheel_front = $get( 'wheels_and_tires.wheel_size' );
+            $wheel_rear  = $get( 'wheels_and_tires.wheel_size_rear' );
+            $tire_width  = $get( 'wheels_and_tires.tire_width' );
+            $tire_type   = $get( 'wheels_and_tires.tire_type' );
+            $tire_brand  = $get( 'wheels_and_tires.tire_brand' );
+            $tire_model  = $get( 'wheels_and_tires.tire_model' );
+            if ( $wheel_front ) {
+                // Size: handle front/rear difference
+                if ( $wheel_rear && $wheel_rear != $wheel_front ) {
+                    $size_str = $wheel_front . '"/' . $wheel_rear . '"';
+                } else {
+                    $size_str = $wheel_front . '"';
+                }
+                // Add width if available
+                if ( $tire_width ) {
+                    $size_str .= '×' . $tire_width . '"';
+                }
+                // Add brand/model if available
+                if ( $tire_brand && strtolower( $tire_brand ) !== 'unknown' ) {
+                    $size_str .= ' ' . $tire_brand;
+                    if ( $tire_model && strtolower( $tire_model ) !== 'unknown' ) {
+                        $size_str .= ' ' . $tire_model;
+                    }
+                }
+                // Add type if available and not unknown
+                if ( $tire_type && strtolower( $tire_type ) !== 'unknown' ) {
+                    $size_str .= ' ' . strtolower( $tire_type );
+                }
+                $size_str .= ' tires';
+                $result[] = $size_str;
+            }
+
+            // 9. Rear Shock - "100mm coil shock" (only if rear suspension exists)
+            $rear_susp   = $get( 'suspension.rear_suspension' );
+            $rear_travel = $get( 'suspension.rear_travel' );
+            if ( $rear_susp && strtolower( $rear_susp ) !== 'none' && strtolower( $rear_susp ) !== 'unknown' ) {
+                $shock_str = '';
+                if ( $rear_travel ) {
+                    $shock_str .= $rear_travel . 'mm ';
+                }
+                $shock_str .= strtolower( $rear_susp ) . ' shock';
+                $result[] = $shock_str;
+            }
+
+            // 10. Seatpost Suspension - "suspension seatpost" (only if true)
+            $seatpost_susp = $get( 'suspension.seatpost_suspension' );
+            if ( $seatpost_susp && $seatpost_susp !== '0' && $seatpost_susp !== false ) {
+                $result[] = 'suspension seatpost';
             }
             break;
 

@@ -55,9 +55,15 @@ if ( ! $featured_comparisons->have_posts() ) {
                 $product_2_thumb = get_the_post_thumbnail_url( $product_2_id, 'medium' );
                 $verdict_winner  = get_field( 'verdict_winner' );
 
-                // Get category from product type.
+                // Get category from product type (ACF field or taxonomy fallback).
                 $product_type = get_field( 'product_type', $product_1_id );
-                $category     = erh_get_category_from_type( $product_type );
+                if ( empty( $product_type ) ) {
+                    $product_type_terms = get_the_terms( $product_1_id, 'product_type' );
+                    if ( ! empty( $product_type_terms ) && ! is_wp_error( $product_type_terms ) ) {
+                        $product_type = $product_type_terms[0]->name;
+                    }
+                }
+                $category = erh_get_category_from_type( $product_type );
                 ?>
                 <a href="<?php the_permalink(); ?>" class="compare-card">
                     <div class="compare-card-images">

@@ -299,12 +299,13 @@ class RestProducts extends WP_REST_Controller {
         $product_type = $product['product_type'] ?? '';
         $this->log('Product type', ['type' => $product_type]);
 
-        // Currently only escooters are supported.
-        if ($product_type !== 'Electric Scooter') {
+        // Supported product types for analysis.
+        $supported_types = ['Electric Scooter', 'Electric Bike'];
+        if (!in_array($product_type, $supported_types, true)) {
             $this->log('Unsupported product type', ['type' => $product_type]);
             return new WP_Error(
                 'unsupported_type',
-                __('Analysis is only available for electric scooters at this time.', 'erh-core'),
+                __('Analysis is only available for electric scooters and e-bikes at this time.', 'erh-core'),
                 ['status' => 400]
             );
         }
@@ -545,11 +546,61 @@ class RestProducts extends WP_REST_Controller {
 
             case 'Electric Bike':
                 $ebike = $specs['e-bikes'] ?? [];
-                if (!empty($ebike['motor']['power_nominal'])) {
-                    $parts[] = $ebike['motor']['power_nominal'] . 'W';
+                // Category.
+                if (!empty($ebike['category'])) {
+                    $cat = is_array($ebike['category']) ? implode('/', $ebike['category']) : $ebike['category'];
+                    if (!empty($cat)) {
+                        $parts[] = $cat;
+                    }
                 }
-                if (!empty($ebike['battery']['range_claimed'])) {
-                    $parts[] = $ebike['battery']['range_claimed'] . ' mi';
+                // Motor power + type.
+                if (!empty($ebike['motor']['power_nominal'])) {
+                    $motor_str = $ebike['motor']['power_nominal'] . 'W';
+                    $motor_type = $ebike['motor']['motor_type'] ?? '';
+                    if ($motor_type && strtolower($motor_type) !== 'unknown') {
+                        $motor_str .= ' ' . strtolower($motor_type);
+                    }
+                    $parts[] = $motor_str;
+                }
+                // Torque.
+                if (!empty($ebike['motor']['torque'])) {
+                    $parts[] = $ebike['motor']['torque'] . 'Nm';
+                }
+                // Battery.
+                if (!empty($ebike['battery']['battery_capacity'])) {
+                    $parts[] = $ebike['battery']['battery_capacity'] . 'Wh';
+                }
+                // Weight.
+                if (!empty($ebike['weight_and_capacity']['weight'])) {
+                    $parts[] = $ebike['weight_and_capacity']['weight'] . ' lbs';
+                }
+                // Frame (material + style).
+                $frame_parts = [];
+                if (!empty($ebike['frame_and_geometry']['frame_material'])) {
+                    $mat = is_array($ebike['frame_and_geometry']['frame_material'])
+                        ? implode('/', $ebike['frame_and_geometry']['frame_material'])
+                        : $ebike['frame_and_geometry']['frame_material'];
+                    $frame_parts[] = strtolower($mat);
+                }
+                if (!empty($ebike['frame_and_geometry']['frame_style'])) {
+                    $style = is_array($ebike['frame_and_geometry']['frame_style'])
+                        ? implode('/', $ebike['frame_and_geometry']['frame_style'])
+                        : $ebike['frame_and_geometry']['frame_style'];
+                    $frame_parts[] = strtolower($style);
+                }
+                if (!empty($frame_parts)) {
+                    $parts[] = implode(' ', $frame_parts);
+                }
+                // Wheels (size + width + type).
+                if (!empty($ebike['wheels_and_tires']['wheel_size'])) {
+                    $wheel_str = $ebike['wheels_and_tires']['wheel_size'] . '"';
+                    if (!empty($ebike['wheels_and_tires']['tire_width'])) {
+                        $wheel_str .= '×' . $ebike['wheels_and_tires']['tire_width'] . '"';
+                    }
+                    if (!empty($ebike['wheels_and_tires']['tire_type']) && strtolower($ebike['wheels_and_tires']['tire_type']) !== 'unknown') {
+                        $wheel_str .= ' ' . strtolower($ebike['wheels_and_tires']['tire_type']);
+                    }
+                    $parts[] = $wheel_str;
                 }
                 break;
 
@@ -563,6 +614,6 @@ class RestProducts extends WP_REST_Controller {
                 }
         }
 
-        return implode(' · ', array_slice($parts, 0, 3));
+        return implode(', ', $parts);
     }
 }

@@ -90,6 +90,59 @@ export const DISPLAY_TYPES = [
 export const TIE_THRESHOLD = 0;
 
 // =============================================================================
+// E-Bike Score Category Labels
+// =============================================================================
+
+/**
+ * E-Bike score category labels and icons.
+ * Used for radar chart and score display.
+ */
+export const EBIKE_SCORE_CATEGORIES = {
+    motor_performance: {
+        label: 'Motor Performance',
+        shortLabel: 'Motor',
+        icon: 'zap',
+        tooltip: 'Based on torque, motor position, sensor type, and power output.',
+    },
+    range_battery: {
+        label: 'Battery & Range',
+        shortLabel: 'Battery',
+        icon: 'battery',
+        tooltip: 'Based on battery capacity, charge time, voltage, and removability.',
+    },
+    ride_quality: {
+        label: 'Ride Quality',
+        shortLabel: 'Comfort',
+        icon: 'smile',
+        tooltip: 'Based on suspension, tire width, puncture protection, and frame style.',
+    },
+    drivetrain: {
+        label: 'Drivetrain & Components',
+        shortLabel: 'Drivetrain',
+        icon: 'settings',
+        tooltip: 'Based on brake type, rotor size, gear count, drive system, and brake brand.',
+    },
+    portability: {
+        label: 'Weight & Portability',
+        shortLabel: 'Weight',
+        icon: 'box',
+        tooltip: 'Based on weight (adjusted for bike category) and folding capability.',
+    },
+    features: {
+        label: 'Features & Tech',
+        shortLabel: 'Features',
+        icon: 'monitor',
+        tooltip: 'Based on display, lights, app connectivity, security, and accessories.',
+    },
+    safety: {
+        label: 'Safety & Compliance',
+        shortLabel: 'Safety',
+        icon: 'shield',
+        tooltip: 'Based on IP rating, visibility, certifications, and throttle availability.',
+    },
+};
+
+// =============================================================================
 // Utility Functions
 // =============================================================================
 
@@ -472,6 +525,7 @@ export default {
     BRAKE_TYPES,
     DISPLAY_TYPES,
     TIE_THRESHOLD,
+    EBIKE_SCORE_CATEGORIES,
     getNestedValue,
     formatSpecValue,
     compareValues,

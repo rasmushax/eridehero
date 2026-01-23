@@ -983,11 +983,13 @@ class SpecConfig {
             'Maintenance'        => 0.05,
         ],
         'ebike' => [
-            'Motor & Power'        => 0.25,
-            'Range & Battery'      => 0.25,
-            'Speed & Performance'  => 0.20,
-            'Build & Frame'        => 0.20,
-            'Components'           => 0.10,
+            'Motor Performance'      => 0.20,
+            'Battery & Range'        => 0.20,
+            'Ride Quality'           => 0.20,
+            'Drivetrain & Components'=> 0.15,
+            'Weight & Portability'   => 0.10,
+            'Features & Tech'        => 0.10,
+            'Safety & Compliance'    => 0.05,
         ],
         'euc' => [
             'Performance'      => 0.35,
@@ -1225,65 +1227,130 @@ class SpecConfig {
 
     /**
      * E-Bike spec groups.
+     *
+     * Keys use flattened paths (no 'e-bikes.' prefix) because erh_flatten_compare_specs()
+     * moves nested content to top level before comparison.
+     *
+     * Groups are organized to match the 7-category scoring system.
      */
     private static function get_ebike_specs(): array {
         return [
-            'Motor & Power' => [
+            'Motor Performance' => [
                 'icon'      => 'zap',
+                'question'  => 'How powerful is it?',
                 'showScore' => true,
                 'scoreKey'  => 'motor_performance',
                 'specs'     => [
-                    [ 'key' => 'e-bikes.motor.power_nominal', 'label' => 'Motor Power', 'unit' => 'W', 'higherBetter' => true ],
-                    [ 'key' => 'e-bikes.motor.power_peak', 'label' => 'Peak Power', 'unit' => 'W', 'higherBetter' => true ],
-                    [ 'key' => 'e-bikes.motor.torque', 'label' => 'Torque', 'unit' => 'Nm', 'higherBetter' => true ],
-                    [ 'key' => 'e-bikes.motor.type', 'label' => 'Motor Type' ],
-                    [ 'key' => 'e-bikes.motor.position', 'label' => 'Motor Position' ],
+                    [ 'key' => 'motor.torque', 'label' => 'Torque', 'unit' => 'Nm', 'higherBetter' => true ],
+                    [ 'key' => 'motor.motor_position', 'label' => 'Motor Position' ],
+                    [ 'key' => 'motor.sensor_type', 'label' => 'Sensor Type' ],
+                    [ 'key' => 'motor.power_nominal', 'label' => 'Motor Power', 'unit' => 'W', 'higherBetter' => true ],
+                    [ 'key' => 'motor.power_peak', 'label' => 'Peak Power', 'unit' => 'W', 'higherBetter' => true ],
+                    [ 'key' => 'motor.motor_type', 'label' => 'Motor Type' ],
+                    [ 'key' => 'motor.assist_levels', 'label' => 'Assist Levels', 'higherBetter' => true ],
                 ],
             ],
-            'Range & Battery' => [
+            'Battery & Range' => [
                 'icon'      => 'battery',
+                'question'  => 'How far can I go?',
                 'showScore' => true,
                 'scoreKey'  => 'range_battery',
                 'specs'     => [
-                    [ 'key' => 'e-bikes.battery.range_claimed', 'label' => 'Claimed Range', 'unit' => 'mi', 'higherBetter' => true ],
-                    [ 'key' => 'e-bikes.battery.capacity', 'label' => 'Battery', 'unit' => 'Wh', 'higherBetter' => true ],
-                    [ 'key' => 'e-bikes.battery.voltage', 'label' => 'Voltage', 'unit' => 'V', 'higherBetter' => true ],
-                    [ 'key' => 'e-bikes.battery.removable', 'label' => 'Removable Battery', 'format' => 'boolean', 'higherBetter' => true ],
-                    [ 'key' => 'e-bikes.battery.charge_time', 'label' => 'Charge Time', 'unit' => 'h', 'higherBetter' => false ],
+                    [ 'key' => 'battery.battery_capacity', 'label' => 'Battery', 'unit' => 'Wh', 'higherBetter' => true ],
+                    [ 'key' => 'battery.range', 'label' => 'Max Range', 'unit' => 'mi', 'higherBetter' => true ],
+                    [ 'key' => 'battery.charge_time', 'label' => 'Charge Time', 'unit' => 'h', 'higherBetter' => false ],
+                    [ 'key' => 'battery.voltage', 'label' => 'Voltage', 'unit' => 'V', 'higherBetter' => true ],
+                    [ 'key' => 'battery.amphours', 'label' => 'Amp Hours', 'unit' => 'Ah', 'higherBetter' => true ],
+                    [ 'key' => 'battery.removable', 'label' => 'Removable Battery', 'format' => 'boolean', 'higherBetter' => true ],
+                    [ 'key' => 'battery.battery_position', 'label' => 'Battery Position' ],
                 ],
             ],
-            'Speed & Performance' => [
-                'icon'      => 'gauge',
+            'Ride Quality' => [
+                'icon'      => 'smile',
+                'question'  => 'Is it comfortable?',
                 'showScore' => true,
+                'scoreKey'  => 'ride_quality',
                 'specs'     => [
-                    [ 'key' => 'e-bikes.performance.top_speed', 'label' => 'Top Speed', 'unit' => 'mph', 'higherBetter' => true ],
-                    [ 'key' => 'e-bikes.performance.class', 'label' => 'Class' ],
-                    [ 'key' => 'e-bikes.performance.pedal_assist_levels', 'label' => 'Assist Levels', 'higherBetter' => true ],
-                    [ 'key' => 'e-bikes.performance.throttle', 'label' => 'Throttle', 'format' => 'boolean' ],
+                    [ 'key' => 'suspension.front_suspension', 'label' => 'Front Suspension' ],
+                    [ 'key' => 'suspension.rear_suspension', 'label' => 'Rear Suspension' ],
+                    [ 'key' => 'suspension.seatpost_suspension', 'label' => 'Seatpost Suspension', 'format' => 'boolean', 'higherBetter' => true ],
+                    [ 'key' => 'wheels_and_tires.tire_width', 'label' => 'Tire Width', 'unit' => '"', 'higherBetter' => true ],
+                    [ 'key' => 'wheels_and_tires.puncture_protection', 'label' => 'Puncture Protection', 'format' => 'boolean', 'higherBetter' => true ],
+                    [ 'key' => 'frame_and_geometry.frame_style', 'label' => 'Frame Style', 'format' => 'array' ],
+                    [ 'key' => 'suspension.front_travel', 'label' => 'Front Travel', 'unit' => 'mm', 'higherBetter' => true ],
+                    [ 'key' => 'suspension.rear_travel', 'label' => 'Rear Travel', 'unit' => 'mm', 'higherBetter' => true ],
                 ],
             ],
-            'Build & Frame' => [
-                'icon'      => 'box',
-                'showScore' => true,
-                'specs'     => [
-                    [ 'key' => 'e-bikes.frame.weight', 'label' => 'Weight', 'unit' => 'lbs', 'higherBetter' => false ],
-                    [ 'key' => 'e-bikes.frame.max_load', 'label' => 'Max Load', 'unit' => 'lbs', 'higherBetter' => true ],
-                    [ 'key' => 'e-bikes.frame.material', 'label' => 'Frame Material' ],
-                    [ 'key' => 'e-bikes.frame.type', 'label' => 'Frame Type' ],
-                    [ 'key' => 'e-bikes.frame.suspension', 'label' => 'Suspension', 'format' => 'suspension' ],
-                    [ 'key' => 'e-bikes.frame.foldable', 'label' => 'Foldable', 'format' => 'boolean' ],
-                ],
-            ],
-            'Components' => [
+            'Drivetrain & Components' => [
                 'icon'      => 'settings',
+                'question'  => 'How good are the components?',
+                'showScore' => true,
+                'scoreKey'  => 'drivetrain',
+                'specs'     => [
+                    [ 'key' => 'brakes.brake_type', 'label' => 'Brake Type', 'format' => 'array' ],
+                    [ 'key' => 'brakes.brake_brand', 'label' => 'Brake Brand' ],
+                    [ 'key' => 'brakes.rotor_size_front', 'label' => 'Rotor Size (Front)', 'unit' => 'mm', 'higherBetter' => true ],
+                    [ 'key' => 'brakes.rotor_size_rear', 'label' => 'Rotor Size (Rear)', 'unit' => 'mm', 'higherBetter' => true ],
+                    [ 'key' => 'drivetrain.gears', 'label' => 'Gears', 'higherBetter' => true ],
+                    [ 'key' => 'drivetrain.drive_system', 'label' => 'Drive System' ],
+                    [ 'key' => 'drivetrain.shifter', 'label' => 'Shifter' ],
+                    [ 'key' => 'drivetrain.derailleur', 'label' => 'Derailleur' ],
+                    [ 'key' => 'drivetrain.cassette', 'label' => 'Cassette' ],
+                ],
+            ],
+            'Weight & Portability' => [
+                'icon'      => 'box',
+                'question'  => 'Is it easy to handle?',
+                'showScore' => true,
+                'scoreKey'  => 'portability',
+                'specs'     => [
+                    [ 'key' => 'weight_and_capacity.weight', 'label' => 'Weight', 'unit' => 'lbs', 'higherBetter' => false ],
+                    [ 'key' => 'weight_and_capacity.weight_limit', 'label' => 'Weight Limit', 'unit' => 'lbs', 'higherBetter' => true ],
+                    [ 'key' => 'frame_and_geometry.frame_material', 'label' => 'Frame Material', 'format' => 'array' ],
+                    [ 'key' => 'frame_and_geometry.sizes_available', 'label' => 'Sizes Available', 'format' => 'array' ],
+                    [ 'key' => 'weight_and_capacity.rack_capacity', 'label' => 'Rack Capacity', 'unit' => 'lbs', 'higherBetter' => true ],
+                ],
+            ],
+            'Features & Tech' => [
+                'icon'      => 'monitor',
+                'question'  => 'What extras does it have?',
+                'showScore' => true,
+                'scoreKey'  => 'features',
+                'specs'     => [
+                    [ 'key' => 'components.display', 'label' => 'Display' ],
+                    [ 'key' => 'components.display_size', 'label' => 'Display Size', 'unit' => '"' ],
+                    [ 'key' => 'integrated_features.integrated_lights', 'label' => 'Integrated Lights', 'format' => 'boolean', 'higherBetter' => true ],
+                    [ 'key' => 'components.app_compatible', 'label' => 'App Compatible', 'format' => 'boolean', 'higherBetter' => true ],
+                    [ 'key' => 'components.connectivity', 'label' => 'Connectivity', 'format' => 'array' ],
+                    [ 'key' => 'integrated_features.fenders', 'label' => 'Fenders', 'format' => 'boolean', 'higherBetter' => true ],
+                    [ 'key' => 'integrated_features.rear_rack', 'label' => 'Rear Rack', 'format' => 'boolean', 'higherBetter' => true ],
+                    [ 'key' => 'integrated_features.front_rack', 'label' => 'Front Rack', 'format' => 'boolean', 'higherBetter' => true ],
+                    [ 'key' => 'integrated_features.kickstand', 'label' => 'Kickstand', 'format' => 'boolean', 'higherBetter' => true ],
+                    [ 'key' => 'integrated_features.walk_assist', 'label' => 'Walk Assist', 'format' => 'boolean', 'higherBetter' => true ],
+                    [ 'key' => 'special_features', 'label' => 'Special Features', 'format' => 'array' ],
+                ],
+            ],
+            'Safety & Compliance' => [
+                'icon'      => 'shield',
+                'question'  => 'Is it safe and compliant?',
+                'showScore' => true,
+                'scoreKey'  => 'safety',
+                'specs'     => [
+                    [ 'key' => 'safety_and_compliance.ip_rating', 'label' => 'IP Rating', 'format' => 'ip', 'higherBetter' => true ],
+                    [ 'key' => 'safety_and_compliance.certifications', 'label' => 'Certifications', 'format' => 'array' ],
+                    [ 'key' => 'speed_and_class.throttle', 'label' => 'Throttle', 'format' => 'boolean', 'higherBetter' => true ],
+                    [ 'key' => 'speed_and_class.class', 'label' => 'E-Bike Class', 'format' => 'array' ],
+                    [ 'key' => 'speed_and_class.top_assist_speed', 'label' => 'Top Assist Speed', 'unit' => 'mph', 'higherBetter' => true ],
+                    [ 'key' => 'speed_and_class.throttle_top_speed', 'label' => 'Throttle Top Speed', 'unit' => 'mph', 'higherBetter' => true ],
+                ],
+            ],
+            'Wheels & Tires' => [
+                'icon'      => 'circle',
                 'collapsed' => true,
                 'specs'     => [
-                    [ 'key' => 'e-bikes.components.gears', 'label' => 'Gears' ],
-                    [ 'key' => 'e-bikes.components.brakes', 'label' => 'Brakes' ],
-                    [ 'key' => 'e-bikes.components.wheel_size', 'label' => 'Wheel Size', 'unit' => '"' ],
-                    [ 'key' => 'e-bikes.components.tire_type', 'label' => 'Tire Type' ],
-                    [ 'key' => 'e-bikes.components.display', 'label' => 'Display' ],
-                    [ 'key' => 'e-bikes.components.lights', 'label' => 'Lights' ],
+                    [ 'key' => 'wheels_and_tires.wheel_size', 'label' => 'Wheel Size', 'unit' => '"' ],
+                    [ 'key' => 'wheels_and_tires.wheel_size_rear', 'label' => 'Wheel Size (Rear)', 'unit' => '"' ],
+                    [ 'key' => 'wheels_and_tires.tire_type', 'label' => 'Tire Type' ],
                 ],
             ],
         ];

@@ -27,11 +27,11 @@ namespace ERH\Scoring;
 class ProductScorer {
 
     /**
-     * Category weights for overall score calculation.
+     * Category weights for e-scooter overall score calculation.
      *
      * @var array<string, float>
      */
-    private const CATEGORY_WEIGHTS = [
+    private const ESCOOTER_CATEGORY_WEIGHTS = [
         'motor_performance' => 0.20,
         'range_battery'     => 0.20,
         'ride_quality'      => 0.20,
@@ -39,6 +39,21 @@ class ProductScorer {
         'safety'            => 0.10,
         'features'          => 0.10,
         'maintenance'       => 0.05,
+    ];
+
+    /**
+     * Category weights for e-bike overall score calculation.
+     *
+     * @var array<string, float>
+     */
+    private const EBIKE_CATEGORY_WEIGHTS = [
+        'motor_performance' => 0.20,
+        'range_battery'     => 0.20,
+        'ride_quality'      => 0.20,
+        'drivetrain'        => 0.15,
+        'portability'       => 0.10,
+        'features'          => 0.10,
+        'safety'            => 0.05,
     ];
 
     /**
@@ -58,24 +73,38 @@ class ProductScorer {
      * }
      */
     public function calculate_scores(array $specs, string $product_type): array {
-        // Only e-scooters have scoring implemented for now.
-        if ($product_type !== 'Electric Scooter') {
-            return [
-                'motor_performance' => null,
-                'range_battery'     => null,
-                'ride_quality'      => null,
-                'portability'       => null,
-                'safety'            => null,
-                'features'          => null,
-                'maintenance'       => null,
-                'overall'           => null,
-            ];
-        }
-
         // Set the product group key for nested ACF structure lookups.
-        // E-scooter data is stored under 'e-scooters' group in ACF.
         $this->set_product_group_key($product_type);
 
+        // Route to product-type-specific scoring.
+        if ($product_type === 'Electric Bike') {
+            return $this->calculate_ebike_scores($specs);
+        }
+
+        if ($product_type === 'Electric Scooter') {
+            return $this->calculate_escooter_scores($specs);
+        }
+
+        // Unsupported product types return null scores.
+        return [
+            'motor_performance' => null,
+            'range_battery'     => null,
+            'ride_quality'      => null,
+            'portability'       => null,
+            'safety'            => null,
+            'features'          => null,
+            'maintenance'       => null,
+            'overall'           => null,
+        ];
+    }
+
+    /**
+     * Calculate all category scores for an e-scooter.
+     *
+     * @param array $specs The product specs array.
+     * @return array Category scores.
+     */
+    private function calculate_escooter_scores(array $specs): array {
         $scores = [
             'motor_performance' => $this->calculate_motor_performance($specs),
             'range_battery'     => $this->calculate_range_battery($specs),
@@ -87,7 +116,39 @@ class ProductScorer {
         ];
 
         // Calculate weighted overall score.
-        $scores['overall'] = $this->calculate_overall_score($scores);
+        $scores['overall'] = $this->calculate_overall_score($scores, self::ESCOOTER_CATEGORY_WEIGHTS);
+
+        return $scores;
+    }
+
+    /**
+     * Calculate all category scores for an e-bike.
+     *
+     * Categories:
+     * - Motor Performance (20%): Torque, motor position, sensor type, power
+     * - Battery & Range (20%): Capacity, charge time, voltage, removable
+     * - Ride Quality (20%): Suspension, tires, comfort
+     * - Drivetrain & Components (15%): Brakes, gears, drive system
+     * - Weight & Portability (10%): Category-adjusted weight, folding
+     * - Features & Tech (10%): Display, lights, app, accessories
+     * - Safety & Compliance (5%): IP rating, certifications, throttle
+     *
+     * @param array $specs The product specs array.
+     * @return array Category scores.
+     */
+    private function calculate_ebike_scores(array $specs): array {
+        $scores = [
+            'motor_performance' => $this->calculate_ebike_motor_performance($specs),
+            'range_battery'     => $this->calculate_ebike_range_battery($specs),
+            'ride_quality'      => $this->calculate_ebike_ride_quality($specs),
+            'drivetrain'        => $this->calculate_ebike_drivetrain($specs),
+            'portability'       => $this->calculate_ebike_portability($specs),
+            'features'          => $this->calculate_ebike_features($specs),
+            'safety'            => $this->calculate_ebike_safety($specs),
+        ];
+
+        // Calculate weighted overall score.
+        $scores['overall'] = $this->calculate_overall_score($scores, self::EBIKE_CATEGORY_WEIGHTS);
 
         return $scores;
     }
@@ -95,14 +156,15 @@ class ProductScorer {
     /**
      * Calculate weighted overall score from category scores.
      *
-     * @param array $scores Category scores.
+     * @param array $scores  Category scores.
+     * @param array $weights Category weights to use.
      * @return int|null Overall score 0-100 or null if no data.
      */
-    private function calculate_overall_score(array $scores): ?int {
+    private function calculate_overall_score(array $scores, array $weights): ?int {
         $weighted_sum = 0.0;
         $total_weight = 0.0;
 
-        foreach (self::CATEGORY_WEIGHTS as $category => $weight) {
+        foreach ($weights as $category => $weight) {
             if (isset($scores[$category]) && $scores[$category] !== null) {
                 $weighted_sum += $scores[$category] * $weight;
                 $total_weight += $weight;
@@ -1273,6 +1335,1112 @@ class ProductScorer {
     }
 
     // =========================================================================
+    // E-Bike Scoring Methods
+    // =========================================================================
+
+    /**
+     * Calculate E-Bike Motor Performance category score (100 pts max).
+     *
+     * Factors: Torque 40pts, Motor Position 25pts, Sensor Type 20pts, Power 15pts.
+     *
+     * Key difference from e-scooters: Torque is primary (not power), and motor position matters.
+     * Top speed is excluded since it's capped by class.
+     *
+     * @param array $specs Product specs.
+     * @return int|null Score 0-100 or null if no data.
+     */
+    private function calculate_ebike_motor_performance(array $specs): ?int {
+        $factors = [
+            $this->score_ebike_torque($this->get_nested_value($specs, 'motor.torque')),
+            $this->score_ebike_motor_position($this->get_nested_value($specs, 'motor.motor_position')),
+            $this->score_ebike_sensor_type($this->get_nested_value($specs, 'motor.sensor_type')),
+            $this->score_ebike_power(
+                $this->get_nested_value($specs, 'motor.power_nominal'),
+                $this->get_nested_value($specs, 'motor.power_peak')
+            ),
+        ];
+
+        return $this->calculate_category_score($factors);
+    }
+
+    /**
+     * Score e-bike torque.
+     * Log scale: 30Nm floor → 120Nm ceiling.
+     *
+     * @param mixed $torque Torque in Nm.
+     * @return array{score: float|null, max_possible: int}
+     */
+    private function score_ebike_torque($torque): array {
+        if ($torque === null || !is_numeric($torque) || (float) $torque <= 0) {
+            return ['score' => null, 'max_possible' => 0];
+        }
+
+        $nm = (float) $torque;
+
+        // Cap at floor/ceiling.
+        if ($nm <= 30) {
+            return ['score' => 0, 'max_possible' => 40];
+        }
+        if ($nm >= 120) {
+            return ['score' => 40, 'max_possible' => 40];
+        }
+
+        // Log scale: 40 * log2(torque/30) / log2(4)
+        // 30Nm → 0 pts, 120Nm → 40 pts.
+        $raw   = 40 * log($nm / 30, 2) / log(4, 2);
+        $score = max(0, min(40, $raw));
+
+        return ['score' => $score, 'max_possible' => 40];
+    }
+
+    /**
+     * Score e-bike motor position.
+     * Mid-drive = 25, Hub = 15, Front hub = 8.
+     *
+     * @param mixed $position Motor position string.
+     * @return array{score: float|null, max_possible: int}
+     */
+    private function score_ebike_motor_position($position): array {
+        if (empty($position)) {
+            return ['score' => null, 'max_possible' => 0];
+        }
+
+        $pos = strtolower((string) $position);
+
+        if (strpos($pos, 'mid') !== false || strpos($pos, 'center') !== false || strpos($pos, 'crank') !== false) {
+            return ['score' => 25, 'max_possible' => 25];
+        }
+
+        if (strpos($pos, 'front') !== false) {
+            return ['score' => 8, 'max_possible' => 25];
+        }
+
+        if (strpos($pos, 'rear') !== false || strpos($pos, 'hub') !== false) {
+            return ['score' => 15, 'max_possible' => 25];
+        }
+
+        return ['score' => null, 'max_possible' => 0];
+    }
+
+    /**
+     * Score e-bike sensor type.
+     * Torque/Both = 20, Cadence = 8, None = 0.
+     *
+     * @param mixed $sensor_type Sensor type string.
+     * @return array{score: float|null, max_possible: int}
+     */
+    private function score_ebike_sensor_type($sensor_type): array {
+        if (empty($sensor_type)) {
+            return ['score' => null, 'max_possible' => 0];
+        }
+
+        $sensor = strtolower((string) $sensor_type);
+
+        if (strpos($sensor, 'torque') !== false || strpos($sensor, 'both') !== false) {
+            return ['score' => 20, 'max_possible' => 20];
+        }
+
+        if (strpos($sensor, 'cadence') !== false) {
+            return ['score' => 8, 'max_possible' => 20];
+        }
+
+        if (strpos($sensor, 'none') !== false) {
+            return ['score' => 0, 'max_possible' => 20];
+        }
+
+        return ['score' => null, 'max_possible' => 0];
+    }
+
+    /**
+     * Score e-bike motor power (nominal or peak).
+     * Log scale: 250W floor → 1500W ceiling.
+     *
+     * @param mixed $nominal Nominal power in watts.
+     * @param mixed $peak    Peak power in watts.
+     * @return array{score: float|null, max_possible: int}
+     */
+    private function score_ebike_power($nominal, $peak): array {
+        // Prefer nominal, fall back to peak.
+        $power = null;
+        if ($nominal !== null && is_numeric($nominal) && (float) $nominal > 0) {
+            $power = (float) $nominal;
+        } elseif ($peak !== null && is_numeric($peak) && (float) $peak > 0) {
+            $power = (float) $peak;
+        }
+
+        if ($power === null) {
+            return ['score' => null, 'max_possible' => 0];
+        }
+
+        // Cap at floor/ceiling.
+        if ($power <= 250) {
+            return ['score' => 0, 'max_possible' => 15];
+        }
+        if ($power >= 1500) {
+            return ['score' => 15, 'max_possible' => 15];
+        }
+
+        // Log scale: 15 * log2(power/250) / log2(6)
+        // 250W → 0 pts, 1500W → 15 pts.
+        $raw   = 15 * log($power / 250, 2) / log(6, 2);
+        $score = max(0, min(15, $raw));
+
+        return ['score' => $score, 'max_possible' => 15];
+    }
+
+    /**
+     * Calculate E-Bike Battery & Range category score (100 pts max).
+     *
+     * Factors: Battery Capacity 60pts, Charge Time 20pts, Voltage 10pts, Removable 10pts.
+     *
+     * @param array $specs Product specs.
+     * @return int|null Score 0-100 or null if no data.
+     */
+    private function calculate_ebike_range_battery(array $specs): ?int {
+        $factors = [
+            $this->score_ebike_battery_capacity($this->get_nested_value($specs, 'battery.battery_capacity')),
+            $this->score_ebike_charge_time($this->get_nested_value($specs, 'battery.charge_time')),
+            $this->score_ebike_voltage($this->get_nested_value($specs, 'battery.voltage')),
+            $this->score_ebike_removable_battery($this->get_nested_value($specs, 'battery.removable')),
+        ];
+
+        return $this->calculate_category_score($factors);
+    }
+
+    /**
+     * Score e-bike battery capacity.
+     * Log scale: 250Wh floor → 1000Wh ceiling.
+     *
+     * @param mixed $wh Battery capacity in Wh.
+     * @return array{score: float|null, max_possible: int}
+     */
+    private function score_ebike_battery_capacity($wh): array {
+        if ($wh === null || !is_numeric($wh) || (float) $wh <= 0) {
+            return ['score' => null, 'max_possible' => 0];
+        }
+
+        $capacity = (float) $wh;
+
+        // Cap at floor/ceiling.
+        if ($capacity <= 250) {
+            return ['score' => 0, 'max_possible' => 60];
+        }
+        if ($capacity >= 1000) {
+            return ['score' => 60, 'max_possible' => 60];
+        }
+
+        // Log scale: 60 * log2(wh/250) / log2(4)
+        // 250Wh → 0 pts, 1000Wh → 60 pts.
+        $raw   = 60 * log($capacity / 250, 2) / log(4, 2);
+        $score = max(0, min(60, $raw));
+
+        return ['score' => $score, 'max_possible' => 60];
+    }
+
+    /**
+     * Score e-bike charge time (lower is better).
+     * 2h → 20, 4h → 12, 6h → 6, 8h+ → 0.
+     *
+     * @param mixed $hours Charge time in hours.
+     * @return array{score: float|null, max_possible: int}
+     */
+    private function score_ebike_charge_time($hours): array {
+        if ($hours === null || !is_numeric($hours) || (float) $hours <= 0) {
+            return ['score' => null, 'max_possible' => 0];
+        }
+
+        $h = (float) $hours;
+
+        if ($h <= 2) {
+            return ['score' => 20, 'max_possible' => 20];
+        }
+        if ($h >= 8) {
+            return ['score' => 0, 'max_possible' => 20];
+        }
+
+        // Linear interpolation: 2h=20, 8h=0
+        $score = 20 - (($h - 2) / 6) * 20;
+
+        return ['score' => max(0, min(20, $score)), 'max_possible' => 20];
+    }
+
+    /**
+     * Score e-bike battery voltage.
+     * 52V = 10, 48V = 7, 36V = 4.
+     *
+     * @param mixed $voltage Voltage in V.
+     * @return array{score: float|null, max_possible: int}
+     */
+    private function score_ebike_voltage($voltage): array {
+        if ($voltage === null || !is_numeric($voltage) || (float) $voltage <= 0) {
+            return ['score' => null, 'max_possible' => 0];
+        }
+
+        $v = (float) $voltage;
+
+        if ($v >= 52) {
+            return ['score' => 10, 'max_possible' => 10];
+        }
+        if ($v >= 48) {
+            return ['score' => 7, 'max_possible' => 10];
+        }
+        if ($v >= 36) {
+            return ['score' => 4, 'max_possible' => 10];
+        }
+
+        return ['score' => 2, 'max_possible' => 10];
+    }
+
+    /**
+     * Score removable battery feature.
+     *
+     * @param mixed $removable Whether battery is removable.
+     * @return array{score: float, max_possible: int}
+     */
+    private function score_ebike_removable_battery($removable): array {
+        if ($removable === null) {
+            return ['score' => null, 'max_possible' => 0];
+        }
+        return ['score' => $removable === true ? 10 : 0, 'max_possible' => 10];
+    }
+
+    /**
+     * Calculate E-Bike Ride Quality category score (100 pts max).
+     *
+     * Factors: Front Suspension 25pts, Rear Suspension 25pts, Seatpost Suspension 10pts,
+     * Tire Width 20pts, Puncture Protection 15pts, Frame Style 5pts.
+     *
+     * @param array $specs Product specs.
+     * @return int|null Score 0-100 or null if no data.
+     */
+    private function calculate_ebike_ride_quality(array $specs): ?int {
+        $factors = [
+            $this->score_ebike_front_suspension($this->get_nested_value($specs, 'suspension.front_suspension')),
+            $this->score_ebike_rear_suspension($this->get_nested_value($specs, 'suspension.rear_suspension')),
+            $this->score_ebike_seatpost_suspension($this->get_nested_value($specs, 'suspension.seatpost_suspension')),
+            $this->score_ebike_tire_width($this->get_nested_value($specs, 'wheels_and_tires.tire_width')),
+            $this->score_ebike_puncture_protection($this->get_nested_value($specs, 'wheels_and_tires.puncture_protection')),
+            $this->score_ebike_frame_style($this->get_nested_value($specs, 'frame_and_geometry.frame_style')),
+        ];
+
+        return $this->calculate_category_score($factors);
+    }
+
+    /**
+     * Score e-bike front suspension.
+     * Air = 25, Coil = 18, Rigid = 0.
+     *
+     * @param mixed $suspension Front suspension type.
+     * @return array{score: float|null, max_possible: int}
+     */
+    private function score_ebike_front_suspension($suspension): array {
+        if (empty($suspension)) {
+            return ['score' => null, 'max_possible' => 0];
+        }
+
+        $susp = strtolower((string) $suspension);
+
+        if (strpos($susp, 'air') !== false) {
+            return ['score' => 25, 'max_possible' => 25];
+        }
+
+        if (strpos($susp, 'coil') !== false || strpos($susp, 'spring') !== false) {
+            return ['score' => 18, 'max_possible' => 25];
+        }
+
+        if (strpos($susp, 'rigid') !== false || strpos($susp, 'none') !== false) {
+            return ['score' => 0, 'max_possible' => 25];
+        }
+
+        // Unknown suspension type - assume some suspension exists.
+        return ['score' => 10, 'max_possible' => 25];
+    }
+
+    /**
+     * Score e-bike rear suspension.
+     * Air = 25, Coil = 18, None = 0.
+     *
+     * @param mixed $suspension Rear suspension type.
+     * @return array{score: float|null, max_possible: int}
+     */
+    private function score_ebike_rear_suspension($suspension): array {
+        if (empty($suspension)) {
+            return ['score' => null, 'max_possible' => 0];
+        }
+
+        $susp = strtolower((string) $suspension);
+
+        if (strpos($susp, 'air') !== false) {
+            return ['score' => 25, 'max_possible' => 25];
+        }
+
+        if (strpos($susp, 'coil') !== false || strpos($susp, 'spring') !== false) {
+            return ['score' => 18, 'max_possible' => 25];
+        }
+
+        if (strpos($susp, 'none') !== false || strpos($susp, 'rigid') !== false || $susp === '') {
+            return ['score' => 0, 'max_possible' => 25];
+        }
+
+        // Unknown suspension type - assume some suspension exists.
+        return ['score' => 10, 'max_possible' => 25];
+    }
+
+    /**
+     * Score e-bike seatpost suspension.
+     *
+     * @param mixed $has_seatpost Whether has seatpost suspension.
+     * @return array{score: float, max_possible: int}
+     */
+    private function score_ebike_seatpost_suspension($has_seatpost): array {
+        if ($has_seatpost === null) {
+            return ['score' => null, 'max_possible' => 0];
+        }
+        return ['score' => $has_seatpost === true ? 10 : 0, 'max_possible' => 10];
+    }
+
+    /**
+     * Score e-bike tire width.
+     * Fat (4"+) = 20, Plus (3") = 15, Standard (2") = 10, Road = 5.
+     *
+     * @param mixed $width Tire width in inches.
+     * @return array{score: float|null, max_possible: int}
+     */
+    private function score_ebike_tire_width($width): array {
+        if ($width === null || !is_numeric($width) || (float) $width <= 0) {
+            return ['score' => null, 'max_possible' => 0];
+        }
+
+        $w = (float) $width;
+
+        if ($w >= 4) {
+            return ['score' => 20, 'max_possible' => 20]; // Fat tire.
+        }
+        if ($w >= 3) {
+            return ['score' => 15, 'max_possible' => 20]; // Plus tire.
+        }
+        if ($w >= 2) {
+            return ['score' => 10, 'max_possible' => 20]; // Standard.
+        }
+
+        return ['score' => 5, 'max_possible' => 20]; // Road/narrow.
+    }
+
+    /**
+     * Score e-bike puncture protection.
+     *
+     * @param mixed $has_protection Whether has puncture protection.
+     * @return array{score: float, max_possible: int}
+     */
+    private function score_ebike_puncture_protection($has_protection): array {
+        if ($has_protection === null) {
+            return ['score' => null, 'max_possible' => 0];
+        }
+        return ['score' => $has_protection === true ? 15 : 0, 'max_possible' => 15];
+    }
+
+    /**
+     * Score e-bike frame style.
+     * Step-through/Low-step = 5 (accessibility bonus), High-step = 0.
+     *
+     * @param mixed $frame_style Frame style (may be array).
+     * @return array{score: float, max_possible: int}
+     */
+    private function score_ebike_frame_style($frame_style): array {
+        if (empty($frame_style)) {
+            return ['score' => null, 'max_possible' => 0];
+        }
+
+        // Handle array (ACF may return array).
+        $styles = is_array($frame_style) ? $frame_style : [$frame_style];
+        $styles_lower = array_map(fn($s) => strtolower((string) $s), $styles);
+
+        // Check for step-through or low-step.
+        foreach ($styles_lower as $style) {
+            if (strpos($style, 'step-through') !== false || strpos($style, 'low-step') !== false) {
+                return ['score' => 5, 'max_possible' => 5];
+            }
+        }
+
+        return ['score' => 0, 'max_possible' => 5];
+    }
+
+    /**
+     * Calculate E-Bike Drivetrain & Components category score (100 pts max).
+     *
+     * Factors: Brake Type 35pts, Rotor Size 15pts, Gear Count 20pts,
+     * Drive System 15pts, Brake Brand 15pts.
+     *
+     * @param array $specs Product specs.
+     * @return int|null Score 0-100 or null if no data.
+     */
+    private function calculate_ebike_drivetrain(array $specs): ?int {
+        $factors = [
+            $this->score_ebike_brake_type($this->get_nested_value($specs, 'brakes.brake_type')),
+            $this->score_ebike_rotor_size(
+                $this->get_nested_value($specs, 'brakes.rotor_size_front'),
+                $this->get_nested_value($specs, 'brakes.rotor_size_rear')
+            ),
+            $this->score_ebike_gear_count($this->get_nested_value($specs, 'drivetrain.gears')),
+            $this->score_ebike_drive_system($this->get_nested_value($specs, 'drivetrain.drive_system')),
+            $this->score_ebike_brake_brand($this->get_nested_value($specs, 'brakes.brake_brand')),
+        ];
+
+        return $this->calculate_category_score($factors);
+    }
+
+    /**
+     * Score e-bike brake type.
+     * Hydraulic = 35, Mechanical = 18, Rim = 5.
+     *
+     * @param mixed $brake_type Brake type (may be array).
+     * @return array{score: float|null, max_possible: int}
+     */
+    private function score_ebike_brake_type($brake_type): array {
+        if (empty($brake_type)) {
+            return ['score' => null, 'max_possible' => 0];
+        }
+
+        // Handle array (ACF may return array).
+        $types = is_array($brake_type) ? $brake_type : [$brake_type];
+        $combined = strtolower(implode(' ', $types));
+
+        if (strpos($combined, 'hydraulic') !== false) {
+            return ['score' => 35, 'max_possible' => 35];
+        }
+
+        if (strpos($combined, 'mechanical') !== false || strpos($combined, 'disc') !== false) {
+            return ['score' => 18, 'max_possible' => 35];
+        }
+
+        if (strpos($combined, 'rim') !== false || strpos($combined, 'v-brake') !== false) {
+            return ['score' => 5, 'max_possible' => 35];
+        }
+
+        return ['score' => null, 'max_possible' => 0];
+    }
+
+    /**
+     * Score e-bike rotor size.
+     * 203mm+ = 15, 180mm = 12, 160mm = 8, <160mm = 4.
+     *
+     * @param mixed $front_rotor Front rotor size in mm.
+     * @param mixed $rear_rotor  Rear rotor size in mm.
+     * @return array{score: float|null, max_possible: int}
+     */
+    private function score_ebike_rotor_size($front_rotor, $rear_rotor): array {
+        // Prefer front rotor, fall back to rear.
+        $rotor = null;
+        if ($front_rotor !== null && is_numeric($front_rotor) && (float) $front_rotor > 0) {
+            $rotor = (float) $front_rotor;
+        } elseif ($rear_rotor !== null && is_numeric($rear_rotor) && (float) $rear_rotor > 0) {
+            $rotor = (float) $rear_rotor;
+        }
+
+        if ($rotor === null) {
+            return ['score' => null, 'max_possible' => 0];
+        }
+
+        if ($rotor >= 203) {
+            return ['score' => 15, 'max_possible' => 15];
+        }
+        if ($rotor >= 180) {
+            return ['score' => 12, 'max_possible' => 15];
+        }
+        if ($rotor >= 160) {
+            return ['score' => 8, 'max_possible' => 15];
+        }
+
+        return ['score' => 4, 'max_possible' => 15];
+    }
+
+    /**
+     * Score e-bike gear count.
+     * 10+ = 20, 8-9 = 15, 7 = 10, 1-3 = 5.
+     *
+     * @param mixed $gears Number of gears.
+     * @return array{score: float|null, max_possible: int}
+     */
+    private function score_ebike_gear_count($gears): array {
+        if ($gears === null || !is_numeric($gears) || (int) $gears <= 0) {
+            return ['score' => null, 'max_possible' => 0];
+        }
+
+        $g = (int) $gears;
+
+        if ($g >= 10) {
+            return ['score' => 20, 'max_possible' => 20];
+        }
+        if ($g >= 8) {
+            return ['score' => 15, 'max_possible' => 20];
+        }
+        if ($g >= 7) {
+            return ['score' => 10, 'max_possible' => 20];
+        }
+
+        return ['score' => 5, 'max_possible' => 20];
+    }
+
+    /**
+     * Score e-bike drive system.
+     * Belt = 15, Chain = 8.
+     *
+     * @param mixed $drive_system Drive system type.
+     * @return array{score: float|null, max_possible: int}
+     */
+    private function score_ebike_drive_system($drive_system): array {
+        if (empty($drive_system)) {
+            return ['score' => null, 'max_possible' => 0];
+        }
+
+        $system = strtolower((string) $drive_system);
+
+        if (strpos($system, 'belt') !== false) {
+            return ['score' => 15, 'max_possible' => 15];
+        }
+
+        if (strpos($system, 'chain') !== false) {
+            return ['score' => 8, 'max_possible' => 15];
+        }
+
+        return ['score' => null, 'max_possible' => 0];
+    }
+
+    /**
+     * Score e-bike brake brand.
+     * Premium = 15, Mid-tier = 10, Generic = 5.
+     *
+     * Premium: Magura, SRAM Guide/Code, Shimano Deore/SLX/XT/XTR, Tektro Auriga/Orion
+     * Mid-tier: Tektro, Shimano MT/Altus, Promax
+     * Generic: Unknown/unbranded
+     *
+     * @param mixed $brake_brand Brake brand string.
+     * @return array{score: float|null, max_possible: int}
+     */
+    private function score_ebike_brake_brand($brake_brand): array {
+        if (empty($brake_brand)) {
+            return ['score' => null, 'max_possible' => 0];
+        }
+
+        $brand = strtolower((string) $brake_brand);
+
+        // Premium brands.
+        $premium_patterns = [
+            'magura',
+            'sram guide', 'sram code',
+            'shimano deore', 'shimano slx', 'shimano xt', 'shimano xtr',
+            'tektro auriga', 'tektro orion',
+        ];
+
+        foreach ($premium_patterns as $pattern) {
+            if (strpos($brand, $pattern) !== false) {
+                return ['score' => 15, 'max_possible' => 15];
+            }
+        }
+
+        // Mid-tier brands.
+        $midtier_patterns = ['tektro', 'shimano mt', 'shimano altus', 'promax'];
+
+        foreach ($midtier_patterns as $pattern) {
+            if (strpos($brand, $pattern) !== false) {
+                return ['score' => 10, 'max_possible' => 15];
+            }
+        }
+
+        // Generic/unknown.
+        return ['score' => 5, 'max_possible' => 15];
+    }
+
+    /**
+     * Calculate E-Bike Weight & Portability category score (100 pts max).
+     *
+     * Factors: Weight 80pts (category-adjusted), Folding Capability 20pts.
+     *
+     * @param array $specs Product specs.
+     * @return int|null Score 0-100 or null if no data.
+     */
+    private function calculate_ebike_portability(array $specs): ?int {
+        // Determine weight category from bike categories.
+        $categories = $this->get_top_level_value($specs, 'ebike_category');
+        $weight_thresholds = $this->get_ebike_weight_thresholds($categories);
+
+        $factors = [
+            $this->score_ebike_weight(
+                $this->get_nested_value($specs, 'weight_and_capacity.weight'),
+                $weight_thresholds
+            ),
+            $this->score_ebike_folding($categories),
+        ];
+
+        // Weight is required for portability score.
+        $weight_factor = $factors[0];
+        if ($weight_factor['score'] === null) {
+            return null;
+        }
+
+        $total_score = 0;
+        $total_max   = 0;
+
+        foreach ($factors as $factor) {
+            $total_score += $factor['score'] ?? 0;
+            $total_max   += $factor['max_possible'];
+        }
+
+        return (int) round(($total_score / $total_max) * 100);
+    }
+
+    /**
+     * Get weight thresholds based on e-bike category.
+     *
+     * Returns [floor, ceiling] in lbs for the category with the most lenient thresholds.
+     *
+     * @param mixed $categories E-bike categories (array or string).
+     * @return array{floor: int, ceiling: int}
+     */
+    private function get_ebike_weight_thresholds($categories): array {
+        // Default thresholds (commuter/city).
+        $thresholds = [
+            'cargo'       => ['floor' => 65, 'ceiling' => 110],
+            'fat'         => ['floor' => 55, 'ceiling' => 85],
+            'fat tire'    => ['floor' => 55, 'ceiling' => 85],
+            'mountain'    => ['floor' => 45, 'ceiling' => 75],
+            'emtb'        => ['floor' => 45, 'ceiling' => 75],
+            'commuter'    => ['floor' => 40, 'ceiling' => 70],
+            'city'        => ['floor' => 40, 'ceiling' => 70],
+            'folding'     => ['floor' => 35, 'ceiling' => 65],
+            'lightweight' => ['floor' => 30, 'ceiling' => 50],
+            'road'        => ['floor' => 30, 'ceiling' => 50],
+        ];
+
+        if (empty($categories)) {
+            return ['floor' => 40, 'ceiling' => 70]; // Default to commuter.
+        }
+
+        $cats = is_array($categories) ? $categories : [$categories];
+        $best_floor   = 40;
+        $best_ceiling = 70;
+
+        foreach ($cats as $cat) {
+            $cat_lower = strtolower((string) $cat);
+
+            foreach ($thresholds as $key => $values) {
+                if (strpos($cat_lower, $key) !== false) {
+                    // Use the most lenient thresholds (highest ceiling).
+                    if ($values['ceiling'] > $best_ceiling) {
+                        $best_floor   = $values['floor'];
+                        $best_ceiling = $values['ceiling'];
+                    }
+                    break;
+                }
+            }
+        }
+
+        return ['floor' => $best_floor, 'ceiling' => $best_ceiling];
+    }
+
+    /**
+     * Score e-bike weight (category-adjusted, lighter is better).
+     *
+     * @param mixed $weight     Weight in lbs.
+     * @param array $thresholds Weight thresholds [floor, ceiling].
+     * @return array{score: float|null, max_possible: int}
+     */
+    private function score_ebike_weight($weight, array $thresholds): array {
+        if ($weight === null || !is_numeric($weight) || (float) $weight <= 0) {
+            return ['score' => null, 'max_possible' => 0];
+        }
+
+        $w     = (float) $weight;
+        $floor = $thresholds['floor'];
+        $ceiling = $thresholds['ceiling'];
+
+        // Cap at floor/ceiling.
+        if ($w <= $floor) {
+            return ['score' => 80, 'max_possible' => 80];
+        }
+        if ($w >= $ceiling) {
+            return ['score' => 0, 'max_possible' => 80];
+        }
+
+        // Linear interpolation between floor and ceiling.
+        $score = 80 * (1 - ($w - $floor) / ($ceiling - $floor));
+
+        return ['score' => max(0, min(80, $score)), 'max_possible' => 80];
+    }
+
+    /**
+     * Score e-bike folding capability.
+     *
+     * @param mixed $categories E-bike categories (check for 'folding').
+     * @return array{score: float, max_possible: int}
+     */
+    private function score_ebike_folding($categories): array {
+        if (empty($categories)) {
+            return ['score' => 0, 'max_possible' => 20];
+        }
+
+        $cats = is_array($categories) ? $categories : [$categories];
+
+        foreach ($cats as $cat) {
+            if (strpos(strtolower((string) $cat), 'folding') !== false) {
+                return ['score' => 20, 'max_possible' => 20];
+            }
+        }
+
+        return ['score' => 0, 'max_possible' => 20];
+    }
+
+    /**
+     * Calculate E-Bike Features & Tech category score (100 pts max).
+     *
+     * Factors: Display 25pts, Integrated Lights 20pts, App Connectivity 15pts,
+     * Security 10pts, Accessories 30pts.
+     *
+     * @param array $specs Product specs.
+     * @return int|null Score 0-100 or null if no data.
+     */
+    private function calculate_ebike_features(array $specs): ?int {
+        $factors = [
+            $this->score_ebike_display($this->get_nested_value($specs, 'components.display')),
+            $this->score_ebike_lights($this->get_nested_value($specs, 'integrated_features.integrated_lights')),
+            $this->score_ebike_app($this->get_nested_value($specs, 'components.app_compatible')),
+            $this->score_ebike_security($this->get_nested_value($specs, 'integrated_features.alarm')),
+            $this->score_ebike_accessories($specs),
+        ];
+
+        return $this->calculate_category_score($factors);
+    }
+
+    /**
+     * Score e-bike display type.
+     * Color = 25, Mono = 15, LED = 8, None = 0.
+     *
+     * @param mixed $display Display type string.
+     * @return array{score: float|null, max_possible: int}
+     */
+    private function score_ebike_display($display): array {
+        if (empty($display)) {
+            return ['score' => null, 'max_possible' => 0];
+        }
+
+        $disp = strtolower((string) $display);
+
+        if (strpos($disp, 'color') !== false || strpos($disp, 'tft') !== false || strpos($disp, 'colour') !== false) {
+            return ['score' => 25, 'max_possible' => 25];
+        }
+
+        if (strpos($disp, 'lcd') !== false || strpos($disp, 'mono') !== false) {
+            return ['score' => 15, 'max_possible' => 25];
+        }
+
+        if (strpos($disp, 'led') !== false) {
+            return ['score' => 8, 'max_possible' => 25];
+        }
+
+        if (strpos($disp, 'none') !== false) {
+            return ['score' => 0, 'max_possible' => 25];
+        }
+
+        // Unknown display type - assume basic LCD.
+        return ['score' => 10, 'max_possible' => 25];
+    }
+
+    /**
+     * Score e-bike integrated lights.
+     * Both = 20, One = 10, None = 0.
+     *
+     * @param mixed $lights Integrated lights value (may be boolean or string).
+     * @return array{score: float|null, max_possible: int}
+     */
+    private function score_ebike_lights($lights): array {
+        if ($lights === null) {
+            return ['score' => null, 'max_possible' => 0];
+        }
+
+        // Boolean check.
+        if ($lights === true) {
+            return ['score' => 20, 'max_possible' => 20]; // Assume both if just "yes".
+        }
+        if ($lights === false) {
+            return ['score' => 0, 'max_possible' => 20];
+        }
+
+        // String check.
+        $l = strtolower((string) $lights);
+
+        if (strpos($l, 'both') !== false || (strpos($l, 'front') !== false && strpos($l, 'rear') !== false)) {
+            return ['score' => 20, 'max_possible' => 20];
+        }
+
+        if (strpos($l, 'front') !== false || strpos($l, 'rear') !== false) {
+            return ['score' => 10, 'max_possible' => 20];
+        }
+
+        if (strpos($l, 'none') !== false) {
+            return ['score' => 0, 'max_possible' => 20];
+        }
+
+        return ['score' => null, 'max_possible' => 0];
+    }
+
+    /**
+     * Score e-bike app connectivity.
+     * Full = 15, Basic = 8, None = 0.
+     *
+     * @param mixed $app_compatible App compatibility value.
+     * @return array{score: float|null, max_possible: int}
+     */
+    private function score_ebike_app($app_compatible): array {
+        if ($app_compatible === null) {
+            return ['score' => null, 'max_possible' => 0];
+        }
+
+        if ($app_compatible === true) {
+            return ['score' => 15, 'max_possible' => 15];
+        }
+        if ($app_compatible === false) {
+            return ['score' => 0, 'max_possible' => 15];
+        }
+
+        // String check.
+        $app = strtolower((string) $app_compatible);
+
+        if (strpos($app, 'full') !== false || strpos($app, 'yes') !== false) {
+            return ['score' => 15, 'max_possible' => 15];
+        }
+
+        if (strpos($app, 'basic') !== false || strpos($app, 'limited') !== false) {
+            return ['score' => 8, 'max_possible' => 15];
+        }
+
+        return ['score' => 0, 'max_possible' => 15];
+    }
+
+    /**
+     * Score e-bike security features.
+     *
+     * @param mixed $alarm Whether has alarm or security features.
+     * @return array{score: float, max_possible: int}
+     */
+    private function score_ebike_security($alarm): array {
+        if ($alarm === null) {
+            return ['score' => null, 'max_possible' => 0];
+        }
+        return ['score' => $alarm === true ? 10 : 0, 'max_possible' => 10];
+    }
+
+    /**
+     * Score e-bike accessories (30 pts total).
+     *
+     * Fenders: 5, Rear Rack: 5, Front Rack: 4, Kickstand: 4,
+     * USB: 4, Walk Assist: 4, Chain Guard: 2, Bottle Cage Mount: 2.
+     *
+     * @param array $specs Product specs.
+     * @return array{score: float, max_possible: int}
+     */
+    private function score_ebike_accessories(array $specs): array {
+        $score = 0;
+
+        // Check each accessory.
+        if ($this->get_nested_value($specs, 'integrated_features.fenders') === true) {
+            $score += 5;
+        }
+        if ($this->get_nested_value($specs, 'integrated_features.rear_rack') === true) {
+            $score += 5;
+        }
+        if ($this->get_nested_value($specs, 'integrated_features.front_rack') === true) {
+            $score += 4;
+        }
+        if ($this->get_nested_value($specs, 'integrated_features.kickstand') === true) {
+            $score += 4;
+        }
+        if ($this->get_nested_value($specs, 'integrated_features.usb') === true) {
+            $score += 4;
+        }
+        if ($this->get_nested_value($specs, 'integrated_features.walk_assist') === true) {
+            $score += 4;
+        }
+        if ($this->get_nested_value($specs, 'integrated_features.chain_guard') === true) {
+            $score += 2;
+        }
+        if ($this->get_nested_value($specs, 'integrated_features.bottle_cage_mount') === true) {
+            $score += 2;
+        }
+
+        return ['score' => $score, 'max_possible' => 30];
+    }
+
+    /**
+     * Calculate E-Bike Safety & Compliance category score (100 pts max).
+     *
+     * Factors: IP Rating 35pts, Reflectors/Visibility 25pts, Certifications 15pts,
+     * Throttle 15pts, Brake Adequacy 10pts.
+     *
+     * @param array $specs Product specs.
+     * @return int|null Score 0-100 or null if no data.
+     */
+    private function calculate_ebike_safety(array $specs): ?int {
+        $factors = [
+            $this->score_ebike_ip_rating($this->get_nested_value($specs, 'safety_and_compliance.ip_rating')),
+            $this->score_ebike_visibility($this->get_nested_value($specs, 'integrated_features.integrated_lights')),
+            $this->score_ebike_certifications($this->get_nested_value($specs, 'safety_and_compliance.certifications')),
+            $this->score_ebike_throttle($this->get_nested_value($specs, 'speed_and_class.throttle')),
+            $this->score_ebike_brake_adequacy($specs),
+        ];
+
+        return $this->calculate_category_score($factors);
+    }
+
+    /**
+     * Score e-bike IP rating.
+     * Water digit: 7 → 35, 6 → 28, 5 → 21, 4 → 14, none → 0.
+     *
+     * @param mixed $ip_rating IP rating like 'IP55', 'IPX5', etc.
+     * @return array{score: float|null, max_possible: int}
+     */
+    private function score_ebike_ip_rating($ip_rating): array {
+        if (empty($ip_rating)) {
+            return ['score' => null, 'max_possible' => 0];
+        }
+
+        $rating = strtoupper((string) $ip_rating);
+
+        // Extract water rating (second digit).
+        $water_rating = 0;
+
+        if (preg_match('/IP[X0-9]([0-9])/', $rating, $matches)) {
+            $water_rating = (int) $matches[1];
+        }
+
+        // Score based on water rating.
+        $score_map = [
+            7 => 35,
+            6 => 28,
+            5 => 21,
+            4 => 14,
+        ];
+
+        $score = $score_map[$water_rating] ?? 0;
+
+        return ['score' => $score, 'max_possible' => 35];
+    }
+
+    /**
+     * Score e-bike visibility (based on lights).
+     * Full = 25, Partial = 15, None = 0.
+     *
+     * @param mixed $lights Integrated lights value.
+     * @return array{score: float|null, max_possible: int}
+     */
+    private function score_ebike_visibility($lights): array {
+        if ($lights === null) {
+            return ['score' => null, 'max_possible' => 0];
+        }
+
+        if ($lights === true) {
+            return ['score' => 25, 'max_possible' => 25];
+        }
+        if ($lights === false) {
+            return ['score' => 0, 'max_possible' => 25];
+        }
+
+        $l = strtolower((string) $lights);
+
+        if (strpos($l, 'both') !== false || (strpos($l, 'front') !== false && strpos($l, 'rear') !== false)) {
+            return ['score' => 25, 'max_possible' => 25];
+        }
+
+        if (strpos($l, 'front') !== false || strpos($l, 'rear') !== false) {
+            return ['score' => 15, 'max_possible' => 25];
+        }
+
+        return ['score' => 0, 'max_possible' => 25];
+    }
+
+    /**
+     * Score e-bike certifications.
+     * Any cert = 15, None = 0.
+     *
+     * @param mixed $certifications Certifications (may be array).
+     * @return array{score: float|null, max_possible: int}
+     */
+    private function score_ebike_certifications($certifications): array {
+        if (empty($certifications)) {
+            return ['score' => null, 'max_possible' => 0];
+        }
+
+        // Check if has any certifications.
+        if (is_array($certifications) && !empty($certifications)) {
+            return ['score' => 15, 'max_possible' => 15];
+        }
+
+        if (is_string($certifications) && strlen($certifications) > 0 && strtolower($certifications) !== 'none') {
+            return ['score' => 15, 'max_possible' => 15];
+        }
+
+        return ['score' => 0, 'max_possible' => 15];
+    }
+
+    /**
+     * Score e-bike throttle feature.
+     * Yes = 15 (accessibility/convenience), No = 0.
+     *
+     * @param mixed $throttle Whether has throttle.
+     * @return array{score: float|null, max_possible: int}
+     */
+    private function score_ebike_throttle($throttle): array {
+        if ($throttle === null) {
+            return ['score' => null, 'max_possible' => 0];
+        }
+        return ['score' => $throttle === true ? 15 : 0, 'max_possible' => 15];
+    }
+
+    /**
+     * Score e-bike brake adequacy (based on brake type vs weight).
+     *
+     * @param array $specs Product specs.
+     * @return array{score: float, max_possible: int}
+     */
+    private function score_ebike_brake_adequacy(array $specs): array {
+        $brake_type = $this->get_nested_value($specs, 'brakes.brake_type');
+        $weight     = $this->get_nested_value($specs, 'weight_and_capacity.weight');
+
+        if (empty($brake_type)) {
+            return ['score' => null, 'max_possible' => 0];
+        }
+
+        // Handle array.
+        $types = is_array($brake_type) ? $brake_type : [$brake_type];
+        $combined = strtolower(implode(' ', $types));
+
+        $has_hydraulic = strpos($combined, 'hydraulic') !== false;
+
+        // If no weight data, base score only on brake type.
+        if ($weight === null || !is_numeric($weight)) {
+            return ['score' => $has_hydraulic ? 10 : 5, 'max_possible' => 10];
+        }
+
+        $w = (float) $weight;
+
+        // Hydraulic brakes are adequate for any weight.
+        if ($has_hydraulic) {
+            return ['score' => 10, 'max_possible' => 10];
+        }
+
+        // Mechanical disc - adequate for lighter bikes.
+        if (strpos($combined, 'mechanical') !== false || strpos($combined, 'disc') !== false) {
+            return ['score' => $w <= 60 ? 8 : 5, 'max_possible' => 10];
+        }
+
+        // Rim brakes - only adequate for very light bikes.
+        if (strpos($combined, 'rim') !== false || strpos($combined, 'v-brake') !== false) {
+            return ['score' => $w <= 45 ? 5 : 2, 'max_possible' => 10];
+        }
+
+        return ['score' => 3, 'max_possible' => 10];
+    }
+
+    // =========================================================================
     // Utility Methods
     // =========================================================================
 
@@ -1311,6 +2479,7 @@ class ProductScorer {
     private function set_product_group_key(string $product_type): void {
         $group_keys = [
             'Electric Scooter'    => 'e-scooters',
+            'Electric Bike'       => 'e-bikes',
             'Electric Skateboard' => 'e-skateboards',
             'Electric Unicycle'   => 'e-unicycles',
             'Hoverboard'          => 'hoverboards',

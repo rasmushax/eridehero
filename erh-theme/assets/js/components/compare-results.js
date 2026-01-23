@@ -1868,15 +1868,26 @@ function renderSpecRows(specs) {
 
 /**
  * Map JS category names to PHP score keys.
+ * Includes mappings for both e-scooters and e-bikes.
  */
 const CATEGORY_SCORE_KEYS = {
+    // Shared categories (same name, same key)
     'Motor Performance': 'motor_performance',
-    'Range & Battery': 'range_battery',
     'Ride Quality': 'ride_quality',
+
+    // E-scooter specific
+    'Range & Battery': 'range_battery',
     'Portability & Fit': 'portability',
     'Safety': 'safety',
     'Features': 'features',
     'Maintenance': 'maintenance',
+
+    // E-bike specific
+    'Battery & Range': 'range_battery',
+    'Drivetrain & Components': 'drivetrain',
+    'Weight & Portability': 'portability',
+    'Features & Tech': 'features',
+    'Safety & Compliance': 'safety',
 };
 
 /**

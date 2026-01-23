@@ -343,6 +343,9 @@ function erh_get_escooter_spec_groups( int $product_id ): array {
 /**
  * Get e-bike specification groups
  *
+ * ACF fallback when cache is not available (during cache rebuild).
+ * Uses correct ACF field paths from acf-json/acf-fields-ebike.json.
+ *
  * @param int $product_id The product ID.
  * @return array Array of spec groups.
  */
@@ -350,40 +353,173 @@ function erh_get_ebike_spec_groups( int $product_id ): array {
     // Get nested e-bike data.
     $ebike = get_field( 'e-bikes', $product_id );
 
+    if ( empty( $ebike ) ) {
+        return array();
+    }
+
     $groups = array();
 
-    // Claimed Performance (manufacturer specs).
-    $groups['claimed'] = array(
-        'label' => 'Claimed performance',
-        'specs' => erh_filter_specs( array(
-            array( 'label' => 'Top speed', 'value' => get_field( 'manufacturer_top_speed', $product_id ), 'unit' => 'mph' ),
-            array( 'label' => 'Range', 'value' => get_field( 'manufacturer_range', $product_id ), 'unit' => 'mi' ),
-        ) ),
-    );
+    // Category.
+    $category = $ebike['category'] ?? array();
+    if ( ! empty( $category ) && is_array( $category ) ) {
+        $groups['category'] = array(
+            'label' => 'Category',
+            'specs' => array(
+                array( 'label' => 'Category', 'value' => implode( ', ', $category ) ),
+            ),
+        );
+    }
 
-    // Motor.
+    // Motor & Assistance.
     $motor = $ebike['motor'] ?? array();
     $groups['motor'] = array(
-        'label' => 'Motor & power',
+        'label' => 'Motor & assistance',
         'specs' => erh_filter_specs( array(
-            array( 'label' => 'Motor type', 'value' => $motor['type'] ?? '' ),
-            array( 'label' => 'Motor position', 'value' => $motor['position'] ?? '' ),
+            array( 'label' => 'Motor type', 'value' => $motor['motor_type'] ?? '' ),
+            array( 'label' => 'Motor position', 'value' => $motor['motor_position'] ?? '' ),
             array( 'label' => 'Nominal power', 'value' => $motor['power_nominal'] ?? '', 'unit' => 'W' ),
             array( 'label' => 'Peak power', 'value' => $motor['power_peak'] ?? '', 'unit' => 'W' ),
             array( 'label' => 'Torque', 'value' => $motor['torque'] ?? '', 'unit' => 'Nm' ),
+            array( 'label' => 'Sensor type', 'value' => $motor['sensor_type'] ?? '' ),
+            array( 'label' => 'Assist levels', 'value' => $motor['assist_levels'] ?? '' ),
         ) ),
     );
 
-    // Battery.
+    // Speed & Class.
+    $speed = $ebike['speed_and_class'] ?? array();
+    $class_arr = $speed['class'] ?? array();
+    $groups['speed'] = array(
+        'label' => 'Speed & class',
+        'specs' => erh_filter_specs( array(
+            array( 'label' => 'E-Bike class', 'value' => is_array( $class_arr ) ? implode( ', ', $class_arr ) : $class_arr ),
+            array( 'label' => 'Top assist speed', 'value' => $speed['top_assist_speed'] ?? '', 'unit' => 'mph' ),
+            array( 'label' => 'Throttle', 'value' => erh_format_boolean( $speed['throttle'] ?? false ) ),
+            array( 'label' => 'Throttle top speed', 'value' => $speed['throttle_top_speed'] ?? '', 'unit' => 'mph' ),
+        ) ),
+    );
+
+    // Battery & Range.
     $battery = $ebike['battery'] ?? array();
     $groups['battery'] = array(
-        'label' => 'Battery & charging',
+        'label' => 'Battery & range',
         'specs' => erh_filter_specs( array(
-            array( 'label' => 'Capacity', 'value' => $battery['capacity'] ?? '', 'unit' => 'Wh' ),
+            array( 'label' => 'Battery capacity', 'value' => $battery['battery_capacity'] ?? '', 'unit' => 'Wh' ),
             array( 'label' => 'Voltage', 'value' => $battery['voltage'] ?? '', 'unit' => 'V' ),
-            array( 'label' => 'Range (claimed)', 'value' => $battery['range_claimed'] ?? '', 'unit' => 'mi' ),
-            array( 'label' => 'Charging time', 'value' => $battery['charging_time'] ?? '', 'unit' => 'hrs' ),
-            array( 'label' => 'Removable', 'value' => erh_format_boolean( $battery['removable'] ?? false ) ),
+            array( 'label' => 'Amp hours', 'value' => $battery['amphours'] ?? '', 'unit' => 'Ah' ),
+            array( 'label' => 'Max range', 'value' => $battery['range'] ?? '', 'unit' => 'mi' ),
+            array( 'label' => 'Charge time', 'value' => $battery['charge_time'] ?? '', 'unit' => 'hrs' ),
+            array( 'label' => 'Battery position', 'value' => $battery['battery_position'] ?? '' ),
+            array( 'label' => 'Removable battery', 'value' => erh_format_boolean( $battery['removable'] ?? false ) ),
+        ) ),
+    );
+
+    // Frame & Fit.
+    $frame = $ebike['frame_and_geometry'] ?? array();
+    $weight_cap = $ebike['weight_and_capacity'] ?? array();
+    $frame_material = $frame['frame_material'] ?? array();
+    $frame_style = $frame['frame_style'] ?? array();
+    $sizes = $frame['sizes_available'] ?? array();
+    $groups['frame'] = array(
+        'label' => 'Frame & fit',
+        'specs' => erh_filter_specs( array(
+            array( 'label' => 'Frame material', 'value' => is_array( $frame_material ) ? implode( ', ', $frame_material ) : $frame_material ),
+            array( 'label' => 'Frame style', 'value' => is_array( $frame_style ) ? implode( ', ', $frame_style ) : $frame_style ),
+            array( 'label' => 'Sizes available', 'value' => is_array( $sizes ) ? implode( ', ', $sizes ) : $sizes ),
+            array( 'label' => 'Weight', 'value' => $weight_cap['weight'] ?? '', 'unit' => 'lbs' ),
+            array( 'label' => 'Weight limit', 'value' => $weight_cap['weight_limit'] ?? '', 'unit' => 'lbs' ),
+            array( 'label' => 'Rack capacity', 'value' => $weight_cap['rack_capacity'] ?? '', 'unit' => 'lbs' ),
+            array( 'label' => 'Standover height', 'value' => $frame['standover_height'] ?? '', 'unit' => '"' ),
+            array( 'label' => 'Min rider height', 'value' => $frame['min_rider_height'] ?? '', 'unit' => '"' ),
+            array( 'label' => 'Max rider height', 'value' => $frame['max_rider_height'] ?? '', 'unit' => '"' ),
+        ) ),
+    );
+
+    // Suspension.
+    $suspension = $ebike['suspension'] ?? array();
+    $groups['suspension'] = array(
+        'label' => 'Suspension',
+        'specs' => erh_filter_specs( array(
+            array( 'label' => 'Front suspension', 'value' => $suspension['front_suspension'] ?? '' ),
+            array( 'label' => 'Front travel', 'value' => $suspension['front_travel'] ?? '', 'unit' => 'mm' ),
+            array( 'label' => 'Rear suspension', 'value' => $suspension['rear_suspension'] ?? '' ),
+            array( 'label' => 'Rear travel', 'value' => $suspension['rear_travel'] ?? '', 'unit' => 'mm' ),
+            array( 'label' => 'Seatpost suspension', 'value' => erh_format_boolean( $suspension['seatpost_suspension'] ?? false ) ),
+        ) ),
+    );
+
+    // Drivetrain.
+    $drivetrain = $ebike['drivetrain'] ?? array();
+    $groups['drivetrain'] = array(
+        'label' => 'Drivetrain',
+        'specs' => erh_filter_specs( array(
+            array( 'label' => 'Gears', 'value' => $drivetrain['gears'] ?? '' ),
+            array( 'label' => 'Drive system', 'value' => $drivetrain['drive_system'] ?? '' ),
+            array( 'label' => 'Shifter', 'value' => $drivetrain['shifter'] ?? '' ),
+            array( 'label' => 'Derailleur', 'value' => $drivetrain['derailleur'] ?? '' ),
+            array( 'label' => 'Cassette', 'value' => $drivetrain['cassette'] ?? '' ),
+        ) ),
+    );
+
+    // Brakes.
+    $brakes = $ebike['brakes'] ?? array();
+    $brake_type = $brakes['brake_type'] ?? array();
+    $groups['brakes'] = array(
+        'label' => 'Brakes',
+        'specs' => erh_filter_specs( array(
+            array( 'label' => 'Brake type', 'value' => is_array( $brake_type ) ? implode( ', ', $brake_type ) : $brake_type ),
+            array( 'label' => 'Brake brand', 'value' => $brakes['brake_brand'] ?? '' ),
+            array( 'label' => 'Rotor size (front)', 'value' => $brakes['rotor_size_front'] ?? '', 'unit' => 'mm' ),
+            array( 'label' => 'Rotor size (rear)', 'value' => $brakes['rotor_size_rear'] ?? '', 'unit' => 'mm' ),
+        ) ),
+    );
+
+    // Wheels & Tires.
+    $wheels = $ebike['wheels_and_tires'] ?? array();
+    $groups['wheels'] = array(
+        'label' => 'Wheels & tires',
+        'specs' => erh_filter_specs( array(
+            array( 'label' => 'Wheel size', 'value' => $wheels['wheel_size'] ?? '', 'unit' => '"' ),
+            array( 'label' => 'Wheel size (rear)', 'value' => $wheels['wheel_size_rear'] ?? '', 'unit' => '"' ),
+            array( 'label' => 'Tire width', 'value' => $wheels['tire_width'] ?? '', 'unit' => '"' ),
+            array( 'label' => 'Tire type', 'value' => $wheels['tire_type'] ?? '' ),
+            array( 'label' => 'Puncture protection', 'value' => erh_format_boolean( $wheels['puncture_protection'] ?? false ) ),
+        ) ),
+    );
+
+    // Components & Tech.
+    $components = $ebike['components'] ?? array();
+    $connectivity = $components['connectivity'] ?? array();
+    $groups['components'] = array(
+        'label' => 'Components & tech',
+        'specs' => erh_filter_specs( array(
+            array( 'label' => 'Display', 'value' => $components['display'] ?? '' ),
+            array( 'label' => 'Display size', 'value' => $components['display_size'] ?? '', 'unit' => '"' ),
+            array( 'label' => 'Connectivity', 'value' => is_array( $connectivity ) ? implode( ', ', $connectivity ) : $connectivity ),
+            array( 'label' => 'App compatible', 'value' => erh_format_boolean( $components['app_compatible'] ?? false ) ),
+        ) ),
+    );
+
+    // Features & Safety.
+    $features = $ebike['integrated_features'] ?? array();
+    $safety = $ebike['safety_and_compliance'] ?? array();
+    $special = $ebike['special_features'] ?? array();
+    $certifications = $safety['certifications'] ?? array();
+    $groups['features'] = array(
+        'label' => 'Features & safety',
+        'specs' => erh_filter_specs( array(
+            array( 'label' => 'Integrated lights', 'value' => erh_format_boolean( $features['integrated_lights'] ?? false ) ),
+            array( 'label' => 'Fenders', 'value' => erh_format_boolean( $features['fenders'] ?? false ) ),
+            array( 'label' => 'Rear rack', 'value' => erh_format_boolean( $features['rear_rack'] ?? false ) ),
+            array( 'label' => 'Front rack', 'value' => erh_format_boolean( $features['front_rack'] ?? false ) ),
+            array( 'label' => 'Kickstand', 'value' => erh_format_boolean( $features['kickstand'] ?? false ) ),
+            array( 'label' => 'Chain guard', 'value' => erh_format_boolean( $features['chain_guard'] ?? false ) ),
+            array( 'label' => 'Walk assist', 'value' => erh_format_boolean( $features['walk_assist'] ?? false ) ),
+            array( 'label' => 'Alarm', 'value' => erh_format_boolean( $features['alarm'] ?? false ) ),
+            array( 'label' => 'USB charging', 'value' => erh_format_boolean( $features['usb'] ?? false ) ),
+            array( 'label' => 'Bottle cage mount', 'value' => erh_format_boolean( $features['bottle_cage_mount'] ?? false ) ),
+            array( 'label' => 'IP rating', 'value' => $safety['ip_rating'] ?? '' ),
+            array( 'label' => 'Certifications', 'value' => is_array( $certifications ) ? implode( ', ', $certifications ) : $certifications ),
+            array( 'label' => 'Special features', 'value' => is_array( $special ) ? implode( ', ', $special ) : $special ),
         ) ),
     );
 

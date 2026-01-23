@@ -758,7 +758,15 @@ function erh_get_compare_title_data(): array {
 	foreach ( $product_ids as $pid ) {
 		$names[] = get_the_title( $pid );
 		if ( empty( $product_type ) ) {
+			// Try ACF field first.
 			$product_type = get_field( 'product_type', $pid );
+			// Fallback to product_type taxonomy.
+			if ( empty( $product_type ) ) {
+				$product_type_terms = get_the_terms( $pid, 'product_type' );
+				if ( ! empty( $product_type_terms ) && ! is_wp_error( $product_type_terms ) ) {
+					$product_type = $product_type_terms[0]->name;
+				}
+			}
 		}
 	}
 
