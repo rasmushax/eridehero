@@ -1871,23 +1871,21 @@ function renderSpecRows(specs) {
  * Includes mappings for both e-scooters and e-bikes.
  */
 const CATEGORY_SCORE_KEYS = {
-    // Shared categories (same name, same key)
+    // E-scooter categories
     'Motor Performance': 'motor_performance',
-    'Ride Quality': 'ride_quality',
-
-    // E-scooter specific
     'Range & Battery': 'range_battery',
+    'Ride Quality': 'ride_quality',
     'Portability & Fit': 'portability',
     'Safety': 'safety',
     'Features': 'features',
     'Maintenance': 'maintenance',
 
-    // E-bike specific
-    'Battery & Range': 'range_battery',
-    'Drivetrain & Components': 'drivetrain',
-    'Weight & Portability': 'portability',
-    'Features & Tech': 'features',
-    'Safety & Compliance': 'safety',
+    // E-bike categories (new 5-category structure)
+    'Motor & Drive': 'motor_drive',
+    'Battery & Range': 'battery_range',
+    'Component Quality': 'component_quality',
+    'Comfort': 'comfort',
+    'Practicality': 'practicality',
 };
 
 /**

@@ -22,18 +22,36 @@ import { getUserGeo } from '../services/geo-price.js';
 // =============================================================================
 
 /**
- * Score category configuration.
+ * Score category configuration by product type.
  * Maps score keys to display names.
  */
 const SCORE_CONFIG = {
-    motor_performance: { name: 'Motor', icon: 'zap' },
-    range_battery: { name: 'Range & Battery', icon: 'battery' },
-    ride_quality: { name: 'Ride Quality', icon: 'smile' },
-    portability: { name: 'Portability', icon: 'box' },
-    safety: { name: 'Safety', icon: 'shield' },
-    features: { name: 'Features', icon: 'settings' },
-    maintenance: { name: 'Maintenance', icon: 'tool' },
+    escooter: {
+        motor_performance: { name: 'Motor', icon: 'zap' },
+        range_battery: { name: 'Range & Battery', icon: 'battery' },
+        ride_quality: { name: 'Ride Quality', icon: 'smile' },
+        portability: { name: 'Portability', icon: 'box' },
+        safety: { name: 'Safety', icon: 'shield' },
+        features: { name: 'Features', icon: 'settings' },
+        maintenance: { name: 'Maintenance', icon: 'tool' },
+    },
+    ebike: {
+        motor_drive: { name: 'Motor & Drive', icon: 'zap' },
+        battery_range: { name: 'Battery & Range', icon: 'battery' },
+        component_quality: { name: 'Component Quality', icon: 'settings' },
+        comfort: { name: 'Comfort', icon: 'smile' },
+        practicality: { name: 'Practicality', icon: 'box' },
+    },
 };
+
+/**
+ * Get score config for a product category.
+ * @param {string} category - Product category (escooter, ebike)
+ * @returns {Object} Score configuration
+ */
+function getScoreConfig(category) {
+    return SCORE_CONFIG[category] || SCORE_CONFIG.escooter;
+}
 
 // =============================================================================
 // ProductPage Class
@@ -195,8 +213,9 @@ class ProductPage {
     renderRadarChart(data) {
         const { product, bracket_scores, price_context } = data;
 
-        // Build categories array from score config
-        const categories = Object.entries(SCORE_CONFIG)
+        // Build categories array from score config (product-type aware)
+        const scoreConfig = getScoreConfig(this.category);
+        const categories = Object.entries(scoreConfig)
             .filter(([key]) => product.scores[key] !== undefined)
             .map(([key, config]) => ({
                 key,

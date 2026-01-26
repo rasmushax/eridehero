@@ -98,47 +98,35 @@ export const TIE_THRESHOLD = 0;
  * Used for radar chart and score display.
  */
 export const EBIKE_SCORE_CATEGORIES = {
-    motor_performance: {
-        label: 'Motor Performance',
+    motor_drive: {
+        label: 'Motor & Drive',
         shortLabel: 'Motor',
         icon: 'zap',
-        tooltip: 'Based on torque, motor position, sensor type, and power output.',
+        tooltip: 'Based on torque, motor brand quality, motor position, sensor type, and power.',
     },
-    range_battery: {
+    battery_range: {
         label: 'Battery & Range',
         shortLabel: 'Battery',
         icon: 'battery',
-        tooltip: 'Based on battery capacity, charge time, voltage, and removability.',
+        tooltip: 'Based on battery capacity, range, cell quality, charge time, and removability.',
     },
-    ride_quality: {
-        label: 'Ride Quality',
+    component_quality: {
+        label: 'Component Quality',
+        shortLabel: 'Components',
+        icon: 'settings',
+        tooltip: 'Based on brake brand, drivetrain brand, tire brand, frame material, IP rating, and certifications.',
+    },
+    comfort: {
+        label: 'Comfort',
         shortLabel: 'Comfort',
         icon: 'smile',
-        tooltip: 'Based on suspension, tire width, puncture protection, and frame style.',
+        tooltip: 'Based on front/rear suspension type and travel, and seatpost suspension.',
     },
-    drivetrain: {
-        label: 'Drivetrain & Components',
-        shortLabel: 'Drivetrain',
-        icon: 'settings',
-        tooltip: 'Based on brake type, rotor size, gear count, drive system, and brake brand.',
-    },
-    portability: {
-        label: 'Weight & Portability',
-        shortLabel: 'Weight',
+    practicality: {
+        label: 'Practicality',
+        shortLabel: 'Practical',
         icon: 'box',
-        tooltip: 'Based on weight (adjusted for bike category) and folding capability.',
-    },
-    features: {
-        label: 'Features & Tech',
-        shortLabel: 'Features',
-        icon: 'monitor',
-        tooltip: 'Based on display, lights, app connectivity, security, and accessories.',
-    },
-    safety: {
-        label: 'Safety & Compliance',
-        shortLabel: 'Safety',
-        icon: 'shield',
-        tooltip: 'Based on IP rating, visibility, certifications, and throttle availability.',
+        tooltip: 'Based on weight, folding, lights, accessories, display, app connectivity, and throttle.',
     },
 };
 
