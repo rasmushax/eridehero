@@ -41,7 +41,14 @@
       "Bash(wp erh cron:*)",
       "Bash(php wp-cli.phar erh cron run:*)",
       "Bash(cmd /c \"cd /d F:\\\\wamp64\\\\www\\\\eridehero && php wp-cli.phar erh cron run cache-rebuild\")",
-      "Bash(cmd /c \"findstr /C:\"overall\" F:\\\\wamp64\\\\www\\\\eridehero\\\\wp-content\\\\uploads\\\\finder_ebike.json | sort\")"
+      "Bash(cmd /c \"findstr /C:\"overall\" F:\\\\wamp64\\\\www\\\\eridehero\\\\wp-content\\\\uploads\\\\finder_ebike.json | sort\")",
+      "Bash(Select-Object -ExpandProperty FullName)",
+      "Bash(powershell.exe -Command \"Get-Content ''C:\\\\laragon\\\\www\\\\eridehero\\\\wp-content\\\\uploads\\\\finder_ebike.json'' | Select-String -Pattern ''\"\"comfort\"\": 0'' -Context 50,5 | Select-Object -First 200\")",
+      "Bash(powershell.exe -Command \"Get-Content ''C:\\\\laragon\\\\www\\\\eridehero\\\\wp-content\\\\uploads\\\\finder_ebike.json'' | ConvertFrom-Json | Where-Object { $_specs.scores.comfort -eq 0 } | Select-Object -Property name, @{n=''suspension'';e={$_specs.suspension}}, @{n=''category'';e={$_specs.category}}, @{n=''comfort'';e={$_specs.scores.comfort}} | ConvertTo-Json -Depth 5\")",
+      "Bash(dir /s /b \"C:\\\\Users\\\\rasmu\\\\Projects\\\\eridehero\\\\*finder*.json\")",
+      "Bash(powershell:*)",
+      "Bash(php:*)",
+      "Bash(dir nul)"
     ]
   }
 }

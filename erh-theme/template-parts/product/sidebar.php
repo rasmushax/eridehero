@@ -10,7 +10,10 @@ if ( ! defined( 'ABSPATH' ) ) {
     exit;
 }
 
-$product_id = get_the_ID();
+$product_id    = get_the_ID();
+$product_type  = get_field( 'product_type', $product_id ) ?: 'Electric Scooter';
+$category      = \ERH\CategoryConfig::get_by_type( $product_type );
+$archive_slug  = $category ? $category['archive_slug'] : 'e-scooters';
 ?>
 <div class="sidebar-sticky">
     <!-- Table of Contents -->
@@ -30,7 +33,7 @@ $product_id = get_the_ID();
             <?php erh_the_icon( 'bell' ); ?>
             <?php esc_html_e( 'Track price', 'erh' ); ?>
         </button>
-        <a href="<?php echo esc_url( home_url( '/e-scooters/compare/?add=' . $product_id ) ); ?>" class="btn btn-ghost btn-block">
+        <a href="<?php echo esc_url( home_url( '/' . $archive_slug . '/compare/?add=' . $product_id ) ); ?>" class="btn btn-ghost btn-block">
             <?php erh_the_icon( 'grid' ); ?>
             <?php esc_html_e( 'Compare', 'erh' ); ?>
         </a>

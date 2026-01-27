@@ -38,6 +38,26 @@ const WEAKNESS_TIERS = [
 ];
 
 /**
+ * Product type labels for display.
+ */
+const PRODUCT_TYPE_LABELS = {
+    escooter: { singular: 'scooter', plural: 'electric scooters' },
+    ebike: { singular: 'e-bike', plural: 'electric bikes' },
+    euc: { singular: 'EUC', plural: 'electric unicycles' },
+    eskateboard: { singular: 'e-skateboard', plural: 'electric skateboards' },
+    hoverboard: { singular: 'hoverboard', plural: 'hoverboards' },
+};
+
+/**
+ * Get product type labels for a category.
+ * @param {string} category - Category key
+ * @returns {{ singular: string, plural: string }}
+ */
+function getProductLabels(category) {
+    return PRODUCT_TYPE_LABELS[category] || { singular: 'product', plural: 'products' };
+}
+
+/**
  * Get tooltip with fallback chain from centralized tooltips.
  *
  * Fallback chain: erhData.tooltips[key].comparison → .methodology
@@ -121,7 +141,7 @@ function getMetricTooltip(specKey) {
     }
 
     // Fallback for any specs not in centralized tooltips
-    return 'Performance metric compared against similar scooters.';
+    return 'Performance metric compared against similar products.';
 }
 
 /**
@@ -199,13 +219,15 @@ function formatFallbackLabel(item, type) {
  * Format the bracket context text.
  *
  * @param {Object} priceContext - Price context from API
+ * @param {string} category - Category key (escooter, ebike, etc.)
  * @returns {string} Context text
  */
-function formatBracketContextText(priceContext) {
+function formatBracketContextText(priceContext, category) {
     const { bracket, products_in_bracket, comparison_mode } = priceContext;
+    const labels = getProductLabels(category);
 
     if (comparison_mode === 'category') {
-        return 'Compared to all electric scooters';
+        return `Compared to all ${labels.plural}`;
     }
 
     const bracketLabel = bracket?.label || 'this price range';
@@ -213,7 +235,7 @@ function formatBracketContextText(priceContext) {
         ? `$${bracket.min.toLocaleString()}–${bracket.max === 2147483647 ? '+' : '$' + bracket.max.toLocaleString()}`
         : '';
 
-    return `Compared to ${products_in_bracket} scooters in the ${bracketLabel} bracket${bracketRange ? ` (${bracketRange})` : ''}`;
+    return `Compared to ${products_in_bracket} ${labels.plural} in the ${bracketLabel} bracket${bracketRange ? ` (${bracketRange})` : ''}`;
 }
 
 // =============================================================================
@@ -355,7 +377,7 @@ export class ProductAnalysis {
 
         // Update context text (popover is already in the HTML template)
         if (this.contextTextEl) {
-            this.contextTextEl.textContent = formatBracketContextText(price_context);
+            this.contextTextEl.textContent = formatBracketContextText(price_context, this.category);
         }
 
         // Show content, hide skeleton
@@ -389,7 +411,8 @@ export class ProductAnalysis {
             const bracketLabel = priceContext?.bracket?.label || 'its price range';
             const messageEl = this.emptyEl.querySelector('.analysis-empty-message');
             if (messageEl) {
-                messageEl.textContent = `This scooter performs close to average for the ${bracketLabel} bracket — no significant strengths or weaknesses identified.`;
+                const labels = getProductLabels(this.category);
+                messageEl.textContent = `This ${labels.singular} performs close to average for the ${bracketLabel} bracket — no significant strengths or weaknesses identified.`;
             }
             this.emptyEl.style.display = '';
         }

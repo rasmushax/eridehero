@@ -36,6 +36,22 @@ class PriceBracketConfig {
 	];
 
 	/**
+	 * E-bike specific price brackets.
+	 *
+	 * E-bikes are generally more expensive than e-scooters due to
+	 * larger batteries, more complex drivetrains, and component quality.
+	 *
+	 * @var array<string, array{min: int, max: int, label: string}>
+	 */
+	public const EBIKE_BRACKETS = [
+		'budget'      => [ 'min' => 0,    'max' => 1500,        'label' => 'Budget' ],
+		'midrange'    => [ 'min' => 1500, 'max' => 3000,        'label' => 'Mid-Range' ],
+		'performance' => [ 'min' => 3000, 'max' => 5000,        'label' => 'Performance' ],
+		'premium'     => [ 'min' => 5000, 'max' => 8000,        'label' => 'Premium' ],
+		'ultra'       => [ 'min' => 8000, 'max' => PHP_INT_MAX, 'label' => 'Ultra' ],
+	];
+
+	/**
 	 * Minimum products needed in bracket for bracket-based comparison.
 	 * If fewer products exist, falls back to category-wide percentile.
 	 */
@@ -60,13 +76,31 @@ class PriceBracketConfig {
 	public const AVERAGE_THRESHOLD = 15;
 
 	/**
+	 * Get brackets for a specific product type.
+	 *
+	 * @param string $product_type Product type slug (escooter, ebike, etc.).
+	 * @return array<string, array{min: int, max: int, label: string}> Brackets array.
+	 */
+	public static function get_brackets_for_type( string $product_type ): array {
+		$type = strtolower( trim( $product_type ) );
+
+		return match ( $type ) {
+			'ebike', 'electric bike', 'e-bike' => self::EBIKE_BRACKETS,
+			default => self::BRACKETS,
+		};
+	}
+
+	/**
 	 * Get bracket key for a given price.
 	 *
-	 * @param float $price Price in regional currency.
+	 * @param float  $price        Price in regional currency.
+	 * @param string $product_type Product type slug (optional, defaults to escooter brackets).
 	 * @return string Bracket key (budget, midrange, performance, premium, ultra).
 	 */
-	public static function get_bracket_key( float $price ): string {
-		foreach ( self::BRACKETS as $key => $bracket ) {
+	public static function get_bracket_key( float $price, string $product_type = 'escooter' ): string {
+		$brackets = self::get_brackets_for_type( $product_type );
+
+		foreach ( $brackets as $key => $bracket ) {
 			if ( $price >= $bracket['min'] && $price < $bracket['max'] ) {
 				return $key;
 			}
@@ -78,12 +112,14 @@ class PriceBracketConfig {
 	/**
 	 * Get full bracket configuration for a given price.
 	 *
-	 * @param float $price Price to look up.
+	 * @param float  $price        Price to look up.
+	 * @param string $product_type Product type slug (optional, defaults to escooter brackets).
 	 * @return array{key: string, min: int, max: int, label: string} Bracket config.
 	 */
-	public static function get_bracket( float $price ): array {
-		$key    = self::get_bracket_key( $price );
-		$config = self::BRACKETS[ $key ];
+	public static function get_bracket( float $price, string $product_type = 'escooter' ): array {
+		$brackets = self::get_brackets_for_type( $product_type );
+		$key      = self::get_bracket_key( $price, $product_type );
+		$config   = $brackets[ $key ];
 
 		return [
 			'key'   => $key,
@@ -96,22 +132,26 @@ class PriceBracketConfig {
 	/**
 	 * Get bracket label for display.
 	 *
-	 * @param string $bracket_key Bracket key.
+	 * @param string $bracket_key  Bracket key.
+	 * @param string $product_type Product type slug (optional, defaults to escooter brackets).
 	 * @return string Human-readable label.
 	 */
-	public static function get_bracket_label( string $bracket_key ): string {
-		return self::BRACKETS[ $bracket_key ]['label'] ?? 'Unknown';
+	public static function get_bracket_label( string $bracket_key, string $product_type = 'escooter' ): string {
+		$brackets = self::get_brackets_for_type( $product_type );
+		return $brackets[ $bracket_key ]['label'] ?? 'Unknown';
 	}
 
 	/**
 	 * Get price range string for display.
 	 *
-	 * @param string $bracket_key Bracket key.
+	 * @param string $bracket_key     Bracket key.
 	 * @param string $currency_symbol Currency symbol (e.g., '$', '€').
+	 * @param string $product_type    Product type slug (optional, defaults to escooter brackets).
 	 * @return string Formatted range string (e.g., "$500-$1,000").
 	 */
-	public static function get_bracket_range_display( string $bracket_key, string $currency_symbol = '$' ): string {
-		$bracket = self::BRACKETS[ $bracket_key ] ?? null;
+	public static function get_bracket_range_display( string $bracket_key, string $currency_symbol = '$', string $product_type = 'escooter' ): string {
+		$brackets = self::get_brackets_for_type( $product_type );
+		$bracket  = $brackets[ $bracket_key ] ?? null;
 
 		if ( ! $bracket ) {
 			return '';

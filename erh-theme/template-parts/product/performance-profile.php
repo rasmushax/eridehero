@@ -88,18 +88,28 @@ if ( ! $product_id ) {
                             <svg class="icon" aria-hidden="true"><use href="#icon-info"></use></svg>
                             How we compare
                         </button>
+                        <?php
+                        // Get price brackets for this product type.
+                        $brackets = \ERH\Comparison\PriceBracketConfig::get_brackets_for_type( $category_key );
+                        ?>
                         <div id="bracket-info-popover" class="popover popover--top" aria-hidden="true">
                             <div class="popover-arrow"></div>
                             <h4 class="popover-title">Price Bracket Comparison</h4>
-                            <p class="popover-text">Strengths and weaknesses are determined by comparing this scooter against others in the same price range.</p>
-                            <p class="popover-text">This ensures fair comparisons — a budget scooter is measured against budget competitors, not premium models.</p>
+                            <p class="popover-text">Strengths and weaknesses are determined by comparing this product against others in the same price range.</p>
+                            <p class="popover-text">This ensures fair comparisons — a budget model is measured against budget competitors, not premium models.</p>
                             <p class="popover-text"><strong>Price Brackets:</strong></p>
                             <ul class="popover-list">
-                                <li>Budget: Under $500</li>
-                                <li>Mid-Range: $500–$1,000</li>
-                                <li>Performance: $1,000–$1,500</li>
-                                <li>Premium: $1,500–$2,500</li>
-                                <li>Ultra: $2,500+</li>
+                                <?php foreach ( $brackets as $bracket ) : ?>
+                                    <li><?php echo esc_html( $bracket['label'] ); ?>: <?php
+                                        if ( $bracket['min'] === 0 ) {
+                                            echo 'Under $' . number_format( $bracket['max'] );
+                                        } elseif ( $bracket['max'] === PHP_INT_MAX ) {
+                                            echo '$' . number_format( $bracket['min'] ) . '+';
+                                        } else {
+                                            echo '$' . number_format( $bracket['min'] ) . '–$' . number_format( $bracket['max'] );
+                                        }
+                                    ?></li>
+                                <?php endforeach; ?>
                             </ul>
                         </div>
                     </div>

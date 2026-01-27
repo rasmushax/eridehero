@@ -152,7 +152,7 @@ class SpecConfig {
             'comparison'  => 'Higher hill climb speed means better real-world climbing performance.',
         ],
         'max_incline' => [
-            'methodology' => 'Maximum incline angle the manufacturer claims the scooter can climb. Actual results depend on rider weight and battery level.',
+            'methodology' => 'Maximum incline angle the manufacturer claims the product can climb. Actual results depend on rider weight and battery level.',
         ],
         'acceleration_0_15_mph' => [
             'methodology' => 'Median time from standstill to 15 mph over 10+ runs. Max acceleration setting. 175-lb rider, 80%+ battery.',
@@ -278,8 +278,8 @@ class SpecConfig {
         // Portability & Fit
         // =====================================================================
         'dimensions.weight' => [
-            'methodology' => 'Total weight including battery. Heavier scooters are harder to carry but often more stable.',
-            'comparison'  => 'Lighter scooters are easier to carry upstairs, onto public transit, or into your office.',
+            'methodology' => 'Total weight including battery. Heavier products are harder to carry but often more stable.',
+            'comparison'  => 'Lighter products are easier to carry upstairs, onto public transit, or into your office.',
         ],
         'dimensions.max_load' => [
             'methodology' => 'Maximum recommended rider weight. Exceeding may reduce performance and void warranty.',
@@ -297,10 +297,10 @@ class SpecConfig {
         ],
         'dimensions.foldable_handlebars' => [
             'methodology' => 'Handlebars fold down for more compact storage. Reduces folded height significantly.',
-            'comparison'  => 'Foldable handlebars make the scooter more compact for storage.',
+            'comparison'  => 'Foldable handlebars make the product more compact for storage.',
         ],
         'other.fold_location' => [
-            'methodology' => 'Where the scooter folds. Stem-fold is most common. Some fold at the deck.',
+            'methodology' => 'Where the product folds. Stem-fold is most common. Some fold at the deck.',
         ],
         'folded_footprint' => [
             'methodology' => 'Floor space when folded (length × width). Important for closets, car trunks, and under-desk storage.',
@@ -308,15 +308,15 @@ class SpecConfig {
         ],
         'speed_per_lb' => [
             'methodology' => 'Top speed divided by weight. Measures performance relative to weight.',
-            'comparison'  => 'Higher ratio means more speed per pound of scooter.',
+            'comparison'  => 'Higher ratio means more speed per pound of weight.',
         ],
         'wh_per_lb' => [
             'methodology' => 'Battery capacity divided by weight. Measures energy efficiency relative to weight.',
-            'comparison'  => 'Higher ratio means more energy storage per pound of scooter.',
+            'comparison'  => 'Higher ratio means more energy storage per pound of weight.',
         ],
         'tested_range_per_lb' => [
             'methodology' => 'Tested range divided by weight. Measures real-world range efficiency.',
-            'comparison'  => 'Higher ratio means more miles per pound of scooter.',
+            'comparison'  => 'Higher ratio means more miles per pound of weight.',
         ],
 
         // =====================================================================
@@ -326,7 +326,7 @@ class SpecConfig {
             'methodology' => 'Front brake type. Disc brakes offer more stopping power. Drum brakes are sealed and low-maintenance.',
         ],
         'brakes.rear' => [
-            'methodology' => 'Rear brake type. Some scooters use foot brake, electronic brake, or same type as front.',
+            'methodology' => 'Rear brake type. Some products use foot brake, electronic brake, or same type as front.',
         ],
         'brakes.regenerative' => [
             'methodology' => 'Electronic braking that recovers energy back to the battery. Extends range slightly and reduces brake wear.',
@@ -359,7 +359,7 @@ class SpecConfig {
             'comparison'  => 'Better displays show more information and are easier to read in sunlight.',
         ],
         'other.throttle_type' => [
-            'methodology' => 'Throttle style. Trigger and thumb are most common. Twist grip is rare on scooters.',
+            'methodology' => 'Throttle style. Trigger and thumb are most common. Twist grip is less common.',
         ],
         'other.kickstand' => [
             'methodology' => 'Built-in kickstand for parking. Side-mount is standard, center-mount is more stable.',
@@ -1150,7 +1150,7 @@ class SpecConfig {
 
             'Portability & Fit' => [
                 'icon'      => 'box',
-                'question'  => 'Does this scooter fit my life and body?',
+                'question'  => 'Does this product fit my life and body?',
                 'showScore' => true,
                 'scoreKey'  => 'portability',
                 'specs'     => [
