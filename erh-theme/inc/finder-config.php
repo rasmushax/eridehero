@@ -54,15 +54,11 @@ function erh_get_finder_page_config(): array {
 
 /**
  * Slug mappings for page slugs to JSON file types.
+ *
+ * Single source of truth: CategoryConfig::get_finder_slug_map()
  */
 function erh_get_finder_slug_map(): array {
-    return [
-        'escooter-finder'    => 'escooter',
-        'ebike-finder'       => 'ebike',
-        'skateboard-finder'  => 'skateboard',
-        'euc-finder'         => 'euc',
-        'hoverboard-finder'  => 'hoverboard',
-    ];
+    return \ERH\CategoryConfig::get_finder_slug_map();
 }
 
 /**
@@ -95,8 +91,27 @@ function erh_get_finder_type_map(): array {
  * - field_min/field_max: (optional) For contains mode, the product's min/max fields
  *
  * Group membership is defined in erh_get_filter_group_config().
+ *
+ * @param string $product_type Product type for type-specific config (e.g., price presets).
+ * @return array Range filter configuration.
  */
-function erh_get_range_filter_config(): array {
+function erh_get_range_filter_config( string $product_type = 'escooter' ): array {
+    // Product-type specific price presets.
+    $price_presets = [
+        'escooter' => [
+            [ 'label' => 'Under $500', 'min' => 1, 'max' => 500 ],
+            [ 'label' => '$500–$1,000', 'min' => 500, 'max' => 1000 ],
+            [ 'label' => '$1,000–$2,000', 'min' => 1000, 'max' => 2000 ],
+            [ 'label' => '$2,000+', 'min' => 2000 ],
+        ],
+        'ebike' => [
+            [ 'label' => 'Under $1,000', 'min' => 1, 'max' => 1000 ],
+            [ 'label' => '$1,000–$2,000', 'min' => 1000, 'max' => 2000 ],
+            [ 'label' => '$2,000–$3,000', 'min' => 2000, 'max' => 3000 ],
+            [ 'label' => '$3,000+', 'min' => 3000 ],
+        ],
+    ];
+
     return [
         'price' => [
             'label'        => 'Price',
@@ -105,14 +120,9 @@ function erh_get_range_filter_config(): array {
             'unit'         => '',
             'prefix'       => '$',
             'suffix'       => '',
-            'default_max'  => 5000,
+            'default_max'  => $product_type === 'ebike' ? 10000 : 5000,
             'round_factor' => 100,
-            'presets'      => [
-                [ 'label' => 'Under $500', 'min' => 1, 'max' => 500 ],
-                [ 'label' => '$500–$1,000', 'min' => 500, 'max' => 1000 ],
-                [ 'label' => '$1,000–$2,000', 'min' => 1000, 'max' => 2000 ],
-                [ 'label' => '$2,000+', 'min' => 2000 ],
-            ],
+            'presets'      => $price_presets[ $product_type ] ?? $price_presets['escooter'],
         ],
         'release_year' => [
             'label'        => 'Release Year',
@@ -134,19 +144,24 @@ function erh_get_range_filter_config(): array {
         'speed' => [
             'label'        => 'Top Speed (claimed)',
             'field'        => 'top_speed',
-            'spec_paths'   => [ 'manufacturer_top_speed' ], // Manufacturer claim only.
+            'spec_paths'   => [
+                'manufacturer_top_speed',                // E-scooter.
+                'speed_and_class.top_assist_speed',      // E-bike (top assist speed).
+            ],
             'unit'         => 'mph',
             'prefix'       => '',
             'suffix'       => 'mph',
             'default_max'  => 50,
             'round_factor' => 5,
             'use_data_min' => true,
-            'is_open'      => true,
         ],
         'range' => [
             'label'        => 'Range (claimed)',
             'field'        => 'range',
-            'spec_paths'   => [ 'manufacturer_range' ], // Manufacturer claim only.
+            'spec_paths'   => [
+                'manufacturer_range',   // E-scooter.
+                'battery.range',        // E-bike.
+            ],
             'unit'         => 'mi',
             'prefix'       => '',
             'suffix'       => 'mi',
@@ -157,19 +172,24 @@ function erh_get_range_filter_config(): array {
         'weight' => [
             'label'        => 'Weight',
             'field'        => 'weight',
-            'spec_paths'   => [ 'dimensions.weight' ], // Nested in e-scooters group.
+            'spec_paths'   => [
+                'dimensions.weight',           // E-scooter.
+                'weight_and_capacity.weight',  // E-bike.
+            ],
             'unit'         => 'lbs',
             'prefix'       => '',
             'suffix'       => 'lbs',
             'default_max'  => 150,
             'round_factor' => 10,
             'use_data_min' => true,
-            'is_open'      => true,
         ],
         'weight_limit' => [
             'label'        => 'Max Load',
             'field'        => 'weight_limit',
-            'spec_paths'   => [ 'dimensions.max_load' ], // Nested in e-scooters group.
+            'spec_paths'   => [
+                'dimensions.max_load',              // E-scooter.
+                'weight_and_capacity.weight_limit', // E-bike.
+            ],
             'unit'         => 'lbs',
             'prefix'       => '',
             'suffix'       => 'lbs',
@@ -180,14 +200,16 @@ function erh_get_range_filter_config(): array {
         'battery' => [
             'label'        => 'Capacity',
             'field'        => 'battery',
-            'spec_paths'   => [ 'battery.capacity' ], // Nested in e-scooters group.
+            'spec_paths'   => [
+                'battery.capacity',          // E-scooter.
+                'battery.battery_capacity',  // E-bike.
+            ],
             'unit'         => 'Wh',
             'prefix'       => '',
             'suffix'       => 'Wh',
             'default_max'  => 2000,
             'round_factor' => 100,
             'use_data_min' => true,
-            'is_open'      => true,
         ],
         'voltage' => [
             'label'        => 'Voltage',
@@ -214,7 +236,10 @@ function erh_get_range_filter_config(): array {
         'charging_time' => [
             'label'        => 'Charging Time',
             'field'        => 'charging_time',
-            'spec_paths'   => [ 'battery.charging_time' ], // Nested in e-scooters group.
+            'spec_paths'   => [
+                'battery.charging_time',  // E-scooter.
+                'battery.charge_time',    // E-bike.
+            ],
             'unit'         => 'hrs',
             'prefix'       => '',
             'suffix'       => 'hrs',
@@ -301,23 +326,29 @@ function erh_get_range_filter_config(): array {
         ],
 
         // =================================================================
-        // Tires
+        // Tires / Wheels
         // =================================================================
         'tire_size' => [
-            'label'        => 'Tire Size',
+            'label'        => 'Tire/Wheel Size',
             'field'        => 'tire_size',
-            'spec_paths'   => [ 'wheels.tire_size_front' ], // Front wheel size.
+            'spec_paths'   => [
+                'wheels.tire_size_front',        // E-scooter (front wheel).
+                'wheels_and_tires.wheel_size',   // E-bike.
+            ],
             'unit'         => 'in',
             'prefix'       => '',
             'suffix'       => '"',
-            'default_max'  => 14,
+            'default_max'  => 29,  // Increased for 27.5" and 29" e-bike wheels.
             'round_factor' => 1,
             'use_data_min' => true,
         ],
         'tire_width' => [
             'label'        => 'Tire Width',
             'field'        => 'tire_width',
-            'spec_paths'   => [ 'wheels.tire_width' ],
+            'spec_paths'   => [
+                'wheels.tire_width',             // E-scooter.
+                'wheels_and_tires.tire_width',   // E-bike.
+            ],
             'unit'         => 'in',
             'prefix'       => '',
             'suffix'       => '"',
@@ -340,7 +371,6 @@ function erh_get_range_filter_config(): array {
             'filter_mode'  => 'contains', // User inputs their height, check if product fits.
             'slider_mode'  => 'single',   // Single-thumb slider for contains mode.
             'input_type'   => 'height',   // Feet/inches input (future: 'height_metric' for cm).
-            'is_open'      => true,
             'presets'      => [
                 [ 'label' => 'Under 5\'4"', 'value' => 62 ],   // 5'2" midpoint
                 [ 'label' => '5\'4"–5\'10"', 'value' => 67 ],  // 5'7" midpoint
@@ -362,7 +392,6 @@ function erh_get_range_filter_config(): array {
             'default_max'  => 50,
             'round_factor' => 5,
             'use_data_min' => true,
-            'is_open'      => true,
         ],
         'tested_range' => [
             'label'        => 'Tested Range',
@@ -485,6 +514,109 @@ function erh_get_range_filter_config(): array {
             'round_factor' => 0.1,
             'use_data_min' => true,
         ],
+
+        // =================================================================
+        // E-Bike Specific Range Filters
+        // =================================================================
+        'torque' => [
+            'label'        => 'Torque',
+            'field'        => 'torque',
+            'spec_paths'   => [ 'motor.torque' ],
+            'unit'         => 'Nm',
+            'prefix'       => '',
+            'suffix'       => 'Nm',
+            'default_max'  => 120,
+            'round_factor' => 10,
+            'use_data_min' => true,
+        ],
+        'wheel_size' => [
+            'label'        => 'Wheel Size',
+            'field'        => 'wheel_size',
+            'spec_paths'   => [ 'wheels_and_tires.wheel_size' ],
+            'unit'         => 'in',
+            'prefix'       => '',
+            'suffix'       => '"',
+            'default_max'  => 29,
+            'round_factor' => 1,
+            'use_data_min' => true,
+        ],
+        'front_travel' => [
+            'label'        => 'Front Travel',
+            'field'        => 'front_travel',
+            'spec_paths'   => [ 'suspension.front_travel' ],
+            'unit'         => 'mm',
+            'prefix'       => '',
+            'suffix'       => 'mm',
+            'default_max'  => 200,
+            'round_factor' => 10,
+            'use_data_min' => true,
+        ],
+        'rear_travel' => [
+            'label'        => 'Rear Travel',
+            'field'        => 'rear_travel',
+            'spec_paths'   => [ 'suspension.rear_travel' ],
+            'unit'         => 'mm',
+            'prefix'       => '',
+            'suffix'       => 'mm',
+            'default_max'  => 200,
+            'round_factor' => 10,
+            'use_data_min' => true,
+        ],
+        'gears' => [
+            'label'        => 'Gears',
+            'field'        => 'gears',
+            'spec_paths'   => [ 'drivetrain.gears' ],
+            'unit'         => '',
+            'prefix'       => '',
+            'suffix'       => '-speed',
+            'default_max'  => 12,
+            'round_factor' => 1,
+            'use_data_min' => true,
+        ],
+        'top_assist_speed' => [
+            'label'        => 'Top Assist Speed',
+            'field'        => 'top_assist_speed',
+            'spec_paths'   => [ 'speed_and_class.top_assist_speed' ],
+            'unit'         => 'mph',
+            'prefix'       => '',
+            'suffix'       => 'mph',
+            'default_max'  => 32,
+            'round_factor' => 4,
+            'use_data_min' => true,
+        ],
+        'rotor_size' => [
+            'label'        => 'Rotor Size',
+            'field'        => 'rotor_size',
+            'spec_paths'   => [ 'brakes.rotor_size_front' ],
+            'unit'         => 'mm',
+            'prefix'       => '',
+            'suffix'       => 'mm',
+            'default_max'  => 220,
+            'round_factor' => 20,
+            'use_data_min' => true,
+        ],
+        'assist_levels' => [
+            'label'        => 'Assist Levels',
+            'field'        => 'assist_levels',
+            'spec_paths'   => [ 'motor.assist_levels' ],
+            'unit'         => '',
+            'prefix'       => '',
+            'suffix'       => ' levels',
+            'default_max'  => 10,
+            'round_factor' => 1,
+            'use_data_min' => true,
+        ],
+        'rack_capacity' => [
+            'label'        => 'Rack Capacity',
+            'field'        => 'rack_capacity',
+            'spec_paths'   => [ 'weight_and_capacity.rack_capacity' ],
+            'unit'         => 'lbs',
+            'prefix'       => '',
+            'suffix'       => 'lbs',
+            'default_max'  => 100,
+            'round_factor' => 10,
+            'use_data_min' => true,
+        ],
     ];
 }
 
@@ -520,14 +652,20 @@ function erh_get_checkbox_filter_config(): array {
         'brake_type' => [
             'label'         => 'Type',
             'field'         => 'brake_type',
-            'spec_paths'    => [ 'brakes.front' ], // Nested in e-scooters group.
+            'spec_paths'    => [
+                'brakes.front',       // E-scooter.
+                'brakes.brake_type',  // E-bike.
+            ],
             'visible_limit' => 10,
             'searchable'    => false,
         ],
         'tire_type' => [
             'label'         => 'Tire type',
             'field'         => 'tire_type',
-            'spec_paths'    => [ 'wheels.tire_type' ], // Nested in e-scooters group.
+            'spec_paths'    => [
+                'wheels.tire_type',           // E-scooter.
+                'wheels_and_tires.tire_type', // E-bike.
+            ],
             'visible_limit' => 10,
             'searchable'    => false,
         ],
@@ -549,7 +687,10 @@ function erh_get_checkbox_filter_config(): array {
         'ip_rating' => [
             'label'         => 'IP Rating',
             'field'         => 'ip_rating',
-            'spec_paths'    => [ 'other.ip_rating' ],
+            'spec_paths'    => [
+                'other.ip_rating',                   // E-scooter.
+                'safety_and_compliance.ip_rating',   // E-bike.
+            ],
             'visible_limit' => 10,
             'searchable'    => false,
         ],
@@ -563,10 +704,149 @@ function erh_get_checkbox_filter_config(): array {
         'features' => [
             'label'         => 'Features',
             'field'         => 'features',
-            'spec_paths'    => [ 'features' ], // Root level array field.
+            'spec_paths'    => [
+                'features',          // E-scooter.
+                'special_features',  // E-bike.
+            ],
             'visible_limit' => 8,
             'searchable'    => true,
             'is_array'      => true, // Values are arrays (checkbox field).
+        ],
+
+        // =================================================================
+        // E-Bike Specific Checkbox Filters
+        // =================================================================
+        'ebike_class' => [
+            'label'         => 'E-Bike Class',
+            'field'         => 'ebike_class',
+            'spec_paths'    => [ 'speed_and_class.class' ],
+            'visible_limit' => 5,
+            'searchable'    => false,
+            'is_array'      => true,
+        ],
+        'motor_brand' => [
+            'label'         => 'Motor Brand',
+            'field'         => 'motor_brand',
+            'spec_paths'    => [ 'motor.motor_brand' ],
+            'visible_limit' => 10,
+            'searchable'    => true,
+        ],
+        'motor_type' => [
+            'label'         => 'Motor Type',
+            'field'         => 'motor_type',
+            'spec_paths'    => [
+                'motor.motor_type',      // E-bike (Mid-drive, Hub, etc.).
+                'motor.motor_position',  // E-scooter (fallback).
+            ],
+            'visible_limit' => 10,
+            'searchable'    => false,
+        ],
+        'sensor_type' => [
+            'label'         => 'Sensor Type',
+            'field'         => 'sensor_type',
+            'spec_paths'    => [ 'motor.sensor_type' ],
+            'visible_limit' => 5,
+            'searchable'    => false,
+        ],
+        'frame_style' => [
+            'label'         => 'Frame Style',
+            'field'         => 'frame_style',
+            'spec_paths'    => [ 'frame_and_geometry.frame_style' ],
+            'visible_limit' => 5,
+            'searchable'    => false,
+            'is_array'      => true,
+        ],
+        'frame_material' => [
+            'label'         => 'Frame Material',
+            'field'         => 'frame_material',
+            'spec_paths'    => [ 'frame_and_geometry.frame_material' ],
+            'visible_limit' => 5,
+            'searchable'    => false,
+            'is_array'      => true,
+        ],
+        'battery_position' => [
+            'label'         => 'Battery Position',
+            'field'         => 'battery_position',
+            'spec_paths'    => [ 'battery.battery_position' ],
+            'visible_limit' => 5,
+            'searchable'    => false,
+        ],
+        'drive_system' => [
+            'label'         => 'Drive System',
+            'field'         => 'drive_system',
+            'spec_paths'    => [ 'drivetrain.drive_system' ],
+            'visible_limit' => 5,
+            'searchable'    => false,
+        ],
+        'front_suspension' => [
+            'label'         => 'Front Suspension',
+            'field'         => 'front_suspension',
+            'spec_paths'    => [ 'suspension.front_suspension' ],
+            'visible_limit' => 5,
+            'searchable'    => false,
+        ],
+        'rear_suspension' => [
+            'label'         => 'Rear Suspension',
+            'field'         => 'rear_suspension',
+            'spec_paths'    => [ 'suspension.rear_suspension' ],
+            'visible_limit' => 5,
+            'searchable'    => false,
+        ],
+        'display' => [
+            'label'         => 'Display Type',
+            'field'         => 'display',
+            'spec_paths'    => [
+                'components.display',  // E-bike.
+                'other.display_type',  // E-scooter.
+            ],
+            'visible_limit' => 5,
+            'searchable'    => false,
+        ],
+        'connectivity' => [
+            'label'         => 'Connectivity',
+            'field'         => 'connectivity',
+            'spec_paths'    => [ 'components.connectivity' ],
+            'visible_limit' => 5,
+            'searchable'    => false,
+            'is_array'      => true,
+        ],
+        'sizes_available' => [
+            'label'         => 'Sizes Available',
+            'field'         => 'sizes_available',
+            'spec_paths'    => [ 'frame_and_geometry.sizes_available' ],
+            'visible_limit' => 6,
+            'searchable'    => false,
+            'is_array'      => true,
+        ],
+        'certifications' => [
+            'label'         => 'Certifications',
+            'field'         => 'certifications',
+            'spec_paths'    => [ 'safety_and_compliance.certifications' ],
+            'visible_limit' => 5,
+            'searchable'    => false,
+            'is_array'      => true,
+        ],
+        'category' => [
+            'label'         => 'Category',
+            'field'         => 'category',
+            'spec_paths'    => [ 'category' ],
+            'visible_limit' => 6,
+            'searchable'    => true,
+            'is_array'      => true,
+        ],
+        'brake_brand' => [
+            'label'         => 'Brake Brand',
+            'field'         => 'brake_brand',
+            'spec_paths'    => [ 'brakes.brake_brand' ],
+            'visible_limit' => 8,
+            'searchable'    => true,
+        ],
+        'tire_brand' => [
+            'label'         => 'Tire Brand',
+            'field'         => 'tire_brand',
+            'spec_paths'    => [ 'wheels_and_tires.tire_brand' ],
+            'visible_limit' => 8,
+            'searchable'    => true,
         ],
     ];
 }
@@ -611,8 +891,68 @@ function erh_get_tristate_filter_config(): array {
         'has_lights' => [
             'label'      => 'Has lights',
             'field'      => 'has_lights',
-            'spec_paths' => [ 'lighting.lights' ], // Array field - true if has Front/Rear/Both.
-            'derive_from_array' => true, // Special handling: true if array contains non-"None" values.
+            'spec_paths' => [
+                'lighting.lights',                      // E-scooter (array field).
+                'integrated_features.integrated_lights', // E-bike (boolean).
+            ],
+            'derive_from_array' => true, // Special handling: true if array contains non-"None" values or boolean true.
+        ],
+
+        // =================================================================
+        // E-Bike Specific Tristate Filters
+        // =================================================================
+        'has_throttle' => [
+            'label'      => 'Has throttle',
+            'field'      => 'has_throttle',
+            'spec_paths' => [ 'speed_and_class.throttle' ],
+        ],
+        'removable_battery' => [
+            'label'      => 'Removable battery',
+            'field'      => 'removable_battery',
+            'spec_paths' => [ 'battery.removable' ],
+        ],
+        'puncture_protection' => [
+            'label'      => 'Puncture protection',
+            'field'      => 'puncture_protection',
+            'spec_paths' => [ 'wheels_and_tires.puncture_protection' ],
+        ],
+        'seatpost_suspension' => [
+            'label'      => 'Seatpost suspension',
+            'field'      => 'seatpost_suspension',
+            'spec_paths' => [ 'suspension.seatpost_suspension' ],
+        ],
+        'app_compatible' => [
+            'label'      => 'App compatible',
+            'field'      => 'app_compatible',
+            'spec_paths' => [ 'components.app_compatible' ],
+        ],
+        'has_fenders' => [
+            'label'      => 'Has fenders',
+            'field'      => 'has_fenders',
+            'spec_paths' => [ 'integrated_features.fenders' ],
+        ],
+        'has_rear_rack' => [
+            'label'      => 'Has rear rack',
+            'field'      => 'has_rear_rack',
+            'spec_paths' => [ 'integrated_features.rear_rack' ],
+        ],
+        'has_front_rack' => [
+            'label'      => 'Has front rack',
+            'field'      => 'has_front_rack',
+            'spec_paths' => [ 'integrated_features.front_rack' ],
+        ],
+        'has_kickstand' => [
+            'label'      => 'Has kickstand',
+            'field'      => 'has_kickstand',
+            'spec_paths' => [
+                'integrated_features.kickstand',  // E-bike.
+                'other.kickstand',                // E-scooter.
+            ],
+        ],
+        'walk_assist' => [
+            'label'      => 'Walk assist',
+            'field'      => 'walk_assist',
+            'spec_paths' => [ 'integrated_features.walk_assist' ],
         ],
     ];
 }
@@ -622,11 +962,259 @@ function erh_get_tristate_filter_config(): array {
  *
  * Defines the order and structure of filter groups in the sidebar.
  * The 'quick' group contains subgroups and has no main heading.
+ *
+ * Product-type-aware: returns different filter groups based on product type.
+ * Groups with filters that don't apply to a product type auto-hide via erh_group_has_content().
+ *
+ * @param string $product_type Product type key (escooter, ebike, etc.). Default 'escooter'.
+ * @return array Filter group configuration.
  */
-function erh_get_filter_group_config(): array {
+function erh_get_filter_group_config( string $product_type = 'escooter' ): array {
+    // E-scooter filter groups.
+    if ( $product_type === 'escooter' ) {
+        return [
+            'quick' => [
+                'title'      => '', // No main heading.
+                'is_quick'   => true,
+                'subgroups'  => [
+                    'price' => [
+                        'title'            => 'Price',
+                        'range_filters'    => [ 'price' ],
+                        'checkbox_filters' => [],
+                        'tristate_filters' => [],
+                        'has_in_stock'     => true,
+                    ],
+                    'brands' => [
+                        'title'            => 'Brands',
+                        'range_filters'    => [],
+                        'checkbox_filters' => [ 'brand' ],
+                        'tristate_filters' => [],
+                        'has_in_stock'     => false,
+                    ],
+                ],
+            ],
+            'motor' => [
+                'title'            => 'Motor',
+                'range_filters'    => [ 'motor_power', 'motor_peak' ],
+                'checkbox_filters' => [ 'motor_position' ],
+                'tristate_filters' => [],
+                'has_in_stock'     => false,
+            ],
+            'battery' => [
+                'title'            => 'Battery',
+                'range_filters'    => [ 'battery', 'voltage', 'amphours', 'charging_time' ],
+                'checkbox_filters' => [],
+                'tristate_filters' => [],
+                'has_in_stock'     => false,
+            ],
+            'performance' => [
+                'title'            => 'Claimed Specs',
+                'range_filters'    => [ 'speed', 'range', 'max_incline' ],
+                'checkbox_filters' => [],
+                'tristate_filters' => [],
+                'has_in_stock'     => false,
+            ],
+            'tested_performance' => [
+                'title'            => 'Tested Performance',
+                'range_filters'    => [ 'tested_speed', 'tested_range', 'accel_0_15', 'accel_0_20', 'brake_distance', 'hill_climb' ],
+                'checkbox_filters' => [],
+                'tristate_filters' => [],
+                'has_in_stock'     => false,
+            ],
+            'portability' => [
+                'title'            => 'Portability',
+                'range_filters'    => [ 'weight' ],
+                'checkbox_filters' => [],
+                'tristate_filters' => [ 'foldable_handlebars' ],
+                'has_in_stock'     => false,
+            ],
+            'rider_fit' => [
+                'title'            => 'Rider Fit',
+                'range_filters'    => [ 'rider_height', 'weight_limit', 'deck_width', 'handlebar_width', 'ground_clearance' ],
+                'checkbox_filters' => [],
+                'tristate_filters' => [],
+                'has_in_stock'     => false,
+            ],
+            'brakes' => [
+                'title'            => 'Brakes',
+                'range_filters'    => [],
+                'checkbox_filters' => [ 'brake_type' ],
+                'tristate_filters' => [ 'regenerative_braking' ],
+                'has_in_stock'     => false,
+            ],
+            'tires' => [
+                'title'            => 'Tires',
+                'range_filters'    => [ 'tire_size', 'tire_width' ],
+                'checkbox_filters' => [ 'tire_type' ],
+                'tristate_filters' => [ 'self_healing_tires' ],
+                'has_in_stock'     => false,
+            ],
+            'suspension' => [
+                'title'            => 'Suspension',
+                'range_filters'    => [],
+                'checkbox_filters' => [ 'suspension_type' ],
+                'tristate_filters' => [ 'suspension_adjustable' ],
+                'has_in_stock'     => false,
+            ],
+            'terrain_durability' => [
+                'title'            => 'Terrain & Durability',
+                'range_filters'    => [],
+                'checkbox_filters' => [ 'terrain', 'ip_rating' ],
+                'tristate_filters' => [],
+                'has_in_stock'     => false,
+            ],
+            'controls_features' => [
+                'title'            => 'Controls & Features',
+                'range_filters'    => [],
+                'checkbox_filters' => [ 'throttle_type', 'features' ],
+                'tristate_filters' => [],
+                'has_in_stock'     => false,
+            ],
+            'lighting' => [
+                'title'            => 'Lighting',
+                'range_filters'    => [],
+                'checkbox_filters' => [],
+                'tristate_filters' => [ 'has_lights', 'turn_signals' ],
+                'has_in_stock'     => false,
+            ],
+            'model_info' => [
+                'title'            => 'Model Info',
+                'range_filters'    => [ 'release_year' ],
+                'checkbox_filters' => [],
+                'tristate_filters' => [],
+                'has_in_stock'     => false,
+            ],
+            'value_metrics' => [
+                'title'            => 'Value Metrics',
+                'range_filters'    => [ 'price_per_lb', 'price_per_mph', 'price_per_mile', 'price_per_wh', 'speed_per_lb', 'range_per_lb' ],
+                'checkbox_filters' => [],
+                'tristate_filters' => [],
+                'has_in_stock'     => false,
+            ],
+        ];
+    }
+
+    // E-bike specific groups.
+    if ( $product_type === 'ebike' ) {
+        return [
+            'quick' => [
+                'title'      => '', // No main heading.
+                'is_quick'   => true,
+                'subgroups'  => [
+                    'price' => [
+                        'title'            => 'Price',
+                        'range_filters'    => [ 'price' ],
+                        'checkbox_filters' => [],
+                        'tristate_filters' => [],
+                        'has_in_stock'     => true,
+                    ],
+                    'category' => [
+                        'title'            => 'Category',
+                        'range_filters'    => [],
+                        'checkbox_filters' => [ 'category' ],
+                        'tristate_filters' => [],
+                        'has_in_stock'     => false,
+                    ],
+                    'brands' => [
+                        'title'            => 'Brands',
+                        'range_filters'    => [],
+                        'checkbox_filters' => [ 'brand' ],
+                        'tristate_filters' => [],
+                        'has_in_stock'     => false,
+                    ],
+                ],
+            ],
+            'classification' => [
+                'title'            => 'Classification',
+                'range_filters'    => [ 'top_assist_speed' ],
+                'checkbox_filters' => [ 'ebike_class' ],
+                'tristate_filters' => [ 'has_throttle' ],
+                'has_in_stock'     => false,
+            ],
+            'motor' => [
+                'title'            => 'Motor & Drive',
+                'range_filters'    => [ 'motor_power', 'motor_peak', 'torque', 'assist_levels' ],
+                'checkbox_filters' => [ 'motor_brand', 'motor_type', 'sensor_type' ],
+                'tristate_filters' => [],
+                'has_in_stock'     => false,
+            ],
+            'battery' => [
+                'title'            => 'Battery & Range',
+                'range_filters'    => [ 'battery', 'range', 'voltage', 'amphours', 'charging_time' ],
+                'checkbox_filters' => [ 'battery_position' ],
+                'tristate_filters' => [ 'removable_battery' ],
+                'has_in_stock'     => false,
+            ],
+            'frame' => [
+                'title'            => 'Frame & Geometry',
+                'range_filters'    => [ 'weight', 'weight_limit', 'rack_capacity' ],
+                'checkbox_filters' => [ 'frame_style', 'frame_material', 'sizes_available' ],
+                'tristate_filters' => [],
+                'has_in_stock'     => false,
+            ],
+            'drivetrain' => [
+                'title'            => 'Drivetrain',
+                'range_filters'    => [ 'gears' ],
+                'checkbox_filters' => [ 'drive_system' ],
+                'tristate_filters' => [],
+                'has_in_stock'     => false,
+            ],
+            'brakes' => [
+                'title'            => 'Brakes',
+                'range_filters'    => [ 'rotor_size' ],
+                'checkbox_filters' => [ 'brake_type', 'brake_brand' ],
+                'tristate_filters' => [],
+                'has_in_stock'     => false,
+            ],
+            'suspension' => [
+                'title'            => 'Suspension',
+                'range_filters'    => [ 'front_travel', 'rear_travel' ],
+                'checkbox_filters' => [ 'front_suspension', 'rear_suspension' ],
+                'tristate_filters' => [ 'seatpost_suspension' ],
+                'has_in_stock'     => false,
+            ],
+            'wheels_tires' => [
+                'title'            => 'Wheels & Tires',
+                'range_filters'    => [ 'wheel_size', 'tire_width' ],
+                'checkbox_filters' => [ 'tire_type', 'tire_brand' ],
+                'tristate_filters' => [ 'puncture_protection' ],
+                'has_in_stock'     => false,
+            ],
+            'features' => [
+                'title'            => 'Features & Tech',
+                'range_filters'    => [],
+                'checkbox_filters' => [ 'display', 'connectivity', 'features' ],
+                'tristate_filters' => [ 'app_compatible', 'has_lights', 'walk_assist' ],
+                'has_in_stock'     => false,
+            ],
+            'accessories' => [
+                'title'            => 'Accessories',
+                'range_filters'    => [],
+                'checkbox_filters' => [],
+                'tristate_filters' => [ 'has_fenders', 'has_rear_rack', 'has_front_rack', 'has_kickstand' ],
+                'has_in_stock'     => false,
+            ],
+            'safety' => [
+                'title'            => 'Safety & Compliance',
+                'range_filters'    => [],
+                'checkbox_filters' => [ 'ip_rating', 'certifications' ],
+                'tristate_filters' => [],
+                'has_in_stock'     => false,
+            ],
+            'model_info' => [
+                'title'            => 'Model Info',
+                'range_filters'    => [ 'release_year' ],
+                'checkbox_filters' => [],
+                'tristate_filters' => [],
+                'has_in_stock'     => false,
+            ],
+        ];
+    }
+
+    // Default fallback for other product types (minimal set).
     return [
         'quick' => [
-            'title'      => '', // No main heading
+            'title'      => '',
             'is_quick'   => true,
             'subgroups'  => [
                 'price' => [
@@ -648,97 +1236,34 @@ function erh_get_filter_group_config(): array {
         'motor' => [
             'title'            => 'Motor',
             'range_filters'    => [ 'motor_power', 'motor_peak' ],
-            'checkbox_filters' => [ 'motor_position' ],
+            'checkbox_filters' => [],
             'tristate_filters' => [],
             'has_in_stock'     => false,
         ],
         'battery' => [
             'title'            => 'Battery',
-            'range_filters'    => [ 'battery', 'voltage', 'amphours', 'charging_time' ],
+            'range_filters'    => [ 'battery', 'voltage', 'charging_time' ],
             'checkbox_filters' => [],
             'tristate_filters' => [],
             'has_in_stock'     => false,
         ],
         'performance' => [
             'title'            => 'Claimed Specs',
-            'range_filters'    => [ 'speed', 'range', 'max_incline' ],
-            'checkbox_filters' => [],
-            'tristate_filters' => [],
-            'has_in_stock'     => false,
-        ],
-        'tested_performance' => [
-            'title'            => 'Tested Performance',
-            'range_filters'    => [ 'tested_speed', 'tested_range', 'accel_0_15', 'accel_0_20', 'brake_distance', 'hill_climb' ],
+            'range_filters'    => [ 'speed', 'range' ],
             'checkbox_filters' => [],
             'tristate_filters' => [],
             'has_in_stock'     => false,
         ],
         'portability' => [
             'title'            => 'Portability',
-            'range_filters'    => [ 'weight' ],
-            'checkbox_filters' => [],
-            'tristate_filters' => [ 'foldable_handlebars' ],
-            'has_in_stock'     => false,
-        ],
-        'rider_fit' => [
-            'title'            => 'Rider Fit',
-            'range_filters'    => [ 'rider_height', 'weight_limit', 'deck_width', 'handlebar_width', 'ground_clearance' ],
+            'range_filters'    => [ 'weight', 'weight_limit' ],
             'checkbox_filters' => [],
             'tristate_filters' => [],
-            'has_in_stock'     => false,
-        ],
-        'brakes' => [
-            'title'            => 'Brakes',
-            'range_filters'    => [],
-            'checkbox_filters' => [ 'brake_type' ],
-            'tristate_filters' => [ 'regenerative_braking' ],
-            'has_in_stock'     => false,
-        ],
-        'tires' => [
-            'title'            => 'Tires',
-            'range_filters'    => [ 'tire_size', 'tire_width' ],
-            'checkbox_filters' => [ 'tire_type' ],
-            'tristate_filters' => [ 'self_healing_tires' ],
-            'has_in_stock'     => false,
-        ],
-        'suspension' => [
-            'title'            => 'Suspension',
-            'range_filters'    => [],
-            'checkbox_filters' => [ 'suspension_type' ],
-            'tristate_filters' => [ 'suspension_adjustable' ],
-            'has_in_stock'     => false,
-        ],
-        'terrain_durability' => [
-            'title'            => 'Terrain & Durability',
-            'range_filters'    => [],
-            'checkbox_filters' => [ 'terrain', 'ip_rating' ],
-            'tristate_filters' => [],
-            'has_in_stock'     => false,
-        ],
-        'controls_features' => [
-            'title'            => 'Controls & Features',
-            'range_filters'    => [],
-            'checkbox_filters' => [ 'throttle_type', 'features' ],
-            'tristate_filters' => [],
-            'has_in_stock'     => false,
-        ],
-        'lighting' => [
-            'title'            => 'Lighting',
-            'range_filters'    => [],
-            'checkbox_filters' => [],
-            'tristate_filters' => [ 'has_lights', 'turn_signals' ],
             'has_in_stock'     => false,
         ],
         'model_info' => [
             'title'            => 'Model Info',
             'range_filters'    => [ 'release_year' ],
-            'checkbox_filters' => [],
-            'tristate_filters' => [],
-            'has_in_stock'     => false,
-        ],
-        'value_metrics' => [
-            'title'            => 'Value Metrics',
-            'range_filters'    => [ 'price_per_lb', 'price_per_mph', 'price_per_mile', 'price_per_wh', 'speed_per_lb', 'range_per_lb' ],
             'checkbox_filters' => [],
             'tristate_filters' => [],
             'has_in_stock'     => false,
@@ -1085,20 +1610,31 @@ function erh_process_finder_products( array $products, string $user_geo = 'US' )
                     if ( is_array( $value ) ) {
                         $product[ $cfg['field'] ] = $value;
                         foreach ( $value as $item ) {
-                            if ( $item ) {
+                            if ( $item && is_string( $item ) ) {
                                 $checkbox_options[ $key ][ $item ] = ( $checkbox_options[ $key ][ $item ] ?? 0 ) + 1;
                             }
                         }
                     } else {
                         $product[ $cfg['field'] ] = $value ? [ $value ] : [];
-                        if ( $value ) {
+                        if ( $value && is_string( $value ) ) {
                             $checkbox_options[ $key ][ $value ] = ( $checkbox_options[ $key ][ $value ] ?? 0 ) + 1;
                         }
                     }
                 } else {
-                    $product[ $cfg['field'] ] = $value ?: null;
-                    if ( $value ) {
-                        $checkbox_options[ $key ][ $value ] = ( $checkbox_options[ $key ][ $value ] ?? 0 ) + 1;
+                    // Handle case where spec returns array but config doesn't expect it.
+                    // This can happen when e-bike and e-scooter have different data types.
+                    if ( is_array( $value ) ) {
+                        $product[ $cfg['field'] ] = $value;
+                        foreach ( $value as $item ) {
+                            if ( $item && is_string( $item ) ) {
+                                $checkbox_options[ $key ][ $item ] = ( $checkbox_options[ $key ][ $item ] ?? 0 ) + 1;
+                            }
+                        }
+                    } else {
+                        $product[ $cfg['field'] ] = $value ?: null;
+                        if ( $value && is_string( $value ) ) {
+                            $checkbox_options[ $key ][ $value ] = ( $checkbox_options[ $key ][ $value ] ?? 0 ) + 1;
+                        }
                     }
                 }
             }
@@ -1278,7 +1814,7 @@ function erh_prepare_js_products( array $products ): array {
  *
  * @return array Configuration object for JavaScript.
  */
-function erh_get_js_filter_config(): array {
+function erh_get_js_filter_config( string $product_type = 'escooter' ): array {
     $range_config    = erh_get_range_filter_config();
     $checkbox_config = erh_get_checkbox_filter_config();
     $tristate_config = erh_get_tristate_filter_config();
@@ -1439,11 +1975,34 @@ function erh_get_js_filter_config(): array {
         'price_per_wh'    => [ 'key' => 'price_per_wh',    'priority' => 33, 'round' => 2, 'prefix' => '$', 'suffix' => '/Wh' ],
         'speed_per_lb'    => [ 'key' => 'speed_per_lb',    'priority' => 34, 'round' => 2, 'suffix' => ' mph/lb' ],
         'range_per_lb'    => [ 'key' => 'range_per_lb',    'priority' => 35, 'round' => 2, 'suffix' => ' mi/lb' ],
+
+        // E-Bike specific.
+        'torque'          => [ 'key' => 'torque',          'priority' => 4,  'round' => 0, 'suffix' => ' Nm torque' ],
+        'wheel_size'      => [ 'key' => 'wheel_size',      'priority' => 18, 'round' => 1, 'suffix' => '" wheels' ],
+        'front_travel'    => [ 'key' => 'front_travel',    'priority' => 21, 'round' => 0, 'suffix' => 'mm front' ],
+        'rear_travel'     => [ 'key' => 'rear_travel',     'priority' => 22, 'round' => 0, 'suffix' => 'mm rear' ],
+        'gears'           => [ 'key' => 'gears',           'priority' => 15, 'round' => 0, 'suffix' => '-speed' ],
+        'top_assist_speed'=> [ 'key' => 'top_assist_speed','priority' => 1,  'round' => 0, 'suffix' => ' mph assist' ],
+        'rotor_size'      => [ 'key' => 'rotor_size',      'priority' => 23, 'round' => 0, 'suffix' => 'mm rotors' ],
+        'assist_levels'   => [ 'key' => 'assist_levels',   'priority' => 16, 'round' => 0, 'suffix' => ' assist levels' ],
+        'rack_capacity'   => [ 'key' => 'rack_capacity',   'priority' => 24, 'round' => 0, 'suffix' => ' lbs rack' ],
+        'ebike_class'     => [ 'key' => 'ebike_class',     'priority' => 2,  'raw' => true, 'join' => ', ' ],
+        'category'        => [ 'key' => 'category',        'priority' => 3,  'raw' => true, 'join' => ', ' ],
+        'motor_brand'     => [ 'key' => 'motor_brand',     'priority' => 5,  'raw' => true ],
+        'motor_type'      => [ 'key' => 'motor_type',      'priority' => 6,  'raw' => true ],
+        'sensor_type'     => [ 'key' => 'sensor_type',     'priority' => 7,  'raw' => true ],
+        'frame_style'     => [ 'key' => 'frame_style',     'priority' => 10, 'raw' => true, 'join' => ', ' ],
+        'frame_material'  => [ 'key' => 'frame_material',  'priority' => 11, 'raw' => true, 'join' => ', ' ],
+        'brake_brand'     => [ 'key' => 'brake_brand',     'priority' => 23, 'raw' => true ],
+        'tire_brand'      => [ 'key' => 'tire_brand',      'priority' => 19, 'raw' => true ],
     ];
 
     // Default specs to show when no relevant filters are active.
-    // Order: MPH, Wh, motor W, weight, max load, voltage, tire type, suspension, brakes.
-    $default_spec_keys = [ 'speed', 'battery', 'motor_power', 'weight', 'weight_limit', 'voltage', 'tires', 'suspension', 'brakes' ];
+    // Product-type specific to match "similar products" format.
+    $default_spec_keys = [
+        'escooter' => [ 'speed', 'battery', 'motor_power', 'weight', 'weight_limit', 'voltage', 'tires', 'suspension', 'brakes' ],
+        'ebike'    => [ 'category', 'motor_power', 'motor_type', 'torque', 'battery', 'weight', 'frame_material', 'frame_style', 'wheel_size', 'tires' ],
+    ];
 
     // Column groups for table view modal.
     // MUST match filter groups in erh_get_filter_group_config() exactly.
@@ -1511,6 +2070,52 @@ function erh_get_js_filter_config(): array {
         'value' => [
             'label'   => 'Value Metrics',
             'columns' => [ 'price_per_lb', 'price_per_mph', 'price_per_mile', 'price_per_wh', 'speed_per_lb', 'range_per_lb' ],
+        ],
+
+        // E-Bike specific column groups.
+        'classification' => [
+            'label'   => 'Classification',
+            'columns' => [ 'ebike_class', 'category', 'top_assist_speed', 'has_throttle' ],
+        ],
+        'motor_ebike' => [
+            'label'   => 'Motor & Drive',
+            'columns' => [ 'motor_power', 'motor_peak', 'torque', 'assist_levels', 'motor_brand', 'motor_type', 'sensor_type' ],
+        ],
+        'battery_ebike' => [
+            'label'   => 'Battery & Range',
+            'columns' => [ 'battery', 'range', 'voltage', 'amphours', 'charging_time', 'battery_position', 'removable_battery' ],
+        ],
+        'frame' => [
+            'label'   => 'Frame & Geometry',
+            'columns' => [ 'weight', 'weight_limit', 'rack_capacity', 'frame_style', 'frame_material', 'sizes_available' ],
+        ],
+        'drivetrain' => [
+            'label'   => 'Drivetrain',
+            'columns' => [ 'gears', 'drive_system' ],
+        ],
+        'brakes_ebike' => [
+            'label'   => 'Brakes',
+            'columns' => [ 'brake_type', 'brake_brand', 'rotor_size' ],
+        ],
+        'suspension_ebike' => [
+            'label'   => 'Suspension',
+            'columns' => [ 'front_suspension', 'rear_suspension', 'front_travel', 'rear_travel', 'seatpost_suspension' ],
+        ],
+        'wheels_tires' => [
+            'label'   => 'Wheels & Tires',
+            'columns' => [ 'wheel_size', 'tire_width', 'tire_type', 'tire_brand', 'puncture_protection' ],
+        ],
+        'features_ebike' => [
+            'label'   => 'Features & Tech',
+            'columns' => [ 'display', 'connectivity', 'features', 'app_compatible', 'has_lights', 'walk_assist' ],
+        ],
+        'accessories' => [
+            'label'   => 'Accessories',
+            'columns' => [ 'has_fenders', 'has_rear_rack', 'has_front_rack', 'has_kickstand' ],
+        ],
+        'safety_ebike' => [
+            'label'   => 'Safety & Compliance',
+            'columns' => [ 'ip_rating', 'certifications' ],
         ],
     ];
 
@@ -1592,6 +2197,44 @@ function erh_get_js_filter_config(): array {
         'price_per_wh'    => [ 'label' => '$/Wh',          'prefix' => '$', 'suffix' => '/Wh',  'sortable' => true, 'key' => 'price_per_wh',  'filterKey' => 'price_per_wh',  'filterType' => 'range', 'round' => 2, 'sort_dir' => 'asc' ],
         'speed_per_lb'    => [ 'label' => 'mph/lb',        'suffix' => 'mph/lb', 'sortable' => true, 'key' => 'speed_per_lb',  'filterKey' => 'speed_per_lb',  'filterType' => 'range', 'round' => 2 ],
         'range_per_lb'    => [ 'label' => 'mi/lb',         'suffix' => 'mi/lb',  'sortable' => true, 'key' => 'range_per_lb',  'filterKey' => 'range_per_lb',  'filterType' => 'range', 'round' => 2 ],
+
+        // E-Bike specific columns.
+        'torque'          => [ 'label' => 'Torque',        'suffix' => 'Nm',     'sortable' => true, 'key' => 'torque',         'filterKey' => 'torque',         'filterType' => 'range' ],
+        'wheel_size'      => [ 'label' => 'Wheel Size',    'suffix' => '"',      'sortable' => true, 'key' => 'wheel_size',     'filterKey' => 'wheel_size',     'filterType' => 'range', 'round' => 1 ],
+        'front_travel'    => [ 'label' => 'Front Travel',  'suffix' => 'mm',     'sortable' => true, 'key' => 'front_travel',   'filterKey' => 'front_travel',   'filterType' => 'range' ],
+        'rear_travel'     => [ 'label' => 'Rear Travel',   'suffix' => 'mm',     'sortable' => true, 'key' => 'rear_travel',    'filterKey' => 'rear_travel',    'filterType' => 'range' ],
+        'gears'           => [ 'label' => 'Gears',         'type' => 'number',   'sortable' => true, 'key' => 'gears',          'filterKey' => 'gears',          'filterType' => 'range' ],
+        'top_assist_speed'=> [ 'label' => 'Assist Speed',  'suffix' => 'mph',    'sortable' => true, 'key' => 'top_assist_speed','filterKey' => 'top_assist_speed','filterType' => 'range' ],
+        'rotor_size'      => [ 'label' => 'Rotor Size',    'suffix' => 'mm',     'sortable' => true, 'key' => 'rotor_size',     'filterKey' => 'rotor_size',     'filterType' => 'range' ],
+        'assist_levels'   => [ 'label' => 'Assist Levels', 'type' => 'number',   'sortable' => true, 'key' => 'assist_levels',  'filterKey' => 'assist_levels',  'filterType' => 'range' ],
+        'rack_capacity'   => [ 'label' => 'Rack Capacity', 'suffix' => 'lbs',    'sortable' => true, 'key' => 'rack_capacity',  'filterKey' => 'rack_capacity',  'filterType' => 'range' ],
+        'ebike_class'     => [ 'label' => 'Class',         'type' => 'array',    'sortable' => false,'key' => 'ebike_class',    'filterKey' => 'ebike_class',    'filterType' => 'set' ],
+        'motor_brand'     => [ 'label' => 'Motor Brand',   'type' => 'text',     'sortable' => true, 'key' => 'motor_brand',    'filterKey' => 'motor_brand',    'filterType' => 'set' ],
+        'motor_type'      => [ 'label' => 'Motor Type',    'type' => 'text',     'sortable' => true, 'key' => 'motor_type',     'filterKey' => 'motor_type',     'filterType' => 'set' ],
+        'sensor_type'     => [ 'label' => 'Sensor',        'type' => 'text',     'sortable' => true, 'key' => 'sensor_type',    'filterKey' => 'sensor_type',    'filterType' => 'set' ],
+        'frame_style'     => [ 'label' => 'Frame Style',   'type' => 'array',    'sortable' => false,'key' => 'frame_style',    'filterKey' => 'frame_style',    'filterType' => 'set' ],
+        'frame_material'  => [ 'label' => 'Material',      'type' => 'array',    'sortable' => false,'key' => 'frame_material', 'filterKey' => 'frame_material', 'filterType' => 'set' ],
+        'battery_position'=> [ 'label' => 'Battery Pos.',  'type' => 'text',     'sortable' => true, 'key' => 'battery_position','filterKey' => 'battery_position','filterType' => 'set' ],
+        'drive_system'    => [ 'label' => 'Drive System',  'type' => 'text',     'sortable' => true, 'key' => 'drive_system',   'filterKey' => 'drive_system',   'filterType' => 'set' ],
+        'front_suspension'=> [ 'label' => 'Front Susp.',   'type' => 'text',     'sortable' => true, 'key' => 'front_suspension','filterKey' => 'front_suspension','filterType' => 'set' ],
+        'rear_suspension' => [ 'label' => 'Rear Susp.',    'type' => 'text',     'sortable' => true, 'key' => 'rear_suspension','filterKey' => 'rear_suspension','filterType' => 'set' ],
+        'display'         => [ 'label' => 'Display',       'type' => 'text',     'sortable' => true, 'key' => 'display',        'filterKey' => 'display',        'filterType' => 'set' ],
+        'connectivity'    => [ 'label' => 'Connectivity',  'type' => 'array',    'sortable' => false,'key' => 'connectivity',   'filterKey' => 'connectivity',   'filterType' => 'set' ],
+        'sizes_available' => [ 'label' => 'Sizes',         'type' => 'array',    'sortable' => false,'key' => 'sizes_available','filterKey' => 'sizes_available','filterType' => 'set' ],
+        'certifications'  => [ 'label' => 'Certifications','type' => 'array',    'sortable' => false,'key' => 'certifications', 'filterKey' => 'certifications', 'filterType' => 'set' ],
+        'category'        => [ 'label' => 'Category',      'type' => 'array',    'sortable' => false,'key' => 'category',       'filterKey' => 'category',       'filterType' => 'set' ],
+        'has_throttle'    => [ 'label' => 'Throttle',      'type' => 'boolean',  'sortable' => true, 'key' => 'has_throttle',   'filterKey' => 'has_throttle',   'filterType' => 'tristate' ],
+        'removable_battery'=> [ 'label' => 'Removable Batt.','type' => 'boolean','sortable' => true, 'key' => 'removable_battery','filterKey' => 'removable_battery','filterType' => 'tristate' ],
+        'puncture_protection'=> [ 'label' => 'Puncture Prot.','type' => 'boolean','sortable' => true,'key' => 'puncture_protection','filterKey' => 'puncture_protection','filterType' => 'tristate' ],
+        'seatpost_suspension'=> [ 'label' => 'Seatpost Susp.','type' => 'boolean','sortable' => true,'key' => 'seatpost_suspension','filterKey' => 'seatpost_suspension','filterType' => 'tristate' ],
+        'app_compatible'  => [ 'label' => 'App',           'type' => 'boolean',  'sortable' => true, 'key' => 'app_compatible', 'filterKey' => 'app_compatible', 'filterType' => 'tristate' ],
+        'has_fenders'     => [ 'label' => 'Fenders',       'type' => 'boolean',  'sortable' => true, 'key' => 'has_fenders',    'filterKey' => 'has_fenders',    'filterType' => 'tristate' ],
+        'has_rear_rack'   => [ 'label' => 'Rear Rack',     'type' => 'boolean',  'sortable' => true, 'key' => 'has_rear_rack',  'filterKey' => 'has_rear_rack',  'filterType' => 'tristate' ],
+        'has_front_rack'  => [ 'label' => 'Front Rack',    'type' => 'boolean',  'sortable' => true, 'key' => 'has_front_rack', 'filterKey' => 'has_front_rack', 'filterType' => 'tristate' ],
+        'has_kickstand'   => [ 'label' => 'Kickstand',     'type' => 'boolean',  'sortable' => true, 'key' => 'has_kickstand',  'filterKey' => 'has_kickstand',  'filterType' => 'tristate' ],
+        'walk_assist'     => [ 'label' => 'Walk Assist',   'type' => 'boolean',  'sortable' => true, 'key' => 'walk_assist',    'filterKey' => 'walk_assist',    'filterType' => 'tristate' ],
+        'brake_brand'     => [ 'label' => 'Brake Brand',   'type' => 'text',     'sortable' => true, 'key' => 'brake_brand',    'filterKey' => 'brake_brand',    'filterType' => 'set' ],
+        'tire_brand'      => [ 'label' => 'Tire Brand',    'type' => 'text',     'sortable' => true, 'key' => 'tire_brand',     'filterKey' => 'tire_brand',     'filterType' => 'set' ],
     ];
 
     // Default columns to show in table view (price first, then specs).
@@ -1604,7 +2247,7 @@ function erh_get_js_filter_config(): array {
         'booleans'            => $booleans,
         'sort'                => $sort,
         'specDisplay'         => $spec_display,
-        'defaultSpecKeys'     => $default_spec_keys,
+        'defaultSpecKeys'     => $default_spec_keys[ $product_type ] ?? $default_spec_keys['escooter'],
         'columnGroups'        => $column_groups,
         'columnConfig'        => $column_config,
         'defaultTableColumns' => $default_table_columns,

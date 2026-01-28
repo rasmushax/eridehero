@@ -35,6 +35,7 @@ return array(
     'ERH\\Comparison\\AdvantageCalculatorBase' => $baseDir . '/includes/comparison/class-advantage-calculator-base.php',
     'ERH\\Comparison\\AdvantageCalculatorFactory' => $baseDir . '/includes/comparison/class-advantage-calculator-factory.php',
     'ERH\\Comparison\\AdvantageCalculatorInterface' => $baseDir . '/includes/comparison/interface-advantage-calculator.php',
+    'ERH\\Comparison\\Calculators\\EbikeAdvantages' => $baseDir . '/includes/comparison/calculators/class-ebike-advantages.php',
     'ERH\\Comparison\\Calculators\\EscooterAdvantages' => $baseDir . '/includes/comparison/calculators/class-escooter-advantages.php',
     'ERH\\Comparison\\PriceBracketConfig' => $baseDir . '/includes/comparison/class-price-bracket-config.php',
     'ERH\\Config\\SpecConfig' => $baseDir . '/includes/config/class-spec-config.php',

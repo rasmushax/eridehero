@@ -191,6 +191,15 @@ class EbikeAdvantages extends AdvantageCalculatorBase {
 	}
 
 	/**
+	 * Get the spec wrapper key for e-bikes.
+	 *
+	 * @return string
+	 */
+	protected function get_spec_wrapper(): string {
+		return 'e-bikes';
+	}
+
+	/**
 	 * Calculate advantages for head-to-head (2 product) comparison.
 	 *
 	 * @param array $products Array of 2 product data arrays.
@@ -796,8 +805,8 @@ class EbikeAdvantages extends AdvantageCalculatorBase {
 		$format = $spec_def['format'] ?? 'numeric';
 
 		// Get values from both products.
-		$val_a = $this->get_ebike_spec_value( $products[0]['specs'], $key );
-		$val_b = $this->get_ebike_spec_value( $products[1]['specs'], $key );
+		$val_a = $this->get_typed_spec_value( $products[0]['specs'], $key );
+		$val_b = $this->get_typed_spec_value( $products[1]['specs'], $key );
 
 		if ( $val_a === null || $val_b === null ) {
 			return null;
@@ -992,22 +1001,20 @@ class EbikeAdvantages extends AdvantageCalculatorBase {
 	 * @return string Formatted value.
 	 */
 	private function format_ranked_value( string $value, string $ranking_type ): string {
-		$lower = strtolower( $value );
+		// Return as-is - ACF data should already have correct capitalization.
+		return $value;
+	}
 
-		// Acronyms that should stay uppercase.
-		$acronyms = [ 'tft', 'lcd', 'led', 'xt', 'xtr', 'slx' ];
-		if ( in_array( $lower, $acronyms, true ) ) {
-			return strtoupper( $value );
-		}
-
-		// Proper nouns / brand names - capitalize first letter of each word.
-		$brand_types = [ 'motor_brand', 'battery_brand', 'tire_brand', 'drivetrain' ];
-		if ( in_array( $ranking_type, $brand_types, true ) ) {
-			return ucwords( $lower );
-		}
-
-		// Capitalize first letter for everything else.
-		return ucfirst( $lower );
+	/**
+	 * Format brand/component name.
+	 *
+	 * Returns value as-is since ACF data should have correct capitalization.
+	 *
+	 * @param string $value Raw value.
+	 * @return string Value unchanged.
+	 */
+	private function format_brand_name( string $value ): string {
+		return $value;
 	}
 
 	/**
@@ -1092,7 +1099,7 @@ class EbikeAdvantages extends AdvantageCalculatorBase {
 		// Collect values.
 		$values = [];
 		foreach ( $products as $idx => $product ) {
-			$value = $this->get_ebike_spec_value( $product['specs'], $key );
+			$value = $this->get_typed_spec_value( $product['specs'], $key );
 			$values[ $idx ] = $value;
 		}
 
@@ -1242,13 +1249,13 @@ class EbikeAdvantages extends AdvantageCalculatorBase {
 	private function get_motor_summary( array $specs ): string {
 		$details = [];
 
-		$motor_brand = $this->to_string( $this->get_ebike_spec_value( $specs, 'motor.motor_brand' ) );
-		$position    = $this->to_string( $this->get_ebike_spec_value( $specs, 'motor.motor_position' ) );
-		$torque      = $this->get_ebike_spec_value( $specs, 'motor.torque' );
-		$sensor      = $this->to_string( $this->get_ebike_spec_value( $specs, 'motor.sensor_type' ) );
+		$motor_brand = $this->to_string( $this->get_typed_spec_value( $specs, 'motor.motor_brand' ) );
+		$position    = $this->to_string( $this->get_typed_spec_value( $specs, 'motor.motor_position' ) );
+		$torque      = $this->get_typed_spec_value( $specs, 'motor.torque' );
+		$sensor      = $this->to_string( $this->get_typed_spec_value( $specs, 'motor.sensor_type' ) );
 
 		if ( $motor_brand ) {
-			$details[] = ucfirst( strtolower( $motor_brand ) );
+			$details[] = $this->format_brand_name( $motor_brand );
 		}
 		if ( $position ) {
 			$pos_lower = strtolower( $position );
@@ -1280,10 +1287,10 @@ class EbikeAdvantages extends AdvantageCalculatorBase {
 	private function get_battery_summary( array $specs ): string {
 		$details = [];
 
-		$capacity  = $this->get_ebike_spec_value( $specs, 'battery.battery_capacity' );
-		$brand     = $this->to_string( $this->get_ebike_spec_value( $specs, 'battery.battery_brand' ) );
-		$removable = $this->get_ebike_spec_value( $specs, 'battery.removable' );
-		$range     = $this->get_ebike_spec_value( $specs, 'battery.range' );
+		$capacity  = $this->get_typed_spec_value( $specs, 'battery.battery_capacity' );
+		$brand     = $this->to_string( $this->get_typed_spec_value( $specs, 'battery.battery_brand' ) );
+		$removable = $this->get_typed_spec_value( $specs, 'battery.removable' );
+		$range     = $this->get_typed_spec_value( $specs, 'battery.range' );
 
 		if ( $capacity && is_numeric( $capacity ) ) {
 			$details[] = (int) $capacity . 'Wh';
@@ -1313,10 +1320,10 @@ class EbikeAdvantages extends AdvantageCalculatorBase {
 	private function get_component_summary( array $specs ): string {
 		$details = [];
 
-		$brake_type = $this->to_string( $this->get_ebike_spec_value( $specs, 'brakes.brake_type' ) );
-		$drivetrain = $this->to_string( $this->get_ebike_spec_value( $specs, 'drivetrain.derailleur' ) );
-		$frame      = $this->to_string( $this->get_ebike_spec_value( $specs, 'frame_and_geometry.frame_material' ) );
-		$tire_brand = $this->to_string( $this->get_ebike_spec_value( $specs, 'wheels_and_tires.tire_brand' ) );
+		$brake_type = $this->to_string( $this->get_typed_spec_value( $specs, 'brakes.brake_type' ) );
+		$drivetrain = $this->to_string( $this->get_typed_spec_value( $specs, 'drivetrain.derailleur' ) );
+		$frame      = $this->to_string( $this->get_typed_spec_value( $specs, 'frame_and_geometry.frame_material' ) );
+		$tire_brand = $this->to_string( $this->get_typed_spec_value( $specs, 'wheels_and_tires.tire_brand' ) );
 
 		if ( $brake_type ) {
 			$brake_lower = strtolower( $brake_type );
@@ -1327,7 +1334,7 @@ class EbikeAdvantages extends AdvantageCalculatorBase {
 		if ( $drivetrain ) {
 			$rank = $this->get_rank_value( $drivetrain, self::DRIVETRAIN_RANKING );
 			if ( $rank <= 2 ) {
-				$details[] = ucfirst( strtolower( $drivetrain ) );
+				$details[] = $this->format_brand_name( $drivetrain );
 			}
 		}
 		if ( $frame ) {
@@ -1341,7 +1348,7 @@ class EbikeAdvantages extends AdvantageCalculatorBase {
 		if ( $tire_brand ) {
 			$rank = $this->get_rank_value( $tire_brand, self::TIRE_BRAND_RANKING );
 			if ( $rank <= 1 ) {
-				$details[] = ucfirst( strtolower( $tire_brand ) ) . ' tires';
+				$details[] = $this->format_brand_name( $tire_brand ) . ' tires';
 			}
 		}
 
@@ -1357,10 +1364,10 @@ class EbikeAdvantages extends AdvantageCalculatorBase {
 	private function get_comfort_summary( array $specs ): string {
 		$details = [];
 
-		$front_susp = $this->to_string( $this->get_ebike_spec_value( $specs, 'suspension.front_suspension' ) );
-		$rear_susp  = $this->to_string( $this->get_ebike_spec_value( $specs, 'suspension.rear_suspension' ) );
-		$travel     = $this->get_ebike_spec_value( $specs, 'suspension.front_travel' );
-		$tire_width = $this->get_ebike_spec_value( $specs, 'wheels_and_tires.tire_width' );
+		$front_susp = $this->to_string( $this->get_typed_spec_value( $specs, 'suspension.front_suspension' ) );
+		$rear_susp  = $this->to_string( $this->get_typed_spec_value( $specs, 'suspension.rear_suspension' ) );
+		$travel     = $this->get_typed_spec_value( $specs, 'suspension.front_travel' );
+		$tire_width = $this->get_typed_spec_value( $specs, 'wheels_and_tires.tire_width' );
 
 		$has_front = $front_susp && strtolower( $front_susp ) !== 'rigid' && strtolower( $front_susp ) !== 'none';
 		$has_rear  = $rear_susp && strtolower( $rear_susp ) !== 'none' && strtolower( $rear_susp ) !== 'hardtail';
@@ -1391,9 +1398,9 @@ class EbikeAdvantages extends AdvantageCalculatorBase {
 	private function get_practicality_summary( array $specs ): string {
 		$details = [];
 
-		$weight   = $this->get_ebike_spec_value( $specs, 'weight_and_capacity.weight' );
-		$display  = $this->to_string( $this->get_ebike_spec_value( $specs, 'components.display' ) );
-		$app      = $this->get_ebike_spec_value( $specs, 'components.app_compatible' );
+		$weight   = $this->get_typed_spec_value( $specs, 'weight_and_capacity.weight' );
+		$display  = $this->to_string( $this->get_typed_spec_value( $specs, 'components.display' ) );
+		$app      = $this->get_typed_spec_value( $specs, 'components.app_compatible' );
 		$features = $this->count_integrated_features( $specs );
 
 		if ( $weight && is_numeric( $weight ) ) {
@@ -1581,6 +1588,15 @@ class EbikeAdvantages extends AdvantageCalculatorBase {
 			}
 		}
 
+		// Special case: Don't flag tire width >= 2.3" as weakness.
+		// 2.3"+ is standard for most e-bikes. Only truly narrow tires (<2.3") are a concern.
+		if ( $is_weakness && $key === 'wheels_and_tires.tire_width' ) {
+			$width = (float) $product_value;
+			if ( $width >= 2.3 ) {
+				$is_weakness = false;
+			}
+		}
+
 		if ( ! $is_advantage && ! $is_weakness ) {
 			return null;
 		}
@@ -1701,7 +1717,7 @@ class EbikeAdvantages extends AdvantageCalculatorBase {
 	private function analyze_ip_rating( array $product ): ?array {
 		$specs = $product['specs'] ?? [];
 
-		$ip_rating = $this->get_ebike_spec_value( $specs, 'safety_and_compliance.ip_rating' );
+		$ip_rating = $this->get_typed_spec_value( $specs, 'safety_and_compliance.ip_rating' );
 
 		$water_rating = $this->get_ip_water_rating( $ip_rating );
 
@@ -2048,34 +2064,6 @@ class EbikeAdvantages extends AdvantageCalculatorBase {
 	// =========================================================================
 
 	/**
-	 * Get e-bike spec value with path resolution.
-	 *
-	 * @param array  $specs Product specs.
-	 * @param string $key   Spec key (dot notation).
-	 * @return mixed Value or null.
-	 */
-	private function get_ebike_spec_value( array $specs, string $key ) {
-		// Try direct key first.
-		$value = $this->get_nested_spec( $specs, $key );
-		if ( $value !== null && $value !== '' ) {
-			return $value;
-		}
-
-		// Try e-bikes prefix.
-		$value = $this->get_nested_spec( $specs, 'e-bikes.' . $key );
-		if ( $value !== null && $value !== '' ) {
-			return $value;
-		}
-
-		// Try computed specs at root.
-		if ( isset( $specs[ $key ] ) ) {
-			return $specs[ $key ];
-		}
-
-		return null;
-	}
-
-	/**
 	 * Get single spec value for analysis.
 	 *
 	 * @param array  $product Product data.
@@ -2093,7 +2081,7 @@ class EbikeAdvantages extends AdvantageCalculatorBase {
 			return $value_metrics[ $metric_key ] ?? null;
 		}
 
-		return $this->get_ebike_spec_value( $specs, $key );
+		return $this->get_typed_spec_value( $specs, $key );
 	}
 
 	/**
@@ -2197,7 +2185,7 @@ class EbikeAdvantages extends AdvantageCalculatorBase {
 	 * @return int Feature count.
 	 */
 	private function count_integrated_features( array $specs ): int {
-		$features = $this->get_ebike_spec_value( $specs, 'integrated_features' );
+		$features = $this->get_typed_spec_value( $specs, 'integrated_features' );
 
 		if ( ! is_array( $features ) ) {
 			return 0;
@@ -2367,11 +2355,8 @@ class EbikeAdvantages extends AdvantageCalculatorBase {
 			return round( (float) $value, 2 );
 		}
 
-		if ( in_array( $unit, [ 'Wh/lb', 'W/lb' ], true ) ) {
-			return round( (float) $value, 1 );
-		}
-
-		if ( $unit === 'lbs' || $unit === 'hrs' ) {
+		// Precision units: efficiency ratios, weights, times, inches.
+		if ( in_array( $unit, [ 'Wh/lb', 'W/lb', 'lbs', 'hrs', '"' ], true ) ) {
 			return round( (float) $value, 1 );
 		}
 
@@ -2776,26 +2761,26 @@ class EbikeAdvantages extends AdvantageCalculatorBase {
 	private function get_motor_drive_details( array $specs, bool $is_advantage ): string {
 		$details = [];
 
-		$motor_brand = $this->get_ebike_spec_value( $specs, 'motor.motor_brand' );
-		$position    = $this->get_ebike_spec_value( $specs, 'motor.motor_position' );
-		$sensor      = $this->get_ebike_spec_value( $specs, 'motor.sensor_type' );
-		$torque      = $this->get_ebike_spec_value( $specs, 'motor.torque' );
+		$motor_brand = $this->to_string( $this->get_typed_spec_value( $specs, 'motor.motor_brand' ) );
+		$position    = $this->to_string( $this->get_typed_spec_value( $specs, 'motor.motor_position' ) );
+		$sensor      = $this->to_string( $this->get_typed_spec_value( $specs, 'motor.sensor_type' ) );
+		$torque      = $this->get_typed_spec_value( $specs, 'motor.torque' );
 
 		if ( $is_advantage ) {
 			if ( $motor_brand ) {
 				$rank = $this->get_rank_value( $motor_brand, self::MOTOR_BRAND_RANKING );
 				if ( $rank <= 2 ) {
-					$details[] = ucfirst( strtolower( (string) $motor_brand ) ) . ' motor';
+					$details[] = $this->format_brand_name( $motor_brand ) . ' motor';
 				}
 			}
 			if ( $position ) {
-				$pos_lower = strtolower( (string) $position );
+				$pos_lower = strtolower( $position );
 				if ( strpos( $pos_lower, 'mid' ) !== false || strpos( $pos_lower, 'center' ) !== false ) {
 					$details[] = 'mid-drive';
 				}
 			}
 			if ( $sensor ) {
-				$sensor_lower = strtolower( (string) $sensor );
+				$sensor_lower = strtolower( $sensor );
 				if ( strpos( $sensor_lower, 'torque' ) !== false ) {
 					$details[] = 'torque sensor';
 				}
@@ -2805,13 +2790,13 @@ class EbikeAdvantages extends AdvantageCalculatorBase {
 			}
 		} else {
 			if ( $position ) {
-				$pos_lower = strtolower( (string) $position );
+				$pos_lower = strtolower( $position );
 				if ( strpos( $pos_lower, 'hub' ) !== false || strpos( $pos_lower, 'rear' ) !== false ) {
 					$details[] = 'hub motor';
 				}
 			}
 			if ( $sensor ) {
-				$sensor_lower = strtolower( (string) $sensor );
+				$sensor_lower = strtolower( $sensor );
 				if ( strpos( $sensor_lower, 'cadence' ) !== false ) {
 					$details[] = 'cadence sensor only';
 				}
@@ -2831,9 +2816,9 @@ class EbikeAdvantages extends AdvantageCalculatorBase {
 	private function get_battery_range_details( array $specs, bool $is_advantage ): string {
 		$details = [];
 
-		$capacity  = $this->get_ebike_spec_value( $specs, 'battery.battery_capacity' );
-		$brand     = $this->get_ebike_spec_value( $specs, 'battery.battery_brand' );
-		$removable = $this->get_ebike_spec_value( $specs, 'battery.removable' );
+		$capacity  = $this->get_typed_spec_value( $specs, 'battery.battery_capacity' );
+		$brand     = $this->to_string( $this->get_typed_spec_value( $specs, 'battery.battery_brand' ) );
+		$removable = $this->get_typed_spec_value( $specs, 'battery.removable' );
 
 		if ( $is_advantage ) {
 			if ( $capacity && is_numeric( $capacity ) && (float) $capacity >= 600 ) {
@@ -2842,7 +2827,7 @@ class EbikeAdvantages extends AdvantageCalculatorBase {
 			if ( $brand ) {
 				$rank = $this->get_rank_value( $brand, self::BATTERY_BRAND_RANKING );
 				if ( $rank <= 1 ) {
-					$details[] = ucfirst( strtolower( (string) $brand ) ) . ' cells';
+					$details[] = $this->format_brand_name( $brand ) . ' cells';
 				}
 			}
 			if ( $this->to_boolean( $removable ) ) {
@@ -2870,14 +2855,14 @@ class EbikeAdvantages extends AdvantageCalculatorBase {
 	private function get_component_quality_details( array $specs, bool $is_advantage ): string {
 		$details = [];
 
-		$brake_type  = $this->get_ebike_spec_value( $specs, 'brakes.brake_type' );
-		$drivetrain  = $this->get_ebike_spec_value( $specs, 'drivetrain.derailleur' );
-		$frame       = $this->get_ebike_spec_value( $specs, 'frame_and_geometry.frame_material' );
-		$tire_brand  = $this->get_ebike_spec_value( $specs, 'wheels_and_tires.tire_brand' );
+		$brake_type  = $this->to_string( $this->get_typed_spec_value( $specs, 'brakes.brake_type' ) );
+		$drivetrain  = $this->to_string( $this->get_typed_spec_value( $specs, 'drivetrain.derailleur' ) );
+		$frame       = $this->to_string( $this->get_typed_spec_value( $specs, 'frame_and_geometry.frame_material' ) );
+		$tire_brand  = $this->to_string( $this->get_typed_spec_value( $specs, 'wheels_and_tires.tire_brand' ) );
 
 		if ( $is_advantage ) {
 			if ( $brake_type ) {
-				$brake_lower = strtolower( (string) $brake_type );
+				$brake_lower = strtolower( $brake_type );
 				if ( strpos( $brake_lower, 'hydraulic' ) !== false ) {
 					$details[] = 'hydraulic brakes';
 				}
@@ -2885,11 +2870,11 @@ class EbikeAdvantages extends AdvantageCalculatorBase {
 			if ( $drivetrain ) {
 				$rank = $this->get_rank_value( $drivetrain, self::DRIVETRAIN_RANKING );
 				if ( $rank <= 2 ) {
-					$details[] = ucfirst( strtolower( (string) $drivetrain ) ) . ' drivetrain';
+					$details[] = $this->format_brand_name( $drivetrain ) . ' drivetrain';
 				}
 			}
 			if ( $frame ) {
-				$frame_lower = strtolower( (string) $frame );
+				$frame_lower = strtolower( $frame );
 				if ( strpos( $frame_lower, 'carbon' ) !== false ) {
 					$details[] = 'carbon frame';
 				}
@@ -2897,12 +2882,12 @@ class EbikeAdvantages extends AdvantageCalculatorBase {
 			if ( $tire_brand ) {
 				$rank = $this->get_rank_value( $tire_brand, self::TIRE_BRAND_RANKING );
 				if ( $rank <= 1 ) {
-					$details[] = ucfirst( strtolower( (string) $tire_brand ) ) . ' tires';
+					$details[] = $this->format_brand_name( $tire_brand ) . ' tires';
 				}
 			}
 		} else {
 			if ( $brake_type ) {
-				$brake_lower = strtolower( (string) $brake_type );
+				$brake_lower = strtolower( $brake_type );
 				if ( strpos( $brake_lower, 'mechanical' ) !== false ) {
 					$details[] = 'mechanical brakes';
 				} elseif ( strpos( $brake_lower, 'rim' ) !== false || strpos( $brake_lower, 'v-brake' ) !== false ) {
@@ -2930,14 +2915,14 @@ class EbikeAdvantages extends AdvantageCalculatorBase {
 	private function get_comfort_details( array $specs, bool $is_advantage ): string {
 		$details = [];
 
-		$front_susp = $this->get_ebike_spec_value( $specs, 'suspension.front_suspension' );
-		$rear_susp  = $this->get_ebike_spec_value( $specs, 'suspension.rear_suspension' );
-		$travel     = $this->get_ebike_spec_value( $specs, 'suspension.front_travel' );
-		$tire_width = $this->get_ebike_spec_value( $specs, 'wheels_and_tires.tire_width' );
+		$front_susp = $this->to_string( $this->get_typed_spec_value( $specs, 'suspension.front_suspension' ) );
+		$rear_susp  = $this->to_string( $this->get_typed_spec_value( $specs, 'suspension.rear_suspension' ) );
+		$travel     = $this->get_typed_spec_value( $specs, 'suspension.front_travel' );
+		$tire_width = $this->get_typed_spec_value( $specs, 'wheels_and_tires.tire_width' );
 
 		if ( $is_advantage ) {
-			$has_front = $front_susp && strtolower( (string) $front_susp ) !== 'rigid' && strtolower( (string) $front_susp ) !== 'none';
-			$has_rear  = $rear_susp && strtolower( (string) $rear_susp ) !== 'none' && strtolower( (string) $rear_susp ) !== 'hardtail';
+			$has_front = $front_susp && strtolower( $front_susp ) !== 'rigid' && strtolower( $front_susp ) !== 'none';
+			$has_rear  = $rear_susp && strtolower( $rear_susp ) !== 'none' && strtolower( $rear_susp ) !== 'hardtail';
 
 			if ( $has_front && $has_rear ) {
 				$details[] = 'full suspension';
@@ -2954,7 +2939,7 @@ class EbikeAdvantages extends AdvantageCalculatorBase {
 			}
 		} else {
 			// Check for no/rigid suspension.
-			$susp_lower = $front_susp ? strtolower( (string) $front_susp ) : '';
+			$susp_lower = $front_susp ? strtolower( $front_susp ) : '';
 			$is_rigid   = ! $front_susp || in_array( $susp_lower, [ 'rigid', 'none', 'n/a' ], true );
 
 			if ( $is_rigid ) {
@@ -2987,10 +2972,10 @@ class EbikeAdvantages extends AdvantageCalculatorBase {
 	private function get_practicality_details( array $specs, bool $is_advantage ): string {
 		$details = [];
 
-		$weight   = $this->get_ebike_spec_value( $specs, 'weight_and_capacity.weight' );
-		$display  = $this->get_ebike_spec_value( $specs, 'components.display' );
-		$app      = $this->get_ebike_spec_value( $specs, 'components.app_compatible' );
-		$throttle = $this->get_ebike_spec_value( $specs, 'speed_and_class.throttle' );
+		$weight   = $this->get_typed_spec_value( $specs, 'weight_and_capacity.weight' );
+		$display  = $this->to_string( $this->get_typed_spec_value( $specs, 'components.display' ) );
+		$app      = $this->get_typed_spec_value( $specs, 'components.app_compatible' );
+		$throttle = $this->get_typed_spec_value( $specs, 'speed_and_class.throttle' );
 
 		$features = $this->count_integrated_features( $specs );
 
@@ -3000,7 +2985,7 @@ class EbikeAdvantages extends AdvantageCalculatorBase {
 			}
 
 			if ( $display ) {
-				$display_lower = strtolower( (string) $display );
+				$display_lower = strtolower( $display );
 				if ( strpos( $display_lower, 'color' ) !== false || strpos( $display_lower, 'tft' ) !== false ) {
 					$details[] = 'color display';
 				}
@@ -3027,7 +3012,7 @@ class EbikeAdvantages extends AdvantageCalculatorBase {
 
 			// Check for basic display.
 			if ( $display ) {
-				$display_lower = strtolower( (string) $display );
+				$display_lower = strtolower( $display );
 				if ( strpos( $display_lower, 'led' ) !== false && strpos( $display_lower, 'lcd' ) === false ) {
 					$details[] = 'basic display';
 				}

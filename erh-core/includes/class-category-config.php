@@ -34,7 +34,7 @@ class CategoryConfig {
             'name_short'    => 'E-Scooter',
             'slug'          => 'electric-scooters',
             'archive_slug'  => 'e-scooters',
-            'finder_slug'   => 'escooter-finder',
+            'finder_slug'   => 'electric-scooter-finder', // WP page slug.
             'finder_key'    => 'escooter', // JSON file naming: finder_escooter.json.
             'acf_wrapper'   => 'e-scooters',
             'icon'          => 'escooter',
@@ -48,7 +48,7 @@ class CategoryConfig {
             'name_short'    => 'E-Bike',
             'slug'          => 'e-bikes',
             'archive_slug'  => 'e-bikes',
-            'finder_slug'   => 'ebike-finder',
+            'finder_slug'   => 'electric-bike-finder', // WP page slug.
             'finder_key'    => 'ebike',
             'acf_wrapper'   => 'e-bikes',
             'icon'          => 'ebike',
@@ -411,5 +411,21 @@ class CategoryConfig {
     public static function type_to_finder_key( string $product_type ): string {
         $category = self::get_by_type( $product_type );
         return $category ? $category['finder_key'] : '';
+    }
+
+    /**
+     * Get finder slug to finder key mapping.
+     *
+     * Used by page-finder.php to determine product type from WP page slug.
+     * Single source of truth - eliminates duplicate slug maps.
+     *
+     * @return array<string, string> Slug => finder_key mapping.
+     */
+    public static function get_finder_slug_map(): array {
+        $map = [];
+        foreach ( self::CATEGORIES as $category ) {
+            $map[ $category['finder_slug'] ] = $category['finder_key'];
+        }
+        return $map;
     }
 }

@@ -27,6 +27,41 @@ abstract class AdvantageCalculatorBase implements AdvantageCalculatorInterface {
     protected int $max_advantages = 4;
 
     /**
+     * Get the spec wrapper key for this product type.
+     *
+     * ProductCache data (wp_product_data) stores specs with wrappers:
+     * - E-scooters: 'e-scooters.battery.capacity'
+     * - E-bikes: 'e-bikes.battery.battery_capacity'
+     *
+     * @return string Wrapper key (e.g., 'e-scooters', 'e-bikes').
+     */
+    abstract protected function get_spec_wrapper(): string;
+
+    /**
+     * Get a spec value with automatic wrapper prefixing.
+     *
+     * For ProductCache data (wp_product_data), specs are stored with wrappers.
+     * This helper automatically prefixes the key with the product type wrapper.
+     *
+     * @param array  $specs Specs array from ProductCache.
+     * @param string $key   Spec key without wrapper (e.g., 'battery.capacity').
+     * @return mixed Value or null.
+     */
+    protected function get_typed_spec_value( array $specs, string $key ) {
+        $wrapper      = $this->get_spec_wrapper();
+        $prefixed_key = $wrapper . '.' . $key;
+
+        $value = $this->get_nested_spec( $specs, $prefixed_key );
+
+        // Also check for root-level computed specs (value_metrics, etc.).
+        if ( $value === null && isset( $specs[ $key ] ) ) {
+            return $specs[ $key ];
+        }
+
+        return $value;
+    }
+
+    /**
      * Threshold percentage for declaring an advantage.
      *
      * @var float
