@@ -110,6 +110,12 @@ function erh_get_range_filter_config( string $product_type = 'escooter' ): array
             [ 'label' => '$2,000–$3,000', 'min' => 2000, 'max' => 3000 ],
             [ 'label' => '$3,000+', 'min' => 3000 ],
         ],
+        'hoverboard' => [
+            [ 'label' => 'Under $100', 'min' => 1, 'max' => 100 ],
+            [ 'label' => '$100–$200', 'min' => 100, 'max' => 200 ],
+            [ 'label' => '$200–$300', 'min' => 200, 'max' => 300 ],
+            [ 'label' => '$300+', 'min' => 300 ],
+        ],
     ];
 
     return [
@@ -532,7 +538,10 @@ function erh_get_range_filter_config( string $product_type = 'escooter' ): array
         'wheel_size' => [
             'label'        => 'Wheel Size',
             'field'        => 'wheel_size',
-            'spec_paths'   => [ 'wheels_and_tires.wheel_size' ],
+            'spec_paths'   => [
+                'wheels_and_tires.wheel_size',  // E-bike.
+                'wheel_size',                   // Hoverboard.
+            ],
             'unit'         => 'in',
             'prefix'       => '',
             'suffix'       => '"',
@@ -848,6 +857,17 @@ function erh_get_checkbox_filter_config(): array {
             'visible_limit' => 8,
             'searchable'    => true,
         ],
+
+        // =================================================================
+        // Hoverboard Specific Checkbox Filters
+        // =================================================================
+        'wheel_type' => [
+            'label'         => 'Wheel Type',
+            'field'         => 'wheel_type',
+            'spec_paths'    => [ 'wheel_type' ],
+            'visible_limit' => 5,
+            'searchable'    => false,
+        ],
     ];
 }
 
@@ -953,6 +973,30 @@ function erh_get_tristate_filter_config(): array {
             'label'      => 'Walk assist',
             'field'      => 'walk_assist',
             'spec_paths' => [ 'integrated_features.walk_assist' ],
+        ],
+
+        // =================================================================
+        // Hoverboard Specific Tristate Filters
+        // =================================================================
+        'ul_2272' => [
+            'label'      => 'UL 2272 Certified',
+            'field'      => 'ul_2272',
+            'spec_paths' => [ 'safety.ul_2272', 'ul_certified' ],
+        ],
+        'bluetooth_speaker' => [
+            'label'      => 'Bluetooth Speaker',
+            'field'      => 'bluetooth_speaker',
+            'spec_paths' => [ 'connectivity.bluetooth_speaker' ],
+        ],
+        'app_enabled' => [
+            'label'      => 'App Enabled',
+            'field'      => 'app_enabled',
+            'spec_paths' => [ 'connectivity.app_enabled' ],
+        ],
+        'speed_modes' => [
+            'label'      => 'Speed Modes',
+            'field'      => 'speed_modes',
+            'spec_paths' => [ 'connectivity.speed_modes' ],
         ],
     ];
 }
@@ -1199,6 +1243,81 @@ function erh_get_filter_group_config( string $product_type = 'escooter' ): array
                 'range_filters'    => [],
                 'checkbox_filters' => [ 'ip_rating', 'certifications' ],
                 'tristate_filters' => [],
+                'has_in_stock'     => false,
+            ],
+            'model_info' => [
+                'title'            => 'Model Info',
+                'range_filters'    => [ 'release_year' ],
+                'checkbox_filters' => [],
+                'tristate_filters' => [],
+                'has_in_stock'     => false,
+            ],
+        ];
+    }
+
+    // Hoverboard specific groups.
+    if ( $product_type === 'hoverboard' ) {
+        return [
+            'quick' => [
+                'title'      => '',
+                'is_quick'   => true,
+                'subgroups'  => [
+                    'price' => [
+                        'title'            => 'Price',
+                        'range_filters'    => [ 'price' ],
+                        'checkbox_filters' => [],
+                        'tristate_filters' => [],
+                        'has_in_stock'     => true,
+                    ],
+                    'brands' => [
+                        'title'            => 'Brands',
+                        'range_filters'    => [],
+                        'checkbox_filters' => [ 'brand' ],
+                        'tristate_filters' => [],
+                        'has_in_stock'     => false,
+                    ],
+                ],
+            ],
+            'motor' => [
+                'title'            => 'Motor',
+                'range_filters'    => [ 'motor_power', 'motor_peak' ],
+                'checkbox_filters' => [],
+                'tristate_filters' => [],
+                'has_in_stock'     => false,
+            ],
+            'battery' => [
+                'title'            => 'Battery',
+                'range_filters'    => [ 'battery', 'voltage', 'charging_time' ],
+                'checkbox_filters' => [],
+                'tristate_filters' => [],
+                'has_in_stock'     => false,
+            ],
+            'performance' => [
+                'title'            => 'Claimed Specs',
+                'range_filters'    => [ 'speed', 'range' ],
+                'checkbox_filters' => [],
+                'tristate_filters' => [],
+                'has_in_stock'     => false,
+            ],
+            'build' => [
+                'title'            => 'Build',
+                'range_filters'    => [ 'weight', 'weight_limit', 'wheel_size' ],
+                'checkbox_filters' => [ 'wheel_type' ],
+                'tristate_filters' => [],
+                'has_in_stock'     => false,
+            ],
+            'safety' => [
+                'title'            => 'Safety',
+                'range_filters'    => [],
+                'checkbox_filters' => [ 'ip_rating' ],
+                'tristate_filters' => [ 'ul_2272' ],
+                'has_in_stock'     => false,
+            ],
+            'connectivity' => [
+                'title'            => 'Connectivity',
+                'range_filters'    => [],
+                'checkbox_filters' => [],
+                'tristate_filters' => [ 'bluetooth_speaker', 'app_enabled', 'speed_modes' ],
                 'has_in_stock'     => false,
             ],
             'model_info' => [
@@ -2001,7 +2120,8 @@ function erh_get_js_filter_config( string $product_type = 'escooter' ): array {
     // Product-type specific to match "similar products" format.
     $default_spec_keys = [
         'escooter' => [ 'speed', 'battery', 'motor_power', 'weight', 'weight_limit', 'voltage', 'tires', 'suspension', 'brakes' ],
-        'ebike'    => [ 'category', 'motor_power', 'motor_type', 'torque', 'battery', 'weight', 'frame_material', 'frame_style', 'wheel_size', 'tires' ],
+        'ebike'      => [ 'category', 'motor_power', 'motor_type', 'torque', 'battery', 'weight', 'frame_material', 'frame_style', 'wheel_size', 'tires' ],
+        'hoverboard' => [ 'speed', 'battery', 'motor_power', 'weight', 'weight_limit' ],
     ];
 
     // Column groups for table view modal.

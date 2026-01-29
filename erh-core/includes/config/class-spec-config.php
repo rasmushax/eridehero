@@ -1000,9 +1000,11 @@ class SpecConfig {
             'Build'            => 0.30,
         ],
         'hoverboard' => [
-            'Performance'      => 0.30,
-            'Range & Battery'  => 0.35,
-            'Build'            => 0.35,
+            'Motor Performance' => 0.25,
+            'Battery & Range'   => 0.25,
+            'Portability'       => 0.20,
+            'Ride Comfort'      => 0.15,
+            'Features'          => 0.15,
         ],
     ];
 
@@ -1445,29 +1447,45 @@ class SpecConfig {
      */
     private static function get_hoverboard_specs(): array {
         return [
-            'Performance' => [
+            'Motor Performance' => [
                 'icon'  => 'zap',
                 'specs' => [
-                    [ 'key' => 'manufacturer_top_speed', 'label' => 'Top Speed', 'unit' => 'mph', 'higherBetter' => true ],
                     [ 'key' => 'nominal_motor_wattage', 'label' => 'Motor Power', 'unit' => 'W', 'higherBetter' => true ],
+                    [ 'key' => 'manufacturer_top_speed', 'label' => 'Top Speed', 'unit' => 'mph', 'higherBetter' => true ],
                     [ 'key' => 'hill_climb_angle', 'label' => 'Hill Grade', 'unit' => '°', 'higherBetter' => true ],
+                    [ 'key' => 'battery.voltage', 'label' => 'Voltage', 'unit' => 'V', 'higherBetter' => true ],
                 ],
             ],
-            'Range & Battery' => [
+            'Battery & Range' => [
                 'icon'  => 'battery',
                 'specs' => [
-                    [ 'key' => 'manufacturer_range', 'label' => 'Claimed Range', 'unit' => 'mi', 'higherBetter' => true ],
                     [ 'key' => 'battery_capacity', 'label' => 'Battery', 'unit' => 'Wh', 'higherBetter' => true ],
+                    [ 'key' => 'manufacturer_range', 'label' => 'Claimed Range', 'unit' => 'mi', 'higherBetter' => true ],
                     [ 'key' => 'charge_time', 'label' => 'Charge Time', 'unit' => 'h', 'higherBetter' => false ],
                 ],
             ],
-            'Build' => [
+            'Portability' => [
                 'icon'  => 'box',
                 'specs' => [
                     [ 'key' => 'weight', 'label' => 'Weight', 'unit' => 'lbs', 'higherBetter' => false ],
                     [ 'key' => 'max_weight_capacity', 'label' => 'Max Load', 'unit' => 'lbs', 'higherBetter' => true ],
-                    [ 'key' => 'wheel_size', 'label' => 'Wheel Size', 'unit' => '"' ],
+                ],
+            ],
+            'Ride Comfort' => [
+                'icon'  => 'smile',
+                'specs' => [
+                    [ 'key' => 'wheel_size', 'label' => 'Wheel Size', 'unit' => '"', 'higherBetter' => true ],
+                    [ 'key' => 'wheel_type', 'label' => 'Wheel Type' ],
+                ],
+            ],
+            'Features' => [
+                'icon'  => 'settings',
+                'specs' => [
                     [ 'key' => 'ul_certified', 'label' => 'UL Certified', 'format' => 'boolean', 'higherBetter' => true ],
+                    [ 'key' => 'connectivity.bluetooth_speaker', 'label' => 'Bluetooth Speaker', 'format' => 'boolean' ],
+                    [ 'key' => 'connectivity.app_enabled', 'label' => 'App Enabled', 'format' => 'boolean' ],
+                    [ 'key' => 'connectivity.speed_modes', 'label' => 'Speed Modes', 'format' => 'boolean' ],
+                    [ 'key' => 'led_lights', 'label' => 'LED Lights', 'format' => 'boolean' ],
                 ],
             ],
         ];

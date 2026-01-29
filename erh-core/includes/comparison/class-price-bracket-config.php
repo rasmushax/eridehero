@@ -52,6 +52,22 @@ class PriceBracketConfig {
 	];
 
 	/**
+	 * Hoverboard specific price brackets.
+	 *
+	 * Hoverboards are typically much cheaper than other PEVs,
+	 * with most models under $400.
+	 *
+	 * @var array<string, array{min: int, max: int, label: string}>
+	 */
+	public const HOVERBOARD_BRACKETS = [
+		'budget'      => [ 'min' => 0,   'max' => 100,         'label' => 'Budget' ],
+		'midrange'    => [ 'min' => 100, 'max' => 200,         'label' => 'Mid-Range' ],
+		'performance' => [ 'min' => 200, 'max' => 300,         'label' => 'Performance' ],
+		'premium'     => [ 'min' => 300, 'max' => 400,         'label' => 'Premium' ],
+		'ultra'       => [ 'min' => 400, 'max' => PHP_INT_MAX, 'label' => 'Ultra' ],
+	];
+
+	/**
 	 * Minimum products needed in bracket for bracket-based comparison.
 	 * If fewer products exist, falls back to category-wide percentile.
 	 */
@@ -86,6 +102,7 @@ class PriceBracketConfig {
 
 		return match ( $type ) {
 			'ebike', 'electric bike', 'e-bike' => self::EBIKE_BRACKETS,
+			'hoverboard'                       => self::HOVERBOARD_BRACKETS,
 			default => self::BRACKETS,
 		};
 	}

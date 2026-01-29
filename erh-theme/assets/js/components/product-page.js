@@ -42,6 +42,13 @@ const SCORE_CONFIG = {
         comfort: { name: 'Comfort', icon: 'smile' },
         practicality: { name: 'Practicality', icon: 'box' },
     },
+    hoverboard: {
+        motor_performance: { name: 'Motor', icon: 'zap' },
+        battery_range: { name: 'Battery', icon: 'battery' },
+        portability: { name: 'Portability', icon: 'box' },
+        ride_comfort: { name: 'Ride Comfort', icon: 'smile' },
+        features: { name: 'Features', icon: 'settings' },
+    },
 };
 
 /**

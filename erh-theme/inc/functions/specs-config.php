@@ -314,6 +314,66 @@ function erh_get_product_spec_groups_config( string $category ): array {
                 ),
             ),
         ),
+        'hoverboard' => array(
+            'Motor & Performance' => array(
+                'icon'  => 'zap',
+                'specs' => array(
+                    array( 'key' => 'motor.power_nominal', 'label' => 'Motor Power', 'unit' => 'W' ),
+                    array( 'key' => 'motor.power_peak', 'label' => 'Peak Power', 'unit' => 'W' ),
+                    array( 'key' => 'manufacturer_top_speed', 'label' => 'Top Speed (Claimed)', 'unit' => 'mph' ),
+                    array( 'key' => 'manufacturer_range', 'label' => 'Range (Claimed)', 'unit' => 'mi' ),
+                    array( 'key' => 'hill_climb_angle', 'label' => 'Hill Grade', 'unit' => '°' ),
+                ),
+            ),
+            'Battery & Charging' => array(
+                'icon'  => 'battery',
+                'specs' => array(
+                    array( 'key' => 'battery.capacity', 'label' => 'Battery Capacity', 'unit' => 'Wh' ),
+                    array( 'key' => 'battery.voltage', 'label' => 'Voltage', 'unit' => 'V' ),
+                    array( 'key' => 'battery.amphours', 'label' => 'Amp Hours', 'unit' => 'Ah' ),
+                    array( 'key' => 'battery.battery_type', 'label' => 'Battery Type' ),
+                    array( 'key' => 'battery.charging_time', 'label' => 'Charge Time', 'unit' => 'hrs' ),
+                ),
+            ),
+            'Build & Dimensions' => array(
+                'icon'  => 'box',
+                'specs' => array(
+                    array( 'key' => 'dimensions.weight', 'label' => 'Weight', 'unit' => 'lbs' ),
+                    array( 'key' => 'dimensions.max_load', 'label' => 'Max Rider Weight', 'unit' => 'lbs' ),
+                    array( 'key' => 'dimensions.length', 'label' => 'Length', 'unit' => '"' ),
+                    array( 'key' => 'dimensions.width', 'label' => 'Width', 'unit' => '"' ),
+                    array( 'key' => 'dimensions.height', 'label' => 'Height', 'unit' => '"' ),
+                ),
+            ),
+            'Wheels' => array(
+                'icon'  => 'circle',
+                'specs' => array(
+                    array( 'key' => 'wheels.wheel_size', 'label' => 'Wheel Size', 'unit' => '"' ),
+                    array( 'key' => 'wheels.wheel_width', 'label' => 'Wheel Width', 'unit' => '"' ),
+                    array( 'key' => 'wheels.wheel_type', 'label' => 'Wheel Type' ),
+                    array( 'key' => 'wheels.tire_type', 'label' => 'Tire Type' ),
+                ),
+            ),
+            'Safety & Connectivity' => array(
+                'icon'  => 'shield',
+                'specs' => array(
+                    array( 'key' => 'safety.ul_2272', 'label' => 'UL 2272 Certified', 'format' => 'feature_check', 'feature_value' => true ),
+                    array( 'key' => 'safety.ip_rating', 'label' => 'IP Rating', 'format' => 'ip', 'higherBetter' => true ),
+                    array( 'key' => 'connectivity.bluetooth_speaker', 'label' => 'Bluetooth Speaker', 'format' => 'feature_check', 'feature_value' => true ),
+                    array( 'key' => 'connectivity.app_enabled', 'label' => 'App Enabled', 'format' => 'feature_check', 'feature_value' => true ),
+                    array( 'key' => 'connectivity.speed_modes', 'label' => 'Speed Modes', 'format' => 'feature_check', 'feature_value' => true ),
+                ),
+            ),
+            'Features' => array(
+                'icon'  => 'settings',
+                'specs' => array(
+                    array( 'key' => 'lighting.lights', 'label' => 'Lights', 'format' => 'array' ),
+                    array( 'key' => 'features', 'label' => 'Features', 'format' => 'array' ),
+                    array( 'key' => 'other.terrain', 'label' => 'Terrain' ),
+                    array( 'key' => 'other.min_age', 'label' => 'Minimum Age' ),
+                ),
+            ),
+        ),
     );
 
     return $configs[ $category ] ?? array();

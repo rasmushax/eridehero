@@ -5,6 +5,7 @@
  * This is a slim orchestrator that delegates to product-type-specific scorers:
  * - EscooterScorer: Electric scooters (7 categories)
  * - EbikeScorer: Electric bikes (5 categories)
+ * - HoverboardScorer: Hoverboards (5 categories)
  *
  * Each product type uses logarithmic scaling where early gains matter more
  * (500W→1000W is huge, 5000W→5500W is marginal). Missing specs redistribute
@@ -37,6 +38,13 @@ class ProductScorer {
     private ?EbikeScorer $ebike_scorer = null;
 
     /**
+     * Hoverboard scorer instance.
+     *
+     * @var HoverboardScorer|null
+     */
+    private ?HoverboardScorer $hoverboard_scorer = null;
+
+    /**
      * Calculate all category scores for a product.
      *
      * @param array  $specs        The product specs array.
@@ -58,7 +66,7 @@ class ProductScorer {
      * Get the appropriate scorer for a product type.
      *
      * @param string $product_type The product type.
-     * @return EscooterScorer|EbikeScorer|null The scorer instance or null if unsupported.
+     * @return EscooterScorer|EbikeScorer|HoverboardScorer|null The scorer instance or null if unsupported.
      */
     private function get_scorer(string $product_type) {
         switch ($product_type) {
@@ -73,6 +81,12 @@ class ProductScorer {
                     $this->ebike_scorer = new EbikeScorer();
                 }
                 return $this->ebike_scorer;
+
+            case 'Hoverboard':
+                if ($this->hoverboard_scorer === null) {
+                    $this->hoverboard_scorer = new HoverboardScorer();
+                }
+                return $this->hoverboard_scorer;
 
             default:
                 return null;
@@ -94,6 +108,18 @@ class ProductScorer {
                 'component_quality' => null,
                 'comfort'           => null,
                 'practicality'      => null,
+                'overall'           => null,
+            ];
+        }
+
+        // Hoverboards have 5 categories.
+        if ($product_type === 'Hoverboard') {
+            return [
+                'motor_performance' => null,
+                'battery_range'     => null,
+                'portability'       => null,
+                'ride_comfort'      => null,
+                'features'          => null,
                 'overall'           => null,
             ];
         }
