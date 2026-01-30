@@ -1078,18 +1078,10 @@ class HoverboardAdvantages extends AdvantageCalculatorBase {
 			return null;
 		}
 
-		$tier = $is_advantage
-			? ( $diff >= 20 ? "Outstanding {$label}" : ( $diff >= 14 ? "Excellent {$label}" : "Strong {$label}" ) )
-			: ( $diff <= -20 ? "Very weak {$label}" : ( $diff <= -14 ? "Weak {$label}" : "Below average {$label}" ) );
-
-		// Get descriptive comparison text for ride_comfort instead of raw scores.
-		$comparison = $product_score . ' vs ' . round( $avg ) . ' avg';
-		if ( $key === 'ride_comfort' ) {
-			$details = $this->get_ride_comfort_details( $product['specs'] ?? [], $is_advantage );
-			if ( $details ) {
-				$comparison = ucfirst( $details );
-			}
-		}
+		// Get tier label and descriptive details (matching escooter/ebike pattern).
+		$tier    = $this->get_score_tier_label( $key, $diff, $is_advantage );
+		$details = $this->get_score_details( $key, $product['specs'] ?? [], $is_advantage );
+		$comparison = $details ? ucfirst( $details ) : '';
 
 		$item = [
 			'spec_key'      => $key,
@@ -1159,7 +1151,7 @@ class HoverboardAdvantages extends AdvantageCalculatorBase {
 			'unit'          => '',
 			'percentile'    => $is_certified ? 100 : 0,
 			'pct_vs_avg'    => 0,
-			'text'          => $is_certified ? 'UL 2272 Certified' : 'Not UL 2272 Certified',
+			'text'          => $is_certified ? 'UL 2272 certified' : 'Not UL 2272 certified',
 			'comparison'    => $is_certified
 				? 'Meets safety standards for electrical and fire hazards'
 				: 'May lack independent safety verification',
@@ -1707,5 +1699,110 @@ class HoverboardAdvantages extends AdvantageCalculatorBase {
 			],
 			default => null,
 		};
+	}
+
+	/**
+	 * Get tier label based on score difference.
+	 *
+	 * Follows the same pattern as escooter/ebike calculators
+	 * with key-specific descriptive labels instead of generic
+	 * "Outstanding {Label}" patterns.
+	 *
+	 * @param string $key         Score key (battery_range, ride_comfort).
+	 * @param float  $diff        Score difference from average.
+	 * @param bool   $is_positive Whether the difference is positive (advantage).
+	 * @return string Tier label.
+	 */
+	private function get_score_tier_label( string $key, float $diff, bool $is_positive ): string {
+		$abs_diff = abs( $diff );
+
+		$labels = match ( $key ) {
+			'battery_range' => [
+				'excellent'  => 'Excellent battery & range',
+				'great'      => 'Great battery & range',
+				'above_avg'  => 'Good battery & range',
+				'very_weak'  => 'Very limited battery & range',
+				'weak'       => 'Limited battery & range',
+				'below_avg'  => 'Below-average battery & range',
+			],
+			'ride_comfort' => [
+				'excellent'  => 'Excellent ride comfort',
+				'great'      => 'Comfortable ride',
+				'above_avg'  => 'Good ride comfort',
+				'very_weak'  => 'Very uncomfortable ride',
+				'weak'       => 'Uncomfortable ride',
+				'below_avg'  => 'Below-average comfort',
+			],
+			default => [],
+		};
+
+		if ( $is_positive ) {
+			if ( $abs_diff >= 20 ) {
+				return $labels['excellent'] ?? 'Excellent';
+			} elseif ( $abs_diff >= 14 ) {
+				return $labels['great'] ?? 'Great';
+			} else {
+				return $labels['above_avg'] ?? 'Above average';
+			}
+		} else {
+			if ( $abs_diff >= 20 ) {
+				return $labels['very_weak'] ?? 'Very weak';
+			} elseif ( $abs_diff >= 14 ) {
+				return $labels['weak'] ?? 'Weak';
+			} else {
+				return $labels['below_avg'] ?? 'Below average';
+			}
+		}
+	}
+
+	/**
+	 * Get descriptive details for a score-based spec.
+	 *
+	 * Returns human-readable supporting text instead of raw score
+	 * comparisons (e.g., "large 8.5" tires" instead of "86 vs 64 avg").
+	 *
+	 * @param string $key          Score key.
+	 * @param array  $specs        Product specs.
+	 * @param bool   $is_advantage Whether this is a strength.
+	 * @return string Details text, or empty string if none available.
+	 */
+	private function get_score_details( string $key, array $specs, bool $is_advantage ): string {
+		return match ( $key ) {
+			'ride_comfort'  => $this->get_ride_comfort_details( $specs, $is_advantage ),
+			'battery_range' => $this->get_battery_range_details( $specs, $is_advantage ),
+			default         => '',
+		};
+	}
+
+	/**
+	 * Get descriptive details for battery & range score.
+	 *
+	 * @param array $specs        Product specs.
+	 * @param bool  $is_advantage Whether this is a strength.
+	 * @return string Details text.
+	 */
+	private function get_battery_range_details( array $specs, bool $is_advantage ): string {
+		$details = [];
+
+		$capacity = $this->get_typed_spec_value( $specs, 'battery.capacity' );
+		$range    = $this->get_typed_spec_value( $specs, 'manufacturer_range' );
+
+		if ( $is_advantage ) {
+			if ( $capacity && is_numeric( $capacity ) ) {
+				$details[] = $capacity . ' Wh battery';
+			}
+			if ( $range && is_numeric( $range ) ) {
+				$details[] = $range . ' mi range';
+			}
+		} else {
+			if ( $capacity && is_numeric( $capacity ) ) {
+				$details[] = 'only ' . $capacity . ' Wh battery';
+			}
+			if ( $range && is_numeric( $range ) ) {
+				$details[] = $range . ' mi range';
+			}
+		}
+
+		return implode( ', ', $details );
 	}
 }

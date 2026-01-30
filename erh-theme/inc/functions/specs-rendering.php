@@ -180,6 +180,8 @@ function erh_get_spec_groups( int $product_id, string $product_type ): array {
             $groups = erh_get_escooter_spec_groups( $product_id );
         } elseif ( $category === 'ebike' ) {
             $groups = erh_get_ebike_spec_groups( $product_id );
+        } elseif ( $category === 'euc' ) {
+            $groups = erh_get_euc_spec_groups( $product_id );
         } else {
             $groups = erh_get_escooter_spec_groups( $product_id );
         }
@@ -522,6 +524,161 @@ function erh_get_ebike_spec_groups( int $product_id ): array {
             array( 'label' => 'Special features', 'value' => is_array( $special ) ? implode( ', ', $special ) : $special ),
         ) ),
     );
+
+    return $groups;
+}
+
+/**
+ * Get EUC (Electric Unicycle) specification groups
+ *
+ * ACF fallback when cache is not available (during cache rebuild).
+ * Uses correct ACF field paths from acf-json/acf-fields-euc.json.
+ *
+ * @param int $product_id The product ID.
+ * @return array Array of spec groups.
+ */
+function erh_get_euc_spec_groups( int $product_id ): array {
+    // Get nested EUC data.
+    $euc = get_field( 'eucs', $product_id );
+
+    if ( empty( $euc ) ) {
+        return array();
+    }
+
+    $groups = array();
+
+    // Motor & Performance.
+    $motor = $euc['motor'] ?? array();
+    $groups['motor'] = array(
+        'label' => 'Motor & performance',
+        'specs' => erh_filter_specs( array(
+            array( 'label' => 'Nominal power', 'value' => $motor['power_nominal'] ?? '', 'unit' => 'W' ),
+            array( 'label' => 'Peak power', 'value' => $motor['power_peak'] ?? '', 'unit' => 'W' ),
+            array( 'label' => 'Torque', 'value' => $motor['torque'] ?? '', 'unit' => 'Nm' ),
+            array( 'label' => 'Hollow motor', 'value' => erh_format_boolean( $motor['hollow_motor'] ?? false ) ),
+            array( 'label' => 'Motor diameter', 'value' => $motor['motor_diameter'] ?? '', 'unit' => '"' ),
+            array( 'label' => 'Top speed (claimed)', 'value' => get_field( 'manufacturer_top_speed', $product_id ), 'unit' => 'mph' ),
+            array( 'label' => 'Range (claimed)', 'value' => get_field( 'manufacturer_range', $product_id ), 'unit' => 'mi' ),
+        ) ),
+    );
+
+    // Battery & Charging.
+    $battery = $euc['battery'] ?? array();
+    $groups['battery'] = array(
+        'label' => 'Battery & charging',
+        'specs' => erh_filter_specs( array(
+            array( 'label' => 'Capacity', 'value' => $battery['capacity'] ?? '', 'unit' => 'Wh' ),
+            array( 'label' => 'Voltage', 'value' => $battery['voltage'] ?? '', 'unit' => 'V' ),
+            array( 'label' => 'Amp hours', 'value' => $battery['amphours'] ?? '', 'unit' => 'Ah' ),
+            array( 'label' => 'Battery type', 'value' => $battery['battery_type'] ?? '' ),
+            array( 'label' => 'Battery brand', 'value' => $battery['battery_brand'] ?? '' ),
+            array( 'label' => 'Battery packs', 'value' => $battery['battery_packs'] ?? '' ),
+            array( 'label' => 'Charging time', 'value' => $battery['charging_time'] ?? '', 'unit' => 'hrs' ),
+            array( 'label' => 'Charger output', 'value' => $battery['charger_output'] ?? '', 'unit' => 'A' ),
+            array( 'label' => 'Fast charger', 'value' => erh_format_boolean( $battery['fast_charger'] ?? false ) ),
+            array( 'label' => 'Dual charging port', 'value' => erh_format_boolean( $battery['dual_charging'] ?? false ) ),
+            array( 'label' => 'BMS', 'value' => $battery['bms'] ?? '' ),
+        ) ),
+    );
+
+    // Weight & Dimensions.
+    $dims = $euc['dimensions'] ?? array();
+    $groups['dimensions'] = array(
+        'label' => 'Weight & dimensions',
+        'specs' => erh_filter_specs( array(
+            array( 'label' => 'Weight', 'value' => $dims['weight'] ?? '', 'unit' => 'lbs' ),
+            array( 'label' => 'Max load', 'value' => $dims['max_load'] ?? '', 'unit' => 'lbs' ),
+            array( 'label' => 'Height', 'value' => $dims['height'] ?? '', 'unit' => '"' ),
+            array( 'label' => 'Width', 'value' => $dims['width'] ?? '', 'unit' => '"' ),
+            array( 'label' => 'Depth', 'value' => $dims['depth'] ?? '', 'unit' => '"' ),
+        ) ),
+    );
+
+    // Wheel & Tire.
+    $wheel = $euc['wheel'] ?? array();
+    $groups['wheel'] = array(
+        'label' => 'Wheel & tire',
+        'specs' => erh_filter_specs( array(
+            array( 'label' => 'Tire size', 'value' => $wheel['tire_size'] ?? '', 'unit' => '"' ),
+            array( 'label' => 'Tire width', 'value' => $wheel['tire_width'] ?? '', 'unit' => '"' ),
+            array( 'label' => 'Tire type', 'value' => $wheel['tire_type'] ?? '' ),
+            array( 'label' => 'Tire tread', 'value' => $wheel['tire_tread'] ?? '' ),
+            array( 'label' => 'Self-healing tire', 'value' => erh_format_boolean( $wheel['self_healing'] ?? false ) ),
+        ) ),
+    );
+
+    // Suspension.
+    $suspension = $euc['suspension'] ?? array();
+    $groups['suspension'] = array(
+        'label' => 'Suspension',
+        'specs' => erh_filter_specs( array(
+            array( 'label' => 'Suspension type', 'value' => $suspension['suspension_type'] ?? '' ),
+            array( 'label' => 'Suspension travel', 'value' => $suspension['suspension_travel'] ?? '', 'unit' => 'mm' ),
+            array( 'label' => 'Adjustable', 'value' => erh_format_boolean( $suspension['adjustable_suspension'] ?? false ) ),
+        ) ),
+    );
+
+    // Pedals.
+    $pedals = $euc['pedals'] ?? array();
+    $groups['pedals'] = array(
+        'label' => 'Pedals',
+        'specs' => erh_filter_specs( array(
+            array( 'label' => 'Pedal height', 'value' => $pedals['pedal_height'] ?? '', 'unit' => '"' ),
+            array( 'label' => 'Pedal width', 'value' => $pedals['pedal_width'] ?? '', 'unit' => '"' ),
+            array( 'label' => 'Pedal length', 'value' => $pedals['pedal_length'] ?? '', 'unit' => '"' ),
+            array( 'label' => 'Pedal angle', 'value' => $pedals['pedal_angle'] ?? '', 'unit' => '°' ),
+            array( 'label' => 'Adjustable pedals', 'value' => erh_format_boolean( $pedals['adjustable_pedals'] ?? false ) ),
+            array( 'label' => 'Spiked pedals', 'value' => erh_format_boolean( $pedals['spiked_pedals'] ?? false ) ),
+        ) ),
+    );
+
+    // Lighting.
+    $lighting = $euc['lighting'] ?? array();
+    $groups['lighting'] = array(
+        'label' => 'Lighting',
+        'specs' => erh_filter_specs( array(
+            array( 'label' => 'Headlight', 'value' => erh_format_boolean( $lighting['headlight'] ?? false ) ),
+            array( 'label' => 'Headlight lumens', 'value' => $lighting['headlight_lumens'] ?? '', 'unit' => 'lm' ),
+            array( 'label' => 'Taillight', 'value' => erh_format_boolean( $lighting['taillight'] ?? false ) ),
+            array( 'label' => 'Brake light', 'value' => erh_format_boolean( $lighting['brake_light'] ?? false ) ),
+            array( 'label' => 'RGB lights', 'value' => erh_format_boolean( $lighting['rgb_lights'] ?? false ) ),
+        ) ),
+    );
+
+    // Safety.
+    $safety = $euc['safety'] ?? array();
+    $groups['safety'] = array(
+        'label' => 'Safety',
+        'specs' => erh_filter_specs( array(
+            array( 'label' => 'IP rating', 'value' => $safety['ip_rating'] ?? '' ),
+            array( 'label' => 'Tiltback speed', 'value' => $safety['tiltback_speed'] ?? '', 'unit' => 'mph' ),
+            array( 'label' => 'Cutoff speed', 'value' => $safety['cutoff_speed'] ?? '', 'unit' => 'mph' ),
+            array( 'label' => 'Lift sensor', 'value' => erh_format_boolean( $safety['lift_sensor'] ?? false ) ),
+        ) ),
+    );
+
+    // Connectivity.
+    $connectivity = $euc['connectivity'] ?? array();
+    $groups['connectivity'] = array(
+        'label' => 'Connectivity',
+        'specs' => erh_filter_specs( array(
+            array( 'label' => 'Bluetooth', 'value' => erh_format_boolean( $connectivity['bluetooth'] ?? false ) ),
+            array( 'label' => 'Mobile app', 'value' => erh_format_boolean( $connectivity['app'] ?? false ) ),
+            array( 'label' => 'Built-in speaker', 'value' => erh_format_boolean( $connectivity['speaker'] ?? false ) ),
+            array( 'label' => 'GPS', 'value' => erh_format_boolean( $connectivity['gps'] ?? false ) ),
+        ) ),
+    );
+
+    // Features.
+    $features = $euc['features'] ?? array();
+    if ( ! empty( $features ) && is_array( $features ) ) {
+        $groups['features'] = array(
+            'label' => 'Features',
+            'specs' => array(
+                array( 'label' => 'Included features', 'value' => implode( ', ', $features ) ),
+            ),
+        );
+    }
 
     return $groups;
 }

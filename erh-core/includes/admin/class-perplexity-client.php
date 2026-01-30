@@ -202,6 +202,94 @@ class PerplexityClient {
     }
 
     /**
+     * Send a generic request to the Perplexity API.
+     *
+     * Returns the raw content string from the API response.
+     * Used by consumers that need custom prompts (e.g., spec population).
+     *
+     * @param string $system_prompt System prompt for the AI.
+     * @param string $user_prompt   User prompt with the actual request.
+     * @param int    $max_tokens    Maximum tokens in the response.
+     * @param float  $temperature   Temperature for response randomness.
+     * @param int    $timeout       Request timeout in seconds.
+     * @return array{success: bool, content: string|null, error: string|null}
+     */
+    public function send_request(
+        string $system_prompt,
+        string $user_prompt,
+        int $max_tokens = 4000,
+        float $temperature = 0.1,
+        int $timeout = 60
+    ): array {
+        if (!$this->is_configured()) {
+            return [
+                'success' => false,
+                'content' => null,
+                'error'   => 'Perplexity API key not configured.',
+            ];
+        }
+
+        $response = wp_remote_post(self::API_URL, [
+            'timeout' => $timeout,
+            'headers' => [
+                'Authorization' => 'Bearer ' . $this->get_api_key(),
+                'Content-Type'  => 'application/json',
+            ],
+            'body' => wp_json_encode([
+                'model'    => self::MODEL,
+                'messages' => [
+                    [
+                        'role'    => 'system',
+                        'content' => $system_prompt,
+                    ],
+                    [
+                        'role'    => 'user',
+                        'content' => $user_prompt,
+                    ],
+                ],
+                'max_tokens'  => $max_tokens,
+                'temperature' => $temperature,
+            ]),
+        ]);
+
+        if (is_wp_error($response)) {
+            return [
+                'success' => false,
+                'content' => null,
+                'error'   => $response->get_error_message(),
+            ];
+        }
+
+        $code = wp_remote_retrieve_response_code($response);
+        $body = json_decode(wp_remote_retrieve_body($response), true);
+
+        if ($code === 429) {
+            return [
+                'success' => false,
+                'content' => null,
+                'error'   => 'Rate limit exceeded. Please wait before retrying.',
+            ];
+        }
+
+        if ($code !== 200) {
+            $error = $body['error']['message'] ?? 'Unknown API error (HTTP ' . $code . ')';
+            return [
+                'success' => false,
+                'content' => null,
+                'error'   => $error,
+            ];
+        }
+
+        $content = $body['choices'][0]['message']['content'] ?? '';
+
+        return [
+            'success' => true,
+            'content' => $content,
+            'error'   => null,
+        ];
+    }
+
+    /**
      * Find URLs for multiple products in batch.
      * Processes sequentially with a delay to avoid rate limiting.
      *

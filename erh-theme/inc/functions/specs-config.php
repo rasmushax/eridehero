@@ -314,6 +314,113 @@ function erh_get_product_spec_groups_config( string $category ): array {
                 ),
             ),
         ),
+        'euc' => array(
+            'Motor & Performance' => array(
+                'icon'  => 'zap',
+                'specs' => array(
+                    array( 'key' => 'motor.power_nominal', 'label' => 'Nominal Power', 'unit' => 'W' ),
+                    array( 'key' => 'motor.power_peak', 'label' => 'Peak Power', 'unit' => 'W' ),
+                    array( 'key' => 'motor.torque', 'label' => 'Torque', 'unit' => 'Nm' ),
+                    array( 'key' => 'motor.hollow_motor', 'label' => 'Hollow Motor', 'format' => 'feature_check', 'feature_value' => true ),
+                    array( 'key' => 'motor.motor_diameter', 'label' => 'Motor Diameter', 'unit' => '"' ),
+                    array( 'key' => 'manufacturer_top_speed', 'label' => 'Top Speed (Claimed)', 'unit' => 'mph' ),
+                    array( 'key' => 'manufacturer_range', 'label' => 'Range (Claimed)', 'unit' => 'mi' ),
+                ),
+            ),
+            'Battery & Charging' => array(
+                'icon'  => 'battery',
+                'specs' => array(
+                    array( 'key' => 'battery.capacity', 'label' => 'Battery Capacity', 'unit' => 'Wh' ),
+                    array( 'key' => 'battery.voltage', 'label' => 'Voltage', 'unit' => 'V' ),
+                    array( 'key' => 'battery.amphours', 'label' => 'Amp Hours', 'unit' => 'Ah' ),
+                    array( 'key' => 'battery.battery_type', 'label' => 'Battery Type' ),
+                    array( 'key' => 'battery.battery_brand', 'label' => 'Battery Brand' ),
+                    array( 'key' => 'battery.battery_packs', 'label' => 'Battery Packs' ),
+                    array( 'key' => 'battery.charging_time', 'label' => 'Charge Time', 'unit' => 'hrs' ),
+                    array( 'key' => 'battery.charger_output', 'label' => 'Charger Output', 'unit' => 'A' ),
+                    array( 'key' => 'battery.fast_charger', 'label' => 'Fast Charger', 'format' => 'feature_check', 'feature_value' => true ),
+                    array( 'key' => 'battery.dual_charging', 'label' => 'Dual Charging Port', 'format' => 'feature_check', 'feature_value' => true ),
+                    array( 'key' => 'battery.bms', 'label' => 'BMS' ),
+                ),
+            ),
+            'Weight & Dimensions' => array(
+                'icon'  => 'box',
+                'specs' => array(
+                    array( 'key' => 'dimensions.weight', 'label' => 'Weight', 'unit' => 'lbs' ),
+                    array( 'key' => 'dimensions.max_load', 'label' => 'Max Rider Weight', 'unit' => 'lbs' ),
+                    array( 'key' => 'dimensions.height', 'label' => 'Height', 'unit' => '"' ),
+                    array( 'key' => 'dimensions.width', 'label' => 'Width', 'unit' => '"' ),
+                    array( 'key' => 'dimensions.depth', 'label' => 'Depth', 'unit' => '"' ),
+                ),
+            ),
+            'Wheel & Tire' => array(
+                'icon'  => 'circle',
+                'specs' => array(
+                    array( 'key' => 'wheel.tire_size', 'label' => 'Tire Size', 'unit' => '"' ),
+                    array( 'key' => 'wheel.tire_width', 'label' => 'Tire Width', 'unit' => '"' ),
+                    array( 'key' => 'wheel.tire_type', 'label' => 'Tire Type' ),
+                    array( 'key' => 'wheel.tire_tread', 'label' => 'Tire Tread' ),
+                    array( 'key' => 'wheel.self_healing', 'label' => 'Self-Healing Tire', 'format' => 'feature_check', 'feature_value' => true ),
+                ),
+            ),
+            'Suspension' => array(
+                'icon'  => 'smile',
+                'specs' => array(
+                    array( 'key' => 'suspension.suspension_type', 'label' => 'Suspension Type' ),
+                    array( 'key' => 'suspension.suspension_travel', 'label' => 'Suspension Travel', 'unit' => 'mm' ),
+                    array( 'key' => 'suspension.adjustable_suspension', 'label' => 'Adjustable', 'format' => 'feature_check', 'feature_value' => true ),
+                ),
+            ),
+            'Pedals' => array(
+                'icon'  => 'layers',
+                'specs' => array(
+                    array( 'key' => 'pedals.pedal_height', 'label' => 'Pedal Height', 'unit' => '"' ),
+                    array( 'key' => 'pedals.pedal_width', 'label' => 'Pedal Width', 'unit' => '"' ),
+                    array( 'key' => 'pedals.pedal_length', 'label' => 'Pedal Length', 'unit' => '"' ),
+                    array( 'key' => 'pedals.pedal_angle', 'label' => 'Pedal Angle', 'unit' => '°' ),
+                    array( 'key' => 'pedals.adjustable_pedals', 'label' => 'Adjustable Pedals', 'format' => 'feature_check', 'feature_value' => true ),
+                    array( 'key' => 'pedals.spiked_pedals', 'label' => 'Spiked Pedals', 'format' => 'feature_check', 'feature_value' => true ),
+                ),
+            ),
+            'Lighting' => array(
+                'icon'  => 'sun',
+                'specs' => array(
+                    array( 'key' => 'lighting.headlight', 'label' => 'Headlight', 'format' => 'feature_check', 'feature_value' => true ),
+                    array( 'key' => 'lighting.headlight_lumens', 'label' => 'Headlight Brightness', 'unit' => 'lm' ),
+                    array( 'key' => 'lighting.taillight', 'label' => 'Taillight', 'format' => 'feature_check', 'feature_value' => true ),
+                    array( 'key' => 'lighting.brake_light', 'label' => 'Brake Light', 'format' => 'feature_check', 'feature_value' => true ),
+                    array( 'key' => 'lighting.rgb_lights', 'label' => 'RGB Lights', 'format' => 'feature_check', 'feature_value' => true ),
+                ),
+            ),
+            'Safety' => array(
+                'icon'  => 'shield',
+                'specs' => array(
+                    array( 'key' => 'safety.ip_rating', 'label' => 'IP Rating', 'format' => 'ip', 'higherBetter' => true ),
+                    array( 'key' => 'safety.tiltback_speed', 'label' => 'Tiltback Speed', 'unit' => 'mph' ),
+                    array( 'key' => 'safety.cutoff_speed', 'label' => 'Cutoff Speed', 'unit' => 'mph' ),
+                    array( 'key' => 'safety.lift_sensor', 'label' => 'Lift Sensor', 'format' => 'feature_check', 'feature_value' => true ),
+                ),
+            ),
+            'Connectivity & Features' => array(
+                'icon'  => 'settings',
+                'specs' => array(
+                    array( 'key' => 'connectivity.bluetooth', 'label' => 'Bluetooth', 'format' => 'feature_check', 'feature_value' => true ),
+                    array( 'key' => 'connectivity.app', 'label' => 'Mobile App', 'format' => 'feature_check', 'feature_value' => true ),
+                    array( 'key' => 'connectivity.speaker', 'label' => 'Built-in Speaker', 'format' => 'feature_check', 'feature_value' => true ),
+                    array( 'key' => 'connectivity.gps', 'label' => 'GPS', 'format' => 'feature_check', 'feature_value' => true ),
+                    array( 'key' => 'features', 'label' => 'Kickstand', 'format' => 'feature_check', 'feature_value' => 'Kickstand' ),
+                    array( 'key' => 'features', 'label' => 'Trolley Handle', 'format' => 'feature_check', 'feature_value' => 'Trolley Handle' ),
+                    array( 'key' => 'features', 'label' => 'Retractable Handle', 'format' => 'feature_check', 'feature_value' => 'Retractable Handle' ),
+                    array( 'key' => 'features', 'label' => 'Mudguard', 'format' => 'feature_check', 'feature_value' => 'Mudguard' ),
+                    array( 'key' => 'features', 'label' => 'Power Pads', 'format' => 'feature_check', 'feature_value' => 'Power Pads' ),
+                    array( 'key' => 'features', 'label' => 'Jump Pads', 'format' => 'feature_check', 'feature_value' => 'Jump Pads' ),
+                    array( 'key' => 'features', 'label' => 'Display Screen', 'format' => 'feature_check', 'feature_value' => 'Display Screen' ),
+                    array( 'key' => 'features', 'label' => 'USB Charging Port', 'format' => 'feature_check', 'feature_value' => 'USB Charging Port' ),
+                    array( 'key' => 'features', 'label' => 'Anti-Spin Button', 'format' => 'feature_check', 'feature_value' => 'Anti-Spin Button' ),
+                    array( 'key' => 'features', 'label' => 'Learning Mode', 'format' => 'feature_check', 'feature_value' => 'Learning Mode' ),
+                ),
+            ),
+        ),
         'hoverboard' => array(
             'Motor & Performance' => array(
                 'icon'  => 'zap',

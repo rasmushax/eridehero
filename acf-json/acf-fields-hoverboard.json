@@ -253,7 +253,7 @@
                   "Tubed": "Tubed",
                   "Tubeless": "Tubeless"
                 },
-                "default_value": "Tubed",
+                "default_value": false,
                 "return_format": "value",
                 "multiple": 0,
                 "allow_null": 0,

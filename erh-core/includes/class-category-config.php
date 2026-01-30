@@ -281,8 +281,18 @@ class CategoryConfig {
             return $key;
         }
 
-        // Check aliases.
-        return self::KEY_ALIASES[ $key ] ?? $key;
+        // Check aliases with original form.
+        if ( isset( self::KEY_ALIASES[ $key ] ) ) {
+            return self::KEY_ALIASES[ $key ];
+        }
+
+        // Try with spaces replaced by hyphens (handles "Electric Scooter" → "electric-scooter").
+        $hyphenated = str_replace( ' ', '-', $key );
+        if ( isset( self::KEY_ALIASES[ $hyphenated ] ) ) {
+            return self::KEY_ALIASES[ $hyphenated ];
+        }
+
+        return $key;
     }
 
     /**

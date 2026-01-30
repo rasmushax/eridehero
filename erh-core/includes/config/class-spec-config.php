@@ -996,9 +996,12 @@ class SpecConfig {
             'Practicality'       => 0.15,
         ],
         'euc' => [
-            'Performance'      => 0.35,
-            'Range & Battery'  => 0.35,
-            'Build'            => 0.30,
+            'Motor Performance' => 0.20,
+            'Range & Battery'   => 0.25,
+            'Ride Quality'      => 0.20,
+            'Safety'            => 0.15,
+            'Portability'       => 0.12,
+            'Features'          => 0.08,
         ],
         'eskateboard' => [
             'Performance'      => 0.35,

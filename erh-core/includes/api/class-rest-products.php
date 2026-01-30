@@ -604,6 +604,25 @@ class RestProducts extends WP_REST_Controller {
                 }
                 break;
 
+            case 'Hoverboard':
+                $hb = $specs['hoverboards'] ?? [];
+                if (!empty($specs['manufacturer_top_speed'])) {
+                    $parts[] = round((float) $specs['manufacturer_top_speed']) . ' MPH';
+                }
+                if (!empty($hb['battery']['capacity'])) {
+                    $parts[] = round((float) $hb['battery']['capacity']) . ' Wh battery';
+                }
+                if (!empty($hb['motor']['power_nominal'])) {
+                    $parts[] = round((float) $hb['motor']['power_nominal']) . 'W motor';
+                }
+                if (!empty($hb['dimensions']['weight'])) {
+                    $parts[] = round((float) $hb['dimensions']['weight']) . ' lbs';
+                }
+                if (!empty($hb['dimensions']['max_load'])) {
+                    $parts[] = round((float) $hb['dimensions']['max_load']) . ' lbs max load';
+                }
+                break;
+
             default:
                 // Generic fallback.
                 if (!empty($specs['manufacturer_top_speed'])) {
