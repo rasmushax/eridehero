@@ -51,11 +51,12 @@ abstract class AdvantageCalculatorBase implements AdvantageCalculatorInterface {
         $wrapper      = $this->get_spec_wrapper();
         $prefixed_key = $wrapper . '.' . $key;
 
+        // Try with wrapper prefix first (raw ProductCache data).
         $value = $this->get_nested_spec( $specs, $prefixed_key );
 
-        // Also check for root-level computed specs (value_metrics, etc.).
-        if ( $value === null && isset( $specs[ $key ] ) ) {
-            return $specs[ $key ];
+        // Try without wrapper (flattened compare data).
+        if ( $value === null ) {
+            $value = $this->get_nested_spec( $specs, $key );
         }
 
         return $value;

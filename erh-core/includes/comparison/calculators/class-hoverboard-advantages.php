@@ -220,7 +220,7 @@ class HoverboardAdvantages extends AdvantageCalculatorBase {
 		return [
 			// Motor & Performance.
 			[
-				'key'           => 'nominal_motor_wattage',
+				'key'           => 'motor.power_nominal',
 				'label'         => 'Motor Power',
 				'unit'          => 'W',
 				'higher_better' => true,
@@ -238,9 +238,17 @@ class HoverboardAdvantages extends AdvantageCalculatorBase {
 
 			// Battery.
 			[
-				'key'           => 'battery_capacity',
+				'key'           => 'battery.capacity',
 				'label'         => 'Battery Capacity',
 				'unit'          => 'Wh',
+				'higher_better' => true,
+				'format'        => 'numeric',
+				'diff_format'   => 'more',
+			],
+			[
+				'key'           => 'manufacturer_range',
+				'label'         => 'Range',
+				'unit'          => 'mi',
 				'higher_better' => true,
 				'format'        => 'numeric',
 				'diff_format'   => 'more',
@@ -248,7 +256,7 @@ class HoverboardAdvantages extends AdvantageCalculatorBase {
 
 			// Build.
 			[
-				'key'           => 'weight',
+				'key'           => 'dimensions.weight',
 				'label'         => 'Weight',
 				'unit'          => 'lbs',
 				'higher_better' => false,
@@ -256,7 +264,15 @@ class HoverboardAdvantages extends AdvantageCalculatorBase {
 				'diff_format'   => 'lighter',
 			],
 			[
-				'key'           => 'wheel_size',
+				'key'           => 'dimensions.max_load',
+				'label'         => 'Max Rider Weight',
+				'unit'          => 'lbs',
+				'higher_better' => true,
+				'format'        => 'numeric',
+				'diff_format'   => 'more',
+			],
+			[
+				'key'           => 'wheels.wheel_size',
 				'label'         => 'Wheel Size',
 				'unit'          => '"',
 				'higher_better' => true,
@@ -265,7 +281,7 @@ class HoverboardAdvantages extends AdvantageCalculatorBase {
 				'min_diff'      => 0.5,
 			],
 			[
-				'key'           => 'wheel_type',
+				'key'           => 'wheels.wheel_type',
 				'label'         => 'Wheel Type',
 				'higher_better' => true,
 				'format'        => 'ranked',
@@ -274,7 +290,7 @@ class HoverboardAdvantages extends AdvantageCalculatorBase {
 
 			// Safety & Features.
 			[
-				'key'           => 'ul_certified',
+				'key'           => 'safety.ul_2272',
 				'label'         => 'UL 2272 Certified',
 				'higher_better' => true,
 				'format'        => 'boolean',
@@ -312,28 +328,28 @@ class HoverboardAdvantages extends AdvantageCalculatorBase {
 	private function get_multi_comparison_specs(): array {
 		return [
 			[
-				'key'           => 'nominal_motor_wattage',
+				'key'           => 'motor.power_nominal',
 				'label'         => 'Most powerful',
 				'unit'          => 'W',
 				'higher_better' => true,
 				'format'        => 'numeric',
 			],
 			[
-				'key'           => 'battery_capacity',
+				'key'           => 'battery.capacity',
 				'label'         => 'Largest battery',
 				'unit'          => 'Wh',
 				'higher_better' => true,
 				'format'        => 'numeric',
 			],
 			[
-				'key'           => 'weight',
+				'key'           => 'dimensions.weight',
 				'label'         => 'Lightest',
 				'unit'          => 'lbs',
 				'higher_better' => false,
 				'format'        => 'numeric',
 			],
 			[
-				'key'           => 'wheel_size',
+				'key'           => 'wheels.wheel_size',
 				'label'         => 'Biggest wheels',
 				'unit'          => '"',
 				'higher_better' => true,
@@ -343,6 +359,20 @@ class HoverboardAdvantages extends AdvantageCalculatorBase {
 				'key'           => 'manufacturer_top_speed',
 				'label'         => 'Fastest',
 				'unit'          => 'mph',
+				'higher_better' => true,
+				'format'        => 'numeric',
+			],
+			[
+				'key'           => 'manufacturer_range',
+				'label'         => 'Best range',
+				'unit'          => 'mi',
+				'higher_better' => true,
+				'format'        => 'numeric',
+			],
+			[
+				'key'           => 'dimensions.max_load',
+				'label'         => 'Highest weight capacity',
+				'unit'          => 'lbs',
 				'higher_better' => true,
 				'format'        => 'numeric',
 			],
@@ -378,13 +408,13 @@ class HoverboardAdvantages extends AdvantageCalculatorBase {
 
 			// Raw specs.
 			[
-				'key'           => 'nominal_motor_wattage',
+				'key'           => 'motor.power_nominal',
 				'label'         => 'Motor Power',
 				'unit'          => 'W',
 				'higher_better' => true,
 			],
 			[
-				'key'           => 'battery_capacity',
+				'key'           => 'battery.capacity',
 				'label'         => 'Battery Capacity',
 				'unit'          => 'Wh',
 				'higher_better' => true,
@@ -396,13 +426,13 @@ class HoverboardAdvantages extends AdvantageCalculatorBase {
 				'higher_better' => true,
 			],
 			[
-				'key'           => 'weight',
+				'key'           => 'dimensions.weight',
 				'label'         => 'Weight',
 				'unit'          => 'lbs',
 				'higher_better' => false,
 			],
 			[
-				'key'           => 'wheel_size',
+				'key'           => 'wheels.wheel_size',
 				'label'         => 'Wheel Size',
 				'unit'          => '"',
 				'higher_better' => true,
@@ -421,12 +451,6 @@ class HoverboardAdvantages extends AdvantageCalculatorBase {
 			],
 
 			// Score-based composites.
-			[
-				'key'            => 'motor_performance',
-				'label'          => 'Motor Performance',
-				'higher_better'  => true,
-				'is_score_based' => true,
-			],
 			[
 				'key'            => 'battery_range',
 				'label'          => 'Battery & Range',
@@ -799,7 +823,7 @@ class HoverboardAdvantages extends AdvantageCalculatorBase {
 
 		switch ( $key ) {
 			case 'motor_performance':
-				$power = $this->get_typed_spec_value( $specs, 'nominal_motor_wattage' );
+				$power = $this->get_typed_spec_value( $specs, 'motor.power_nominal' );
 				$speed = $this->get_typed_spec_value( $specs, 'manufacturer_top_speed' );
 
 				if ( $power && is_numeric( $power ) ) {
@@ -811,7 +835,7 @@ class HoverboardAdvantages extends AdvantageCalculatorBase {
 				break;
 
 			case 'battery_range':
-				$capacity = $this->get_typed_spec_value( $specs, 'battery_capacity' );
+				$capacity = $this->get_typed_spec_value( $specs, 'battery.capacity' );
 				$range    = $this->get_typed_spec_value( $specs, 'manufacturer_range' );
 
 				if ( $capacity && is_numeric( $capacity ) ) {
@@ -823,7 +847,7 @@ class HoverboardAdvantages extends AdvantageCalculatorBase {
 				break;
 
 			case 'portability':
-				$weight = $this->get_typed_spec_value( $specs, 'weight' );
+				$weight = $this->get_typed_spec_value( $specs, 'dimensions.weight' );
 
 				if ( $weight && is_numeric( $weight ) ) {
 					$details[] = number_format( (float) $weight, 1 ) . ' lbs';
@@ -831,8 +855,8 @@ class HoverboardAdvantages extends AdvantageCalculatorBase {
 				break;
 
 			case 'ride_comfort':
-				$wheel_size = $this->get_typed_spec_value( $specs, 'wheel_size' );
-				$wheel_type = $this->to_string( $this->get_typed_spec_value( $specs, 'wheel_type' ) );
+				$wheel_size = $this->get_typed_spec_value( $specs, 'wheels.wheel_size' );
+				$wheel_type = $this->to_string( $this->get_typed_spec_value( $specs, 'wheels.wheel_type' ) );
 
 				if ( $wheel_size && is_numeric( $wheel_size ) ) {
 					$details[] = $wheel_size . '"';
@@ -942,7 +966,7 @@ class HoverboardAdvantages extends AdvantageCalculatorBase {
 		// Get product value.
 		$product_value = $this->get_single_spec_value( $product, $key, $geo );
 
-		if ( $product_value === null || ( is_numeric( $product_value ) && $product_value <= 0 ) ) {
+		if ( $product_value === null || $product_value === '' || ( is_numeric( $product_value ) && $product_value <= 0 ) ) {
 			return null;
 		}
 
@@ -950,7 +974,7 @@ class HoverboardAdvantages extends AdvantageCalculatorBase {
 		$values = [];
 		foreach ( $comparison_set as $comp_product ) {
 			$val = $this->get_single_spec_value( $comp_product, $key, $geo );
-			if ( $val !== null && ( ! is_numeric( $val ) || $val > 0 ) ) {
+			if ( $val !== null && $val !== '' && ( ! is_numeric( $val ) || $val > 0 ) ) {
 				$values[] = (float) $val;
 			}
 		}
@@ -1058,6 +1082,15 @@ class HoverboardAdvantages extends AdvantageCalculatorBase {
 			? ( $diff >= 20 ? "Outstanding {$label}" : ( $diff >= 14 ? "Excellent {$label}" : "Strong {$label}" ) )
 			: ( $diff <= -20 ? "Very weak {$label}" : ( $diff <= -14 ? "Weak {$label}" : "Below average {$label}" ) );
 
+		// Get descriptive comparison text for ride_comfort instead of raw scores.
+		$comparison = $product_score . ' vs ' . round( $avg ) . ' avg';
+		if ( $key === 'ride_comfort' ) {
+			$details = $this->get_ride_comfort_details( $product['specs'] ?? [], $is_advantage );
+			if ( $details ) {
+				$comparison = ucfirst( $details );
+			}
+		}
+
 		$item = [
 			'spec_key'      => $key,
 			'label'         => $label,
@@ -1067,7 +1100,7 @@ class HoverboardAdvantages extends AdvantageCalculatorBase {
 			'percentile'    => 0,
 			'pct_vs_avg'    => round( $diff ),
 			'text'          => $tier,
-			'comparison'    => $product_score . ' vs ' . round( $avg ) . ' avg',
+			'comparison'    => $comparison,
 		];
 
 		return [
@@ -1148,12 +1181,17 @@ class HoverboardAdvantages extends AdvantageCalculatorBase {
 	private function analyze_ip_rating( array $product ): ?array {
 		$specs = $product['specs'] ?? [];
 
-		$ip_rating    = $this->get_typed_spec_value( $specs, 'other.ip_rating' )
+		$ip_rating    = $this->get_typed_spec_value( $specs, 'safety.ip_rating' )
+		                ?? $this->get_typed_spec_value( $specs, 'other.ip_rating' )
 		                ?? $this->get_typed_spec_value( $specs, 'ip_rating' );
 		$water_rating = $this->get_ip_water_rating( $ip_rating );
 
-		$is_advantage = $water_rating >= 5;
-		$is_weakness  = empty( $ip_rating ) || $water_rating <= 3;
+		// Treat "Unknown" as no rating.
+		$has_rating = ! empty( $ip_rating ) && strtolower( (string) $ip_rating ) !== 'unknown';
+
+		// Hoverboard thresholds: IPX5+ = strength, IPX4 = neutral, IPX3-/none = weakness.
+		$is_advantage = $has_rating && $water_rating >= 5;
+		$is_weakness  = ! $has_rating || $water_rating <= 3;
 
 		if ( ! $is_advantage && ! $is_weakness ) {
 			return null;
@@ -1161,8 +1199,8 @@ class HoverboardAdvantages extends AdvantageCalculatorBase {
 
 		if ( $is_advantage ) {
 			$text       = 'Good water resistance (' . strtoupper( (string) $ip_rating ) . ')';
-			$comparison = 'Safe for light rain';
-		} elseif ( empty( $ip_rating ) ) {
+			$comparison = 'Safe for light rain and splashes';
+		} elseif ( ! $has_rating ) {
 			$text       = 'No water resistance rating';
 			$comparison = 'Avoid wet conditions';
 		} else {
@@ -1334,23 +1372,13 @@ class HoverboardAdvantages extends AdvantageCalculatorBase {
 	private function count_hoverboard_features( array $specs ): int {
 		$count = 0;
 
-		$feature_keys = [
-			'carrying_handle',
-			'fenders',
-			'non_slip_deck',
-			'gps_tracking',
-			'learning_mode',
-			'led_lights',
-		];
-
-		foreach ( $feature_keys as $key ) {
-			$value = $this->get_typed_spec_value( $specs, $key )
-			         ?? $this->get_typed_spec_value( $specs, 'features.' . $key );
-			if ( $this->to_boolean( $value ) ) {
-				$count++;
-			}
+		// Features are stored as an ACF checkbox array (e.g., ['Carrying Handle', 'LED Lights']).
+		$features_array = $this->get_typed_spec_value( $specs, 'features' );
+		if ( is_array( $features_array ) && ! empty( $features_array ) ) {
+			$count += count( $features_array );
 		}
 
+		// Connectivity booleans.
 		$connectivity_keys = [
 			'connectivity.bluetooth_speaker',
 			'connectivity.app_enabled',
@@ -1364,6 +1392,67 @@ class HoverboardAdvantages extends AdvantageCalculatorBase {
 		}
 
 		return $count;
+	}
+
+	/**
+	 * Get descriptive ride comfort details for single product analysis.
+	 *
+	 * Builds a human-readable description like "large 10\" pneumatic tires"
+	 * instead of raw score comparison text.
+	 *
+	 * @param array $specs        Product specs.
+	 * @param bool  $is_advantage Whether this is a strength.
+	 * @return string Supporting details text, or empty string.
+	 */
+	private function get_ride_comfort_details( array $specs, bool $is_advantage ): string {
+		$details = [];
+
+		$wheel_size = $this->get_typed_spec_value( $specs, 'wheels.wheel_size' );
+		$wheel_type = $this->to_string( $this->get_typed_spec_value( $specs, 'wheels.wheel_type' ) );
+
+		// Build size descriptor.
+		$size_desc = '';
+		if ( $wheel_size && is_numeric( $wheel_size ) ) {
+			$size = (float) $wheel_size;
+			if ( $is_advantage ) {
+				$size_desc = $size >= 8.5 ? 'large' : '';
+			} else {
+				$size_desc = $size <= 6.5 ? 'small' : '';
+			}
+		}
+
+		// Build tire type descriptor.
+		$type_desc = '';
+		if ( $wheel_type ) {
+			$type_lower = strtolower( $wheel_type );
+			if ( $is_advantage ) {
+				if ( strpos( $type_lower, 'pneumatic' ) !== false || strpos( $type_lower, 'air' ) !== false || strpos( $type_lower, 'inflatable' ) !== false ) {
+					$type_desc = 'pneumatic';
+				}
+			} else {
+				if ( strpos( $type_lower, 'solid' ) !== false || strpos( $type_lower, 'rubber' ) !== false ) {
+					$type_desc = 'solid';
+				}
+			}
+		}
+
+		// Combine: "large 10" pneumatic tires" or "small 6.5" solid tires".
+		$parts = [];
+		if ( $size_desc ) {
+			$parts[] = $size_desc;
+		}
+		if ( $wheel_size && is_numeric( $wheel_size ) ) {
+			$parts[] = $wheel_size . '"';
+		}
+		if ( $type_desc ) {
+			$parts[] = $type_desc;
+		}
+
+		if ( ! empty( $parts ) ) {
+			$details[] = implode( ' ', $parts ) . ' tires';
+		}
+
+		return implode( ', ', $details );
 	}
 
 	/**
@@ -1464,7 +1553,7 @@ class HoverboardAdvantages extends AdvantageCalculatorBase {
 			return round( (float) $value, 2 );
 		}
 
-		if ( in_array( $unit, [ 'Wh/lb', 'lbs', '"' ], true ) ) {
+		if ( in_array( $unit, [ 'Wh/lb', 'lbs', '"', 'mph', 'mi' ], true ) ) {
 			return round( (float) $value, 1 );
 		}
 
@@ -1568,7 +1657,7 @@ class HoverboardAdvantages extends AdvantageCalculatorBase {
 	 */
 	private function get_custom_spec_labels( string $key ): ?array {
 		return match ( $key ) {
-			'weight' => [
+			'dimensions.weight' => [
 				'best'      => 'Lightest',
 				'excellent' => 'Very light',
 				'strong'    => 'Light',
@@ -1576,7 +1665,7 @@ class HoverboardAdvantages extends AdvantageCalculatorBase {
 				'very_weak' => 'Very heavy',
 				'weak'      => 'Heavy',
 			],
-			'nominal_motor_wattage' => [
+			'motor.power_nominal' => [
 				'best'      => 'Most powerful motor',
 				'excellent' => 'Powerful motor',
 				'strong'    => 'Good motor power',
@@ -1584,7 +1673,7 @@ class HoverboardAdvantages extends AdvantageCalculatorBase {
 				'very_weak' => 'Very low motor power',
 				'weak'      => 'Low motor power',
 			],
-			'battery_capacity' => [
+			'battery.capacity' => [
 				'best'      => 'Largest battery',
 				'excellent' => 'Large battery',
 				'strong'    => 'Good battery size',
@@ -1599,6 +1688,22 @@ class HoverboardAdvantages extends AdvantageCalculatorBase {
 				'worst'     => 'Slowest',
 				'very_weak' => 'Very slow',
 				'weak'      => 'Slow',
+			],
+			'wheels.wheel_size' => [
+				'best'      => 'Largest wheels',
+				'excellent' => 'Very large wheels',
+				'strong'    => 'Large wheels',
+				'worst'     => 'Smallest wheels',
+				'very_weak' => 'Very small wheels',
+				'weak'      => 'Small wheels',
+			],
+			'battery.voltage' => [
+				'best'      => 'Highest voltage',
+				'excellent' => 'Very high voltage',
+				'strong'    => 'High voltage',
+				'worst'     => 'Lowest voltage',
+				'very_weak' => 'Very low voltage',
+				'weak'      => 'Low voltage',
 			],
 			default => null,
 		};

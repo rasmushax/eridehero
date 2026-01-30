@@ -540,7 +540,7 @@ function erh_get_range_filter_config( string $product_type = 'escooter' ): array
             'field'        => 'wheel_size',
             'spec_paths'   => [
                 'wheels_and_tires.wheel_size',  // E-bike.
-                'wheel_size',                   // Hoverboard.
+                'wheels.wheel_size',            // Hoverboard.
             ],
             'unit'         => 'in',
             'prefix'       => '',
@@ -699,6 +699,7 @@ function erh_get_checkbox_filter_config(): array {
             'spec_paths'    => [
                 'other.ip_rating',                   // E-scooter.
                 'safety_and_compliance.ip_rating',   // E-bike.
+                'safety.ip_rating',                  // Hoverboard.
             ],
             'visible_limit' => 10,
             'searchable'    => false,
@@ -864,7 +865,7 @@ function erh_get_checkbox_filter_config(): array {
         'wheel_type' => [
             'label'         => 'Wheel Type',
             'field'         => 'wheel_type',
-            'spec_paths'    => [ 'wheel_type' ],
+            'spec_paths'    => [ 'wheels.tire_type', 'wheel_type' ],
             'visible_limit' => 5,
             'searchable'    => false,
         ],
@@ -1010,384 +1011,17 @@ function erh_get_tristate_filter_config(): array {
  * Product-type-aware: returns different filter groups based on product type.
  * Groups with filters that don't apply to a product type auto-hide via erh_group_has_content().
  *
+ * Each product type's config lives in inc/finder/filter-groups-{type}.php.
+ *
  * @param string $product_type Product type key (escooter, ebike, etc.). Default 'escooter'.
  * @return array Filter group configuration.
  */
 function erh_get_filter_group_config( string $product_type = 'escooter' ): array {
-    // E-scooter filter groups.
-    if ( $product_type === 'escooter' ) {
-        return [
-            'quick' => [
-                'title'      => '', // No main heading.
-                'is_quick'   => true,
-                'subgroups'  => [
-                    'price' => [
-                        'title'            => 'Price',
-                        'range_filters'    => [ 'price' ],
-                        'checkbox_filters' => [],
-                        'tristate_filters' => [],
-                        'has_in_stock'     => true,
-                    ],
-                    'brands' => [
-                        'title'            => 'Brands',
-                        'range_filters'    => [],
-                        'checkbox_filters' => [ 'brand' ],
-                        'tristate_filters' => [],
-                        'has_in_stock'     => false,
-                    ],
-                ],
-            ],
-            'motor' => [
-                'title'            => 'Motor',
-                'range_filters'    => [ 'motor_power', 'motor_peak' ],
-                'checkbox_filters' => [ 'motor_position' ],
-                'tristate_filters' => [],
-                'has_in_stock'     => false,
-            ],
-            'battery' => [
-                'title'            => 'Battery',
-                'range_filters'    => [ 'battery', 'voltage', 'amphours', 'charging_time' ],
-                'checkbox_filters' => [],
-                'tristate_filters' => [],
-                'has_in_stock'     => false,
-            ],
-            'performance' => [
-                'title'            => 'Claimed Specs',
-                'range_filters'    => [ 'speed', 'range', 'max_incline' ],
-                'checkbox_filters' => [],
-                'tristate_filters' => [],
-                'has_in_stock'     => false,
-            ],
-            'tested_performance' => [
-                'title'            => 'Tested Performance',
-                'range_filters'    => [ 'tested_speed', 'tested_range', 'accel_0_15', 'accel_0_20', 'brake_distance', 'hill_climb' ],
-                'checkbox_filters' => [],
-                'tristate_filters' => [],
-                'has_in_stock'     => false,
-            ],
-            'portability' => [
-                'title'            => 'Portability',
-                'range_filters'    => [ 'weight' ],
-                'checkbox_filters' => [],
-                'tristate_filters' => [ 'foldable_handlebars' ],
-                'has_in_stock'     => false,
-            ],
-            'rider_fit' => [
-                'title'            => 'Rider Fit',
-                'range_filters'    => [ 'rider_height', 'weight_limit', 'deck_width', 'handlebar_width', 'ground_clearance' ],
-                'checkbox_filters' => [],
-                'tristate_filters' => [],
-                'has_in_stock'     => false,
-            ],
-            'brakes' => [
-                'title'            => 'Brakes',
-                'range_filters'    => [],
-                'checkbox_filters' => [ 'brake_type' ],
-                'tristate_filters' => [ 'regenerative_braking' ],
-                'has_in_stock'     => false,
-            ],
-            'tires' => [
-                'title'            => 'Tires',
-                'range_filters'    => [ 'tire_size', 'tire_width' ],
-                'checkbox_filters' => [ 'tire_type' ],
-                'tristate_filters' => [ 'self_healing_tires' ],
-                'has_in_stock'     => false,
-            ],
-            'suspension' => [
-                'title'            => 'Suspension',
-                'range_filters'    => [],
-                'checkbox_filters' => [ 'suspension_type' ],
-                'tristate_filters' => [ 'suspension_adjustable' ],
-                'has_in_stock'     => false,
-            ],
-            'terrain_durability' => [
-                'title'            => 'Terrain & Durability',
-                'range_filters'    => [],
-                'checkbox_filters' => [ 'terrain', 'ip_rating' ],
-                'tristate_filters' => [],
-                'has_in_stock'     => false,
-            ],
-            'controls_features' => [
-                'title'            => 'Controls & Features',
-                'range_filters'    => [],
-                'checkbox_filters' => [ 'throttle_type', 'features' ],
-                'tristate_filters' => [],
-                'has_in_stock'     => false,
-            ],
-            'lighting' => [
-                'title'            => 'Lighting',
-                'range_filters'    => [],
-                'checkbox_filters' => [],
-                'tristate_filters' => [ 'has_lights', 'turn_signals' ],
-                'has_in_stock'     => false,
-            ],
-            'model_info' => [
-                'title'            => 'Model Info',
-                'range_filters'    => [ 'release_year' ],
-                'checkbox_filters' => [],
-                'tristate_filters' => [],
-                'has_in_stock'     => false,
-            ],
-            'value_metrics' => [
-                'title'            => 'Value Metrics',
-                'range_filters'    => [ 'price_per_lb', 'price_per_mph', 'price_per_mile', 'price_per_wh', 'speed_per_lb', 'range_per_lb' ],
-                'checkbox_filters' => [],
-                'tristate_filters' => [],
-                'has_in_stock'     => false,
-            ],
-        ];
+    $file = get_template_directory() . "/inc/finder/filter-groups-{$product_type}.php";
+    if ( file_exists( $file ) ) {
+        return include $file;
     }
-
-    // E-bike specific groups.
-    if ( $product_type === 'ebike' ) {
-        return [
-            'quick' => [
-                'title'      => '', // No main heading.
-                'is_quick'   => true,
-                'subgroups'  => [
-                    'price' => [
-                        'title'            => 'Price',
-                        'range_filters'    => [ 'price' ],
-                        'checkbox_filters' => [],
-                        'tristate_filters' => [],
-                        'has_in_stock'     => true,
-                    ],
-                    'category' => [
-                        'title'            => 'Category',
-                        'range_filters'    => [],
-                        'checkbox_filters' => [ 'category' ],
-                        'tristate_filters' => [],
-                        'has_in_stock'     => false,
-                    ],
-                    'brands' => [
-                        'title'            => 'Brands',
-                        'range_filters'    => [],
-                        'checkbox_filters' => [ 'brand' ],
-                        'tristate_filters' => [],
-                        'has_in_stock'     => false,
-                    ],
-                ],
-            ],
-            'classification' => [
-                'title'            => 'Classification',
-                'range_filters'    => [ 'top_assist_speed' ],
-                'checkbox_filters' => [ 'ebike_class' ],
-                'tristate_filters' => [ 'has_throttle' ],
-                'has_in_stock'     => false,
-            ],
-            'motor' => [
-                'title'            => 'Motor & Drive',
-                'range_filters'    => [ 'motor_power', 'motor_peak', 'torque', 'assist_levels' ],
-                'checkbox_filters' => [ 'motor_brand', 'motor_type', 'sensor_type' ],
-                'tristate_filters' => [],
-                'has_in_stock'     => false,
-            ],
-            'battery' => [
-                'title'            => 'Battery & Range',
-                'range_filters'    => [ 'battery', 'range', 'voltage', 'amphours', 'charging_time' ],
-                'checkbox_filters' => [ 'battery_position' ],
-                'tristate_filters' => [ 'removable_battery' ],
-                'has_in_stock'     => false,
-            ],
-            'frame' => [
-                'title'            => 'Frame & Geometry',
-                'range_filters'    => [ 'weight', 'weight_limit', 'rack_capacity' ],
-                'checkbox_filters' => [ 'frame_style', 'frame_material', 'sizes_available' ],
-                'tristate_filters' => [],
-                'has_in_stock'     => false,
-            ],
-            'drivetrain' => [
-                'title'            => 'Drivetrain',
-                'range_filters'    => [ 'gears' ],
-                'checkbox_filters' => [ 'drive_system' ],
-                'tristate_filters' => [],
-                'has_in_stock'     => false,
-            ],
-            'brakes' => [
-                'title'            => 'Brakes',
-                'range_filters'    => [ 'rotor_size' ],
-                'checkbox_filters' => [ 'brake_type', 'brake_brand' ],
-                'tristate_filters' => [],
-                'has_in_stock'     => false,
-            ],
-            'suspension' => [
-                'title'            => 'Suspension',
-                'range_filters'    => [ 'front_travel', 'rear_travel' ],
-                'checkbox_filters' => [ 'front_suspension', 'rear_suspension' ],
-                'tristate_filters' => [ 'seatpost_suspension' ],
-                'has_in_stock'     => false,
-            ],
-            'wheels_tires' => [
-                'title'            => 'Wheels & Tires',
-                'range_filters'    => [ 'wheel_size', 'tire_width' ],
-                'checkbox_filters' => [ 'tire_type', 'tire_brand' ],
-                'tristate_filters' => [ 'puncture_protection' ],
-                'has_in_stock'     => false,
-            ],
-            'features' => [
-                'title'            => 'Features & Tech',
-                'range_filters'    => [],
-                'checkbox_filters' => [ 'display', 'connectivity', 'features' ],
-                'tristate_filters' => [ 'app_compatible', 'has_lights', 'walk_assist' ],
-                'has_in_stock'     => false,
-            ],
-            'accessories' => [
-                'title'            => 'Accessories',
-                'range_filters'    => [],
-                'checkbox_filters' => [],
-                'tristate_filters' => [ 'has_fenders', 'has_rear_rack', 'has_front_rack', 'has_kickstand' ],
-                'has_in_stock'     => false,
-            ],
-            'safety' => [
-                'title'            => 'Safety & Compliance',
-                'range_filters'    => [],
-                'checkbox_filters' => [ 'ip_rating', 'certifications' ],
-                'tristate_filters' => [],
-                'has_in_stock'     => false,
-            ],
-            'model_info' => [
-                'title'            => 'Model Info',
-                'range_filters'    => [ 'release_year' ],
-                'checkbox_filters' => [],
-                'tristate_filters' => [],
-                'has_in_stock'     => false,
-            ],
-        ];
-    }
-
-    // Hoverboard specific groups.
-    if ( $product_type === 'hoverboard' ) {
-        return [
-            'quick' => [
-                'title'      => '',
-                'is_quick'   => true,
-                'subgroups'  => [
-                    'price' => [
-                        'title'            => 'Price',
-                        'range_filters'    => [ 'price' ],
-                        'checkbox_filters' => [],
-                        'tristate_filters' => [],
-                        'has_in_stock'     => true,
-                    ],
-                    'brands' => [
-                        'title'            => 'Brands',
-                        'range_filters'    => [],
-                        'checkbox_filters' => [ 'brand' ],
-                        'tristate_filters' => [],
-                        'has_in_stock'     => false,
-                    ],
-                ],
-            ],
-            'motor' => [
-                'title'            => 'Motor',
-                'range_filters'    => [ 'motor_power', 'motor_peak' ],
-                'checkbox_filters' => [],
-                'tristate_filters' => [],
-                'has_in_stock'     => false,
-            ],
-            'battery' => [
-                'title'            => 'Battery',
-                'range_filters'    => [ 'battery', 'voltage', 'charging_time' ],
-                'checkbox_filters' => [],
-                'tristate_filters' => [],
-                'has_in_stock'     => false,
-            ],
-            'performance' => [
-                'title'            => 'Claimed Specs',
-                'range_filters'    => [ 'speed', 'range' ],
-                'checkbox_filters' => [],
-                'tristate_filters' => [],
-                'has_in_stock'     => false,
-            ],
-            'build' => [
-                'title'            => 'Build',
-                'range_filters'    => [ 'weight', 'weight_limit', 'wheel_size' ],
-                'checkbox_filters' => [ 'wheel_type' ],
-                'tristate_filters' => [],
-                'has_in_stock'     => false,
-            ],
-            'safety' => [
-                'title'            => 'Safety',
-                'range_filters'    => [],
-                'checkbox_filters' => [ 'ip_rating' ],
-                'tristate_filters' => [ 'ul_2272' ],
-                'has_in_stock'     => false,
-            ],
-            'connectivity' => [
-                'title'            => 'Connectivity',
-                'range_filters'    => [],
-                'checkbox_filters' => [],
-                'tristate_filters' => [ 'bluetooth_speaker', 'app_enabled', 'speed_modes' ],
-                'has_in_stock'     => false,
-            ],
-            'model_info' => [
-                'title'            => 'Model Info',
-                'range_filters'    => [ 'release_year' ],
-                'checkbox_filters' => [],
-                'tristate_filters' => [],
-                'has_in_stock'     => false,
-            ],
-        ];
-    }
-
-    // Default fallback for other product types (minimal set).
-    return [
-        'quick' => [
-            'title'      => '',
-            'is_quick'   => true,
-            'subgroups'  => [
-                'price' => [
-                    'title'            => 'Price',
-                    'range_filters'    => [ 'price' ],
-                    'checkbox_filters' => [],
-                    'tristate_filters' => [],
-                    'has_in_stock'     => true,
-                ],
-                'brands' => [
-                    'title'            => 'Brands',
-                    'range_filters'    => [],
-                    'checkbox_filters' => [ 'brand' ],
-                    'tristate_filters' => [],
-                    'has_in_stock'     => false,
-                ],
-            ],
-        ],
-        'motor' => [
-            'title'            => 'Motor',
-            'range_filters'    => [ 'motor_power', 'motor_peak' ],
-            'checkbox_filters' => [],
-            'tristate_filters' => [],
-            'has_in_stock'     => false,
-        ],
-        'battery' => [
-            'title'            => 'Battery',
-            'range_filters'    => [ 'battery', 'voltage', 'charging_time' ],
-            'checkbox_filters' => [],
-            'tristate_filters' => [],
-            'has_in_stock'     => false,
-        ],
-        'performance' => [
-            'title'            => 'Claimed Specs',
-            'range_filters'    => [ 'speed', 'range' ],
-            'checkbox_filters' => [],
-            'tristate_filters' => [],
-            'has_in_stock'     => false,
-        ],
-        'portability' => [
-            'title'            => 'Portability',
-            'range_filters'    => [ 'weight', 'weight_limit' ],
-            'checkbox_filters' => [],
-            'tristate_filters' => [],
-            'has_in_stock'     => false,
-        ],
-        'model_info' => [
-            'title'            => 'Model Info',
-            'range_filters'    => [ 'release_year' ],
-            'checkbox_filters' => [],
-            'tristate_filters' => [],
-            'has_in_stock'     => false,
-        ],
-    ];
+    return include get_template_directory() . '/inc/finder/filter-groups-default.php';
 }
 
 /**

@@ -1297,7 +1297,7 @@ class EscooterAdvantages extends AdvantageCalculatorBase {
         // Get product value.
         $product_value = $this->get_single_spec_value( $product, $key, $geo );
 
-        if ( $product_value === null || ( is_numeric( $product_value ) && $product_value <= 0 ) ) {
+        if ( $product_value === null || $product_value === '' || ( is_numeric( $product_value ) && $product_value <= 0 ) ) {
             // DEBUG: Log skipped spec due to null/zero product value.
             // phpcs:ignore WordPress.PHP.DevelopmentFunctions.error_log_error_log
             error_log( sprintf(
@@ -1314,7 +1314,7 @@ class EscooterAdvantages extends AdvantageCalculatorBase {
         $values_with_names = [];
         foreach ( $comparison_set as $comp_product ) {
             $val = $this->get_single_spec_value( $comp_product, $key, $geo );
-            if ( $val !== null && ( ! is_numeric( $val ) || $val > 0 ) ) {
+            if ( $val !== null && $val !== '' && ( ! is_numeric( $val ) || $val > 0 ) ) {
                 $values[]            = (float) $val;
                 $values_with_names[] = [
                     'name'  => $comp_product['name'] ?? 'Unknown',
