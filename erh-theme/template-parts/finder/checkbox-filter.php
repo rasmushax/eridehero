@@ -34,7 +34,7 @@ $label         = $cfg['label'] ?? ucfirst( $key );
 $field         = $cfg['field'] ?? $key;
 $visible_limit = $cfg['visible_limit'] ?? 8;
 $searchable    = $cfg['searchable'] ?? false;
-$is_open       = $cfg['is_open'] ?? true;
+$is_open       = $cfg['is_open'] ?? false;
 
 $option_count = count( $options );
 $has_overflow = $option_count > $visible_limit;

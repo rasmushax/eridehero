@@ -101,14 +101,14 @@ function erh_get_product_analysis_for_schema( int $product_id, string $product_t
 		'weaknesses'  => [],
 	];
 
-	// Only escooters are supported currently.
-	if ( $product_type !== 'Electric Scooter' ) {
-		return $result;
-	}
-
 	// Check if calculator factory is available.
 	if ( ! class_exists( 'ERH\Comparison\AdvantageCalculatorFactory' ) ||
 		 ! class_exists( 'ERH\Database\ProductCache' ) ) {
+		return $result;
+	}
+
+	// Check if product type has an advantage calculator.
+	if ( ! \ERH\Comparison\AdvantageCalculatorFactory::supports( $product_type ) ) {
 		return $result;
 	}
 
@@ -158,25 +158,38 @@ function erh_get_product_analysis_for_schema( int $product_id, string $product_t
 }
 
 /**
- * Get weight in pounds for a product.
+ * Get weight in pounds for a product from ProductCache.
+ *
+ * Reads from wp_product_data cache table for consistency with analysis data.
  *
  * @param int    $product_id   The product post ID.
  * @param string $product_type Product type.
  * @return float|null Weight in pounds or null if not available.
  */
 function erh_get_product_weight_for_schema( int $product_id, string $product_type ): ?float {
-	// Different ACF field paths depending on product type.
+	// Check if ProductCache is available.
+	if ( ! class_exists( 'ERH\Database\ProductCache' ) ) {
+		return null;
+	}
+
+	$cache   = new \ERH\Database\ProductCache();
+	$product = $cache->get( $product_id );
+
+	if ( ! $product || empty( $product['specs'] ) ) {
+		return null;
+	}
+
+	$specs  = $product['specs'];
 	$weight = null;
 
+	// Path depends on product type (matches cache rebuild structure).
 	if ( $product_type === 'Electric Scooter' ) {
-		$dimensions = get_field( 'dimensions', $product_id );
-		$weight     = $dimensions['weight'] ?? null;
+		$weight = erh_get_nested_spec( $specs, 'e-scooters.dimensions.weight' );
 	} elseif ( $product_type === 'Electric Bike' ) {
-		$frame  = get_field( 'e-bikes', $product_id );
-		$weight = $frame['frame']['weight'] ?? null;
+		$weight = erh_get_nested_spec( $specs, 'e-bikes.weight_and_capacity.weight' );
 	} else {
-		// EUC, Skateboard, Hoverboard - generic weight field.
-		$weight = get_field( 'weight', $product_id );
+		// EUC, Skateboard, Hoverboard - use dimensions.weight like escooters.
+		$weight = erh_get_nested_spec( $specs, 'dimensions.weight' );
 	}
 
 	if ( $weight && is_numeric( $weight ) ) {

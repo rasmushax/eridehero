@@ -57,11 +57,11 @@ $checkbox_options = $processed['checkbox_options'];
 $tristate_counts  = $processed['tristate_counts'];
 $preset_counts    = $processed['preset_counts'];
 
-// Get filter configurations.
-$range_config    = erh_get_range_filter_config();
+// Get filter configurations (pass product type for type-aware config).
+$range_config    = erh_get_range_filter_config( $json_type );
 $checkbox_config = erh_get_checkbox_filter_config();
 $tristate_config = erh_get_tristate_filter_config();
-$group_config    = erh_get_filter_group_config();
+$group_config    = erh_get_filter_group_config( $json_type );
 
 $product_count = count( $products );
 ?>
@@ -334,7 +334,7 @@ foreach ( $range_config as $key => $cfg ) {
 }
 
 // Get unified filter config (single source of truth).
-$js_filter_config = erh_get_js_filter_config();
+$js_filter_config = erh_get_js_filter_config( $json_type );
 
 get_footer();
 

@@ -6,7 +6,7 @@
  * - Motor & Drive (25%): Torque, motor brand, position, sensor, power
  * - Battery & Range (20%): Capacity, cell quality, charge time, removable
  * - Component Quality (25%): Brakes, drivetrain, tires, frame, IP, certifications
- * - Comfort (15%): Front/rear suspension, seatpost
+ * - Comfort (15%): Front/rear suspension, seatpost, tire width
  * - Practicality (15%): Weight, display, app, folding, accessories, throttle
  *
  * @package ERH\Scoring
@@ -787,7 +787,7 @@ class EbikeScorer {
      * Calculate Comfort category score.
      *
      * Factors: Front Suspension Type 35pts, Front Travel 20pts,
-     * Rear Suspension 30pts, Seatpost Suspension 15pts.
+     * Rear Suspension 30pts, Seatpost Suspension 15pts, Tire Width 15pts.
      */
     private function calculate_comfort(array $specs): ?int {
         $factors = [
@@ -795,6 +795,7 @@ class EbikeScorer {
             $this->score_front_travel($this->get_nested_value($specs, 'suspension.front_travel')),
             $this->score_rear_suspension($this->get_nested_value($specs, 'suspension.rear_suspension')),
             $this->score_seatpost_suspension($this->get_nested_value($specs, 'suspension.seatpost_suspension')),
+            $this->score_tire_width($this->get_nested_value($specs, 'wheels_and_tires.tire_width')),
         ];
 
         return $this->calculate_category_score($factors);
@@ -820,7 +821,9 @@ class EbikeScorer {
         }
 
         if (strpos($susp, 'rigid') !== false || strpos($susp, 'none') !== false) {
-            return ['score' => 0, 'max_possible' => 35];
+            // Per research: rigid forks still provide base comfort (10 pts)
+            // Road bikes and rigid-fork designs are valid choices, not defects
+            return ['score' => 10, 'max_possible' => 35];
         }
 
         // Unknown - assume some suspension exists.
@@ -865,7 +868,9 @@ class EbikeScorer {
         }
 
         if (strpos($susp, 'none') !== false || strpos($susp, 'rigid') !== false || strpos($susp, 'hardtail') !== false || $susp === '') {
-            return ['score' => 0, 'max_possible' => 30];
+            // Per research: hardtails are a valid design choice, not a defect
+            // Base points acknowledge the frame still contributes some compliance
+            return ['score' => 8, 'max_possible' => 30];
         }
 
         // Unknown - assume some suspension exists.
@@ -880,6 +885,40 @@ class EbikeScorer {
             return ['score' => null, 'max_possible' => 0];
         }
         return ['score' => $has_seatpost === true ? 15 : 0, 'max_possible' => 15];
+    }
+
+    /**
+     * Score tire width for comfort (15 pts max).
+     *
+     * Per research: wider tires provide pneumatic cushioning.
+     * Log scale: 2" = 10pts (floor), 4" = 15pts (ceiling).
+     *
+     * @param mixed $tire_width Tire width in inches.
+     * @return array Score array with 'score' and 'max_possible'.
+     */
+    private function score_tire_width($tire_width): array {
+        if (!$this->is_valid_numeric($tire_width)) {
+            return ['score' => null, 'max_possible' => 0];
+        }
+
+        $w = (float) $tire_width;
+
+        // Below 2" = 10pts floor (narrow road tires still provide some cushioning)
+        if ($w <= 2.0) {
+            return ['score' => 10, 'max_possible' => 15];
+        }
+
+        // At or above 4" = 15pts ceiling (fat tires)
+        if ($w >= 4.0) {
+            return ['score' => 15, 'max_possible' => 15];
+        }
+
+        // Log scale for the 5-point range between 2" and 4"
+        // Maps 2"->10pts to 4"->15pts using logarithmic curve
+        $ratio = log($w / 2.0, 2) / log(4.0 / 2.0, 2);
+        $score = 10 + (5 * $ratio);
+
+        return ['score' => $score, 'max_possible' => 15];
     }
 
     // =========================================================================

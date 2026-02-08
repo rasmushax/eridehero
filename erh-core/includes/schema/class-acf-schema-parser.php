@@ -84,8 +84,8 @@ class AcfSchemaParser {
      * @var array<string>
      */
     private const SHARED_GROUPS = [
-        'group_erh_basic',
-        'group_erh_performance',
+        'group_erh_basic_info',
+        'group_erh_performance_tests',
     ];
 
     /**
@@ -145,6 +145,8 @@ class AcfSchemaParser {
         // Get type-specific field group.
         $type_group_key = self::TYPE_GROUP_MAP[$product_type] ?? null;
 
+        error_log('[ERH AcfSchemaParser] get_schema("' . $product_type . '") — type_group_key: ' . ($type_group_key ?: 'NULL'));
+
         // Collect all groups to process.
         $groups_to_process = [];
 
@@ -158,22 +160,28 @@ class AcfSchemaParser {
             $groups_to_process[] = $type_group_key;
         }
 
+        error_log('[ERH AcfSchemaParser] Groups to process: ' . implode(', ', $groups_to_process));
+
         // Process each group.
         foreach ($groups_to_process as $group_key) {
             $group = acf_get_field_group($group_key);
             if (!$group) {
+                error_log('[ERH AcfSchemaParser] Group not found: ' . $group_key);
                 continue;
             }
 
             $fields = acf_get_fields($group_key);
             if (!$fields) {
+                error_log('[ERH AcfSchemaParser] No fields for group: ' . $group_key);
                 continue;
             }
+
+            error_log('[ERH AcfSchemaParser] Loaded group "' . $group_key . '" with ' . count($fields) . ' top-level field(s)');
 
             $group_title = $group['title'] ?? 'Unknown';
 
             // Flatten fields recursively.
-            $this->flatten_fields($fields, '', $group_title, $columns);
+            $this->flatten_fields($fields, '', $group_title, $columns, $group_key);
         }
 
         // Cache and return.
@@ -203,7 +211,7 @@ class AcfSchemaParser {
      * @param array  $columns     Reference to columns array.
      * @return void
      */
-    private function flatten_fields(array $fields, string $path_prefix, string $group_label, array &$columns): void {
+    private function flatten_fields(array $fields, string $path_prefix, string $group_label, array &$columns, string $group_key = ''): void {
         foreach ($fields as $field) {
             $field_type = $field['type'] ?? '';
             $field_name = $field['name'] ?? '';
@@ -225,7 +233,7 @@ class AcfSchemaParser {
             // Handle group fields - recurse into sub_fields.
             if ($field_type === 'group' && !empty($field['sub_fields'])) {
                 $sub_group_label = $field['label'] ?? $group_label;
-                $this->flatten_fields($field['sub_fields'], $field_path, $sub_group_label, $columns);
+                $this->flatten_fields($field['sub_fields'], $field_path, $sub_group_label, $columns, $group_key);
                 continue;
             }
 
@@ -240,6 +248,7 @@ class AcfSchemaParser {
                 'acf_key'   => $field_key,
                 'label'     => $field['label'] ?? $field_name,
                 'group'     => $group_label,
+                'group_key' => $group_key,
                 'type'      => $this->normalize_field_type($field_type),
                 'readonly'  => false,
                 'pinned'    => false,

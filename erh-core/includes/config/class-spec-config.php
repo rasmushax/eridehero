@@ -18,6 +18,12 @@
 
 namespace ERH\Config;
 
+use ERH\Config\Specs\EscooterSpecs;
+use ERH\Config\Specs\EbikeSpecs;
+use ERH\Config\Specs\EucSpecs;
+use ERH\Config\Specs\EskateboardSpecs;
+use ERH\Config\Specs\HoverboardSpecs;
+
 // Prevent direct access.
 if ( ! defined( 'ABSPATH' ) ) {
     exit;
@@ -152,7 +158,7 @@ class SpecConfig {
             'comparison'  => 'Higher hill climb speed means better real-world climbing performance.',
         ],
         'max_incline' => [
-            'methodology' => 'Maximum incline angle the manufacturer claims the scooter can climb. Actual results depend on rider weight and battery level.',
+            'methodology' => 'Maximum incline angle the manufacturer claims the product can climb. Actual results depend on rider weight and battery level.',
         ],
         'acceleration_0_15_mph' => [
             'methodology' => 'Median time from standstill to 15 mph over 10+ runs. Max acceleration setting. 175-lb rider, 80%+ battery.',
@@ -278,8 +284,8 @@ class SpecConfig {
         // Portability & Fit
         // =====================================================================
         'dimensions.weight' => [
-            'methodology' => 'Total weight including battery. Heavier scooters are harder to carry but often more stable.',
-            'comparison'  => 'Lighter scooters are easier to carry upstairs, onto public transit, or into your office.',
+            'methodology' => 'Total weight including battery. Heavier products are harder to carry but often more stable.',
+            'comparison'  => 'Lighter products are easier to carry upstairs, onto public transit, or into your office.',
         ],
         'dimensions.max_load' => [
             'methodology' => 'Maximum recommended rider weight. Exceeding may reduce performance and void warranty.',
@@ -297,10 +303,10 @@ class SpecConfig {
         ],
         'dimensions.foldable_handlebars' => [
             'methodology' => 'Handlebars fold down for more compact storage. Reduces folded height significantly.',
-            'comparison'  => 'Foldable handlebars make the scooter more compact for storage.',
+            'comparison'  => 'Foldable handlebars make the product more compact for storage.',
         ],
         'other.fold_location' => [
-            'methodology' => 'Where the scooter folds. Stem-fold is most common. Some fold at the deck.',
+            'methodology' => 'Where the product folds. Stem-fold is most common. Some fold at the deck.',
         ],
         'folded_footprint' => [
             'methodology' => 'Floor space when folded (length × width). Important for closets, car trunks, and under-desk storage.',
@@ -308,15 +314,15 @@ class SpecConfig {
         ],
         'speed_per_lb' => [
             'methodology' => 'Top speed divided by weight. Measures performance relative to weight.',
-            'comparison'  => 'Higher ratio means more speed per pound of scooter.',
+            'comparison'  => 'Higher ratio means more speed per pound of weight.',
         ],
         'wh_per_lb' => [
             'methodology' => 'Battery capacity divided by weight. Measures energy efficiency relative to weight.',
-            'comparison'  => 'Higher ratio means more energy storage per pound of scooter.',
+            'comparison'  => 'Higher ratio means more energy storage per pound of weight.',
         ],
         'tested_range_per_lb' => [
             'methodology' => 'Tested range divided by weight. Measures real-world range efficiency.',
-            'comparison'  => 'Higher ratio means more miles per pound of scooter.',
+            'comparison'  => 'Higher ratio means more miles per pound of weight.',
         ],
 
         // =====================================================================
@@ -326,7 +332,7 @@ class SpecConfig {
             'methodology' => 'Front brake type. Disc brakes offer more stopping power. Drum brakes are sealed and low-maintenance.',
         ],
         'brakes.rear' => [
-            'methodology' => 'Rear brake type. Some scooters use foot brake, electronic brake, or same type as front.',
+            'methodology' => 'Rear brake type. Some products use foot brake, electronic brake, or same type as front.',
         ],
         'brakes.regenerative' => [
             'methodology' => 'Electronic braking that recovers energy back to the battery. Extends range slightly and reduces brake wear.',
@@ -359,7 +365,7 @@ class SpecConfig {
             'comparison'  => 'Better displays show more information and are easier to read in sunlight.',
         ],
         'other.throttle_type' => [
-            'methodology' => 'Throttle style. Trigger and thumb are most common. Twist grip is rare on scooters.',
+            'methodology' => 'Throttle style. Trigger and thumb are most common. Twist grip is less common.',
         ],
         'other.kickstand' => [
             'methodology' => 'Built-in kickstand for parking. Side-mount is standard, center-mount is more stable.',
@@ -990,9 +996,12 @@ class SpecConfig {
             'Practicality'       => 0.15,
         ],
         'euc' => [
-            'Performance'      => 0.35,
-            'Range & Battery'  => 0.35,
-            'Build'            => 0.30,
+            'Motor Performance' => 0.20,
+            'Range & Battery'   => 0.25,
+            'Ride Quality'      => 0.20,
+            'Safety'            => 0.15,
+            'Portability'       => 0.12,
+            'Features'          => 0.08,
         ],
         'eskateboard' => [
             'Performance'      => 0.35,
@@ -1000,9 +1009,11 @@ class SpecConfig {
             'Build'            => 0.30,
         ],
         'hoverboard' => [
-            'Performance'      => 0.30,
-            'Range & Battery'  => 0.35,
-            'Build'            => 0.35,
+            'Motor Performance' => 0.25,
+            'Range & Battery'   => 0.25,
+            'Portability'       => 0.20,
+            'Ride Comfort'      => 0.15,
+            'Features'          => 0.15,
         ],
     ];
 
@@ -1067,409 +1078,17 @@ class SpecConfig {
     /**
      * Get all spec groups for all categories.
      *
+     * Each category's specs are defined in a dedicated class under Config\Specs\.
+     *
      * @return array All spec groups by category.
      */
     private static function get_all_spec_groups(): array {
         return [
-            'escooter' => self::get_escooter_specs(),
-            'ebike'    => self::get_ebike_specs(),
-            'euc'      => self::get_euc_specs(),
-            'eskateboard' => self::get_eskateboard_specs(),
-            'hoverboard'  => self::get_hoverboard_specs(),
-        ];
-    }
-
-    /**
-     * E-Scooter spec groups.
-     */
-    private static function get_escooter_specs(): array {
-        return [
-            'Motor Performance' => [
-                'icon'      => 'zap',
-                'question'  => 'How fast and powerful is it?',
-                'showScore' => true,
-                'scoreKey'  => 'motor_performance',
-                'specs'     => [
-                    // Tooltips auto-enriched from TOOLTIPS constant.
-                    [ 'key' => 'tested_top_speed', 'label' => 'Top Speed (Tested)', 'unit' => 'mph', 'higherBetter' => true ],
-                    [ 'key' => 'manufacturer_top_speed', 'label' => 'Top Speed (Claimed)', 'unit' => 'mph', 'higherBetter' => true ],
-                    [ 'key' => 'motor.power_nominal', 'label' => 'Motor Power', 'unit' => 'W', 'higherBetter' => true ],
-                    [ 'key' => 'motor.power_peak', 'label' => 'Peak Power', 'unit' => 'W', 'higherBetter' => true ],
-                    [ 'key' => 'motor.voltage', 'label' => 'Voltage', 'unit' => 'V', 'higherBetter' => true ],
-                    [ 'key' => 'motor.motor_position', 'label' => 'Motor Config' ],
-                    [ 'key' => 'hill_climbing', 'label' => 'Hill Climb', 'unit' => 's', 'higherBetter' => false ],
-                    [ 'key' => 'max_incline', 'label' => 'Hill Grade', 'unit' => '°', 'higherBetter' => true ],
-                    [ 'key' => 'acceleration_0_15_mph', 'label' => '0-15 mph', 'unit' => 's', 'higherBetter' => false ],
-                    [ 'key' => 'acceleration_0_20_mph', 'label' => '0-20 mph', 'unit' => 's', 'higherBetter' => false ],
-                    [ 'key' => 'acceleration_0_25_mph', 'label' => '0-25 mph', 'unit' => 's', 'higherBetter' => false ],
-                    [ 'key' => 'acceleration_0_30_mph', 'label' => '0-30 mph', 'unit' => 's', 'higherBetter' => false ],
-                    [ 'key' => 'acceleration_0_to_top', 'label' => '0-Top', 'unit' => 's', 'higherBetter' => false ],
-                ],
-            ],
-
-            'Range & Battery' => [
-                'icon'      => 'battery',
-                'question'  => 'How far can I go?',
-                'showScore' => true,
-                'scoreKey'  => 'range_battery',
-                'specs'     => [
-                    [ 'key' => 'tested_range_fast', 'label' => 'Range (Fast)', 'unit' => 'mi', 'higherBetter' => true ],
-                    [ 'key' => 'tested_range_regular', 'label' => 'Range (Tested)', 'unit' => 'mi', 'higherBetter' => true ],
-                    [ 'key' => 'tested_range_slow', 'label' => 'Range (Slow)', 'unit' => 'mi', 'higherBetter' => true ],
-                    [ 'key' => 'manufacturer_range', 'label' => 'Range (Claimed)', 'unit' => 'mi', 'higherBetter' => true ],
-                    [ 'key' => 'battery.capacity', 'label' => 'Battery Capacity', 'unit' => 'Wh', 'higherBetter' => true ],
-                    [ 'key' => 'battery.ah', 'label' => 'Amp Hours', 'unit' => 'Ah', 'higherBetter' => true ],
-                    [ 'key' => 'battery.voltage', 'label' => 'Voltage', 'unit' => 'V', 'higherBetter' => true ],
-                    [ 'key' => 'battery.charging_time', 'label' => 'Charge Time', 'unit' => 'h', 'higherBetter' => false ],
-                    [ 'key' => 'battery.battery_type', 'label' => 'Battery Type' ],
-                ],
-            ],
-
-            'Ride Quality' => [
-                'icon'      => 'smile',
-                'question'  => 'Is it comfortable?',
-                'showScore' => true,
-                'scoreKey'  => 'ride_quality',
-                'specs'     => [
-                    [ 'key' => 'suspension.type', 'label' => 'Suspension', 'higherBetter' => true, 'format' => 'suspensionArray' ],
-                    [ 'key' => 'suspension.adjustable', 'label' => 'Adjustable Suspension', 'format' => 'boolean', 'higherBetter' => true ],
-                    [ 'key' => 'wheels.tire_type', 'label' => 'Tire Type', 'format' => 'tire' ],
-                    [ 'key' => 'wheels.tire_size_front', 'label' => 'Front Tire Size', 'unit' => '"', 'higherBetter' => true ],
-                    [ 'key' => 'wheels.tire_size_rear', 'label' => 'Rear Tire Size', 'unit' => '"', 'higherBetter' => true ],
-                    [ 'key' => 'wheels.tire_width', 'label' => 'Tire Width', 'unit' => '"', 'higherBetter' => true ],
-                    [ 'key' => 'dimensions.deck_length', 'label' => 'Deck Length', 'unit' => '"', 'higherBetter' => true ],
-                    [ 'key' => 'dimensions.deck_width', 'label' => 'Deck Width', 'unit' => '"', 'higherBetter' => true ],
-                    [ 'key' => 'dimensions.ground_clearance', 'label' => 'Ground Clearance', 'unit' => '"' ],
-                    [ 'key' => 'dimensions.handlebar_height_min', 'label' => 'Handlebar Height (min)', 'unit' => '"' ],
-                    [ 'key' => 'dimensions.handlebar_height_max', 'label' => 'Handlebar Height (max)', 'unit' => '"' ],
-                    [ 'key' => 'dimensions.handlebar_width', 'label' => 'Handlebar Width', 'unit' => '"', 'higherBetter' => true ],
-                    [ 'key' => 'other.footrest', 'label' => 'Footrest', 'format' => 'boolean', 'higherBetter' => true ],
-                    [ 'key' => 'other.terrain', 'label' => 'Terrain Type' ],
-                ],
-            ],
-
-            'Portability & Fit' => [
-                'icon'      => 'box',
-                'question'  => 'Does this scooter fit my life and body?',
-                'showScore' => true,
-                'scoreKey'  => 'portability',
-                'specs'     => [
-                    [ 'key' => 'dimensions.weight', 'label' => 'Weight', 'unit' => 'lbs', 'higherBetter' => false ],
-                    [ 'key' => 'dimensions.max_load', 'label' => 'Max Rider Weight', 'unit' => 'lbs', 'higherBetter' => true ],
-                    [ 'key' => 'dimensions.folded_length', 'label' => 'Folded Length', 'unit' => '"', 'higherBetter' => false ],
-                    [ 'key' => 'dimensions.folded_width', 'label' => 'Folded Width', 'unit' => '"', 'higherBetter' => false ],
-                    [ 'key' => 'dimensions.folded_height', 'label' => 'Folded Height', 'unit' => '"', 'higherBetter' => false ],
-                    [ 'key' => 'dimensions.foldable_handlebars', 'label' => 'Foldable Bars', 'format' => 'boolean', 'higherBetter' => true ],
-                    [ 'key' => 'other.fold_location', 'label' => 'Fold Mechanism' ],
-                    [ 'key' => 'speed_per_lb', 'label' => 'mph/lb', 'format' => 'decimal', 'higherBetter' => true, 'valueUnit' => 'mph/lb' ],
-                    [ 'key' => 'wh_per_lb', 'label' => 'Wh/lb', 'format' => 'decimal', 'higherBetter' => true, 'valueUnit' => 'Wh/lb' ],
-                    [ 'key' => 'tested_range_per_lb', 'label' => 'mi/lb', 'format' => 'decimal', 'higherBetter' => true, 'valueUnit' => 'mi/lb' ],
-                ],
-            ],
-
-            'Safety' => [
-                'icon'      => 'shield',
-                'question'  => 'Is it safe to ride?',
-                'showScore' => true,
-                'scoreKey'  => 'safety',
-                'specs'     => [
-                    [ 'key' => 'brakes.front', 'label' => 'Front Brake', 'format' => 'brakeType', 'noWinner' => true ],
-                    [ 'key' => 'brakes.rear', 'label' => 'Rear Brake', 'format' => 'brakeType', 'noWinner' => true ],
-                    [ 'key' => 'brakes.regenerative', 'label' => 'Regen Braking', 'format' => 'boolean', 'higherBetter' => true ],
-                    [ 'key' => 'brake_distance', 'label' => 'Brake Distance', 'unit' => 'ft', 'higherBetter' => false ],
-                    [ 'key' => 'lighting.lights', 'label' => 'Lights', 'format' => 'array' ],
-                    [ 'key' => 'lighting.turn_signals', 'label' => 'Turn Signals', 'format' => 'boolean', 'higherBetter' => true ],
-                ],
-            ],
-
-            'Features' => [
-                'icon'      => 'settings',
-                'question'  => 'What extras does it have?',
-                'showScore' => true,
-                'scoreKey'  => 'features',
-                'specs'     => [
-                    [ 'key' => 'features', 'label' => 'Features', 'format' => 'featureArray' ],
-                    [ 'key' => 'other.display_type', 'label' => 'Display', 'format' => 'displayType' ],
-                    [ 'key' => 'other.throttle_type', 'label' => 'Throttle' ],
-                    [ 'key' => 'other.kickstand', 'label' => 'Kickstand', 'format' => 'boolean', 'higherBetter' => true ],
-                ],
-            ],
-
-            'Maintenance' => [
-                'icon'        => 'tool',
-                'question'    => 'Is it hassle-free?',
-                'showScore'   => true,
-                'scoreKey'    => 'maintenance',
-                'contextNote' => 'Score also factors in brake type (see Safety)',
-                'specs'       => [
-                    [ 'key' => 'wheels.tire_type', 'label' => 'Tire Type', 'format' => 'tire' ],
-                    [ 'key' => 'wheels.self_healing', 'label' => 'Self-Healing Tires', 'format' => 'boolean', 'higherBetter' => true ],
-                    [ 'key' => 'other.ip_rating', 'label' => 'IP Rating', 'format' => 'ip', 'higherBetter' => true ],
-                ],
-            ],
-
-            'Value Analysis' => [
-                'icon'           => 'dollar-sign',
-                'question'       => 'Am I getting good value?',
-                'showScore'      => false,
-                'isValueSection' => true,
-                'specs'          => [
-                    [ 'key' => 'value_metrics.{geo}.price_per_tested_mile', 'label' => '{symbol}/mi', 'higherBetter' => false, 'format' => 'currency', 'geoAware' => true, 'valueUnit' => '/mi' ],
-                    [ 'key' => 'value_metrics.{geo}.price_per_mph', 'label' => '{symbol}/mph', 'higherBetter' => false, 'format' => 'currency', 'geoAware' => true, 'valueUnit' => '/mph' ],
-                    [ 'key' => 'value_metrics.{geo}.price_per_watt', 'label' => '{symbol}/W', 'higherBetter' => false, 'format' => 'currency', 'geoAware' => true, 'valueUnit' => '/W' ],
-                    [ 'key' => 'value_metrics.{geo}.price_per_wh', 'label' => '{symbol}/Wh', 'higherBetter' => false, 'format' => 'currency', 'geoAware' => true, 'valueUnit' => '/Wh' ],
-                ],
-            ],
-        ];
-    }
-
-    /**
-     * E-Bike spec groups.
-     *
-     * Keys use flattened paths (no 'e-bikes.' prefix) because erh_flatten_compare_specs()
-     * moves nested content to top level before comparison.
-     *
-     * Groups are organized to match the 7-category scoring system.
-     */
-    private static function get_ebike_specs(): array {
-        return [
-            // =====================================================================
-            // New 5-category structure (use-case agnostic, component quality aware)
-            // =====================================================================
-            'Motor & Drive' => [
-                'icon'      => 'zap',
-                'question'  => 'How good is the motor system?',
-                'showScore' => true,
-                'scoreKey'  => 'motor_drive',
-                'specs'     => [
-                    [ 'key' => 'motor.torque', 'label' => 'Torque', 'unit' => 'Nm', 'higherBetter' => true, 'tooltip' => 'Climbing power - higher is better for hills' ],
-                    [ 'key' => 'motor.motor_brand', 'label' => 'Motor Brand', 'tooltip' => 'Premium brands (Bosch, Shimano) offer refined power delivery' ],
-                    [ 'key' => 'motor.motor_position', 'label' => 'Motor Position', 'tooltip' => 'Mid-drive > Rear hub > Front hub' ],
-                    [ 'key' => 'motor.sensor_type', 'label' => 'Sensor Type', 'tooltip' => 'Torque sensors feel more natural than cadence' ],
-                    [ 'key' => 'motor.power_nominal', 'label' => 'Motor Power', 'unit' => 'W', 'higherBetter' => true ],
-                    [ 'key' => 'motor.power_peak', 'label' => 'Peak Power', 'unit' => 'W', 'higherBetter' => true ],
-                    [ 'key' => 'motor.motor_type', 'label' => 'Motor Type' ],
-                    [ 'key' => 'motor.assist_levels', 'label' => 'Assist Levels', 'higherBetter' => true ],
-                ],
-            ],
-            'Battery & Range' => [
-                'icon'      => 'battery',
-                'question'  => 'How far can I go?',
-                'showScore' => true,
-                'scoreKey'  => 'battery_range',
-                'specs'     => [
-                    [ 'key' => 'battery.battery_capacity', 'label' => 'Battery', 'unit' => 'Wh', 'higherBetter' => true ],
-                    [ 'key' => 'battery.range', 'label' => 'Max Range', 'unit' => 'mi', 'higherBetter' => true ],
-                    [ 'key' => 'battery.battery_brand', 'label' => 'Battery/Cell Brand', 'tooltip' => 'Samsung/LG/Panasonic cells are highest quality' ],
-                    [ 'key' => 'battery.charge_time', 'label' => 'Charge Time', 'unit' => 'h', 'higherBetter' => false ],
-                    [ 'key' => 'battery.voltage', 'label' => 'Voltage', 'unit' => 'V', 'higherBetter' => true ],
-                    [ 'key' => 'battery.amphours', 'label' => 'Amp Hours', 'unit' => 'Ah', 'higherBetter' => true ],
-                    [ 'key' => 'battery.removable', 'label' => 'Removable Battery', 'format' => 'boolean', 'higherBetter' => true ],
-                    [ 'key' => 'battery.battery_position', 'label' => 'Battery Position' ],
-                ],
-            ],
-            'Component Quality' => [
-                'icon'      => 'settings',
-                'question'  => 'How good are the components?',
-                'showScore' => true,
-                'scoreKey'  => 'component_quality',
-                'specs'     => [
-                    // Brakes
-                    [ 'key' => 'brakes.brake_brand', 'label' => 'Brake Brand', 'tooltip' => 'Shimano XT/XTR, SRAM Code are premium' ],
-                    [ 'key' => 'brakes.brake_type', 'label' => 'Brake Type', 'format' => 'array', 'tooltip' => 'Hydraulic > Mechanical > Rim' ],
-                    [ 'key' => 'brakes.rotor_size_front', 'label' => 'Rotor Size (Front)', 'unit' => 'mm', 'higherBetter' => true ],
-                    [ 'key' => 'brakes.rotor_size_rear', 'label' => 'Rotor Size (Rear)', 'unit' => 'mm', 'higherBetter' => true ],
-                    // Drivetrain
-                    [ 'key' => 'drivetrain.derailleur', 'label' => 'Derailleur', 'tooltip' => 'SRAM Eagle, Shimano Deore+ are premium' ],
-                    [ 'key' => 'drivetrain.shifter', 'label' => 'Shifter' ],
-                    [ 'key' => 'drivetrain.drive_system', 'label' => 'Drive System', 'tooltip' => 'Belt drive is maintenance-free' ],
-                    [ 'key' => 'drivetrain.gears', 'label' => 'Gears', 'higherBetter' => true ],
-                    [ 'key' => 'drivetrain.cassette', 'label' => 'Cassette' ],
-                    // Build quality
-                    [ 'key' => 'wheels_and_tires.tire_brand', 'label' => 'Tire Brand', 'tooltip' => 'Maxxis, Schwalbe, Continental are premium' ],
-                    [ 'key' => 'frame_and_geometry.frame_material', 'label' => 'Frame Material', 'format' => 'array', 'tooltip' => 'Carbon > Aluminum > Steel' ],
-                    // Safety/compliance (moved from old category)
-                    [ 'key' => 'safety_and_compliance.ip_rating', 'label' => 'IP Rating', 'format' => 'ip', 'higherBetter' => true, 'tooltip' => 'IPX4+ for weather protection' ],
-                    [ 'key' => 'safety_and_compliance.certifications', 'label' => 'Certifications', 'format' => 'array', 'tooltip' => 'UL 2849 is the gold standard' ],
-                ],
-            ],
-            'Comfort' => [
-                'icon'      => 'smile',
-                'question'  => 'How comfortable is the ride?',
-                'showScore' => true,
-                'scoreKey'  => 'comfort',
-                'specs'     => [
-                    [ 'key' => 'suspension.front_suspension', 'label' => 'Front Suspension', 'tooltip' => 'Air > Coil > Rigid' ],
-                    [ 'key' => 'suspension.front_travel', 'label' => 'Front Travel', 'unit' => 'mm', 'higherBetter' => true ],
-                    [ 'key' => 'suspension.rear_suspension', 'label' => 'Rear Suspension' ],
-                    [ 'key' => 'suspension.rear_travel', 'label' => 'Rear Travel', 'unit' => 'mm', 'higherBetter' => true ],
-                    [ 'key' => 'suspension.seatpost_suspension', 'label' => 'Seatpost Suspension', 'format' => 'boolean', 'higherBetter' => true ],
-                ],
-            ],
-            'Practicality' => [
-                'icon'      => 'box',
-                'question'  => 'How practical for daily use?',
-                'showScore' => true,
-                'scoreKey'  => 'practicality',
-                'specs'     => [
-                    // Weight
-                    [ 'key' => 'weight_and_capacity.weight', 'label' => 'Weight', 'unit' => 'lbs', 'higherBetter' => false ],
-                    [ 'key' => 'weight_and_capacity.weight_limit', 'label' => 'Weight Limit', 'unit' => 'lbs', 'higherBetter' => true ],
-                    // Tech
-                    [ 'key' => 'components.display', 'label' => 'Display', 'tooltip' => 'Color TFT > LCD > LED' ],
-                    [ 'key' => 'components.display_size', 'label' => 'Display Size', 'unit' => '"' ],
-                    [ 'key' => 'components.app_compatible', 'label' => 'App Compatible', 'format' => 'boolean', 'higherBetter' => true ],
-                    [ 'key' => 'components.connectivity', 'label' => 'Connectivity', 'format' => 'array' ],
-                    // Lights & throttle (moved from old Safety)
-                    [ 'key' => 'integrated_features.integrated_lights', 'label' => 'Integrated Lights', 'format' => 'boolean', 'higherBetter' => true ],
-                    [ 'key' => 'speed_and_class.throttle', 'label' => 'Throttle', 'format' => 'boolean', 'higherBetter' => true ],
-                    // Accessories
-                    [ 'key' => 'integrated_features.fenders', 'label' => 'Fenders', 'format' => 'boolean', 'higherBetter' => true ],
-                    [ 'key' => 'integrated_features.rear_rack', 'label' => 'Rear Rack', 'format' => 'boolean', 'higherBetter' => true ],
-                    [ 'key' => 'integrated_features.front_rack', 'label' => 'Front Rack', 'format' => 'boolean', 'higherBetter' => true ],
-                    [ 'key' => 'integrated_features.kickstand', 'label' => 'Kickstand', 'format' => 'boolean', 'higherBetter' => true ],
-                    [ 'key' => 'integrated_features.walk_assist', 'label' => 'Walk Assist', 'format' => 'boolean', 'higherBetter' => true ],
-                    [ 'key' => 'integrated_features.alarm', 'label' => 'Alarm/Security', 'format' => 'boolean', 'higherBetter' => true ],
-                    [ 'key' => 'special_features', 'label' => 'Special Features', 'format' => 'array' ],
-                ],
-            ],
-            // =====================================================================
-            // Non-scored supplementary groups
-            // =====================================================================
-            'Speed & Class' => [
-                'icon'      => 'activity',
-                'collapsed' => true,
-                'specs'     => [
-                    [ 'key' => 'speed_and_class.class', 'label' => 'E-Bike Class', 'format' => 'array' ],
-                    [ 'key' => 'speed_and_class.top_assist_speed', 'label' => 'Top Assist Speed', 'unit' => 'mph', 'higherBetter' => true ],
-                    [ 'key' => 'speed_and_class.throttle_top_speed', 'label' => 'Throttle Top Speed', 'unit' => 'mph', 'higherBetter' => true ],
-                ],
-            ],
-            'Wheels & Tires' => [
-                'icon'      => 'circle',
-                'collapsed' => true,
-                'specs'     => [
-                    [ 'key' => 'wheels_and_tires.wheel_size', 'label' => 'Wheel Size', 'unit' => '"' ],
-                    [ 'key' => 'wheels_and_tires.wheel_size_rear', 'label' => 'Wheel Size (Rear)', 'unit' => '"' ],
-                    [ 'key' => 'wheels_and_tires.tire_type', 'label' => 'Tire Type' ],
-                    [ 'key' => 'wheels_and_tires.tire_width', 'label' => 'Tire Width', 'unit' => '"' ],
-                    [ 'key' => 'wheels_and_tires.puncture_protection', 'label' => 'Puncture Protection', 'format' => 'boolean' ],
-                ],
-            ],
-            'Frame & Geometry' => [
-                'icon'      => 'square',
-                'collapsed' => true,
-                'specs'     => [
-                    [ 'key' => 'frame_and_geometry.frame_style', 'label' => 'Frame Style', 'format' => 'array' ],
-                    [ 'key' => 'frame_and_geometry.sizes_available', 'label' => 'Sizes Available', 'format' => 'array' ],
-                    [ 'key' => 'weight_and_capacity.rack_capacity', 'label' => 'Rack Capacity', 'unit' => 'lbs', 'higherBetter' => true ],
-                ],
-            ],
-        ];
-    }
-
-    /**
-     * EUC spec groups.
-     */
-    private static function get_euc_specs(): array {
-        return [
-            'Performance' => [
-                'icon'  => 'zap',
-                'specs' => [
-                    [ 'key' => 'manufacturer_top_speed', 'label' => 'Top Speed', 'unit' => 'mph', 'higherBetter' => true ],
-                    [ 'key' => 'nominal_motor_wattage', 'label' => 'Motor Power', 'unit' => 'W', 'higherBetter' => true ],
-                    [ 'key' => 'peak_motor_wattage', 'label' => 'Peak Power', 'unit' => 'W', 'higherBetter' => true ],
-                    [ 'key' => 'hill_climb_angle', 'label' => 'Hill Grade', 'unit' => '°', 'higherBetter' => true ],
-                ],
-            ],
-            'Range & Battery' => [
-                'icon'  => 'battery',
-                'specs' => [
-                    [ 'key' => 'manufacturer_range', 'label' => 'Claimed Range', 'unit' => 'mi', 'higherBetter' => true ],
-                    [ 'key' => 'battery_capacity', 'label' => 'Battery', 'unit' => 'Wh', 'higherBetter' => true ],
-                    [ 'key' => 'battery_voltage', 'label' => 'Voltage', 'unit' => 'V', 'higherBetter' => true ],
-                    [ 'key' => 'charge_time', 'label' => 'Charge Time', 'unit' => 'h', 'higherBetter' => false ],
-                ],
-            ],
-            'Build' => [
-                'icon'  => 'box',
-                'specs' => [
-                    [ 'key' => 'weight', 'label' => 'Weight', 'unit' => 'lbs', 'higherBetter' => false ],
-                    [ 'key' => 'max_weight_capacity', 'label' => 'Max Load', 'unit' => 'lbs', 'higherBetter' => true ],
-                    [ 'key' => 'wheel_size', 'label' => 'Wheel Size', 'unit' => '"' ],
-                    [ 'key' => 'suspension', 'label' => 'Suspension', 'format' => 'suspension' ],
-                    [ 'key' => 'ip_rating', 'label' => 'IP Rating', 'format' => 'ip' ],
-                ],
-            ],
-        ];
-    }
-
-    /**
-     * E-Skateboard spec groups.
-     */
-    private static function get_eskateboard_specs(): array {
-        return [
-            'Performance' => [
-                'icon'  => 'zap',
-                'specs' => [
-                    [ 'key' => 'manufacturer_top_speed', 'label' => 'Top Speed', 'unit' => 'mph', 'higherBetter' => true ],
-                    [ 'key' => 'nominal_motor_wattage', 'label' => 'Motor Power', 'unit' => 'W', 'higherBetter' => true ],
-                    [ 'key' => 'motor_count', 'label' => 'Motors', 'higherBetter' => true ],
-                    [ 'key' => 'hill_climb_angle', 'label' => 'Hill Grade', 'unit' => '°', 'higherBetter' => true ],
-                ],
-            ],
-            'Range & Battery' => [
-                'icon'  => 'battery',
-                'specs' => [
-                    [ 'key' => 'manufacturer_range', 'label' => 'Claimed Range', 'unit' => 'mi', 'higherBetter' => true ],
-                    [ 'key' => 'battery_capacity', 'label' => 'Battery', 'unit' => 'Wh', 'higherBetter' => true ],
-                    [ 'key' => 'charge_time', 'label' => 'Charge Time', 'unit' => 'h', 'higherBetter' => false ],
-                    [ 'key' => 'swappable_battery', 'label' => 'Swappable Battery', 'format' => 'boolean' ],
-                ],
-            ],
-            'Build' => [
-                'icon'  => 'box',
-                'specs' => [
-                    [ 'key' => 'weight', 'label' => 'Weight', 'unit' => 'lbs', 'higherBetter' => false ],
-                    [ 'key' => 'max_weight_capacity', 'label' => 'Max Load', 'unit' => 'lbs', 'higherBetter' => true ],
-                    [ 'key' => 'deck_type', 'label' => 'Deck Type' ],
-                    [ 'key' => 'deck_length', 'label' => 'Deck Length', 'unit' => '"' ],
-                    [ 'key' => 'wheel_type', 'label' => 'Wheel Type' ],
-                ],
-            ],
-        ];
-    }
-
-    /**
-     * Hoverboard spec groups.
-     */
-    private static function get_hoverboard_specs(): array {
-        return [
-            'Performance' => [
-                'icon'  => 'zap',
-                'specs' => [
-                    [ 'key' => 'manufacturer_top_speed', 'label' => 'Top Speed', 'unit' => 'mph', 'higherBetter' => true ],
-                    [ 'key' => 'nominal_motor_wattage', 'label' => 'Motor Power', 'unit' => 'W', 'higherBetter' => true ],
-                    [ 'key' => 'hill_climb_angle', 'label' => 'Hill Grade', 'unit' => '°', 'higherBetter' => true ],
-                ],
-            ],
-            'Range & Battery' => [
-                'icon'  => 'battery',
-                'specs' => [
-                    [ 'key' => 'manufacturer_range', 'label' => 'Claimed Range', 'unit' => 'mi', 'higherBetter' => true ],
-                    [ 'key' => 'battery_capacity', 'label' => 'Battery', 'unit' => 'Wh', 'higherBetter' => true ],
-                    [ 'key' => 'charge_time', 'label' => 'Charge Time', 'unit' => 'h', 'higherBetter' => false ],
-                ],
-            ],
-            'Build' => [
-                'icon'  => 'box',
-                'specs' => [
-                    [ 'key' => 'weight', 'label' => 'Weight', 'unit' => 'lbs', 'higherBetter' => false ],
-                    [ 'key' => 'max_weight_capacity', 'label' => 'Max Load', 'unit' => 'lbs', 'higherBetter' => true ],
-                    [ 'key' => 'wheel_size', 'label' => 'Wheel Size', 'unit' => '"' ],
-                    [ 'key' => 'ul_certified', 'label' => 'UL Certified', 'format' => 'boolean', 'higherBetter' => true ],
-                ],
-            ],
+            'escooter'    => EscooterSpecs::get(),
+            'ebike'       => EbikeSpecs::get(),
+            'euc'         => EucSpecs::get(),
+            'eskateboard' => EskateboardSpecs::get(),
+            'hoverboard'  => HoverboardSpecs::get(),
         ];
     }
 

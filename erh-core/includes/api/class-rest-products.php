@@ -300,12 +300,12 @@ class RestProducts extends WP_REST_Controller {
         $this->log('Product type', ['type' => $product_type]);
 
         // Supported product types for analysis.
-        $supported_types = ['Electric Scooter', 'Electric Bike'];
+        $supported_types = ['Electric Scooter', 'Electric Bike', 'Hoverboard'];
         if (!in_array($product_type, $supported_types, true)) {
             $this->log('Unsupported product type', ['type' => $product_type]);
             return new WP_Error(
                 'unsupported_type',
-                __('Analysis is only available for electric scooters and e-bikes at this time.', 'erh-core'),
+                __('Analysis is not available for this product type.', 'erh-core'),
                 ['status' => 400]
             );
         }
@@ -601,6 +601,25 @@ class RestProducts extends WP_REST_Controller {
                         $wheel_str .= ' ' . strtolower($ebike['wheels_and_tires']['tire_type']);
                     }
                     $parts[] = $wheel_str;
+                }
+                break;
+
+            case 'Hoverboard':
+                $hb = $specs['hoverboards'] ?? [];
+                if (!empty($specs['manufacturer_top_speed'])) {
+                    $parts[] = round((float) $specs['manufacturer_top_speed']) . ' MPH';
+                }
+                if (!empty($hb['battery']['capacity'])) {
+                    $parts[] = round((float) $hb['battery']['capacity']) . ' Wh battery';
+                }
+                if (!empty($hb['motor']['power_nominal'])) {
+                    $parts[] = round((float) $hb['motor']['power_nominal']) . 'W motor';
+                }
+                if (!empty($hb['dimensions']['weight'])) {
+                    $parts[] = round((float) $hb['dimensions']['weight']) . ' lbs';
+                }
+                if (!empty($hb['dimensions']['max_load'])) {
+                    $parts[] = round((float) $hb['dimensions']['max_load']) . ' lbs max load';
                 }
                 break;
 

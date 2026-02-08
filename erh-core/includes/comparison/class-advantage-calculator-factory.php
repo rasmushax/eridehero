@@ -14,6 +14,8 @@ declare(strict_types=1);
 namespace ERH\Comparison;
 
 use ERH\Comparison\Calculators\EscooterAdvantages;
+use ERH\Comparison\Calculators\EbikeAdvantages;
+use ERH\Comparison\Calculators\HoverboardAdvantages;
 
 /**
  * Factory for creating advantage calculators.
@@ -70,7 +72,9 @@ class AdvantageCalculatorFactory {
     public static function get_supported_types(): array {
         return [
             'escooter',
-            // Future: 'ebike', 'euc', 'eskateboard', 'hoverboard'
+            'ebike',
+            'hoverboard',
+            // Future: 'euc', 'eskateboard'
         ];
     }
 
@@ -85,15 +89,17 @@ class AdvantageCalculatorFactory {
             case 'escooter':
                 return new EscooterAdvantages();
 
+            case 'ebike':
+                return new EbikeAdvantages();
+
+            case 'hoverboard':
+                return new HoverboardAdvantages();
+
             // Future implementations:
-            // case 'ebike':
-            //     return new EbikeAdvantages();
             // case 'euc':
             //     return new EucAdvantages();
             // case 'eskateboard':
             //     return new EskateboardAdvantages();
-            // case 'hoverboard':
-            //     return new HoverboardAdvantages();
 
             default:
                 return null;

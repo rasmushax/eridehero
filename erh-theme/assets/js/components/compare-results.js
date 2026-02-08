@@ -1886,6 +1886,10 @@ const CATEGORY_SCORE_KEYS = {
     'Component Quality': 'component_quality',
     'Comfort': 'comfort',
     'Practicality': 'practicality',
+
+    // Hoverboard categories
+    'Portability': 'portability',
+    'Ride Comfort': 'ride_comfort',
 };
 
 /**
@@ -1906,7 +1910,9 @@ function calculateProductScore(product) {
  */
 function calculateCategoryScore(product, categoryName) {
     const specs = product.specs || product;
-    const scoreKey = CATEGORY_SCORE_KEYS[categoryName];
+    // Prefer scoreKey from PHP config (single source of truth), fall back to hardcoded map.
+    const specGroups = getSpecGroups();
+    const scoreKey = specGroups[categoryName]?.scoreKey || CATEGORY_SCORE_KEYS[categoryName];
     return scoreKey ? (specs.scores?.[scoreKey] ?? 0) : 0;
 }
 

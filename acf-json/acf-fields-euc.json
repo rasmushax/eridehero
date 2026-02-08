@@ -1,1008 +1,1388 @@
 [
-  {
-    "key": "group_erh_eucs",
-    "title": "EUC Specifications",
-    "fields": [
-      {
-        "key": "field_erh_eucs",
-        "label": "EUCs",
-        "name": "eucs",
-        "type": "group",
-        "instructions": "",
-        "required": 0,
-        "wrapper": {
-          "width": "",
-          "class": "",
-          "id": ""
-        },
-        "layout": "block",
-        "sub_fields": [
-          {
-            "key": "field_erh_euc_motor",
-            "label": "Motor",
-            "name": "motor",
-            "type": "group",
-            "instructions": "",
-            "required": 0,
-            "wrapper": {
-              "width": "",
-              "class": "",
-              "id": ""
-            },
-            "layout": "block",
-            "sub_fields": [
-              {
-                "key": "field_erh_euc_power_nominal",
-                "label": "Nominal Power",
-                "name": "power_nominal",
-                "type": "number",
-                "instructions": "Watts (W)",
-                "required": 0,
-                "wrapper": {
-                  "width": "25",
-                  "class": "",
-                  "id": ""
-                },
-                "min": "",
-                "max": "",
-                "step": ""
-              },
-              {
-                "key": "field_erh_euc_power_peak",
-                "label": "Peak Power",
-                "name": "power_peak",
-                "type": "number",
-                "instructions": "Watts (W)",
-                "required": 0,
-                "wrapper": {
-                  "width": "25",
-                  "class": "",
-                  "id": ""
-                },
-                "min": "",
-                "max": "",
-                "step": ""
-              },
-              {
-                "key": "field_erh_euc_torque",
-                "label": "Torque",
-                "name": "torque",
-                "type": "number",
-                "instructions": "Nm",
-                "required": 0,
-                "wrapper": {
-                  "width": "25",
-                  "class": "",
-                  "id": ""
-                },
-                "min": "",
-                "max": "",
-                "step": ""
-              },
-              {
-                "key": "field_erh_euc_hollow_motor",
-                "label": "Hollow Motor",
-                "name": "hollow_motor",
-                "type": "true_false",
+    {
+        "key": "group_erh_eucs",
+        "title": "EUC Specifications",
+        "fields": [
+            {
+                "key": "field_erh_eucs",
+                "label": "EUCs",
+                "name": "eucs",
+                "aria-label": "",
+                "type": "group",
                 "instructions": "",
                 "required": 0,
+                "conditional_logic": false,
                 "wrapper": {
-                  "width": "25",
-                  "class": "",
-                  "id": ""
+                    "width": "",
+                    "class": "",
+                    "id": ""
                 },
-                "default_value": 0,
-                "ui": 1
-              }
-            ]
-          },
-          {
-            "key": "field_erh_euc_battery",
-            "label": "Battery",
-            "name": "battery",
-            "type": "group",
-            "instructions": "",
-            "required": 0,
-            "wrapper": {
-              "width": "",
-              "class": "",
-              "id": ""
-            },
-            "layout": "block",
-            "sub_fields": [
-              {
-                "key": "field_erh_euc_capacity",
-                "label": "Capacity",
-                "name": "capacity",
-                "type": "number",
-                "instructions": "Watt-hours (Wh)",
-                "required": 0,
-                "wrapper": {
-                  "width": "20",
-                  "class": "",
-                  "id": ""
-                },
-                "min": "",
-                "max": "",
-                "step": ""
-              },
-              {
-                "key": "field_erh_euc_voltage",
-                "label": "Voltage",
-                "name": "voltage",
-                "type": "number",
-                "instructions": "Volts (V)",
-                "required": 0,
-                "wrapper": {
-                  "width": "20",
-                  "class": "",
-                  "id": ""
-                },
-                "min": "",
-                "max": "",
-                "step": ""
-              },
-              {
-                "key": "field_erh_euc_amphours",
-                "label": "Amp Hours",
-                "name": "amphours",
-                "type": "number",
-                "instructions": "Ah",
-                "required": 0,
-                "wrapper": {
-                  "width": "20",
-                  "class": "",
-                  "id": ""
-                },
-                "min": "",
-                "max": "",
-                "step": ""
-              },
-              {
-                "key": "field_erh_euc_battery_type",
-                "label": "Battery Type",
-                "name": "battery_type",
-                "type": "select",
-                "instructions": "",
-                "required": 0,
-                "wrapper": {
-                  "width": "20",
-                  "class": "",
-                  "id": ""
-                },
-                "choices": {
-                  "Lithium-ion": "Lithium-ion",
-                  "LG": "LG",
-                  "Samsung": "Samsung",
-                  "Panasonic": "Panasonic",
-                  "LiPo": "LiPo"
-                },
-                "default_value": "Lithium-ion",
-                "return_format": "value",
-                "multiple": 0,
-                "allow_null": 0,
-                "ui": 0,
-                "ajax": 0
-              },
-              {
-                "key": "field_erh_euc_charging_time",
-                "label": "Charging Time",
-                "name": "charging_time",
-                "type": "number",
-                "instructions": "Hours",
-                "required": 0,
-                "wrapper": {
-                  "width": "20",
-                  "class": "",
-                  "id": ""
-                },
-                "min": "",
-                "max": "",
-                "step": ""
-              },
-              {
-                "key": "field_erh_euc_charger_output",
-                "label": "Charger Output",
-                "name": "charger_output",
-                "type": "number",
-                "instructions": "Amps (A)",
-                "required": 0,
-                "wrapper": {
-                  "width": "25",
-                  "class": "",
-                  "id": ""
-                },
-                "min": "",
-                "max": "",
-                "step": ""
-              },
-              {
-                "key": "field_erh_euc_fast_charger",
-                "label": "Fast Charger Available",
-                "name": "fast_charger",
-                "type": "true_false",
-                "instructions": "",
-                "required": 0,
-                "wrapper": {
-                  "width": "25",
-                  "class": "",
-                  "id": ""
-                },
-                "default_value": 0,
-                "ui": 1
-              },
-              {
-                "key": "field_erh_euc_dual_charging",
-                "label": "Dual Charging Port",
-                "name": "dual_charging",
-                "type": "true_false",
-                "instructions": "",
-                "required": 0,
-                "wrapper": {
-                  "width": "25",
-                  "class": "",
-                  "id": ""
-                },
-                "default_value": 0,
-                "ui": 1
-              },
-              {
-                "key": "field_erh_euc_bms",
-                "label": "BMS",
-                "name": "bms",
-                "type": "text",
-                "instructions": "Battery Management System details",
-                "required": 0,
-                "wrapper": {
-                  "width": "25",
-                  "class": "",
-                  "id": ""
-                },
-                "default_value": "",
-                "maxlength": ""
-              }
-            ]
-          },
-          {
-            "key": "field_erh_euc_wheel",
-            "label": "Wheel",
-            "name": "wheel",
-            "type": "group",
-            "instructions": "",
-            "required": 0,
-            "wrapper": {
-              "width": "",
-              "class": "",
-              "id": ""
-            },
-            "layout": "block",
-            "sub_fields": [
-              {
-                "key": "field_erh_euc_tire_size",
-                "label": "Tire Size",
-                "name": "tire_size",
-                "type": "number",
-                "instructions": "Inches",
-                "required": 0,
-                "wrapper": {
-                  "width": "20",
-                  "class": "",
-                  "id": ""
-                },
-                "min": "",
-                "max": "",
-                "step": "0.1"
-              },
-              {
-                "key": "field_erh_euc_tire_width",
-                "label": "Tire Width",
-                "name": "tire_width",
-                "type": "number",
-                "instructions": "Inches",
-                "required": 0,
-                "wrapper": {
-                  "width": "20",
-                  "class": "",
-                  "id": ""
-                },
-                "min": "",
-                "max": "",
-                "step": "0.1"
-              },
-              {
-                "key": "field_erh_euc_tire_type",
-                "label": "Tire Type",
-                "name": "tire_type",
-                "type": "select",
-                "instructions": "",
-                "required": 0,
-                "wrapper": {
-                  "width": "20",
-                  "class": "",
-                  "id": ""
-                },
-                "choices": {
-                  "Pneumatic": "Pneumatic",
-                  "Solid": "Solid",
-                  "Honeycomb": "Honeycomb"
-                },
-                "default_value": "Pneumatic",
-                "return_format": "value",
-                "multiple": 0,
-                "allow_null": 0,
-                "ui": 0,
-                "ajax": 0
-              },
-              {
-                "key": "field_erh_euc_tire_tread",
-                "label": "Tire Tread",
-                "name": "tire_tread",
-                "type": "select",
-                "instructions": "",
-                "required": 0,
-                "wrapper": {
-                  "width": "20",
-                  "class": "",
-                  "id": ""
-                },
-                "choices": {
-                  "Street": "Street",
-                  "Knobby": "Knobby",
-                  "All-Terrain": "All-Terrain"
-                },
-                "default_value": "Street",
-                "return_format": "value",
-                "multiple": 0,
-                "allow_null": 0,
-                "ui": 0,
-                "ajax": 0
-              },
-              {
-                "key": "field_erh_euc_self_healing",
-                "label": "Self-Healing Tire",
-                "name": "self_healing",
-                "type": "true_false",
-                "instructions": "",
-                "required": 0,
-                "wrapper": {
-                  "width": "20",
-                  "class": "",
-                  "id": ""
-                },
-                "default_value": 0,
-                "ui": 1
-              }
-            ]
-          },
-          {
-            "key": "field_erh_euc_suspension",
-            "label": "Suspension",
-            "name": "suspension",
-            "type": "group",
-            "instructions": "",
-            "required": 0,
-            "wrapper": {
-              "width": "",
-              "class": "",
-              "id": ""
-            },
-            "layout": "block",
-            "sub_fields": [
-              {
-                "key": "field_erh_euc_has_suspension",
-                "label": "Has Suspension",
-                "name": "has_suspension",
-                "type": "true_false",
-                "instructions": "",
-                "required": 0,
-                "wrapper": {
-                  "width": "25",
-                  "class": "",
-                  "id": ""
-                },
-                "default_value": 0,
-                "ui": 1
-              },
-              {
-                "key": "field_erh_euc_suspension_type",
-                "label": "Suspension Type",
-                "name": "suspension_type",
-                "type": "select",
-                "instructions": "",
-                "required": 0,
-                "wrapper": {
-                  "width": "25",
-                  "class": "",
-                  "id": ""
-                },
-                "choices": {
-                  "None": "None",
-                  "Air": "Air",
-                  "Hydraulic": "Hydraulic",
-                  "Coil Spring": "Coil Spring",
-                  "DNM": "DNM",
-                  "KKE": "KKE",
-                  "Fastace": "Fastace",
-                  "Custom": "Custom"
-                },
-                "default_value": "None",
-                "return_format": "value",
-                "multiple": 0,
-                "allow_null": 0,
-                "ui": 0,
-                "ajax": 0,
-                "conditional_logic": [
-                  [
+                "layout": "block",
+                "sub_fields": [
                     {
-                      "field": "field_erh_euc_has_suspension",
-                      "operator": "==",
-                      "value": "1"
-                    }
-                  ]
-                ]
-              },
-              {
-                "key": "field_erh_euc_suspension_travel",
-                "label": "Suspension Travel",
-                "name": "suspension_travel",
-                "type": "number",
-                "instructions": "mm",
-                "required": 0,
-                "wrapper": {
-                  "width": "25",
-                  "class": "",
-                  "id": ""
-                },
-                "min": "",
-                "max": "",
-                "step": "",
-                "conditional_logic": [
-                  [
+                        "key": "field_erh_euc_motor",
+                        "label": "Motor",
+                        "name": "motor",
+                        "aria-label": "",
+                        "type": "group",
+                        "instructions": "",
+                        "required": 0,
+                        "conditional_logic": false,
+                        "wrapper": {
+                            "width": "",
+                            "class": "",
+                            "id": ""
+                        },
+                        "layout": "block",
+                        "sub_fields": [
+                            {
+                                "key": "field_erh_euc_power_nominal",
+                                "label": "Nominal Power",
+                                "name": "power_nominal",
+                                "aria-label": "",
+                                "type": "number",
+                                "instructions": "Watts (W)",
+                                "required": 0,
+                                "conditional_logic": false,
+                                "wrapper": {
+                                    "width": "25",
+                                    "class": "",
+                                    "id": ""
+                                },
+                                "min": "",
+                                "max": "",
+                                "step": "",
+                                "default_value": "",
+                                "placeholder": "",
+                                "prepend": "",
+                                "append": ""
+                            },
+                            {
+                                "key": "field_erh_euc_power_peak",
+                                "label": "Peak Power",
+                                "name": "power_peak",
+                                "aria-label": "",
+                                "type": "number",
+                                "instructions": "Watts (W)",
+                                "required": 0,
+                                "conditional_logic": false,
+                                "wrapper": {
+                                    "width": "25",
+                                    "class": "",
+                                    "id": ""
+                                },
+                                "min": "",
+                                "max": "",
+                                "step": "",
+                                "default_value": "",
+                                "placeholder": "",
+                                "prepend": "",
+                                "append": ""
+                            },
+                            {
+                                "key": "field_erh_euc_torque",
+                                "label": "Torque",
+                                "name": "torque",
+                                "aria-label": "",
+                                "type": "number",
+                                "instructions": "Nm",
+                                "required": 0,
+                                "conditional_logic": false,
+                                "wrapper": {
+                                    "width": "25",
+                                    "class": "",
+                                    "id": ""
+                                },
+                                "min": "",
+                                "max": "",
+                                "step": "",
+                                "default_value": "",
+                                "placeholder": "",
+                                "prepend": "",
+                                "append": ""
+                            },
+                            {
+                                "key": "field_697ca403721e8",
+                                "label": "Motor Diameter",
+                                "name": "motor_diameter",
+                                "aria-label": "",
+                                "type": "number",
+                                "instructions": "inches",
+                                "required": 0,
+                                "conditional_logic": 0,
+                                "wrapper": {
+                                    "width": "15",
+                                    "class": "",
+                                    "id": ""
+                                },
+                                "default_value": "",
+                                "min": "",
+                                "max": "",
+                                "allow_in_bindings": 1,
+                                "placeholder": "",
+                                "step": "",
+                                "prepend": "",
+                                "append": ""
+                            },
+                            {
+                                "key": "field_erh_euc_hollow_motor",
+                                "label": "Hollow Motor",
+                                "name": "hollow_motor",
+                                "aria-label": "",
+                                "type": "true_false",
+                                "instructions": "",
+                                "required": 0,
+                                "conditional_logic": 0,
+                                "wrapper": {
+                                    "width": "15",
+                                    "class": "",
+                                    "id": ""
+                                },
+                                "message": "",
+                                "default_value": 0,
+                                "allow_in_bindings": 1,
+                                "ui_on_text": "",
+                                "ui_off_text": "",
+                                "ui": 1
+                            }
+                        ]
+                    },
                     {
-                      "field": "field_erh_euc_has_suspension",
-                      "operator": "==",
-                      "value": "1"
-                    }
-                  ]
-                ]
-              },
-              {
-                "key": "field_erh_euc_adjustable_suspension",
-                "label": "Adjustable",
-                "name": "adjustable_suspension",
-                "type": "true_false",
-                "instructions": "",
-                "required": 0,
-                "wrapper": {
-                  "width": "25",
-                  "class": "",
-                  "id": ""
-                },
-                "default_value": 0,
-                "ui": 1,
-                "conditional_logic": [
-                  [
+                        "key": "field_erh_euc_battery",
+                        "label": "Battery",
+                        "name": "battery",
+                        "aria-label": "",
+                        "type": "group",
+                        "instructions": "",
+                        "required": 0,
+                        "conditional_logic": false,
+                        "wrapper": {
+                            "width": "",
+                            "class": "",
+                            "id": ""
+                        },
+                        "layout": "block",
+                        "sub_fields": [
+                            {
+                                "key": "field_erh_euc_capacity",
+                                "label": "Capacity",
+                                "name": "capacity",
+                                "aria-label": "",
+                                "type": "number",
+                                "instructions": "Watt-hours (Wh)",
+                                "required": 0,
+                                "conditional_logic": false,
+                                "wrapper": {
+                                    "width": "20",
+                                    "class": "",
+                                    "id": ""
+                                },
+                                "min": "",
+                                "max": "",
+                                "step": "",
+                                "default_value": "",
+                                "placeholder": "",
+                                "prepend": "",
+                                "append": ""
+                            },
+                            {
+                                "key": "field_erh_euc_voltage",
+                                "label": "Voltage",
+                                "name": "voltage",
+                                "aria-label": "",
+                                "type": "number",
+                                "instructions": "Volts (V)",
+                                "required": 0,
+                                "conditional_logic": false,
+                                "wrapper": {
+                                    "width": "20",
+                                    "class": "",
+                                    "id": ""
+                                },
+                                "min": "",
+                                "max": "",
+                                "step": "",
+                                "default_value": "",
+                                "placeholder": "",
+                                "prepend": "",
+                                "append": ""
+                            },
+                            {
+                                "key": "field_erh_euc_amphours",
+                                "label": "Amp Hours",
+                                "name": "amphours",
+                                "aria-label": "",
+                                "type": "number",
+                                "instructions": "Ah",
+                                "required": 0,
+                                "conditional_logic": false,
+                                "wrapper": {
+                                    "width": "20",
+                                    "class": "",
+                                    "id": ""
+                                },
+                                "min": "",
+                                "max": "",
+                                "step": "",
+                                "default_value": "",
+                                "placeholder": "",
+                                "prepend": "",
+                                "append": ""
+                            },
+                            {
+                                "key": "field_697ca4a6721e9",
+                                "label": "Battery Packs",
+                                "name": "battery_packs",
+                                "aria-label": "",
+                                "type": "number",
+                                "instructions": "",
+                                "required": 0,
+                                "conditional_logic": 0,
+                                "wrapper": {
+                                    "width": "15",
+                                    "class": "",
+                                    "id": ""
+                                },
+                                "default_value": 1,
+                                "min": "",
+                                "max": "",
+                                "allow_in_bindings": 1,
+                                "placeholder": "",
+                                "step": "",
+                                "prepend": "",
+                                "append": ""
+                            },
+                            {
+                                "key": "field_erh_euc_battery_type",
+                                "label": "Battery Type",
+                                "name": "battery_type",
+                                "aria-label": "",
+                                "type": "select",
+                                "instructions": "",
+                                "required": 0,
+                                "conditional_logic": 0,
+                                "wrapper": {
+                                    "width": "15",
+                                    "class": "",
+                                    "id": ""
+                                },
+                                "choices": {
+                                    "Lithium-ion": "Lithium-ion",
+                                    "LiPo": "LiPo",
+                                    "Unknown": "Unknown"
+                                },
+                                "default_value": "Unknown",
+                                "return_format": "value",
+                                "multiple": 0,
+                                "allow_null": 0,
+                                "allow_in_bindings": 1,
+                                "ui": 0,
+                                "ajax": 0,
+                                "placeholder": "",
+                                "create_options": 0,
+                                "save_options": 0
+                            },
+                            {
+                                "key": "field_697ca3cc721e7",
+                                "label": "Battery Brand",
+                                "name": "battery_brand",
+                                "aria-label": "",
+                                "type": "select",
+                                "instructions": "",
+                                "required": 0,
+                                "conditional_logic": 0,
+                                "wrapper": {
+                                    "width": "15",
+                                    "class": "",
+                                    "id": ""
+                                },
+                                "choices": {
+                                    "LG": "LG",
+                                    "Samsung": "Samsung",
+                                    "Molicel": "Molicel",
+                                    "Panasonic": "Panasonic",
+                                    "EVE": "EVE",
+                                    "BAK": "BAK",
+                                    "Lishen": "Lishen",
+                                    "Generic": "Generic",
+                                    "Unknown": "Unknown"
+                                },
+                                "default_value": "Unknown",
+                                "return_format": "value",
+                                "multiple": 0,
+                                "allow_null": 0,
+                                "allow_in_bindings": 1,
+                                "ui": 0,
+                                "ajax": 0,
+                                "placeholder": "",
+                                "create_options": 0,
+                                "save_options": 0
+                            },
+                            {
+                                "key": "field_erh_euc_charging_time",
+                                "label": "Charging Time",
+                                "name": "charging_time",
+                                "aria-label": "",
+                                "type": "number",
+                                "instructions": "Hours",
+                                "required": 0,
+                                "conditional_logic": 0,
+                                "wrapper": {
+                                    "width": "15",
+                                    "class": "",
+                                    "id": ""
+                                },
+                                "default_value": "",
+                                "min": "",
+                                "max": "",
+                                "allow_in_bindings": 1,
+                                "placeholder": "",
+                                "step": "",
+                                "prepend": "",
+                                "append": ""
+                            },
+                            {
+                                "key": "field_erh_euc_charger_output",
+                                "label": "Charger Output",
+                                "name": "charger_output",
+                                "aria-label": "",
+                                "type": "number",
+                                "instructions": "Amps (A)",
+                                "required": 0,
+                                "conditional_logic": 0,
+                                "wrapper": {
+                                    "width": "20",
+                                    "class": "",
+                                    "id": ""
+                                },
+                                "default_value": "",
+                                "min": "",
+                                "max": "",
+                                "allow_in_bindings": 1,
+                                "placeholder": "",
+                                "step": "",
+                                "prepend": "",
+                                "append": ""
+                            },
+                            {
+                                "key": "field_erh_euc_fast_charger",
+                                "label": "Fast Charger Available",
+                                "name": "fast_charger",
+                                "aria-label": "",
+                                "type": "true_false",
+                                "instructions": "",
+                                "required": 0,
+                                "conditional_logic": false,
+                                "wrapper": {
+                                    "width": "25",
+                                    "class": "",
+                                    "id": ""
+                                },
+                                "default_value": 0,
+                                "ui": 1,
+                                "message": "",
+                                "ui_on_text": "",
+                                "ui_off_text": ""
+                            },
+                            {
+                                "key": "field_erh_euc_dual_charging",
+                                "label": "Dual Charging Port",
+                                "name": "dual_charging",
+                                "aria-label": "",
+                                "type": "true_false",
+                                "instructions": "",
+                                "required": 0,
+                                "conditional_logic": false,
+                                "wrapper": {
+                                    "width": "25",
+                                    "class": "",
+                                    "id": ""
+                                },
+                                "default_value": 0,
+                                "ui": 1,
+                                "message": "",
+                                "ui_on_text": "",
+                                "ui_off_text": ""
+                            },
+                            {
+                                "key": "field_erh_euc_bms",
+                                "label": "BMS",
+                                "name": "bms",
+                                "aria-label": "",
+                                "type": "text",
+                                "instructions": "Battery Management System details",
+                                "required": 0,
+                                "conditional_logic": false,
+                                "wrapper": {
+                                    "width": "25",
+                                    "class": "",
+                                    "id": ""
+                                },
+                                "default_value": "",
+                                "maxlength": "",
+                                "placeholder": "",
+                                "prepend": "",
+                                "append": ""
+                            }
+                        ]
+                    },
                     {
-                      "field": "field_erh_euc_has_suspension",
-                      "operator": "==",
-                      "value": "1"
-                    }
-                  ]
-                ]
-              }
-            ]
-          },
-          {
-            "key": "field_erh_euc_pedals",
-            "label": "Pedals",
-            "name": "pedals",
-            "type": "group",
-            "instructions": "",
-            "required": 0,
-            "wrapper": {
-              "width": "",
-              "class": "",
-              "id": ""
-            },
-            "layout": "block",
-            "sub_fields": [
-              {
-                "key": "field_erh_euc_pedal_height",
-                "label": "Pedal Height",
-                "name": "pedal_height",
-                "type": "number",
-                "instructions": "mm from ground",
-                "required": 0,
-                "wrapper": {
-                  "width": "25",
-                  "class": "",
-                  "id": ""
-                },
-                "min": "",
-                "max": "",
-                "step": ""
-              },
-              {
-                "key": "field_erh_euc_pedal_size",
-                "label": "Pedal Size",
-                "name": "pedal_size",
-                "type": "text",
-                "instructions": "L x W (mm)",
-                "required": 0,
-                "wrapper": {
-                  "width": "25",
-                  "class": "",
-                  "id": ""
-                },
-                "default_value": "",
-                "maxlength": ""
-              },
-              {
-                "key": "field_erh_euc_pedal_angle",
-                "label": "Pedal Angle",
-                "name": "pedal_angle",
-                "type": "number",
-                "instructions": "Degrees tilt",
-                "required": 0,
-                "wrapper": {
-                  "width": "25",
-                  "class": "",
-                  "id": ""
-                },
-                "min": "",
-                "max": "",
-                "step": ""
-              },
-              {
-                "key": "field_erh_euc_adjustable_pedals",
-                "label": "Adjustable Pedals",
-                "name": "adjustable_pedals",
-                "type": "true_false",
-                "instructions": "",
-                "required": 0,
-                "wrapper": {
-                  "width": "25",
-                  "class": "",
-                  "id": ""
-                },
-                "default_value": 0,
-                "ui": 1
-              },
-              {
-                "key": "field_erh_euc_spiked_pedals",
-                "label": "Spiked Pedals",
-                "name": "spiked_pedals",
-                "type": "true_false",
-                "instructions": "",
-                "required": 0,
-                "wrapper": {
-                  "width": "25",
-                  "class": "",
-                  "id": ""
-                },
-                "default_value": 0,
-                "ui": 1
-              }
-            ]
-          },
-          {
-            "key": "field_erh_euc_dimensions",
-            "label": "Dimensions",
-            "name": "dimensions",
-            "type": "group",
-            "instructions": "",
-            "required": 0,
-            "wrapper": {
-              "width": "",
-              "class": "",
-              "id": ""
-            },
-            "layout": "block",
-            "sub_fields": [
-              {
-                "key": "field_erh_euc_weight",
-                "label": "Weight",
-                "name": "weight",
-                "type": "number",
-                "instructions": "Pounds",
-                "required": 0,
-                "wrapper": {
-                  "width": "20",
-                  "class": "",
-                  "id": ""
-                },
-                "min": "",
-                "max": "",
-                "step": ""
-              },
-              {
-                "key": "field_erh_euc_max_load",
-                "label": "Max Load",
-                "name": "max_load",
-                "type": "number",
-                "instructions": "Pounds",
-                "required": 0,
-                "wrapper": {
-                  "width": "20",
-                  "class": "",
-                  "id": ""
-                },
-                "min": "",
-                "max": "",
-                "step": ""
-              },
-              {
-                "key": "field_erh_euc_height",
-                "label": "Height",
-                "name": "height",
-                "type": "number",
-                "instructions": "Inches",
-                "required": 0,
-                "wrapper": {
-                  "width": "20",
-                  "class": "",
-                  "id": ""
-                },
-                "min": "",
-                "max": "",
-                "step": ""
-              },
-              {
-                "key": "field_erh_euc_width",
-                "label": "Width",
-                "name": "width",
-                "type": "number",
-                "instructions": "Inches",
-                "required": 0,
-                "wrapper": {
-                  "width": "20",
-                  "class": "",
-                  "id": ""
-                },
-                "min": "",
-                "max": "",
-                "step": ""
-              },
-              {
-                "key": "field_erh_euc_depth",
-                "label": "Depth",
-                "name": "depth",
-                "type": "number",
-                "instructions": "Inches",
-                "required": 0,
-                "wrapper": {
-                  "width": "20",
-                  "class": "",
-                  "id": ""
-                },
-                "min": "",
-                "max": "",
-                "step": ""
-              }
-            ]
-          },
-          {
-            "key": "field_erh_euc_lighting",
-            "label": "Lighting",
-            "name": "lighting",
-            "type": "group",
-            "instructions": "",
-            "required": 0,
-            "wrapper": {
-              "width": "",
-              "class": "",
-              "id": ""
-            },
-            "layout": "block",
-            "sub_fields": [
-              {
-                "key": "field_erh_euc_headlight",
-                "label": "Headlight",
-                "name": "headlight",
-                "type": "true_false",
-                "instructions": "",
-                "required": 0,
-                "wrapper": {
-                  "width": "20",
-                  "class": "",
-                  "id": ""
-                },
-                "default_value": 0,
-                "ui": 1
-              },
-              {
-                "key": "field_erh_euc_headlight_lumens",
-                "label": "Headlight Lumens",
-                "name": "headlight_lumens",
-                "type": "number",
-                "instructions": "Lumens",
-                "required": 0,
-                "wrapper": {
-                  "width": "20",
-                  "class": "",
-                  "id": ""
-                },
-                "min": "",
-                "max": "",
-                "step": "",
-                "conditional_logic": [
-                  [
+                        "key": "field_erh_euc_wheel",
+                        "label": "Wheel",
+                        "name": "wheel",
+                        "aria-label": "",
+                        "type": "group",
+                        "instructions": "",
+                        "required": 0,
+                        "conditional_logic": false,
+                        "wrapper": {
+                            "width": "",
+                            "class": "",
+                            "id": ""
+                        },
+                        "layout": "block",
+                        "sub_fields": [
+                            {
+                                "key": "field_erh_euc_tire_size",
+                                "label": "Tire Size",
+                                "name": "tire_size",
+                                "aria-label": "",
+                                "type": "number",
+                                "instructions": "Inches",
+                                "required": 0,
+                                "conditional_logic": false,
+                                "wrapper": {
+                                    "width": "20",
+                                    "class": "",
+                                    "id": ""
+                                },
+                                "min": "",
+                                "max": "",
+                                "step": "0.1",
+                                "default_value": "",
+                                "placeholder": "",
+                                "prepend": "",
+                                "append": ""
+                            },
+                            {
+                                "key": "field_erh_euc_tire_width",
+                                "label": "Tire Width",
+                                "name": "tire_width",
+                                "aria-label": "",
+                                "type": "number",
+                                "instructions": "Inches",
+                                "required": 0,
+                                "conditional_logic": false,
+                                "wrapper": {
+                                    "width": "20",
+                                    "class": "",
+                                    "id": ""
+                                },
+                                "min": "",
+                                "max": "",
+                                "step": "0.1",
+                                "default_value": "",
+                                "placeholder": "",
+                                "prepend": "",
+                                "append": ""
+                            },
+                            {
+                                "key": "field_erh_euc_tire_type",
+                                "label": "Tire Type",
+                                "name": "tire_type",
+                                "aria-label": "",
+                                "type": "select",
+                                "instructions": "",
+                                "required": 0,
+                                "conditional_logic": 0,
+                                "wrapper": {
+                                    "width": "20",
+                                    "class": "",
+                                    "id": ""
+                                },
+                                "choices": {
+                                    "Pneumatic": "Pneumatic",
+                                    "Solid": "Solid",
+                                    "Honeycomb": "Honeycomb"
+                                },
+                                "default_value": false,
+                                "return_format": "value",
+                                "multiple": 0,
+                                "allow_null": 0,
+                                "allow_in_bindings": 1,
+                                "ui": 0,
+                                "ajax": 0,
+                                "placeholder": "",
+                                "create_options": 0,
+                                "save_options": 0
+                            },
+                            {
+                                "key": "field_erh_euc_tire_tread",
+                                "label": "Tire Tread",
+                                "name": "tire_tread",
+                                "aria-label": "",
+                                "type": "select",
+                                "instructions": "",
+                                "required": 0,
+                                "conditional_logic": 0,
+                                "wrapper": {
+                                    "width": "20",
+                                    "class": "",
+                                    "id": ""
+                                },
+                                "choices": {
+                                    "Street": "Street",
+                                    "Knobby": "Knobby",
+                                    "All-Terrain": "All-Terrain",
+                                    "Multiple Options": "Multiple Options"
+                                },
+                                "default_value": false,
+                                "return_format": "value",
+                                "multiple": 0,
+                                "allow_null": 0,
+                                "allow_in_bindings": 1,
+                                "ui": 0,
+                                "ajax": 0,
+                                "placeholder": "",
+                                "create_options": 0,
+                                "save_options": 0
+                            },
+                            {
+                                "key": "field_erh_euc_self_healing",
+                                "label": "Self-Healing Tire",
+                                "name": "self_healing",
+                                "aria-label": "",
+                                "type": "true_false",
+                                "instructions": "",
+                                "required": 0,
+                                "conditional_logic": false,
+                                "wrapper": {
+                                    "width": "20",
+                                    "class": "",
+                                    "id": ""
+                                },
+                                "default_value": 0,
+                                "ui": 1,
+                                "message": "",
+                                "ui_on_text": "",
+                                "ui_off_text": ""
+                            }
+                        ]
+                    },
                     {
-                      "field": "field_erh_euc_headlight",
-                      "operator": "==",
-                      "value": "1"
+                        "key": "field_erh_euc_suspension",
+                        "label": "Suspension",
+                        "name": "suspension",
+                        "aria-label": "",
+                        "type": "group",
+                        "instructions": "",
+                        "required": 0,
+                        "conditional_logic": false,
+                        "wrapper": {
+                            "width": "",
+                            "class": "",
+                            "id": ""
+                        },
+                        "layout": "block",
+                        "sub_fields": [
+                            {
+                                "key": "field_erh_euc_has_suspension",
+                                "label": "Has Suspension",
+                                "name": "has_suspension",
+                                "aria-label": "",
+                                "type": "true_false",
+                                "instructions": "",
+                                "required": 0,
+                                "conditional_logic": false,
+                                "wrapper": {
+                                    "width": "25",
+                                    "class": "",
+                                    "id": ""
+                                },
+                                "default_value": 0,
+                                "ui": 1,
+                                "message": "",
+                                "ui_on_text": "",
+                                "ui_off_text": ""
+                            },
+                            {
+                                "key": "field_erh_euc_suspension_type",
+                                "label": "Suspension Type",
+                                "name": "suspension_type",
+                                "aria-label": "",
+                                "type": "select",
+                                "instructions": "",
+                                "required": 0,
+                                "conditional_logic": [
+                                    [
+                                        {
+                                            "field": "field_erh_euc_has_suspension",
+                                            "operator": "==",
+                                            "value": "1"
+                                        }
+                                    ]
+                                ],
+                                "wrapper": {
+                                    "width": "25",
+                                    "class": "",
+                                    "id": ""
+                                },
+                                "choices": {
+                                    "None": "None",
+                                    "Air": "Air",
+                                    "Hydraulic": "Hydraulic",
+                                    "Coil Spring": "Coil Spring",
+                                    "DNM": "DNM",
+                                    "KKE": "KKE",
+                                    "Fastace": "Fastace",
+                                    "Custom": "Custom"
+                                },
+                                "default_value": false,
+                                "return_format": "value",
+                                "multiple": 0,
+                                "allow_null": 0,
+                                "allow_in_bindings": 1,
+                                "ui": 0,
+                                "ajax": 0,
+                                "placeholder": "",
+                                "create_options": 0,
+                                "save_options": 0
+                            },
+                            {
+                                "key": "field_erh_euc_suspension_travel",
+                                "label": "Suspension Travel",
+                                "name": "suspension_travel",
+                                "aria-label": "",
+                                "type": "number",
+                                "instructions": "mm",
+                                "required": 0,
+                                "conditional_logic": [
+                                    [
+                                        {
+                                            "field": "field_erh_euc_has_suspension",
+                                            "operator": "==",
+                                            "value": "1"
+                                        }
+                                    ]
+                                ],
+                                "wrapper": {
+                                    "width": "25",
+                                    "class": "",
+                                    "id": ""
+                                },
+                                "min": "",
+                                "max": "",
+                                "step": "",
+                                "default_value": "",
+                                "placeholder": "",
+                                "prepend": "",
+                                "append": ""
+                            },
+                            {
+                                "key": "field_erh_euc_adjustable_suspension",
+                                "label": "Adjustable",
+                                "name": "adjustable_suspension",
+                                "aria-label": "",
+                                "type": "true_false",
+                                "instructions": "",
+                                "required": 0,
+                                "conditional_logic": [
+                                    [
+                                        {
+                                            "field": "field_erh_euc_has_suspension",
+                                            "operator": "==",
+                                            "value": "1"
+                                        }
+                                    ]
+                                ],
+                                "wrapper": {
+                                    "width": "25",
+                                    "class": "",
+                                    "id": ""
+                                },
+                                "default_value": 0,
+                                "ui": 1,
+                                "message": "",
+                                "ui_on_text": "",
+                                "ui_off_text": ""
+                            }
+                        ]
+                    },
+                    {
+                        "key": "field_erh_euc_pedals",
+                        "label": "Pedals",
+                        "name": "pedals",
+                        "aria-label": "",
+                        "type": "group",
+                        "instructions": "",
+                        "required": 0,
+                        "conditional_logic": false,
+                        "wrapper": {
+                            "width": "",
+                            "class": "",
+                            "id": ""
+                        },
+                        "layout": "block",
+                        "sub_fields": [
+                            {
+                                "key": "field_erh_euc_pedal_height",
+                                "label": "Pedal Height",
+                                "name": "pedal_height",
+                                "aria-label": "",
+                                "type": "number",
+                                "instructions": "inches from ground",
+                                "required": 0,
+                                "conditional_logic": false,
+                                "wrapper": {
+                                    "width": "25",
+                                    "class": "",
+                                    "id": ""
+                                },
+                                "min": "",
+                                "max": "",
+                                "step": "",
+                                "default_value": "",
+                                "placeholder": "",
+                                "prepend": "",
+                                "append": ""
+                            },
+                            {
+                                "key": "field_erh_euc_pedal_size",
+                                "label": "Pedal Width",
+                                "name": "pedal_width",
+                                "aria-label": "",
+                                "type": "text",
+                                "instructions": "inches",
+                                "required": 0,
+                                "conditional_logic": 0,
+                                "wrapper": {
+                                    "width": "12.5",
+                                    "class": "",
+                                    "id": ""
+                                },
+                                "default_value": "",
+                                "maxlength": "",
+                                "allow_in_bindings": 1,
+                                "placeholder": "",
+                                "prepend": "",
+                                "append": ""
+                            },
+                            {
+                                "key": "field_697ca5552b64e",
+                                "label": "Pedal Length",
+                                "name": "pedal_length",
+                                "aria-label": "",
+                                "type": "text",
+                                "instructions": "inches",
+                                "required": 0,
+                                "conditional_logic": 0,
+                                "wrapper": {
+                                    "width": "12.5",
+                                    "class": "",
+                                    "id": ""
+                                },
+                                "default_value": "",
+                                "maxlength": "",
+                                "allow_in_bindings": 1,
+                                "placeholder": "",
+                                "prepend": "",
+                                "append": ""
+                            },
+                            {
+                                "key": "field_erh_euc_pedal_angle",
+                                "label": "Pedal Angle",
+                                "name": "pedal_angle",
+                                "aria-label": "",
+                                "type": "number",
+                                "instructions": "Degrees tilt",
+                                "required": 0,
+                                "conditional_logic": false,
+                                "wrapper": {
+                                    "width": "25",
+                                    "class": "",
+                                    "id": ""
+                                },
+                                "min": "",
+                                "max": "",
+                                "step": "",
+                                "default_value": "",
+                                "placeholder": "",
+                                "prepend": "",
+                                "append": ""
+                            },
+                            {
+                                "key": "field_erh_euc_adjustable_pedals",
+                                "label": "Adjustable Pedals",
+                                "name": "adjustable_pedals",
+                                "aria-label": "",
+                                "type": "true_false",
+                                "instructions": "",
+                                "required": 0,
+                                "conditional_logic": false,
+                                "wrapper": {
+                                    "width": "25",
+                                    "class": "",
+                                    "id": ""
+                                },
+                                "default_value": 0,
+                                "ui": 1,
+                                "message": "",
+                                "ui_on_text": "",
+                                "ui_off_text": ""
+                            },
+                            {
+                                "key": "field_erh_euc_spiked_pedals",
+                                "label": "Spiked Pedals",
+                                "name": "spiked_pedals",
+                                "aria-label": "",
+                                "type": "true_false",
+                                "instructions": "",
+                                "required": 0,
+                                "conditional_logic": false,
+                                "wrapper": {
+                                    "width": "25",
+                                    "class": "",
+                                    "id": ""
+                                },
+                                "default_value": 0,
+                                "ui": 1,
+                                "message": "",
+                                "ui_on_text": "",
+                                "ui_off_text": ""
+                            }
+                        ]
+                    },
+                    {
+                        "key": "field_erh_euc_dimensions",
+                        "label": "Dimensions",
+                        "name": "dimensions",
+                        "aria-label": "",
+                        "type": "group",
+                        "instructions": "",
+                        "required": 0,
+                        "conditional_logic": false,
+                        "wrapper": {
+                            "width": "",
+                            "class": "",
+                            "id": ""
+                        },
+                        "layout": "block",
+                        "sub_fields": [
+                            {
+                                "key": "field_erh_euc_weight",
+                                "label": "Weight",
+                                "name": "weight",
+                                "aria-label": "",
+                                "type": "number",
+                                "instructions": "Pounds",
+                                "required": 0,
+                                "conditional_logic": false,
+                                "wrapper": {
+                                    "width": "20",
+                                    "class": "",
+                                    "id": ""
+                                },
+                                "min": "",
+                                "max": "",
+                                "step": "",
+                                "default_value": "",
+                                "placeholder": "",
+                                "prepend": "",
+                                "append": ""
+                            },
+                            {
+                                "key": "field_erh_euc_max_load",
+                                "label": "Max Load",
+                                "name": "max_load",
+                                "aria-label": "",
+                                "type": "number",
+                                "instructions": "Pounds",
+                                "required": 0,
+                                "conditional_logic": false,
+                                "wrapper": {
+                                    "width": "20",
+                                    "class": "",
+                                    "id": ""
+                                },
+                                "min": "",
+                                "max": "",
+                                "step": "",
+                                "default_value": "",
+                                "placeholder": "",
+                                "prepend": "",
+                                "append": ""
+                            },
+                            {
+                                "key": "field_erh_euc_height",
+                                "label": "Height",
+                                "name": "height",
+                                "aria-label": "",
+                                "type": "number",
+                                "instructions": "Inches",
+                                "required": 0,
+                                "conditional_logic": false,
+                                "wrapper": {
+                                    "width": "20",
+                                    "class": "",
+                                    "id": ""
+                                },
+                                "min": "",
+                                "max": "",
+                                "step": "",
+                                "default_value": "",
+                                "placeholder": "",
+                                "prepend": "",
+                                "append": ""
+                            },
+                            {
+                                "key": "field_erh_euc_width",
+                                "label": "Width",
+                                "name": "width",
+                                "aria-label": "",
+                                "type": "number",
+                                "instructions": "Inches",
+                                "required": 0,
+                                "conditional_logic": false,
+                                "wrapper": {
+                                    "width": "20",
+                                    "class": "",
+                                    "id": ""
+                                },
+                                "min": "",
+                                "max": "",
+                                "step": "",
+                                "default_value": "",
+                                "placeholder": "",
+                                "prepend": "",
+                                "append": ""
+                            },
+                            {
+                                "key": "field_erh_euc_depth",
+                                "label": "Depth",
+                                "name": "depth",
+                                "aria-label": "",
+                                "type": "number",
+                                "instructions": "Inches",
+                                "required": 0,
+                                "conditional_logic": false,
+                                "wrapper": {
+                                    "width": "20",
+                                    "class": "",
+                                    "id": ""
+                                },
+                                "min": "",
+                                "max": "",
+                                "step": "",
+                                "default_value": "",
+                                "placeholder": "",
+                                "prepend": "",
+                                "append": ""
+                            }
+                        ]
+                    },
+                    {
+                        "key": "field_erh_euc_lighting",
+                        "label": "Lighting",
+                        "name": "lighting",
+                        "aria-label": "",
+                        "type": "group",
+                        "instructions": "",
+                        "required": 0,
+                        "conditional_logic": false,
+                        "wrapper": {
+                            "width": "",
+                            "class": "",
+                            "id": ""
+                        },
+                        "layout": "block",
+                        "sub_fields": [
+                            {
+                                "key": "field_erh_euc_headlight",
+                                "label": "Headlight",
+                                "name": "headlight",
+                                "aria-label": "",
+                                "type": "true_false",
+                                "instructions": "",
+                                "required": 0,
+                                "conditional_logic": false,
+                                "wrapper": {
+                                    "width": "20",
+                                    "class": "",
+                                    "id": ""
+                                },
+                                "default_value": 0,
+                                "ui": 1,
+                                "message": "",
+                                "ui_on_text": "",
+                                "ui_off_text": ""
+                            },
+                            {
+                                "key": "field_erh_euc_headlight_lumens",
+                                "label": "Headlight Lumens",
+                                "name": "headlight_lumens",
+                                "aria-label": "",
+                                "type": "number",
+                                "instructions": "Lumens",
+                                "required": 0,
+                                "conditional_logic": [
+                                    [
+                                        {
+                                            "field": "field_erh_euc_headlight",
+                                            "operator": "==",
+                                            "value": "1"
+                                        }
+                                    ]
+                                ],
+                                "wrapper": {
+                                    "width": "20",
+                                    "class": "",
+                                    "id": ""
+                                },
+                                "min": "",
+                                "max": "",
+                                "step": "",
+                                "default_value": "",
+                                "placeholder": "",
+                                "prepend": "",
+                                "append": ""
+                            },
+                            {
+                                "key": "field_erh_euc_taillight",
+                                "label": "Taillight",
+                                "name": "taillight",
+                                "aria-label": "",
+                                "type": "true_false",
+                                "instructions": "",
+                                "required": 0,
+                                "conditional_logic": false,
+                                "wrapper": {
+                                    "width": "20",
+                                    "class": "",
+                                    "id": ""
+                                },
+                                "default_value": 0,
+                                "ui": 1,
+                                "message": "",
+                                "ui_on_text": "",
+                                "ui_off_text": ""
+                            },
+                            {
+                                "key": "field_erh_euc_brake_light",
+                                "label": "Brake Light",
+                                "name": "brake_light",
+                                "aria-label": "",
+                                "type": "true_false",
+                                "instructions": "",
+                                "required": 0,
+                                "conditional_logic": false,
+                                "wrapper": {
+                                    "width": "20",
+                                    "class": "",
+                                    "id": ""
+                                },
+                                "default_value": 0,
+                                "ui": 1,
+                                "message": "",
+                                "ui_on_text": "",
+                                "ui_off_text": ""
+                            },
+                            {
+                                "key": "field_erh_euc_rgb_lights",
+                                "label": "RGB Lights",
+                                "name": "rgb_lights",
+                                "aria-label": "",
+                                "type": "true_false",
+                                "instructions": "",
+                                "required": 0,
+                                "conditional_logic": false,
+                                "wrapper": {
+                                    "width": "20",
+                                    "class": "",
+                                    "id": ""
+                                },
+                                "default_value": 0,
+                                "ui": 1,
+                                "message": "",
+                                "ui_on_text": "",
+                                "ui_off_text": ""
+                            }
+                        ]
+                    },
+                    {
+                        "key": "field_erh_euc_connectivity",
+                        "label": "Connectivity",
+                        "name": "connectivity",
+                        "aria-label": "",
+                        "type": "group",
+                        "instructions": "",
+                        "required": 0,
+                        "conditional_logic": false,
+                        "wrapper": {
+                            "width": "",
+                            "class": "",
+                            "id": ""
+                        },
+                        "layout": "block",
+                        "sub_fields": [
+                            {
+                                "key": "field_erh_euc_bluetooth",
+                                "label": "Bluetooth",
+                                "name": "bluetooth",
+                                "aria-label": "",
+                                "type": "true_false",
+                                "instructions": "",
+                                "required": 0,
+                                "conditional_logic": false,
+                                "wrapper": {
+                                    "width": "25",
+                                    "class": "",
+                                    "id": ""
+                                },
+                                "default_value": 0,
+                                "ui": 1,
+                                "message": "",
+                                "ui_on_text": "",
+                                "ui_off_text": ""
+                            },
+                            {
+                                "key": "field_erh_euc_app",
+                                "label": "Mobile App",
+                                "name": "app",
+                                "aria-label": "",
+                                "type": "true_false",
+                                "instructions": "",
+                                "required": 0,
+                                "conditional_logic": false,
+                                "wrapper": {
+                                    "width": "25",
+                                    "class": "",
+                                    "id": ""
+                                },
+                                "default_value": 0,
+                                "ui": 1,
+                                "message": "",
+                                "ui_on_text": "",
+                                "ui_off_text": ""
+                            },
+                            {
+                                "key": "field_erh_euc_speaker",
+                                "label": "Built-in Speaker",
+                                "name": "speaker",
+                                "aria-label": "",
+                                "type": "true_false",
+                                "instructions": "",
+                                "required": 0,
+                                "conditional_logic": false,
+                                "wrapper": {
+                                    "width": "25",
+                                    "class": "",
+                                    "id": ""
+                                },
+                                "default_value": 0,
+                                "ui": 1,
+                                "message": "",
+                                "ui_on_text": "",
+                                "ui_off_text": ""
+                            },
+                            {
+                                "key": "field_erh_euc_gps",
+                                "label": "GPS",
+                                "name": "gps",
+                                "aria-label": "",
+                                "type": "true_false",
+                                "instructions": "",
+                                "required": 0,
+                                "conditional_logic": false,
+                                "wrapper": {
+                                    "width": "25",
+                                    "class": "",
+                                    "id": ""
+                                },
+                                "default_value": 0,
+                                "ui": 1,
+                                "message": "",
+                                "ui_on_text": "",
+                                "ui_off_text": ""
+                            }
+                        ]
+                    },
+                    {
+                        "key": "field_erh_euc_safety",
+                        "label": "Safety",
+                        "name": "safety",
+                        "aria-label": "",
+                        "type": "group",
+                        "instructions": "",
+                        "required": 0,
+                        "conditional_logic": false,
+                        "wrapper": {
+                            "width": "",
+                            "class": "",
+                            "id": ""
+                        },
+                        "layout": "block",
+                        "sub_fields": [
+                            {
+                                "key": "field_erh_euc_ip_rating",
+                                "label": "IP Rating",
+                                "name": "ip_rating",
+                                "aria-label": "",
+                                "type": "select",
+                                "instructions": "",
+                                "required": 0,
+                                "conditional_logic": false,
+                                "wrapper": {
+                                    "width": "25",
+                                    "class": "",
+                                    "id": ""
+                                },
+                                "choices": {
+                                    "None": "None",
+                                    "IP34": "IP34",
+                                    "IP45": "IP45",
+                                    "IP54": "IP54",
+                                    "IP55": "IP55",
+                                    "IP65": "IP65",
+                                    "IP66": "IP66",
+                                    "IP67": "IP67",
+                                    "IP77": "IP77",
+                                    "IPX4": "IPX4",
+                                    "IPX5": "IPX5",
+                                    "IPX6": "IPX6",
+                                    "IPX7": "IPX7",
+                                    "Unknown": "Unknown"
+                                },
+                                "default_value": "Unknown",
+                                "return_format": "value",
+                                "multiple": 0,
+                                "allow_null": 0,
+                                "ui": 0,
+                                "ajax": 0,
+                                "placeholder": "",
+                                "create_options": 0,
+                                "save_options": 0
+                            },
+                            {
+                                "key": "field_erh_euc_tiltback_speed",
+                                "label": "Tiltback Speed",
+                                "name": "tiltback_speed",
+                                "aria-label": "",
+                                "type": "number",
+                                "instructions": "mph",
+                                "required": 0,
+                                "conditional_logic": false,
+                                "wrapper": {
+                                    "width": "25",
+                                    "class": "",
+                                    "id": ""
+                                },
+                                "min": "",
+                                "max": "",
+                                "step": "",
+                                "default_value": "",
+                                "placeholder": "",
+                                "prepend": "",
+                                "append": ""
+                            },
+                            {
+                                "key": "field_erh_euc_cutoff_speed",
+                                "label": "Cutoff Speed",
+                                "name": "cutoff_speed",
+                                "aria-label": "",
+                                "type": "number",
+                                "instructions": "mph",
+                                "required": 0,
+                                "conditional_logic": false,
+                                "wrapper": {
+                                    "width": "25",
+                                    "class": "",
+                                    "id": ""
+                                },
+                                "min": "",
+                                "max": "",
+                                "step": "",
+                                "default_value": "",
+                                "placeholder": "",
+                                "prepend": "",
+                                "append": ""
+                            },
+                            {
+                                "key": "field_erh_euc_lift_sensor",
+                                "label": "Lift Sensor",
+                                "name": "lift_sensor",
+                                "aria-label": "",
+                                "type": "true_false",
+                                "instructions": "",
+                                "required": 0,
+                                "conditional_logic": false,
+                                "wrapper": {
+                                    "width": "25",
+                                    "class": "",
+                                    "id": ""
+                                },
+                                "default_value": 0,
+                                "ui": 1,
+                                "message": "",
+                                "ui_on_text": "",
+                                "ui_off_text": ""
+                            }
+                        ]
+                    },
+                    {
+                        "key": "field_erh_euc_features",
+                        "label": "Features",
+                        "name": "features",
+                        "aria-label": "",
+                        "type": "checkbox",
+                        "instructions": "",
+                        "required": 0,
+                        "conditional_logic": false,
+                        "wrapper": {
+                            "width": "100",
+                            "class": "",
+                            "id": ""
+                        },
+                        "choices": {
+                            "Kickstand": "Kickstand",
+                            "Trolley Handle": "Trolley Handle",
+                            "Retractable Handle": "Retractable Handle",
+                            "Mudguard": "Mudguard",
+                            "Power Pads": "Power Pads",
+                            "Jump Pads": "Jump Pads",
+                            "Display Screen": "Display Screen",
+                            "USB Charging Port": "USB Charging Port",
+                            "Anti-Spin Button": "Anti-Spin Button",
+                            "Learning Mode": "Learning Mode"
+                        },
+                        "default_value": [],
+                        "return_format": "value",
+                        "layout": "horizontal",
+                        "allow_custom": 0,
+                        "save_custom": 0,
+                        "toggle": 0,
+                        "custom_choice_button_text": "Add new choice"
                     }
-                  ]
                 ]
-              },
-              {
-                "key": "field_erh_euc_taillight",
-                "label": "Taillight",
-                "name": "taillight",
-                "type": "true_false",
-                "instructions": "",
-                "required": 0,
-                "wrapper": {
-                  "width": "20",
-                  "class": "",
-                  "id": ""
-                },
-                "default_value": 0,
-                "ui": 1
-              },
-              {
-                "key": "field_erh_euc_brake_light",
-                "label": "Brake Light",
-                "name": "brake_light",
-                "type": "true_false",
-                "instructions": "",
-                "required": 0,
-                "wrapper": {
-                  "width": "20",
-                  "class": "",
-                  "id": ""
-                },
-                "default_value": 0,
-                "ui": 1
-              },
-              {
-                "key": "field_erh_euc_rgb_lights",
-                "label": "RGB Lights",
-                "name": "rgb_lights",
-                "type": "true_false",
-                "instructions": "",
-                "required": 0,
-                "wrapper": {
-                  "width": "20",
-                  "class": "",
-                  "id": ""
-                },
-                "default_value": 0,
-                "ui": 1
-              }
+            }
+        ],
+        "location": [
+            [
+                {
+                    "param": "post_taxonomy",
+                    "operator": "==",
+                    "value": "product_type:electric-unicycle"
+                }
             ]
-          },
-          {
-            "key": "field_erh_euc_connectivity",
-            "label": "Connectivity",
-            "name": "connectivity",
-            "type": "group",
-            "instructions": "",
-            "required": 0,
-            "wrapper": {
-              "width": "",
-              "class": "",
-              "id": ""
-            },
-            "layout": "block",
-            "sub_fields": [
-              {
-                "key": "field_erh_euc_bluetooth",
-                "label": "Bluetooth",
-                "name": "bluetooth",
-                "type": "true_false",
-                "instructions": "",
-                "required": 0,
-                "wrapper": {
-                  "width": "25",
-                  "class": "",
-                  "id": ""
-                },
-                "default_value": 0,
-                "ui": 1
-              },
-              {
-                "key": "field_erh_euc_app",
-                "label": "Mobile App",
-                "name": "app",
-                "type": "true_false",
-                "instructions": "",
-                "required": 0,
-                "wrapper": {
-                  "width": "25",
-                  "class": "",
-                  "id": ""
-                },
-                "default_value": 0,
-                "ui": 1
-              },
-              {
-                "key": "field_erh_euc_speaker",
-                "label": "Built-in Speaker",
-                "name": "speaker",
-                "type": "true_false",
-                "instructions": "",
-                "required": 0,
-                "wrapper": {
-                  "width": "25",
-                  "class": "",
-                  "id": ""
-                },
-                "default_value": 0,
-                "ui": 1
-              },
-              {
-                "key": "field_erh_euc_gps",
-                "label": "GPS",
-                "name": "gps",
-                "type": "true_false",
-                "instructions": "",
-                "required": 0,
-                "wrapper": {
-                  "width": "25",
-                  "class": "",
-                  "id": ""
-                },
-                "default_value": 0,
-                "ui": 1
-              }
-            ]
-          },
-          {
-            "key": "field_erh_euc_safety",
-            "label": "Safety",
-            "name": "safety",
-            "type": "group",
-            "instructions": "",
-            "required": 0,
-            "wrapper": {
-              "width": "",
-              "class": "",
-              "id": ""
-            },
-            "layout": "block",
-            "sub_fields": [
-              {
-                "key": "field_erh_euc_ip_rating",
-                "label": "IP Rating",
-                "name": "ip_rating",
-                "type": "select",
-                "instructions": "",
-                "required": 0,
-                "wrapper": {
-                  "width": "25",
-                  "class": "",
-                  "id": ""
-                },
-                "choices": {
-                  "None": "None",
-                  "IP34": "IP34",
-                  "IP45": "IP45",
-                  "IP54": "IP54",
-                  "IP55": "IP55",
-                  "IP65": "IP65",
-                  "IP66": "IP66",
-                  "IP67": "IP67",
-                  "IP77": "IP77",
-                  "IPX4": "IPX4",
-                  "IPX5": "IPX5",
-                  "IPX6": "IPX6",
-                  "IPX7": "IPX7",
-                  "Unknown": "Unknown"
-                },
-                "default_value": "Unknown",
-                "return_format": "value",
-                "multiple": 0,
-                "allow_null": 0,
-                "ui": 0,
-                "ajax": 0
-              },
-              {
-                "key": "field_erh_euc_tiltback_speed",
-                "label": "Tiltback Speed",
-                "name": "tiltback_speed",
-                "type": "number",
-                "instructions": "mph",
-                "required": 0,
-                "wrapper": {
-                  "width": "25",
-                  "class": "",
-                  "id": ""
-                },
-                "min": "",
-                "max": "",
-                "step": ""
-              },
-              {
-                "key": "field_erh_euc_cutoff_speed",
-                "label": "Cutoff Speed",
-                "name": "cutoff_speed",
-                "type": "number",
-                "instructions": "mph",
-                "required": 0,
-                "wrapper": {
-                  "width": "25",
-                  "class": "",
-                  "id": ""
-                },
-                "min": "",
-                "max": "",
-                "step": ""
-              },
-              {
-                "key": "field_erh_euc_lift_sensor",
-                "label": "Lift Sensor",
-                "name": "lift_sensor",
-                "type": "true_false",
-                "instructions": "",
-                "required": 0,
-                "wrapper": {
-                  "width": "25",
-                  "class": "",
-                  "id": ""
-                },
-                "default_value": 0,
-                "ui": 1
-              }
-            ]
-          },
-          {
-            "key": "field_erh_euc_features",
-            "label": "Features",
-            "name": "features",
-            "type": "checkbox",
-            "instructions": "",
-            "required": 0,
-            "wrapper": {
-              "width": "100",
-              "class": "",
-              "id": ""
-            },
-            "choices": {
-              "Kickstand": "Kickstand",
-              "Trolley Handle": "Trolley Handle",
-              "Retractable Handle": "Retractable Handle",
-              "Mudguard": "Mudguard",
-              "Power Pads": "Power Pads",
-              "Jump Pads": "Jump Pads",
-              "Display Screen": "Display Screen",
-              "USB Charging Port": "USB Charging Port",
-              "Anti-Spin Button": "Anti-Spin Button",
-              "Learning Mode": "Learning Mode"
-            },
-            "default_value": [],
-            "return_format": "value",
-            "layout": "horizontal"
-          }
-        ]
-      }
-    ],
-    "location": [
-      [
-        {
-          "param": "post_taxonomy",
-          "operator": "==",
-          "value": "product_type:electric-unicycle"
-        }
-      ]
-    ],
-    "menu_order": 5,
-    "position": "normal",
-    "style": "default",
-    "label_placement": "top",
-    "instruction_placement": "label",
-    "hide_on_screen": "",
-    "active": true,
-    "show_in_rest": true
-  }
+        ],
+        "menu_order": 5,
+        "position": "normal",
+        "style": "default",
+        "label_placement": "top",
+        "instruction_placement": "label",
+        "hide_on_screen": "",
+        "active": true,
+        "description": "",
+        "show_in_rest": 1,
+        "display_title": ""
+    }
 ]

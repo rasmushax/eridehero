@@ -39,6 +39,15 @@ class EscooterAdvantages extends AdvantageCalculatorBase {
     }
 
     /**
+     * Get the spec wrapper key for e-scooters.
+     *
+     * @return string
+     */
+    protected function get_spec_wrapper(): string {
+        return 'e-scooters';
+    }
+
+    /**
      * Calculate advantages for head-to-head (2 product) comparison.
      *
      * @param array $products Array of 2 product data arrays.
@@ -1288,7 +1297,7 @@ class EscooterAdvantages extends AdvantageCalculatorBase {
         // Get product value.
         $product_value = $this->get_single_spec_value( $product, $key, $geo );
 
-        if ( $product_value === null || ( is_numeric( $product_value ) && $product_value <= 0 ) ) {
+        if ( $product_value === null || $product_value === '' || ( is_numeric( $product_value ) && $product_value <= 0 ) ) {
             // DEBUG: Log skipped spec due to null/zero product value.
             // phpcs:ignore WordPress.PHP.DevelopmentFunctions.error_log_error_log
             error_log( sprintf(
@@ -1305,7 +1314,7 @@ class EscooterAdvantages extends AdvantageCalculatorBase {
         $values_with_names = [];
         foreach ( $comparison_set as $comp_product ) {
             $val = $this->get_single_spec_value( $comp_product, $key, $geo );
-            if ( $val !== null && ( ! is_numeric( $val ) || $val > 0 ) ) {
+            if ( $val !== null && $val !== '' && ( ! is_numeric( $val ) || $val > 0 ) ) {
                 $values[]            = (float) $val;
                 $values_with_names[] = [
                     'name'  => $comp_product['name'] ?? 'Unknown',
@@ -1589,8 +1598,7 @@ class EscooterAdvantages extends AdvantageCalculatorBase {
         $details = [];
 
         // Suspension type.
-        $suspension = $this->get_nested_spec( $specs, 'suspension.type' )
-            ?? $this->get_nested_spec( $specs, 'e-scooters.suspension.type' );
+        $suspension = $this->get_typed_spec_value( $specs, 'suspension.type' );
 
         $has_suspension = false;
         if ( ! empty( $suspension ) && is_array( $suspension ) ) {
@@ -1629,8 +1637,7 @@ class EscooterAdvantages extends AdvantageCalculatorBase {
         }
 
         // Tire type.
-        $tire_type = $this->get_nested_spec( $specs, 'wheels.tire_type' )
-            ?? $this->get_nested_spec( $specs, 'e-scooters.wheels.tire_type' );
+        $tire_type = $this->get_typed_spec_value( $specs, 'wheels.tire_type' );
 
         if ( $tire_type ) {
             $tire_lower = strtolower( (string) $tire_type );
@@ -1650,10 +1657,8 @@ class EscooterAdvantages extends AdvantageCalculatorBase {
         }
 
         // Tire size - only show for strengths if large, or weaknesses if small.
-        $tire_front = $this->get_nested_spec( $specs, 'wheels.tire_size_front' )
-            ?? $this->get_nested_spec( $specs, 'e-scooters.wheels.tire_size_front' );
-        $tire_rear = $this->get_nested_spec( $specs, 'wheels.tire_size_rear' )
-            ?? $this->get_nested_spec( $specs, 'e-scooters.wheels.tire_size_rear' );
+        $tire_front = $this->get_typed_spec_value( $specs, 'wheels.tire_size_front' );
+        $tire_rear  = $this->get_typed_spec_value( $specs, 'wheels.tire_size_rear' );
 
         $avg_size = 0;
         $count    = 0;
@@ -1691,8 +1696,7 @@ class EscooterAdvantages extends AdvantageCalculatorBase {
         $details = [];
 
         // Tire type.
-        $tire_type = $this->get_nested_spec( $specs, 'wheels.tire_type' )
-            ?? $this->get_nested_spec( $specs, 'e-scooters.wheels.tire_type' );
+        $tire_type = $this->get_typed_spec_value( $specs, 'wheels.tire_type' );
 
         $is_pneumatic   = false;
         $is_solid       = false;
@@ -1725,8 +1729,7 @@ class EscooterAdvantages extends AdvantageCalculatorBase {
         }
 
         // Self-healing tires.
-        $self_healing = $this->get_nested_spec( $specs, 'wheels.self_healing' )
-            ?? $this->get_nested_spec( $specs, 'e-scooters.wheels.self_healing' );
+        $self_healing = $this->get_typed_spec_value( $specs, 'wheels.self_healing' );
 
         $has_self_healing = $self_healing === true || $self_healing === 'true' || $self_healing === '1' || $self_healing === 1;
 
@@ -1738,10 +1741,8 @@ class EscooterAdvantages extends AdvantageCalculatorBase {
         }
 
         // Brake type.
-        $front_brake = $this->get_nested_spec( $specs, 'brakes.front' )
-            ?? $this->get_nested_spec( $specs, 'e-scooters.brakes.front' );
-        $rear_brake = $this->get_nested_spec( $specs, 'brakes.rear' )
-            ?? $this->get_nested_spec( $specs, 'e-scooters.brakes.rear' );
+        $front_brake = $this->get_typed_spec_value( $specs, 'brakes.front' );
+        $rear_brake  = $this->get_typed_spec_value( $specs, 'brakes.rear' );
 
         $brakes        = [ $front_brake, $rear_brake ];
         $has_drum      = false;
@@ -1778,8 +1779,7 @@ class EscooterAdvantages extends AdvantageCalculatorBase {
 
         // IP rating for water resistance (only for strengths).
         if ( $is_advantage ) {
-            $ip_rating = $this->get_nested_spec( $specs, 'other.ip_rating' )
-                ?? $this->get_nested_spec( $specs, 'e-scooters.other.ip_rating' );
+            $ip_rating = $this->get_typed_spec_value( $specs, 'other.ip_rating' );
 
             if ( $ip_rating ) {
                 $water = $this->get_ip_water_rating( $ip_rating );
@@ -1832,8 +1832,7 @@ class EscooterAdvantages extends AdvantageCalculatorBase {
         $specs = $product['specs'] ?? [];
 
         // Get suspension type array.
-        $suspension = $this->get_nested_spec( $specs, 'suspension.type' )
-            ?? $this->get_nested_spec( $specs, 'e-scooters.suspension.type' );
+        $suspension = $this->get_typed_spec_value( $specs, 'suspension.type' );
 
         // Calculate product's suspension score.
         $score = $this->calculate_suspension_score( $specs );
@@ -2015,9 +2014,7 @@ class EscooterAdvantages extends AdvantageCalculatorBase {
         $specs = $product['specs'] ?? [];
 
         // Get IP rating.
-        $ip_rating = $this->get_nested_spec( $specs, 'other.ip_rating' )
-            ?? $this->get_nested_spec( $specs, 'e-scooters.other.ip_rating' )
-            ?? $this->get_nested_spec( $specs, 'ip_rating' );
+        $ip_rating = $this->get_typed_spec_value( $specs, 'other.ip_rating' );
 
         // Get the water rating digit.
         $water_rating = $this->get_ip_water_rating( $ip_rating );
@@ -2189,38 +2186,12 @@ class EscooterAdvantages extends AdvantageCalculatorBase {
         }
 
         if ( $key === 'feature_count' ) {
-            // Try multiple paths for features.
-            $features = $this->get_nested_spec( $specs, 'features' )
-                ?? $this->get_nested_spec( $specs, 'e-scooters.features' );
+            $features = $this->get_typed_spec_value( $specs, 'features' );
             return is_array( $features ) ? count( $features ) : 0;
         }
 
-        // Try multiple paths for e-scooter specs.
-        // ACF stores data under 'e-scooters' prefix, but we also check flat keys.
-        $paths_to_try = [
-            $key,                        // Direct path (e.g., 'battery.capacity')
-            'e-scooters.' . $key,        // E-scooter prefixed (e.g., 'e-scooters.battery.capacity')
-        ];
-
-        // Add flat key fallbacks for common specs.
-        $flat_fallbacks = [
-            'battery.capacity'     => 'battery_capacity',
-            'motor.power_nominal'  => 'nominal_motor_wattage',
-            'dimensions.weight'    => 'weight',
-            'dimensions.max_load'  => 'max_weight_capacity',
-        ];
-        if ( isset( $flat_fallbacks[ $key ] ) ) {
-            $paths_to_try[] = $flat_fallbacks[ $key ];
-        }
-
-        foreach ( $paths_to_try as $path ) {
-            $value = $this->get_nested_spec( $specs, $path );
-            if ( $value !== null && $value !== '' ) {
-                return $value;
-            }
-        }
-
-        return null;
+        // Use typed spec value helper (auto-prefixes with 'e-scooters.').
+        return $this->get_typed_spec_value( $specs, $key );
     }
 
     /**
@@ -2230,9 +2201,7 @@ class EscooterAdvantages extends AdvantageCalculatorBase {
      * @return int Score (0-10).
      */
     private function calculate_suspension_score( array $specs ): int {
-        // Try multiple paths for suspension.
-        $suspension = $this->get_nested_spec( $specs, 'suspension.type' )
-            ?? $this->get_nested_spec( $specs, 'e-scooters.suspension.type' );
+        $suspension = $this->get_typed_spec_value( $specs, 'suspension.type' );
 
         if ( empty( $suspension ) || ! is_array( $suspension ) ) {
             return 0;
@@ -2271,10 +2240,7 @@ class EscooterAdvantages extends AdvantageCalculatorBase {
      * @return int Score (0-10).
      */
     private function calculate_ip_score( array $specs ): int {
-        // Try multiple paths for IP rating.
-        $ip_rating = $this->get_nested_spec( $specs, 'other.ip_rating' )
-            ?? $this->get_nested_spec( $specs, 'e-scooters.other.ip_rating' )
-            ?? $this->get_nested_spec( $specs, 'ip_rating' );
+        $ip_rating = $this->get_typed_spec_value( $specs, 'other.ip_rating' );
 
         if ( empty( $ip_rating ) ) {
             return 0;

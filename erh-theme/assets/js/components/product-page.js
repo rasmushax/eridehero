@@ -42,6 +42,13 @@ const SCORE_CONFIG = {
         comfort: { name: 'Comfort', icon: 'smile' },
         practicality: { name: 'Practicality', icon: 'box' },
     },
+    hoverboard: {
+        motor_performance: { name: 'Motor', icon: 'zap' },
+        battery_range: { name: 'Battery', icon: 'battery' },
+        portability: { name: 'Portability', icon: 'box' },
+        ride_comfort: { name: 'Ride Comfort', icon: 'smile' },
+        features: { name: 'Features', icon: 'settings' },
+    },
 };
 
 /**
@@ -51,6 +58,26 @@ const SCORE_CONFIG = {
  */
 function getScoreConfig(category) {
     return SCORE_CONFIG[category] || SCORE_CONFIG.escooter;
+}
+
+/**
+ * Product type labels for display.
+ */
+const PRODUCT_TYPE_LABELS = {
+    escooter: { singular: 'scooter', plural: 'scooters' },
+    ebike: { singular: 'e-bike', plural: 'e-bikes' },
+    euc: { singular: 'EUC', plural: 'EUCs' },
+    eskateboard: { singular: 'e-skateboard', plural: 'e-skateboards' },
+    hoverboard: { singular: 'hoverboard', plural: 'hoverboards' },
+};
+
+/**
+ * Get product type labels for a category.
+ * @param {string} category - Category key
+ * @returns {{ singular: string, plural: string }}
+ */
+function getProductLabels(category) {
+    return PRODUCT_TYPE_LABELS[category] || { singular: 'product', plural: 'products' };
 }
 
 // =============================================================================
@@ -235,8 +262,9 @@ class ProductPage {
         // Add bracket average first (if available) - grey, at the back
         if (bracket_scores && Object.keys(bracket_scores).length > 0) {
             const bracket = price_context?.bracket;
+            const labels = getProductLabels(this.category);
             const bracketLabel = bracket
-                ? `${bracket.label} scooters ($${bracket.min.toLocaleString()}–$${bracket.max >= 2147483647 ? '+' : bracket.max.toLocaleString()})`
+                ? `${bracket.label} ${labels.plural} ($${bracket.min.toLocaleString()}–$${bracket.max >= 2147483647 ? '+' : bracket.max.toLocaleString()})`
                 : 'Bracket average';
 
             productData.push({

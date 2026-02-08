@@ -49,6 +49,7 @@ use ERH\Admin\PopularComparisonsPage;
 use ERH\Admin\ProductPopularityPage;
 use ERH\Admin\ProductPopularityWidget;
 use ERH\Admin\SpecEditor;
+use ERH\Admin\SpecPopulator;
 use ERH\Admin\EmailTestPage;
 use ERH\Admin\NewsletterAdmin;
 use ERH\Migration\MigrationAdmin;
@@ -214,6 +215,13 @@ class Core {
      * @var SpecEditor
      */
     private SpecEditor $spec_editor;
+
+    /**
+     * Spec populator admin page instance.
+     *
+     * @var SpecPopulator
+     */
+    private SpecPopulator $spec_populator;
 
     /**
      * Email test page instance.
@@ -605,6 +613,10 @@ class Core {
         // Initialize spec editor admin page.
         $this->spec_editor = new SpecEditor();
         $this->spec_editor->register();
+
+        // Initialize spec populator admin page.
+        $this->spec_populator = new SpecPopulator();
+        $this->spec_populator->register();
 
         // Initialize email test page.
         $this->email_test_page = new EmailTestPage();

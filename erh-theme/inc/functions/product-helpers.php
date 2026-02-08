@@ -358,6 +358,36 @@ function erh_get_similarity_spec_config( string $product_type ): array {
     );
 
     // Adjust for other product types as needed.
+    if ( 'Electric Unicycle' === $product_type ) {
+        $config = array(
+            'motor' => array(
+                'paths'  => array( 'eucs.motor.power_peak', 'eucs.motor.power_nominal' ),
+                'range'  => 500,   // ±500W for 100 points.
+                'weight' => 0.7,
+            ),
+            'battery' => array(
+                'paths'  => array( 'eucs.battery.capacity' ),
+                'range'  => 300,   // ±300Wh for 100 points.
+                'weight' => 0.8,
+            ),
+            'weight' => array(
+                'paths'  => array( 'eucs.dimensions.weight' ),
+                'range'  => 15,    // ±15 lbs for 100 points.
+                'weight' => 0.6,
+            ),
+            'speed' => array(
+                'paths'  => array( 'manufacturer_top_speed' ),
+                'range'  => 8,     // ±8 mph for 100 points.
+                'weight' => 1.0,
+            ),
+            'range' => array(
+                'paths'  => array( 'manufacturer_range' ),
+                'range'  => 15,    // ±15 miles for 100 points.
+                'weight' => 0.9,
+            ),
+        );
+    }
+
     if ( 'Electric Bike' === $product_type ) {
         $config = array(
             // Numeric comparisons (uses range-based scoring).
@@ -538,6 +568,12 @@ function erh_format_card_specs( array $specs ): string {
     // Detect product type from specs structure.
     if ( isset( $specs['e-bikes'] ) && is_array( $specs['e-bikes'] ) ) {
         return erh_format_ebike_card_specs( $specs );
+    }
+    if ( isset( $specs['hoverboards'] ) && is_array( $specs['hoverboards'] ) ) {
+        return erh_format_hoverboard_card_specs( $specs );
+    }
+    if ( isset( $specs['eucs'] ) && is_array( $specs['eucs'] ) ) {
+        return erh_format_euc_card_specs( $specs );
     }
 
     // Default: e-scooter format.
@@ -731,6 +767,148 @@ function erh_format_ebike_card_specs( array $specs ): string {
             $wheel_str .= ' ' . strtolower( $tire_type );
         }
         $parts[] = $wheel_str;
+    }
+
+    return implode( ', ', $parts );
+}
+
+/**
+ * Format hoverboard specs for card display.
+ *
+ * Order: Speed, Battery (Wh), Motor (W), Weight, Max Load
+ * Matches the finder tool display format.
+ *
+ * @param array $specs Product specs.
+ * @return string Formatted specs line.
+ */
+function erh_format_hoverboard_card_specs( array $specs ): string {
+    $parts      = array();
+    $hoverboard = $specs['hoverboards'] ?? array();
+
+    // Helper to safely get nested value.
+    $get = function ( string $path ) use ( $hoverboard, $specs ) {
+        // Try nested hoverboards path first.
+        $keys    = explode( '.', $path );
+        $current = $hoverboard;
+        foreach ( $keys as $key ) {
+            if ( ! is_array( $current ) || ! isset( $current[ $key ] ) ) {
+                $current = null;
+                break;
+            }
+            $current = $current[ $key ];
+        }
+        if ( $current !== null && $current !== '' ) {
+            return $current;
+        }
+        // Fallback to flat spec key.
+        if ( isset( $specs[ $path ] ) && $specs[ $path ] !== '' && $specs[ $path ] !== null ) {
+            return $specs[ $path ];
+        }
+        return null;
+    };
+
+    // 1. Top speed.
+    $speed = $get( 'manufacturer_top_speed' ) ?? ( $specs['manufacturer_top_speed'] ?? null );
+    if ( $speed && is_numeric( $speed ) ) {
+        $parts[] = round( (float) $speed ) . ' MPH';
+    }
+
+    // 2. Battery capacity.
+    $battery = $get( 'battery.capacity' );
+    if ( $battery && is_numeric( $battery ) ) {
+        $parts[] = round( (float) $battery ) . ' Wh battery';
+    }
+
+    // 3. Motor power.
+    $motor = $get( 'motor.power_nominal' );
+    if ( $motor && is_numeric( $motor ) ) {
+        $parts[] = round( (float) $motor ) . 'W motor';
+    }
+
+    // 4. Weight.
+    $weight = $get( 'dimensions.weight' );
+    if ( $weight && is_numeric( $weight ) ) {
+        $parts[] = round( (float) $weight ) . ' lbs';
+    }
+
+    // 5. Max load.
+    $max_load = $get( 'dimensions.max_load' );
+    if ( $max_load && is_numeric( $max_load ) ) {
+        $parts[] = round( (float) $max_load ) . ' lbs max load';
+    }
+
+    return implode( ', ', $parts );
+}
+
+/**
+ * Format EUC specs for card display.
+ *
+ * Order: Speed, Battery (Wh), Motor (W), Weight, Max Load, Wheel Size
+ * Matches the finder tool display format.
+ *
+ * @param array $specs Product specs.
+ * @return string Formatted specs line.
+ */
+function erh_format_euc_card_specs( array $specs ): string {
+    $parts = array();
+    $euc   = $specs['eucs'] ?? array();
+
+    // Helper to safely get nested value.
+    $get = function ( string $path ) use ( $euc, $specs ) {
+        // Try nested eucs path first.
+        $keys    = explode( '.', $path );
+        $current = $euc;
+        foreach ( $keys as $key ) {
+            if ( ! is_array( $current ) || ! isset( $current[ $key ] ) ) {
+                $current = null;
+                break;
+            }
+            $current = $current[ $key ];
+        }
+        if ( $current !== null && $current !== '' ) {
+            return $current;
+        }
+        // Fallback to flat spec key.
+        if ( isset( $specs[ $path ] ) && $specs[ $path ] !== '' && $specs[ $path ] !== null ) {
+            return $specs[ $path ];
+        }
+        return null;
+    };
+
+    // 1. Top speed.
+    $speed = $get( 'manufacturer_top_speed' ) ?? ( $specs['manufacturer_top_speed'] ?? null );
+    if ( $speed && is_numeric( $speed ) ) {
+        $parts[] = round( (float) $speed ) . ' mph';
+    }
+
+    // 2. Battery capacity.
+    $battery = $get( 'battery.capacity' );
+    if ( $battery && is_numeric( $battery ) ) {
+        $parts[] = round( (float) $battery ) . ' Wh';
+    }
+
+    // 3. Motor power (peak preferred, then nominal).
+    $motor = $get( 'motor.power_peak' ) ?: $get( 'motor.power_nominal' );
+    if ( $motor && is_numeric( $motor ) ) {
+        $parts[] = round( (float) $motor ) . 'W';
+    }
+
+    // 4. Weight.
+    $weight = $get( 'dimensions.weight' );
+    if ( $weight && is_numeric( $weight ) ) {
+        $parts[] = round( (float) $weight ) . ' lbs';
+    }
+
+    // 5. Max load.
+    $max_load = $get( 'dimensions.max_load' );
+    if ( $max_load && is_numeric( $max_load ) ) {
+        $parts[] = round( (float) $max_load ) . ' lbs max load';
+    }
+
+    // 6. Wheel size.
+    $wheel_size = $get( 'wheel.tire_size' );
+    if ( $wheel_size && is_numeric( $wheel_size ) ) {
+        $parts[] = $wheel_size . '" wheel';
     }
 
     return implode( ', ', $parts );
@@ -1331,6 +1509,162 @@ function erh_get_hero_key_specs( int $product_id, string $product_type ): array 
             $seatpost_susp = $get( 'suspension.seatpost_suspension' );
             if ( $seatpost_susp && $seatpost_susp !== '0' && $seatpost_susp !== false ) {
                 $result[] = 'suspension seatpost';
+            }
+            break;
+
+        case 'euc':
+            // 1. Product type.
+            $result[] = 'EUC';
+
+            // 2. Top speed.
+            $speed = $get( 'manufacturer_top_speed' );
+            if ( $speed ) {
+                $result[] = $speed . ' mph';
+            }
+
+            // 3. Range.
+            $range = $get( 'manufacturer_range' );
+            if ( $range ) {
+                $result[] = '(' . $range . ' mi range)';
+            }
+
+            // 4. Motor - "3500W motor (7000W peak)".
+            $motor_nominal = $get( 'motor.power_nominal' );
+            $motor_peak    = $get( 'motor.power_peak' );
+            if ( $motor_nominal ) {
+                $motor_str = $motor_nominal . 'W motor';
+                if ( $motor_peak && $motor_peak > $motor_nominal ) {
+                    $motor_str .= ' (' . $motor_peak . 'W peak)';
+                }
+                $result[] = $motor_str;
+            }
+
+            // 5. Torque.
+            $torque = $get( 'motor.torque' );
+            if ( $torque ) {
+                $result[] = $torque . 'Nm torque';
+            }
+
+            // 6. Battery - "2400Wh 100.8V battery".
+            $battery_wh = $get( 'battery.capacity' );
+            $battery_v  = $get( 'battery.voltage' );
+            if ( $battery_wh ) {
+                $battery_str = $battery_wh . 'Wh';
+                if ( $battery_v ) {
+                    $battery_str .= ' ' . $battery_v . 'V';
+                }
+                $result[] = $battery_str . ' battery';
+            }
+
+            // 7. Weight.
+            $weight = $get( 'dimensions.weight' );
+            if ( $weight ) {
+                $result[] = $weight . ' lbs';
+            }
+
+            // 8. Max load.
+            $max_load = $get( 'dimensions.max_load' );
+            if ( $max_load ) {
+                $result[] = $max_load . ' lbs max load';
+            }
+
+            // 9. Wheel size + tire type.
+            $wheel_size = $get( 'wheel.tire_size' );
+            $tire_type  = $get( 'wheel.tire_type' );
+            if ( $wheel_size ) {
+                $wheel_str = $wheel_size . '"';
+                if ( $tire_type && strtolower( $tire_type ) !== 'unknown' ) {
+                    $wheel_str .= ' ' . strtolower( $tire_type );
+                }
+                $wheel_str .= ' wheel';
+                $result[] = $wheel_str;
+            }
+
+            // 10. Suspension.
+            $suspension_type = $get( 'suspension.suspension_type' );
+            if ( $suspension_type && strtolower( $suspension_type ) !== 'none' && strtolower( $suspension_type ) !== 'unknown' ) {
+                $result[] = strtolower( $suspension_type ) . ' suspension';
+            }
+
+            // 11. IP rating.
+            $ip_rating = $get( 'safety.ip_rating' );
+            if ( $ip_rating && ! in_array( strtolower( $ip_rating ), array( 'none', 'unknown', '' ), true ) ) {
+                $result[] = $ip_rating;
+            }
+            break;
+
+        case 'hoverboard':
+            // 1. Product type.
+            $result[] = 'Hoverboard';
+
+            // 2. Top speed.
+            $speed = $get( 'manufacturer_top_speed' );
+            if ( $speed ) {
+                $result[] = $speed . ' mph';
+            }
+
+            // 3. Range.
+            $range = $get( 'manufacturer_range' );
+            if ( $range ) {
+                $result[] = '(' . $range . ' mi range)';
+            }
+
+            // 4. Motor power.
+            $motor = $get( 'motor.power_nominal' );
+            if ( $motor ) {
+                $motor_str = $motor . 'W motor';
+                $peak      = $get( 'motor.power_peak' );
+                if ( $peak && $peak > $motor ) {
+                    $motor_str .= ' (' . $peak . 'W peak)';
+                }
+                $result[] = $motor_str;
+            }
+
+            // 5. Battery.
+            $battery_wh = $get( 'battery.capacity' );
+            $battery_v  = $get( 'battery.voltage' );
+            if ( $battery_wh ) {
+                $battery_str = $battery_wh . 'Wh';
+                if ( $battery_v ) {
+                    $battery_str .= ' ' . $battery_v . 'V';
+                }
+                $result[] = $battery_str . ' battery';
+            }
+
+            // 6. Weight.
+            $weight = $get( 'dimensions.weight' );
+            if ( $weight ) {
+                $result[] = $weight . ' lbs';
+            }
+
+            // 7. Max load.
+            $max_load = $get( 'dimensions.max_load' );
+            if ( $max_load ) {
+                $result[] = $max_load . ' lbs max load';
+            }
+
+            // 8. Wheel size + tire type.
+            $wheel_size = $get( 'wheels.wheel_size' );
+            $tire_type  = $get( 'wheels.tire_type' );
+            if ( $wheel_size ) {
+                $wheel_str = $wheel_size . '"';
+                if ( $tire_type && strtolower( $tire_type ) !== 'unknown' ) {
+                    $wheel_str .= ' ' . strtolower( $tire_type );
+                }
+                $wheel_str .= ' wheels';
+                $result[] = $wheel_str;
+            }
+
+            // 9. UL 2272 certification.
+            $ul_cert = $get( 'safety.ul_2272' );
+            if ( $ul_cert && $ul_cert !== '0' && $ul_cert !== false ) {
+                $result[] = 'UL 2272';
+            }
+
+            // 10. IP rating.
+            $ip_rating = $get( 'safety.ip_rating' );
+            if ( $ip_rating && ! in_array( strtolower( $ip_rating ), array( 'none', 'unknown', '' ), true ) ) {
+                $result[] = $ip_rating;
             }
             break;
 

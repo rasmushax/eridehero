@@ -34,7 +34,7 @@ trait SpecsAccessor {
             'Electric Scooter'    => 'e-scooters',
             'Electric Bike'       => 'e-bikes',
             'Electric Skateboard' => 'e-skateboards',
-            'Electric Unicycle'   => 'e-unicycles',
+            'Electric Unicycle'   => 'eucs',
             'Hoverboard'          => 'hoverboards',
         ];
 

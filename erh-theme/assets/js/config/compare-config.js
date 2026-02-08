@@ -243,9 +243,10 @@ export function formatSpecValue(value, spec) {
         return String(value);
     }
 
-    // IP rating formatting
+    // IP rating formatting - uppercase valid ratings (e.g. "ip54" → "IP54"), leave others as-is
     if (spec.format === 'ip') {
-        return String(value).toUpperCase();
+        const str = String(value);
+        return /^ip/i.test(str) ? str.toUpperCase() : str;
     }
 
     // Suspension formatting (string value)

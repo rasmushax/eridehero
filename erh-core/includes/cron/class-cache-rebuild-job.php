@@ -478,6 +478,15 @@ class CacheRebuildJob implements CronJobInterface {
         }
 
         $wheels = &$specs[$group_key]['wheels'];
+
+        // If wheel_type is "Solid", override tire_type regardless of other fields.
+        $wheel_type_lower = strtolower(trim($wheels['wheel_type'] ?? ''));
+        if ($wheel_type_lower === 'solid') {
+            $wheels['tire_type'] = 'Solid';
+            unset($wheels['pneumatic_type']);
+            return $specs;
+        }
+
         $tire_type = $wheels['tire_type'] ?? '';
         $pneumatic_type = $wheels['pneumatic_type'] ?? '';
 
@@ -1020,10 +1029,12 @@ class CacheRebuildJob implements CronJobInterface {
         };
 
         // Get base values for calculations.
+        // Include e-bike paths alongside e-scooter paths for universal support.
         $tested_range = $get_value('tested_range_regular');
-        $top_speed = $get_value('tested_top_speed', 'manufacturer_top_speed');
-        $motor_power = $get_value('nominal_motor_wattage', 'e-scooters.motor.power_nominal', 'motor.power_nominal');
-        $battery_capacity = $get_value('battery_capacity', 'e-scooters.battery.capacity', 'battery.capacity');
+        $top_speed = $get_value('tested_top_speed', 'manufacturer_top_speed', 'e-bikes.speed_and_class.top_assist_speed', 'hoverboards.manufacturer_top_speed');
+        $motor_power = $get_value('nominal_motor_wattage', 'e-scooters.motor.power_nominal', 'motor.power_nominal', 'e-bikes.motor.power_nominal', 'hoverboards.motor.power_nominal');
+        $battery_capacity = $get_value('battery_capacity', 'e-scooters.battery.capacity', 'battery.capacity', 'battery.battery_capacity', 'e-bikes.battery.battery_capacity', 'hoverboards.battery.capacity');
+        $torque = $get_value('motor.torque', 'e-bikes.motor.torque');
 
         foreach (GeoConfig::REGIONS as $geo) {
             $price = $this->get_price_for_geo($product_id, $geo);
@@ -1038,6 +1049,7 @@ class CacheRebuildJob implements CronJobInterface {
                 'price_per_mph'         => $top_speed && $top_speed > 0 ? round($price / $top_speed, 2) : null,
                 'price_per_watt'        => $motor_power && $motor_power > 0 ? round($price / $motor_power, 2) : null,
                 'price_per_wh'          => $battery_capacity && $battery_capacity > 0 ? round($price / $battery_capacity, 2) : null,
+                'price_per_nm'          => $torque && $torque > 0 ? round($price / $torque, 2) : null,
             ];
         }
 
