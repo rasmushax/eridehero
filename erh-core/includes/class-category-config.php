@@ -62,8 +62,8 @@ class CategoryConfig {
             'name_short'    => 'E-Skateboard',
             'slug'          => 'e-skateboards',
             'archive_slug'  => 'e-skateboards',
-            'finder_slug'   => 'skateboard-finder',
-            'finder_key'    => 'eskate', // Historical: JSON files use eskate.
+            'finder_slug'   => 'electric-skateboard-finder',
+            'finder_key'    => 'eskate',
             'acf_wrapper'   => 'e-skateboards',
             'icon'          => 'eskate',
             'icon_class'    => '',

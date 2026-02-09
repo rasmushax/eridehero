@@ -31,7 +31,7 @@ function erh_get_finder_page_config(): array {
             'short'        => 'E-Bike',
             'product_type' => 'Electric Bike',
         ],
-        'skateboard' => [
+        'eskate' => [
             'title'        => 'Electric Skateboard Database',
             'subtitle'     => 'Find the perfect electric skateboard for your riding style',
             'short'        => 'E-Skateboard',
@@ -68,7 +68,7 @@ function erh_get_finder_type_map(): array {
     return [
         'e-scooters'    => 'escooter',
         'e-bikes'       => 'ebike',
-        'e-skateboards' => 'skateboard',
+        'e-skateboards' => 'eskate',
         'eucs'          => 'euc',
         'hoverboards'   => 'hoverboard',
     ];
@@ -1875,7 +1875,7 @@ function erh_get_js_filter_config( string $product_type = 'escooter' ): array {
         'escooter' => [ 'speed', 'battery', 'motor_power', 'weight', 'weight_limit', 'voltage', 'tires', 'suspension', 'brakes' ],
         'ebike'      => [ 'category', 'motor_power', 'motor_type', 'torque', 'battery', 'weight', 'frame_material', 'frame_style', 'wheel_size', 'tires' ],
         'hoverboard' => [ 'speed', 'battery', 'motor_power', 'weight', 'weight_limit' ],
-        'skateboard' => [ 'speed', 'battery', 'motor_power', 'weight', 'deck_length', 'tire_size' ],
+        'eskate' => [ 'speed', 'battery', 'motor_power', 'weight', 'deck_length', 'tire_size' ],
     ];
 
     // Column groups for table view modal.
