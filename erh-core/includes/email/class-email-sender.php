@@ -134,6 +134,11 @@ class EmailSender {
      * @return bool True on success, false on failure.
      */
     public function send_html(string $to, string $subject, string $html, array $headers = []): bool {
+        if (defined('ERH_DISABLE_EMAILS') && ERH_DISABLE_EMAILS) {
+            error_log(sprintf('[ERH Email] BLOCKED (staging): to=%s subject=%s', $to, $subject));
+            return true;
+        }
+
         $default_headers = [
             'Content-Type: text/html; charset=UTF-8',
             'From: ' . $this->get_from_header(),
@@ -164,6 +169,11 @@ class EmailSender {
      * @return bool True on success, false on failure.
      */
     public function send_plain(string $to, string $subject, string $content, array $headers = []): bool {
+        if (defined('ERH_DISABLE_EMAILS') && ERH_DISABLE_EMAILS) {
+            error_log(sprintf('[ERH Email] BLOCKED (staging): to=%s subject=%s', $to, $subject));
+            return true;
+        }
+
         $default_headers = [
             'Content-Type: text/plain; charset=UTF-8',
             'From: ' . $this->get_from_header(),

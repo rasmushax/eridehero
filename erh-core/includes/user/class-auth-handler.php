@@ -1005,6 +1005,11 @@ class AuthHandler {
         $subject = PasswordResetTemplate::get_subject();
         $headers = ['Content-Type: text/html; charset=UTF-8'];
 
+        if (defined('ERH_DISABLE_EMAILS') && ERH_DISABLE_EMAILS) {
+            error_log(sprintf('[ERH Email] BLOCKED (staging): to=%s subject=%s', $user->user_email, $subject));
+            return true;
+        }
+
         return wp_mail($user->user_email, $subject, $html, $headers);
     }
 

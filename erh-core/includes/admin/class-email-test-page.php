@@ -565,6 +565,15 @@ class EmailTestPage {
         $this->log('(SMTP plugin may override this with configured sender)', 'info');
         $this->log('Sending email via wp_mail()...', 'info');
 
+        if (defined('ERH_DISABLE_EMAILS') && ERH_DISABLE_EMAILS) {
+            $this->log(sprintf('BLOCKED (staging): to=%s subject=%s', $recipient, $subject), 'warning');
+            $this->log('ERH_DISABLE_EMAILS is true — email not sent.', 'warning');
+            return [
+                'success' => true,
+                'message' => 'Email blocked by ERH_DISABLE_EMAILS (staging mode).',
+            ];
+        }
+
         // Capture any PHP mail errors.
         $mail_error = null;
         add_action('wp_mail_failed', function ($wp_error) use (&$mail_error) {

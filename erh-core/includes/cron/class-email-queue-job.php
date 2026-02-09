@@ -148,6 +148,19 @@ class EmailQueueJob implements CronJobInterface {
             // Build headers.
             $headers = $this->parse_headers($email['headers']);
 
+            // Block actual sending on staging environments.
+            if (defined('ERH_DISABLE_EMAILS') && ERH_DISABLE_EMAILS) {
+                error_log(sprintf(
+                    '[ERH Email Queue] BLOCKED (staging): #%d to=%s subject=%s',
+                    $email_id,
+                    $email['recipient_email'],
+                    $email['subject']
+                ));
+                $this->queue_repo->mark_sent($email_id);
+                $sent++;
+                continue;
+            }
+
             // Attempt to send via wp_mail.
             $result = wp_mail(
                 $email['recipient_email'],

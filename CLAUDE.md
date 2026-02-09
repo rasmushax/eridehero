@@ -11,6 +11,7 @@ Electric mobility review platform (scooters, e-bikes, EUCs, skateboards, hoverbo
 | REST API endpoints | `API_REFERENCE.md` |
 | Porting old plugin code | `LEGACY_FUNCTIONS.md` |
 | Progress tracking, phase status | `IMPLEMENTATION_CHECKLIST.md` |
+| Staging setup, data migration | `scripts/migration/` (SQL + shell scripts) |
 | Static HTML/CSS reference | `eridehero-redesign/CLAUDE.md` |
 | Compare system refactoring plan | `.claude/plans/playful-whistling-thompson.md` |
 
@@ -670,4 +671,11 @@ php -l path/to/file.php
 # WP-CLI cron
 wp erh cron run cache-rebuild
 wp erh cron list
+
+# WP-CLI migration (staging setup)
+wp erh migrate --source=https://eridehero.com --batch-size=50
+wp erh migrate --dry-run
+wp erh migrate single <id-or-slug>
+wp erh migrate social              # NSL → ERH user meta
+wp erh migrate social --dry-run
 ```

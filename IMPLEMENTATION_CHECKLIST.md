@@ -589,27 +589,29 @@ Routes in `single.php`:
 
 ---
 
-## Phase 7: ACF Blocks - IN PROGRESS
+## Phase 7: ACF Blocks - COMPLETE ✅
 
 ### Completed Blocks
-- [x] `accordion` - Collapsible accordion sections
+- [x] `accordion` - Collapsible accordion sections (replaces `acf/super-accordion`)
 - [x] `jumplinks` - Jump link navigation
-- [x] `listicle-item` - Product display for buying guides (3 tabs, geo-pricing, price tracking)
+- [x] `listicle-item` - Product display for buying guides (replaces `acf/toppicks`, `acf/simplebgitem`, `acf/bgoverview`)
 - [x] `video` - YouTube video embed
 - [x] `checklist` - Checklist items
+- [x] `buying-guide-table` - Top picks summary table (replaces `acf/top3`)
 
-### Pending Blocks
-- [ ] `top3`
-- [ ] `toppicks`
-- [ ] `buying-guide-table`
-- [ ] `relatedproducts`
-- [ ] `bgoverview`
-- [ ] `thisprodprice`
-- [ ] `simplebgitem`
-- [ ] `super-accordion`
-- [ ] `bfdeal`
+### Legacy Block Mapping
+| Legacy Block | New Equivalent | Status |
+|---|---|---|
+| `acf/top3` | `acf/buying-guide-table` | Recreated |
+| `acf/toppicks` | `acf/listicle-item` | Recreated |
+| `acf/simplebgitem` | `acf/listicle-item` | Recreated |
+| `acf/bgoverview` | `acf/listicle-item` | Recreated |
+| `acf/thisprodprice` | Built into product page (`price-intel.php`) | Recreated |
+| `acf/super-accordion` | `acf/accordion` | Recreated |
+| `acf/bfdeal` | Not needed | Removed |
+| `acf/relatedproducts` | Not needed | Removed |
 
-- [ ] Test: Each block renders correctly
+**Note:** Posts with legacy blocks will show empty/unsupported blocks after migration. Fix manually per post by replacing with new equivalents. See `scripts/migration/02-find-legacy-blocks.sql`.
 
 ---
 
@@ -911,13 +913,96 @@ REST endpoint for analyzing a product's strengths/weaknesses by comparing agains
 
 ### Launch Prep
 - [ ] Backup current site
-- [ ] Create staging copy
-- [ ] Deploy new theme to staging
+- [ ] Deploy to staging (see Phase 9B below)
 - [ ] Full QA on staging
 - [ ] Plan rollback procedure
 - [ ] Switch to production
 - [ ] Monitor error logs
 - [ ] Clear all caches
+
+---
+
+## Phase 9B: Staging Deployment & Data Migration - PENDING
+
+### Strategy: Selective DB Import + ERH Migrator
+- **Not full DB clone** — brings junk (Oxygen data, old plugin tables)
+- **Not WP export/import** — creates new IDs, breaks foreign keys
+- **Hybrid approach**: Selective import preserves all IDs, ERH migrator restructures ACF fields
+
+### Scripts & Tools
+Located in `scripts/migration/`:
+- `staging-setup.sh` - Main setup automation script
+- `01-export-selective-options.sql` - Selective wp_options export
+- `02-find-legacy-blocks.sql` - Identify posts with legacy ACF blocks
+- `03-list-production-tables.sql` - Inventory production tables
+- `04-post-import-verification.sql` - Post-import data integrity checks
+
+### WP-CLI Migration Commands
+```bash
+wp erh migrate --source=https://eridehero.com --batch-size=50     # Full migration
+wp erh migrate --dry-run                                           # Preview only
+wp erh migrate single <id-or-slug>                                 # Single product
+wp erh migrate social                                              # NSL → ERH user meta
+wp erh migrate social --dry-run                                    # Preview social migration
+```
+
+### Setup Steps
+- [ ] Step 1: Fresh WordPress install on staging
+- [ ] Step 2: Selective database import (core tables + ERH + HFT + wp_social_users)
+- [ ] Step 3: Selective wp_options import (ERH, HFT, ACF, RankMath, core WP)
+- [ ] Step 4: Copy uploads directory (`rsync`)
+- [ ] Step 5: Install theme + plugins, `composer dump-autoload`
+- [ ] Step 6: Activate theme and plugins
+- [ ] Step 7: ACF field sync (admin UI → Sync pending groups)
+- [ ] Step 8: Run ERH migrator (`wp erh migrate`)
+- [ ] Step 9: Social login migration (`wp erh migrate social`)
+- [ ] Step 10: URL replacement (`wp search-replace`)
+- [ ] Step 11: Add `ERH_DISABLE_EMAILS` to wp-config.php
+- [ ] Step 12: Regenerate all caches (`wp erh cron run cache-rebuild` etc.)
+- [ ] Step 13: Flush caches and rewrite rules
+
+### Verification Checklist (Post-Migration)
+
+**Core pages:**
+- [ ] Homepage loads
+- [ ] Product page (each type) — specs, radar chart, analysis, pricing
+- [ ] Finder page (each type) — filters, table, sorting
+- [ ] Compare page — hub, category, dynamic, curated
+- [ ] Blog posts — content renders, new blocks display
+- [ ] Tool pages — calculators work
+
+**Data integrity:**
+- [ ] Product IDs match production (spot-check)
+- [ ] User accounts accessible (test login)
+- [ ] Price trackers exist for test users
+- [ ] Price history present
+- [ ] Scores generated for all 5 product types
+- [ ] Finder JSON files in uploads
+- [ ] Media images load
+
+**SEO:**
+- [ ] RankMath titles on product pages
+- [ ] Compare page dynamic titles
+- [ ] `/go/` redirects work
+
+**Email safety:**
+- [ ] `ERH_DISABLE_EMAILS` is set in wp-config.php
+- [ ] Test that emails are blocked (check debug.log for "BLOCKED (staging)" messages)
+
+### Data Migration Confidence
+
+| Data | Method |
+|------|--------|
+| RankMath SEO | Automatic (post meta + options) |
+| Price trackers (149) | Automatic + schema auto-upgrade (adds geo/currency) |
+| Email preferences | Automatic (already ERH-compatible user meta keys) |
+| Social login (449) | `wp erh migrate social` CLI command |
+| Media library | Automatic (wp_posts + wp_postmeta + uploads/) |
+| Product scores | Regenerated via `wp erh cron run cache-rebuild` |
+
+### Post-Migration Editorial Work
+- [ ] Run `02-find-legacy-blocks.sql` to count affected posts
+- [ ] Re-create legacy blocks in affected posts (manual, prioritize by traffic)
 
 ---
 
@@ -1024,10 +1109,16 @@ erh-core/
 │   │   ├── class-oauth-reddit.php
 │   │   └── class-social-auth.php
 │   │
+│   ├── migration/
+│   │   ├── class-product-migrator.php     # Product ACF restructuring
+│   │   ├── class-price-history-migrator.php # Price history schema migration
+│   │   ├── class-migration-admin.php      # Admin UI for migrations
+│   │   └── class-migration-cli.php        # WP-CLI: wp erh migrate
+│   │
 │   ├── email/
 │   │   ├── class-mailchimp-sync.php
 │   │   ├── class-email-template.php
-│   │   └── class-email-sender.php
+│   │   └── class-email-sender.php         # ERH_DISABLE_EMAILS support
 │   │
 │   └── cron/
 │       ├── interface-cron-job.php

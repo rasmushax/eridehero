@@ -136,6 +136,11 @@ class NewsletterSender {
         $html     = $template->render($newsletter_id);
         $subject  = '[TEST] ' . get_the_title($newsletter_id);
 
+        if (defined('ERH_DISABLE_EMAILS') && ERH_DISABLE_EMAILS) {
+            error_log(sprintf('[ERH Email] BLOCKED (staging): to=%s subject=%s', $email, $subject));
+            return true;
+        }
+
         return wp_mail($email, $subject, $html, [
             'Content-Type: text/html; charset=UTF-8',
         ]);

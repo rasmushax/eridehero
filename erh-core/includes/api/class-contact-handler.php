@@ -243,6 +243,11 @@ class ContactHandler {
         $to = apply_filters('erh_contact_email_to', $to, $topic);
         $subject = apply_filters('erh_contact_email_subject', $subject, $topic);
 
+        if (defined('ERH_DISABLE_EMAILS') && ERH_DISABLE_EMAILS) {
+            error_log(sprintf('[ERH Email] BLOCKED (staging): to=%s subject=%s', $to, $subject));
+            return true;
+        }
+
         return wp_mail($to, $subject, $body, $headers);
     }
 

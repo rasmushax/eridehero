@@ -53,6 +53,7 @@ use ERH\Admin\SpecPopulator;
 use ERH\Admin\EmailTestPage;
 use ERH\Admin\NewsletterAdmin;
 use ERH\Migration\MigrationAdmin;
+use ERH\Migration\MigrationCli;
 use ERH\Api\RestPrices;
 use ERH\Api\RestDeals;
 use ERH\Api\RestProducts;
@@ -336,6 +337,9 @@ class Core {
 
         // Initialize REST API.
         add_action('rest_api_init', [$this, 'init_rest_api']);
+
+        // Register WP-CLI migration commands.
+        MigrationCli::register();
     }
 
     /**
