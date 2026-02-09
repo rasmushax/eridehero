@@ -282,8 +282,10 @@ export function formatSpecValue(value, spec) {
     if (spec.unit) {
         const num = parseFloat(value);
         if (!isNaN(num)) {
-            // Round to 1 decimal if needed
-            const formatted = Number.isInteger(num) ? num : num.toFixed(1);
+            // Format with thousand separators to match SSR (PHP number_format)
+            const formatted = Number.isInteger(num)
+                ? num.toLocaleString('en-US')
+                : num.toLocaleString('en-US', { minimumFractionDigits: 1, maximumFractionDigits: 1 });
             return `${formatted} ${spec.unit}`;
         }
     }

@@ -68,6 +68,22 @@ class PriceBracketConfig {
 	];
 
 	/**
+	 * EUC (Electric Unicycle) specific price brackets.
+	 *
+	 * EUCs range from ~$800 entry-level to $5,000+ flagship models,
+	 * with most of the market concentrated in the $1,500-$3,000 range.
+	 *
+	 * @var array<string, array{min: int, max: int, label: string}>
+	 */
+	public const EUC_BRACKETS = [
+		'budget'      => [ 'min' => 0,    'max' => 1000,        'label' => 'Budget' ],
+		'midrange'    => [ 'min' => 1000, 'max' => 2000,        'label' => 'Mid-Range' ],
+		'performance' => [ 'min' => 2000, 'max' => 3000,        'label' => 'Performance' ],
+		'premium'     => [ 'min' => 3000, 'max' => 4500,        'label' => 'Premium' ],
+		'ultra'       => [ 'min' => 4500, 'max' => PHP_INT_MAX, 'label' => 'Ultra' ],
+	];
+
+	/**
 	 * Minimum products needed in bracket for bracket-based comparison.
 	 * If fewer products exist, falls back to category-wide percentile.
 	 */
@@ -101,8 +117,9 @@ class PriceBracketConfig {
 		$type = strtolower( trim( $product_type ) );
 
 		return match ( $type ) {
-			'ebike', 'electric bike', 'e-bike' => self::EBIKE_BRACKETS,
-			'hoverboard'                       => self::HOVERBOARD_BRACKETS,
+			'ebike', 'electric bike', 'e-bike'           => self::EBIKE_BRACKETS,
+			'hoverboard'                                  => self::HOVERBOARD_BRACKETS,
+			'euc', 'electric unicycle', 'electric-unicycle' => self::EUC_BRACKETS,
 			default => self::BRACKETS,
 		};
 	}

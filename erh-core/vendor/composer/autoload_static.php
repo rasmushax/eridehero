@@ -41,6 +41,7 @@ class ComposerStaticInitb5e889746c5280811e87a72c161db6db
         'ERH\\Comparison\\AdvantageCalculatorInterface' => __DIR__ . '/../..' . '/includes/comparison/interface-advantage-calculator.php',
         'ERH\\Comparison\\Calculators\\EbikeAdvantages' => __DIR__ . '/../..' . '/includes/comparison/calculators/class-ebike-advantages.php',
         'ERH\\Comparison\\Calculators\\EscooterAdvantages' => __DIR__ . '/../..' . '/includes/comparison/calculators/class-escooter-advantages.php',
+        'ERH\\Comparison\\Calculators\\EucAdvantages' => __DIR__ . '/../..' . '/includes/comparison/calculators/class-euc-advantages.php',
         'ERH\\Comparison\\Calculators\\HoverboardAdvantages' => __DIR__ . '/../..' . '/includes/comparison/calculators/class-hoverboard-advantages.php',
         'ERH\\Comparison\\PriceBracketConfig' => __DIR__ . '/../..' . '/includes/comparison/class-price-bracket-config.php',
         'ERH\\Config\\SpecConfig' => __DIR__ . '/../..' . '/includes/config/class-spec-config.php',

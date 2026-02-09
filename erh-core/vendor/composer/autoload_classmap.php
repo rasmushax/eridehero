@@ -40,6 +40,7 @@ return array(
     'ERH\\Comparison\\AdvantageCalculatorInterface' => $baseDir . '/includes/comparison/interface-advantage-calculator.php',
     'ERH\\Comparison\\Calculators\\EbikeAdvantages' => $baseDir . '/includes/comparison/calculators/class-ebike-advantages.php',
     'ERH\\Comparison\\Calculators\\EscooterAdvantages' => $baseDir . '/includes/comparison/calculators/class-escooter-advantages.php',
+    'ERH\\Comparison\\Calculators\\EucAdvantages' => $baseDir . '/includes/comparison/calculators/class-euc-advantages.php',
     'ERH\\Comparison\\Calculators\\HoverboardAdvantages' => $baseDir . '/includes/comparison/calculators/class-hoverboard-advantages.php',
     'ERH\\Comparison\\PriceBracketConfig' => $baseDir . '/includes/comparison/class-price-bracket-config.php',
     'ERH\\Config\\SpecConfig' => $baseDir . '/includes/config/class-spec-config.php',

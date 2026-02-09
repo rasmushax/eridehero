@@ -116,6 +116,12 @@ function erh_get_range_filter_config( string $product_type = 'escooter' ): array
             [ 'label' => '$200–$300', 'min' => 200, 'max' => 300 ],
             [ 'label' => '$300+', 'min' => 300 ],
         ],
+        'euc' => [
+            [ 'label' => 'Under $1,000', 'min' => 1, 'max' => 1000 ],
+            [ 'label' => '$1,000–$2,000', 'min' => 1000, 'max' => 2000 ],
+            [ 'label' => '$2,000–$3,000', 'min' => 2000, 'max' => 3000 ],
+            [ 'label' => '$3,000+', 'min' => 3000 ],
+        ],
     ];
 
     return [
@@ -340,6 +346,7 @@ function erh_get_range_filter_config( string $product_type = 'escooter' ): array
             'spec_paths'   => [
                 'wheels.tire_size_front',        // E-scooter (front wheel).
                 'wheels_and_tires.wheel_size',   // E-bike.
+                'wheel.tire_size',               // EUC.
             ],
             'unit'         => 'in',
             'prefix'       => '',
@@ -354,6 +361,7 @@ function erh_get_range_filter_config( string $product_type = 'escooter' ): array
             'spec_paths'   => [
                 'wheels.tire_width',             // E-scooter.
                 'wheels_and_tires.tire_width',   // E-bike.
+                'wheel.tire_width',              // EUC.
             ],
             'unit'         => 'in',
             'prefix'       => '',
@@ -674,6 +682,7 @@ function erh_get_checkbox_filter_config(): array {
             'spec_paths'    => [
                 'wheels.tire_type',           // E-scooter.
                 'wheels_and_tires.tire_type', // E-bike.
+                'wheel.tire_type',            // EUC.
             ],
             'visible_limit' => 10,
             'searchable'    => false,
@@ -681,7 +690,10 @@ function erh_get_checkbox_filter_config(): array {
         'suspension_type' => [
             'label'         => 'Type',
             'field'         => 'suspension_type',
-            'spec_paths'    => [ 'suspension.type' ], // Nested in e-scooters group.
+            'spec_paths'    => [
+                'suspension.type',            // E-scooter.
+                'suspension.suspension_type',  // EUC.
+            ],
             'visible_limit' => 10,
             'searchable'    => false,
             'is_array'      => true, // Values can be arrays (checkbox field).
@@ -860,6 +872,17 @@ function erh_get_checkbox_filter_config(): array {
         ],
 
         // =================================================================
+        // EUC Specific Checkbox Filters
+        // =================================================================
+        'battery_brand' => [
+            'label'         => 'Battery Brand',
+            'field'         => 'battery_brand',
+            'spec_paths'    => [ 'battery.battery_brand' ],
+            'visible_limit' => 10,
+            'searchable'    => false,
+        ],
+
+        // =================================================================
         // Hoverboard Specific Checkbox Filters
         // =================================================================
         'wheel_type' => [
@@ -892,12 +915,18 @@ function erh_get_tristate_filter_config(): array {
         'self_healing_tires' => [
             'label'      => 'Self-healing tires',
             'field'      => 'self_healing_tires',
-            'spec_paths' => [ 'wheels.self_healing' ], // Nested in e-scooters group.
+            'spec_paths' => [
+                'wheels.self_healing', // E-scooter.
+                'wheel.self_healing',  // EUC.
+            ],
         ],
         'suspension_adjustable' => [
             'label'      => 'Adjustable suspension',
             'field'      => 'suspension_adjustable',
-            'spec_paths' => [ 'suspension.adjustable' ], // Nested in e-scooters group.
+            'spec_paths' => [
+                'suspension.adjustable',             // E-scooter.
+                'suspension.adjustable_suspension',  // EUC.
+            ],
         ],
         'foldable_handlebars' => [
             'label'      => 'Foldable handlebars',
@@ -998,6 +1027,55 @@ function erh_get_tristate_filter_config(): array {
             'label'      => 'Speed Modes',
             'field'      => 'speed_modes',
             'spec_paths' => [ 'connectivity.speed_modes' ],
+        ],
+
+        // =================================================================
+        // EUC Specific Tristate Filters
+        // =================================================================
+        'hollow_motor' => [
+            'label'      => 'Hollow motor',
+            'field'      => 'hollow_motor',
+            'spec_paths' => [ 'motor.hollow_motor' ],
+        ],
+        'dual_charging' => [
+            'label'      => 'Dual charging',
+            'field'      => 'dual_charging',
+            'spec_paths' => [ 'battery.dual_charging' ],
+        ],
+        'fast_charger' => [
+            'label'      => 'Fast charger',
+            'field'      => 'fast_charger',
+            'spec_paths' => [ 'battery.fast_charger' ],
+        ],
+        'headlight' => [
+            'label'      => 'Headlight',
+            'field'      => 'headlight',
+            'spec_paths' => [ 'lighting.headlight' ],
+        ],
+        'taillight' => [
+            'label'      => 'Taillight',
+            'field'      => 'taillight',
+            'spec_paths' => [ 'lighting.taillight' ],
+        ],
+        'brake_light' => [
+            'label'      => 'Brake light',
+            'field'      => 'brake_light',
+            'spec_paths' => [ 'lighting.brake_light' ],
+        ],
+        'lift_sensor' => [
+            'label'      => 'Lift sensor',
+            'field'      => 'lift_sensor',
+            'spec_paths' => [ 'safety.lift_sensor' ],
+        ],
+        'spiked_pedals' => [
+            'label'      => 'Spiked pedals',
+            'field'      => 'spiked_pedals',
+            'spec_paths' => [ 'pedals.spiked_pedals' ],
+        ],
+        'adjustable_pedals' => [
+            'label'      => 'Adjustable pedals',
+            'field'      => 'adjustable_pedals',
+            'spec_paths' => [ 'pedals.adjustable_pedals' ],
         ],
     ];
 }

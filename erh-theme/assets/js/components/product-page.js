@@ -49,6 +49,14 @@ const SCORE_CONFIG = {
         ride_comfort: { name: 'Ride Comfort', icon: 'smile' },
         features: { name: 'Features', icon: 'settings' },
     },
+    euc: {
+        motor_performance: { name: 'Motor', icon: 'zap' },
+        battery_range: { name: 'Battery & Range', icon: 'battery' },
+        ride_quality: { name: 'Ride Quality', icon: 'smile' },
+        safety: { name: 'Safety', icon: 'shield' },
+        portability: { name: 'Portability', icon: 'box' },
+        features: { name: 'Features', icon: 'settings' },
+    },
 };
 
 /**

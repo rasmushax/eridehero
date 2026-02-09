@@ -76,7 +76,7 @@ class CategoryConfig {
             'name_short'    => 'EUC',
             'slug'          => 'electric-unicycles',
             'archive_slug'  => 'eucs',
-            'finder_slug'   => 'euc-finder',
+            'finder_slug'   => 'electric-unicycle-finder',
             'finder_key'    => 'euc',
             'acf_wrapper'   => 'eucs',
             'icon'          => 'euc',

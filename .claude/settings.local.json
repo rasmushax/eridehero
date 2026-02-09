@@ -48,7 +48,8 @@
       "Bash(dir /s /b \"C:\\\\Users\\\\rasmu\\\\Projects\\\\eridehero\\\\*finder*.json\")",
       "Bash(powershell:*)",
       "Bash(php:*)",
-      "Bash(dir nul)"
+      "Bash(dir nul)",
+      "Bash(git log:*)"
     ]
   }
 }
