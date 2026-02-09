@@ -27,6 +27,7 @@ return array(
     'ERH\\Amazon\\AwsV4Signer' => $baseDir . '/includes/amazon/class-aws-v4-signer.php',
     'ERH\\Api\\RestComparisonViews' => $baseDir . '/includes/api/class-rest-comparison-views.php',
     'ERH\\Api\\RestDeals' => $baseDir . '/includes/api/class-rest-deals.php',
+    'ERH\\Api\\RestGeo' => $baseDir . '/includes/api/class-rest-geo.php',
     'ERH\\Api\\RestListicle' => $baseDir . '/includes/api/class-rest-listicle.php',
     'ERH\\Api\\RestPrices' => $baseDir . '/includes/api/class-rest-prices.php',
     'ERH\\Api\\RestProducts' => $baseDir . '/includes/api/class-rest-products.php',

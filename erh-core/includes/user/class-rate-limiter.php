@@ -26,6 +26,12 @@ class RateLimiter {
         'tracker_create'      => ['max_attempts' => 10, 'window' => 3600], // 10 per hour
         'tracker_unsubscribe' => ['max_attempts' => 20, 'window' => 3600], // 20 per hour
         'review_submit'       => ['max_attempts' => 5, 'window' => 3600],  // 5 per hour
+        // Public API endpoints.
+        'api_similar'         => ['max_attempts' => 60, 'window' => 60],   // 60 per minute
+        'api_analysis'        => ['max_attempts' => 30, 'window' => 60],   // 30 per minute
+        'api_best_prices'     => ['max_attempts' => 30, 'window' => 60],   // 30 per minute
+        'api_deals'           => ['max_attempts' => 60, 'window' => 60],   // 60 per minute
+        'api_geo'             => ['max_attempts' => 10, 'window' => 60],   // 10 per minute
     ];
 
     /**

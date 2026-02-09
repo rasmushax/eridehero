@@ -7,16 +7,7 @@
 import { formatPrice } from '../services/geo-price.js';
 import { PriceAlertModal } from '../components/price-alert.js';
 import { calculateDiscountIndicator } from './pricing-ui.js';
-
-/**
- * Get REST URL base from WordPress localized data
- */
-export function getRestUrl() {
-    if (typeof erhData !== 'undefined' && erhData.restUrl) {
-        return erhData.restUrl;
-    }
-    return '/wp-json/erh/v1/';
-}
+import { getRestUrl } from './api.js';
 
 /**
  * Create a deal card from a template

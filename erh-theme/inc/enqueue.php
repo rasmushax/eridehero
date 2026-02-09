@@ -133,16 +133,7 @@ function erh_enqueue_assets(): void {
     // Localize script with data the JS might need.
     wp_localize_script( 'erh-app', 'erhData', $erh_data );
 
-    // Add erhConfig with IPInfo token for geo detection.
-    $hft_settings = get_option( 'hft_settings', array() );
-    $ipinfo_token = $hft_settings['ipinfo_api_token'] ?? '';
-    if ( ! empty( $ipinfo_token ) ) {
-        wp_add_inline_script(
-            'erh-app',
-            'window.erhConfig = window.erhConfig || {}; window.erhConfig.ipinfoToken = ' . wp_json_encode( $ipinfo_token ) . ';',
-            'before'
-        );
-    }
+    // IPInfo token is now handled server-side via /erh/v1/geo endpoint (class-rest-geo.php).
 
     // OAuth popup handler: If we're in a popup and user is logged in, notify parent
     if ( is_user_logged_in() && class_exists( '\ERH\User\UserRepository' ) ) {

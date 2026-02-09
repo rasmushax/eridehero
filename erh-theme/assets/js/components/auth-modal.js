@@ -22,8 +22,9 @@
 
 import { Modal } from './modal.js';
 import { Toast } from './toast.js';
+import { getRestUrl } from '../utils/api.js';
 
-const REST_URL = window.erhData?.restUrl || '/wp-json/erh/v1/';
+const REST_URL = getRestUrl();
 const STORAGE_KEY = 'erh_pending_action';
 
 class AuthModalManager {

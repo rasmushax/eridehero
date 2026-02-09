@@ -12,6 +12,7 @@ declare(strict_types=1);
 namespace ERH\Api;
 
 use ERH\CacheKeys;
+use ERH\CategoryConfig;
 use ERH\Comparison\AdvantageCalculatorFactory;
 use ERH\Database\ProductCache;
 use ERH\Database\ViewTracker;
@@ -35,6 +36,13 @@ class RestProducts extends WP_REST_Controller {
     private bool $debug = false;
 
     /**
+     * Rate limiter instance.
+     *
+     * @var RateLimiter
+     */
+    private RateLimiter $rate_limiter;
+
+    /**
      * Namespace for the REST API.
      *
      * @var string
@@ -56,24 +64,13 @@ class RestProducts extends WP_REST_Controller {
     private const SUPPORTED_REGIONS = ['US', 'GB', 'EU', 'CA', 'AU'];
 
     /**
-     * Category slug to product type mapping.
-     *
-     * @var array<string, string>
-     */
-    private array $category_map = [
-        'escooter'   => 'Electric Scooter',
-        'ebike'      => 'Electric Bike',
-        'eskate'     => 'Electric Skateboard',
-        'euc'        => 'Electric Unicycle',
-        'hoverboard' => 'Hoverboard',
-    ];
-
-    /**
      * Constructor.
+     *
+     * @param RateLimiter|null $rate_limiter Optional rate limiter instance.
      */
-    public function __construct() {
-        // Enable debug via constant or query param.
+    public function __construct(?RateLimiter $rate_limiter = null) {
         $this->debug = defined('ERH_GEO_DEBUG') && ERH_GEO_DEBUG;
+        $this->rate_limiter = $rate_limiter ?? new RateLimiter();
     }
 
     /**
@@ -177,9 +174,14 @@ class RestProducts extends WP_REST_Controller {
      * @return WP_REST_Response|WP_Error Response with similar products.
      */
     public function get_similar_products(WP_REST_Request $request) {
+        $rate = $this->rate_limiter->check_and_record('api_similar', RateLimiter::get_client_ip());
+        if (!$rate['allowed']) {
+            return new WP_Error('rate_limit_exceeded', $rate['message'], ['status' => 429]);
+        }
+
         $product_id = (int) $request->get_param('id');
         $limit = (int) $request->get_param('limit');
-        $geo = strtoupper($request->get_param('geo'));
+        $geo = strtoupper($request->get_param('geo') ?? 'US');
 
         $this->log('get_similar_products called', [
             'product_id' => $product_id,
@@ -263,8 +265,13 @@ class RestProducts extends WP_REST_Controller {
      * @return WP_REST_Response|WP_Error Response with analysis data.
      */
     public function get_product_analysis(WP_REST_Request $request) {
+        $rate = $this->rate_limiter->check_and_record('api_analysis', RateLimiter::get_client_ip());
+        if (!$rate['allowed']) {
+            return new WP_Error('rate_limit_exceeded', $rate['message'], ['status' => 429]);
+        }
+
         $product_id = (int) $request->get_param('id');
-        $geo = strtoupper($request->get_param('geo'));
+        $geo = strtoupper($request->get_param('geo') ?? 'US');
 
         $this->log('get_product_analysis called', [
             'product_id' => $product_id,
@@ -466,7 +473,7 @@ class RestProducts extends WP_REST_Controller {
             // Pricing (geo-aware, NO cross-region fallbacks).
             'price'           => $current_price,
             'currency'        => $currency,
-            'instock'         => $instock,
+            'in_stock'        => $instock,
             'tracked_url'     => $tracked_url,
             'price_indicator' => $price_indicator,
             'avg_6m'          => $avg_6m,
@@ -494,8 +501,7 @@ class RestProducts extends WP_REST_Controller {
      * @return string Category slug.
      */
     private function get_category_slug(string $product_type): string {
-        $reverse_map = array_flip($this->category_map);
-        return $reverse_map[$product_type] ?? 'other';
+        return CategoryConfig::type_to_finder_key($product_type) ?: 'other';
     }
 
     /**

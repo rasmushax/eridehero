@@ -5,6 +5,8 @@
  * Works with custom-select component for styled dropdowns.
  */
 
+import { getRestUrl } from '../utils/api.js';
+
 export function initContactForm() {
     const form = document.getElementById('erh-contact-form');
     if (!form) return;
@@ -230,8 +232,7 @@ export function initContactForm() {
             const formData = new FormData(form);
             const data = Object.fromEntries(formData.entries());
 
-            // Use localized REST URL or fallback
-            const restUrl = window.erhData?.restUrl || '/wp-json/erh/v1/';
+            const restUrl = getRestUrl();
 
             const response = await fetch(restUrl + 'contact', {
                 method: 'POST',

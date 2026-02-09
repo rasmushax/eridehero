@@ -15,6 +15,8 @@ declare(strict_types=1);
 
 namespace ERH\Email;
 
+use ERH\CategoryConfig;
+
 /**
  * Handles sending branded HTML emails via wp_mail.
  */
@@ -108,15 +110,8 @@ class EmailSender {
         // Generate subject based on categories.
         $category_count = count($deals_by_category);
         if ($category_count === 1) {
-            $category_names = [
-                'escooter'   => 'E-Scooter',
-                'ebike'      => 'E-Bike',
-                'euc'        => 'EUC',
-                'eskate'     => 'E-Skate',
-                'hoverboard' => 'Hoverboard',
-            ];
             $slug    = array_key_first($deals_by_category);
-            $name    = $category_names[$slug] ?? 'Electric Ride';
+            $name    = CategoryConfig::get_name($slug, 'name_short') ?: 'Electric Ride';
             $subject = sprintf(__("This Week's Best %s Deals", 'erh-core'), $name);
         } else {
             $subject = __('Your Weekly Deals Roundup', 'erh-core');

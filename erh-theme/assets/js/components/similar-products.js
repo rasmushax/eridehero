@@ -14,6 +14,7 @@
 import { getUserGeo } from '../services/geo-price.js';
 import { createProductCard } from '../utils/product-card.js';
 import { initCarousel } from '../utils/carousel.js';
+import { getRestUrl } from '../utils/api.js';
 
 // Debug logging (enabled via localStorage or URL param)
 const DEBUG = localStorage.getItem('erh_geo_debug') === 'true' ||
@@ -27,18 +28,6 @@ function log(message, data = null) {
     } else {
         console.log(prefix, message);
     }
-}
-
-/**
- * Get REST URL base from WordPress localized data.
- *
- * @returns {string} REST API base URL
- */
-function getRestUrl() {
-    if (typeof erhData !== 'undefined' && erhData.restUrl) {
-        return erhData.restUrl;
-    }
-    return '/wp-json/erh/v1/';
 }
 
 /**

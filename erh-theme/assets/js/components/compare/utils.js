@@ -8,6 +8,7 @@
 
 import { compareValues } from '../../config/compare-config.js';
 import { SELECTORS } from './constants.js';
+import { getRestUrl } from '../../utils/api.js';
 
 // =============================================================================
 // Spec Value Utilities
@@ -163,7 +164,7 @@ export async function trackComparisonView(productIds) {
     if (!untracked.length) return;
 
     try {
-        const restUrl = window.erhData?.restUrl || '/wp-json/erh/v1/';
+        const restUrl = getRestUrl();
         const nonce = window.erhData?.nonce || '';
 
         await fetch(`${restUrl}compare/track`, {

@@ -21,8 +21,9 @@ import { Toast } from './toast.js';
 import { escapeHtml } from '../utils/dom.js';
 import { AuthModal } from './auth-modal.js';
 import { getUserGeo, formatPrice, getCurrencySymbol } from '../services/geo-price.js';
+import { getRestUrl } from '../utils/api.js';
 
-const REST_URL = window.erhData?.restUrl || '/wp-json/erh/v1/';
+const REST_URL = getRestUrl();
 
 // Geo to flag mapping
 const GEO_FLAGS = {

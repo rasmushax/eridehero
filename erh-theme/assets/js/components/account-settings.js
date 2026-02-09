@@ -5,9 +5,9 @@
 
 import { Toast } from './toast.js';
 import { setUserGeoPreference } from '../services/geo-price.js';
+import { getRestUrl } from '../utils/api.js';
 
-// Use erhData.restUrl which includes correct site path (e.g., /eridehero/wp-json/erh/v1/)
-const getApiBase = () => (window.erhData?.restUrl || '/wp-json/erh/v1/').replace(/\/$/, '');
+const getApiBase = () => getRestUrl().replace(/\/$/, '');
 const getNonce = () => window.erhData?.nonce || '';
 const getSiteUrl = () => window.erhData?.siteUrl || '/';
 

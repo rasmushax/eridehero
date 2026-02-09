@@ -12,7 +12,9 @@ declare(strict_types=1);
 namespace ERH\Api;
 
 use ERH\Pricing\DealsFinder;
+use ERH\CategoryConfig;
 use ERH\CacheKeys;
+use ERH\User\RateLimiter;
 use WP_REST_Controller;
 use WP_REST_Server;
 use WP_REST_Request;
@@ -46,26 +48,21 @@ class RestDeals extends WP_REST_Controller {
     private DealsFinder $deals_finder;
 
     /**
-     * Category slug to product type mapping.
+     * Rate limiter instance.
      *
-     * @var array<string, string>
+     * @var RateLimiter
      */
-    private array $category_map = [
-        'all'        => '',
-        'escooter'   => 'Electric Scooter',
-        'ebike'      => 'Electric Bike',
-        'eskate'     => 'Electric Skateboard',
-        'euc'        => 'Electric Unicycle',
-        'hoverboard' => 'Hoverboard',
-    ];
+    private RateLimiter $rate_limiter;
 
     /**
      * Constructor.
      *
      * @param DealsFinder|null $deals_finder Optional DealsFinder instance.
+     * @param RateLimiter|null $rate_limiter Optional RateLimiter instance.
      */
-    public function __construct(?DealsFinder $deals_finder = null) {
+    public function __construct(?DealsFinder $deals_finder = null, ?RateLimiter $rate_limiter = null) {
         $this->deals_finder = $deals_finder ?? new DealsFinder();
+        $this->rate_limiter = $rate_limiter ?? new RateLimiter();
     }
 
     /**
@@ -85,7 +82,7 @@ class RestDeals extends WP_REST_Controller {
                         'description' => 'Product category (escooter, ebike, eskate, euc, hoverboard, or all)',
                         'type'        => 'string',
                         'default'     => 'all',
-                        'enum'        => array_keys($this->category_map),
+                        'enum'        => array_merge(['all'], CategoryConfig::get_keys(), ['eskate']),
                     ],
                     'limit' => [
                         'description' => 'Maximum number of deals to return',
@@ -149,10 +146,15 @@ class RestDeals extends WP_REST_Controller {
      * @return WP_REST_Response Response with deals.
      */
     public function get_deals(WP_REST_Request $request): WP_REST_Response {
+        $rate = $this->rate_limiter->check_and_record('api_deals', RateLimiter::get_client_ip());
+        if (!$rate['allowed']) {
+            return new WP_REST_Response(['code' => 'rate_limit_exceeded', 'message' => $rate['message']], 429);
+        }
+
         $category = $request->get_param('category');
         $limit = (int) $request->get_param('limit');
         $threshold = (float) $request->get_param('threshold');
-        $geo = strtoupper($request->get_param('geo'));
+        $geo = strtoupper($request->get_param('geo') ?? 'US');
         $period = $request->get_param('period');
 
         // Check transient cache (1 hour - deals only change when cron runs every 2 hours).
@@ -189,7 +191,7 @@ class RestDeals extends WP_REST_Controller {
             $deals = array_slice($deals, 0, $limit);
         } else {
             // Get deals for specific category.
-            $product_type = $this->category_map[$category] ?? '';
+            $product_type = CategoryConfig::key_to_type($category);
 
             if ($product_type) {
                 $deals = $this->deals_finder->get_deals($product_type, $threshold, $limit, $geo, $period);
@@ -313,7 +315,6 @@ class RestDeals extends WP_REST_Controller {
      * @return string Category slug.
      */
     private function get_category_slug(string $product_type): string {
-        $reverse_map = array_flip($this->category_map);
-        return $reverse_map[$product_type] ?? 'other';
+        return CategoryConfig::type_to_finder_key($product_type) ?: 'other';
     }
 }

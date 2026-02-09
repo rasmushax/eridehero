@@ -14,6 +14,7 @@ namespace ERH\Api;
 use ERH\Pricing\PriceFetcher;
 use ERH\Pricing\ExchangeRateService;
 use ERH\Database\PriceHistory;
+use ERH\User\RateLimiter;
 use ERH\CacheKeys;
 use WP_REST_Controller;
 use WP_REST_Server;
@@ -62,20 +63,30 @@ class RestPrices extends WP_REST_Controller {
     private PriceHistory $price_history;
 
     /**
+     * Rate limiter instance.
+     *
+     * @var RateLimiter
+     */
+    private RateLimiter $rate_limiter;
+
+    /**
      * Constructor.
      *
      * @param PriceFetcher|null        $price_fetcher    Optional PriceFetcher instance.
      * @param ExchangeRateService|null $exchange_service Optional ExchangeRateService instance.
      * @param PriceHistory|null        $price_history    Optional PriceHistory instance.
+     * @param RateLimiter|null         $rate_limiter     Optional RateLimiter instance.
      */
     public function __construct(
         ?PriceFetcher $price_fetcher = null,
         ?ExchangeRateService $exchange_service = null,
-        ?PriceHistory $price_history = null
+        ?PriceHistory $price_history = null,
+        ?RateLimiter $rate_limiter = null
     ) {
         $this->price_fetcher = $price_fetcher ?? new PriceFetcher();
         $this->exchange_service = $exchange_service ?? new ExchangeRateService();
         $this->price_history = $price_history ?? new PriceHistory();
+        $this->rate_limiter = $rate_limiter ?? new RateLimiter();
     }
 
     /**
@@ -188,6 +199,15 @@ class RestPrices extends WP_REST_Controller {
         $ids_string = $request->get_param('ids');
         $geo = $request->get_param('geo');
         $convert_to = $request->get_param('convert_to');
+
+        // Guard against excessively long input.
+        if (strlen($ids_string) > 500) {
+            return new WP_Error(
+                'input_too_long',
+                'IDs parameter exceeds maximum length',
+                ['status' => 400]
+            );
+        }
 
         // Parse product IDs.
         $product_ids = array_map('intval', array_filter(explode(',', $ids_string)));
@@ -377,9 +397,23 @@ class RestPrices extends WP_REST_Controller {
      * @return WP_REST_Response|WP_Error Response or error.
      */
     public function get_best_prices(WP_REST_Request $request): WP_REST_Response|WP_Error {
+        $rate = $this->rate_limiter->check_and_record('api_best_prices', RateLimiter::get_client_ip());
+        if (!$rate['allowed']) {
+            return new WP_Error('rate_limit_exceeded', $rate['message'], ['status' => 429]);
+        }
+
         $ids_string = $request->get_param('ids');
         $geo = $request->get_param('geo');
         $convert_to = $request->get_param('convert_to');
+
+        // Guard against excessively long input.
+        if (strlen($ids_string) > 500) {
+            return new WP_Error(
+                'input_too_long',
+                'IDs parameter exceeds maximum length',
+                ['status' => 400]
+            );
+        }
 
         // Parse product IDs.
         $product_ids = array_map('intval', array_filter(explode(',', $ids_string)));

@@ -13,6 +13,7 @@ declare(strict_types=1);
 
 namespace ERH\Comparison;
 
+use ERH\CategoryConfig;
 use ERH\Comparison\Calculators\EscooterAdvantages;
 use ERH\Comparison\Calculators\EbikeAdvantages;
 use ERH\Comparison\Calculators\HoverboardAdvantages;
@@ -118,25 +119,7 @@ class AdvantageCalculatorFactory {
      * @return string Normalized type slug.
      */
     private static function normalize_product_type(string $product_type): string {
-        $type = strtolower(trim($product_type));
-
-        // Map common variations to canonical slugs.
-        $mappings = [
-            'electric scooter'    => 'escooter',
-            'e-scooter'           => 'escooter',
-            'escooter'            => 'escooter',
-            'electric bike'       => 'ebike',
-            'e-bike'              => 'ebike',
-            'ebike'               => 'ebike',
-            'electric unicycle'   => 'euc',
-            'euc'                 => 'euc',
-            'electric skateboard' => 'eskateboard',
-            'e-skateboard'        => 'eskateboard',
-            'eskateboard'         => 'eskateboard',
-            'hoverboard'          => 'hoverboard',
-        ];
-
-        return $mappings[$type] ?? $type;
+        return CategoryConfig::normalize_key($product_type);
     }
 
     /**

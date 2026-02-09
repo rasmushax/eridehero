@@ -28,6 +28,7 @@ class ComposerStaticInitb5e889746c5280811e87a72c161db6db
         'ERH\\Amazon\\AwsV4Signer' => __DIR__ . '/../..' . '/includes/amazon/class-aws-v4-signer.php',
         'ERH\\Api\\RestComparisonViews' => __DIR__ . '/../..' . '/includes/api/class-rest-comparison-views.php',
         'ERH\\Api\\RestDeals' => __DIR__ . '/../..' . '/includes/api/class-rest-deals.php',
+        'ERH\\Api\\RestGeo' => __DIR__ . '/../..' . '/includes/api/class-rest-geo.php',
         'ERH\\Api\\RestListicle' => __DIR__ . '/../..' . '/includes/api/class-rest-listicle.php',
         'ERH\\Api\\RestPrices' => __DIR__ . '/../..' . '/includes/api/class-rest-prices.php',
         'ERH\\Api\\RestProducts' => __DIR__ . '/../..' . '/includes/api/class-rest-products.php',

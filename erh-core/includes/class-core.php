@@ -56,6 +56,7 @@ use ERH\Migration\MigrationAdmin;
 use ERH\Api\RestPrices;
 use ERH\Api\RestDeals;
 use ERH\Api\RestProducts;
+use ERH\Api\RestGeo;
 use ERH\Api\RestListicle;
 use ERH\Api\RestComparisonViews;
 use ERH\Api\RestSpecEditor;
@@ -819,6 +820,10 @@ class Core {
         // Initialize and register REST Products API.
         $rest_products = new RestProducts();
         $rest_products->register_routes();
+
+        // Initialize and register REST Geo API (server-side IPInfo proxy).
+        $rest_geo = new RestGeo();
+        $rest_geo->register_routes();
 
         // Initialize and register REST Listicle API.
         $rest_listicle = new RestListicle();

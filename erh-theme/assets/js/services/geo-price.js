@@ -26,6 +26,7 @@ import {
     isValidRegion,
 } from './geo-config.js';
 import { ensureAbsoluteUrl } from '../utils/dom.js';
+import { getRestUrl } from '../utils/api.js';
 
 // Cache duration (1 hour for prices - prices update twice daily)
 const CACHE_DURATION = 60 * 60 * 1000;
@@ -62,19 +63,6 @@ const pendingRequests = new Map();
 
 // Geo detection Promise (for deduplication of concurrent getUserGeo calls)
 let geoDetectionPromise = null;
-
-/**
- * Get REST URL base from WordPress localized data
- * @returns {string}
- */
-function getRestUrl() {
-    // Use WordPress localized data if available
-    if (typeof erhData !== 'undefined' && erhData.restUrl) {
-        return erhData.restUrl;
-    }
-    // Fallback - should not happen in production
-    return '/wp-json/erh/v1/';
-}
 
 /**
  * Get user's region (mapped from IPInfo country)
@@ -167,30 +155,24 @@ async function detectUserGeo() {
         return { ...cached, isUserPreference: false };
     }
 
-    // Detect via IPInfo
+    // Detect via server-side geo proxy (keeps IPInfo token private)
     let detectedCountry = null;
 
     try {
-        const ipInfoToken = window.erhConfig?.ipinfoToken;
+        log('Calling geo detection proxy...');
+        const apiStart = performance.now();
+        const response = await fetch(getRestUrl() + 'geo');
+        const apiTime = (performance.now() - apiStart).toFixed(2);
 
-        if (ipInfoToken) {
-            log('Calling IPInfo API...');
-            const apiStart = performance.now();
-            const response = await fetch(`https://ipinfo.io/json?token=${ipInfoToken}`);
-            const apiTime = (performance.now() - apiStart).toFixed(2);
-
-            if (response.ok) {
-                const data = await response.json();
-                detectedCountry = data.country || null;
-                log('IPInfo response', { country: detectedCountry, ip: data.ip, bogon: data.bogon, time_ms: apiTime });
-            } else {
-                log('IPInfo request failed', { status: response.status, time_ms: apiTime });
-            }
+        if (response.ok) {
+            const data = await response.json();
+            detectedCountry = data.country || null;
+            log('Geo proxy response', { country: detectedCountry, region: data.region, detected: data.detected, time_ms: apiTime });
         } else {
-            log('No IPInfo token configured');
+            log('Geo proxy request failed', { status: response.status, time_ms: apiTime });
         }
     } catch (error) {
-        console.error('[GeoPriceService] IPInfo detection failed:', error.message);
+        console.error('[GeoPriceService] Geo detection failed:', error.message);
     }
 
     // Map country to region
@@ -211,7 +193,7 @@ async function detectUserGeo() {
     log('Geo detection complete', {
         region,
         country: detectedCountry,
-        source: detectedCountry ? 'ipinfo' : 'default',
+        source: detectedCountry ? 'geo-proxy' : 'default',
         total_time_ms: (performance.now() - startTime).toFixed(2)
     });
 
@@ -710,7 +692,7 @@ export function filterOffersForGeo(offers, userGeo) {
     const userCountry = userGeo.country; // Country code: DK, DE, FR, etc.
 
     // EU countries that should be treated as EU region
-    const euCountries = ['DE', 'FR', 'IT', 'ES', 'NL', 'BE', 'AT', 'IE', 'PT', 'FI', 'GR', 'LU', 'SK', 'SI', 'EE', 'LV', 'LT', 'CY', 'MT', 'BG', 'HR', 'CZ', 'DK', 'HU', 'PL', 'RO', 'SE', 'NO', 'CH'];
+    const euCountries = ['DE', 'FR', 'IT', 'ES', 'NL', 'BE', 'AT', 'IE', 'PT', 'FI', 'GR', 'LU', 'SK', 'SI', 'EE', 'LV', 'LT', 'CY', 'MT', 'BG', 'HR', 'CZ', 'DK', 'HU', 'PL', 'RO', 'SE'];
 
     return offers.filter(offer => {
         const offerCurrency = offer.currency || 'USD';

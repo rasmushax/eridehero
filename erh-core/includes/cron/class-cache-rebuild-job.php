@@ -9,6 +9,7 @@ declare(strict_types=1);
 
 namespace ERH\Cron;
 
+use ERH\CategoryConfig;
 use ERH\GeoConfig;
 use ERH\Pricing\PriceFetcher;
 use ERH\Database\ProductCache;
@@ -50,16 +51,7 @@ use ERH\Scoring\ProductScorer;
  */
 class CacheRebuildJob implements CronJobInterface {
 
-    /**
-     * Supported product types.
-     */
-    private const PRODUCT_TYPES = [
-        'Electric Scooter',
-        'Electric Bike',
-        'Electric Skateboard',
-        'Electric Unicycle',
-        'Hoverboard',
-    ];
+    // Product types sourced from CategoryConfig (single source of truth).
 
     /**
      * Price fetcher instance.
@@ -233,7 +225,7 @@ class CacheRebuildJob implements CronJobInterface {
             error_log('[ERH Cache Rebuild] === Starting cache rebuild with debug logging ===');
         }
 
-        foreach (self::PRODUCT_TYPES as $product_type) {
+        foreach (array_column(CategoryConfig::get_all(), 'type') as $product_type) {
             $products = $this->get_products_by_type($product_type);
 
             if (empty($products)) {

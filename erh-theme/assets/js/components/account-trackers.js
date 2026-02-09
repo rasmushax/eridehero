@@ -9,9 +9,9 @@ import { Modal } from './modal.js';
 import { PriceAlertModal } from './price-alert.js';
 import { escapeHtml } from '../utils/dom.js';
 import { formatPrice } from '../services/geo-price.js';
+import { getRestUrl } from '../utils/api.js';
 
-// Use erhData.restUrl which includes correct site path (e.g., /eridehero/wp-json/erh/v1/)
-const getApiBase = () => (window.erhData?.restUrl || '/wp-json/erh/v1/').replace(/\/$/, '');
+const getApiBase = () => getRestUrl().replace(/\/$/, '');
 const getNonce = () => window.erhData?.nonce || '';
 
 // Geo to flag mapping

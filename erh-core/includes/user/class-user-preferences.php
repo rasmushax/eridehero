@@ -76,7 +76,7 @@ class UserPreferences {
                     'type'  => 'array',
                     'items' => [
                         'type' => 'string',
-                        'enum' => array_keys(UserRepository::VALID_ROUNDUP_TYPES),
+                        'enum' => UserRepository::get_valid_roundup_keys(),
                     ],
                 ],
                 'newsletter_subscription' => ['type' => 'boolean'],

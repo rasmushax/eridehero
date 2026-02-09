@@ -13,6 +13,7 @@ import { getUserGeo, formatPrice, getCurrencySymbol } from '../services/geo-pric
 import { PriceAlertModal } from './price-alert.js';
 import { initCustomSelects, CustomSelect } from './custom-select.js';
 import { ComparisonBar } from './comparison-bar.js';
+import { getRestUrl } from '../utils/api.js';
 
 // Configuration
 const CONFIG = {
@@ -21,13 +22,6 @@ const CONFIG = {
     defaultSort: 'discount',
     maxCompare: 4,
 };
-
-/**
- * Get REST URL base
- */
-function getRestUrl() {
-    return window.erhData?.restUrl || '/wp-json/erh/v1/';
-}
 
 /**
  * Initialize the deals page

@@ -9,6 +9,8 @@ declare(strict_types=1);
 
 namespace ERH\User;
 
+use ERH\CategoryConfig;
+
 /**
  * Provides a clean interface for reading and writing user data.
  */
@@ -40,16 +42,15 @@ class UserRepository {
     public const VALID_FREQUENCIES = ['weekly', 'bi-weekly', 'monthly'];
 
     /**
-     * Valid product types for sales roundup.
-     * Keys are the slug used in API/storage, values are display names.
+     * Get valid product type keys for sales roundup.
+     *
+     * @return array<string>
      */
-    public const VALID_ROUNDUP_TYPES = [
-        'escooter'   => 'Electric Scooter',
-        'ebike'      => 'Electric Bike',
-        'eskate'     => 'Electric Skateboard',
-        'euc'        => 'Electric Unicycle',
-        'hoverboard' => 'Hoverboard',
-    ];
+    public static function get_valid_roundup_keys(): array {
+        return array_values(array_unique(
+            array_column(CategoryConfig::get_all(), 'finder_key')
+        ));
+    }
 
     /**
      * Get a user by ID.
@@ -216,15 +217,15 @@ class UserRepository {
 
         if (empty($types)) {
             // Default to all types for backwards compatibility
-            return array_keys(self::VALID_ROUNDUP_TYPES);
+            return self::get_valid_roundup_keys();
         }
 
         // Filter to only valid types
         if (is_array($types)) {
-            return array_values(array_intersect($types, array_keys(self::VALID_ROUNDUP_TYPES)));
+            return array_values(array_intersect($types, self::get_valid_roundup_keys()));
         }
 
-        return array_keys(self::VALID_ROUNDUP_TYPES);
+        return self::get_valid_roundup_keys();
     }
 
     /**
@@ -236,7 +237,7 @@ class UserRepository {
      */
     public function set_sales_roundup_types(int $user_id, array $types): void {
         // Filter to only valid types
-        $valid_types = array_values(array_intersect($types, array_keys(self::VALID_ROUNDUP_TYPES)));
+        $valid_types = array_values(array_intersect($types, self::get_valid_roundup_keys()));
         update_user_meta($user_id, self::META_SALES_ROUNDUP_TYPES, $valid_types);
     }
 

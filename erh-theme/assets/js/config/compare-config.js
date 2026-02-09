@@ -85,9 +85,9 @@ export const DISPLAY_TYPES = [
 /**
  * Threshold for declaring a "tie" (percentage difference).
  * If two values are within this percentage, neither wins.
- * Set to 0 - a winner is a winner, any difference matters.
+ * Must match PHP SpecConfig::TIE_THRESHOLD (3%).
  */
-export const TIE_THRESHOLD = 0;
+export const TIE_THRESHOLD = 3;
 
 // =============================================================================
 // E-Bike Score Category Labels

@@ -6,7 +6,7 @@
  */
 
 import { formatPrice } from '../services/geo-price.js';
-import { ensureAbsoluteUrl } from './dom.js';
+import { ensureAbsoluteUrl, escapeHtml } from './dom.js';
 
 /**
  * Default verdict threshold configuration.
@@ -83,9 +83,12 @@ export function renderRetailerRow(offer, options = {}) {
     const stockIcon = offer.in_stock ? 'check' : 'x';
     const stockText = offer.in_stock ? 'In stock' : 'Out of stock';
 
-    const logoHtml = offer.logo_url
-        ? `<img src="${offer.logo_url}" alt="${offer.retailer}" class="${classPrefix}-retailer-logo">`
-        : `<span class="${classPrefix}-retailer-logo-text">${offer.retailer}</span>`;
+    const safeRetailer = escapeHtml(offer.retailer);
+    const safeLogoUrl = offer.logo_url && String(offer.logo_url).startsWith('http') ? offer.logo_url : '';
+
+    const logoHtml = safeLogoUrl
+        ? `<img src="${safeLogoUrl}" alt="${safeRetailer}" class="${classPrefix}-retailer-logo">`
+        : `<span class="${classPrefix}-retailer-logo-text">${safeRetailer}</span>`;
 
     const badgeHtml = isBest
         ? `<span class="${classPrefix}-retailer-badge">Best price</span>`
@@ -95,7 +98,7 @@ export function renderRetailerRow(offer, options = {}) {
         <a href="${ensureAbsoluteUrl(offer.tracked_url || offer.url) || '#'}" class="${classPrefix}-retailer-row ${bestClass}" target="_blank" rel="sponsored noopener">
             ${logoHtml}
             <div class="${classPrefix}-retailer-info">
-                <span class="${classPrefix}-retailer-name">${offer.retailer}</span>
+                <span class="${classPrefix}-retailer-name">${safeRetailer}</span>
                 <span class="${classPrefix}-retailer-stock ${stockClass}">
                     <svg class="icon" aria-hidden="true"><use href="#icon-${stockIcon}"></use></svg>
                     ${stockText}
@@ -167,11 +170,13 @@ export function renderStockStatus(inStock, options = {}) {
  */
 export function renderRetailerLogo(offer, options = {}) {
     const { classPrefix = 'price-intel' } = options;
+    const safeRetailer = escapeHtml(offer.retailer);
+    const safeLogoUrl = offer.logo_url && String(offer.logo_url).startsWith('http') ? offer.logo_url : '';
 
-    if (offer.logo_url) {
-        return `<img src="${offer.logo_url}" alt="${offer.retailer}" class="${classPrefix}-retailer-logo">`;
+    if (safeLogoUrl) {
+        return `<img src="${safeLogoUrl}" alt="${safeRetailer}" class="${classPrefix}-retailer-logo">`;
     }
-    return `<span class="${classPrefix}-retailer-logo-text">${offer.retailer}</span>`;
+    return `<span class="${classPrefix}-retailer-logo-text">${safeRetailer}</span>`;
 }
 
 /**

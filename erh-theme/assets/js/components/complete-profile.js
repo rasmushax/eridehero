@@ -6,8 +6,9 @@
  */
 
 import { Toast } from './toast.js';
+import { getRestUrl } from '../utils/api.js';
 
-const getApiBase = () => (window.erhData?.restUrl || '/wp-json/erh/v1/').replace(/\/$/, '');
+const getApiBase = () => getRestUrl().replace(/\/$/, '');
 const getSiteUrl = () => window.erhData?.siteUrl || '';
 const getNonce = () => window.erhData?.nonce || '';
 
