@@ -481,6 +481,98 @@ function erh_get_product_spec_groups_config( string $category ): array {
                 ),
             ),
         ),
+        'eskateboard' => array(
+            'Motor & Power' => array(
+                'icon'  => 'zap',
+                'specs' => array(
+                    array( 'key' => 'motor.power_nominal', 'label' => 'Motor Power', 'unit' => 'W' ),
+                    array( 'key' => 'motor.power_peak', 'label' => 'Peak Power', 'unit' => 'W' ),
+                    array( 'key' => 'motor.motor_type', 'label' => 'Motor Type' ),
+                    array( 'key' => 'motor.drive', 'label' => 'Drive' ),
+                    array( 'key' => 'motor.motor_count', 'label' => 'Motors' ),
+                    array( 'key' => 'motor.motor_size', 'label' => 'Motor Size' ),
+                    array( 'key' => 'manufacturer_top_speed', 'label' => 'Top Speed (Claimed)', 'unit' => 'mph' ),
+                    array( 'key' => 'manufacturer_range', 'label' => 'Range (Claimed)', 'unit' => 'mi' ),
+                ),
+            ),
+            'ERideHero Test Results' => array(
+                'icon'  => 'clipboard-check',
+                'specs' => array(
+                    array( 'key' => 'tested_top_speed', 'label' => 'Top Speed (Tested)', 'unit' => 'mph' ),
+                    array( 'key' => 'tested_range_regular', 'label' => 'Range (Regular Riding)', 'unit' => 'mi' ),
+                    array( 'key' => 'tested_range_fast', 'label' => 'Range (Fast Riding)', 'unit' => 'mi' ),
+                    array( 'key' => 'tested_range_slow', 'label' => 'Range (Eco Mode)', 'unit' => 'mi' ),
+                    array( 'key' => 'acceleration_0_15_mph', 'label' => '0–15 mph', 'unit' => 's' ),
+                    array( 'key' => 'acceleration_0_20_mph', 'label' => '0–20 mph', 'unit' => 's' ),
+                    array( 'key' => 'acceleration_0_to_top', 'label' => '0–Top Speed', 'unit' => 's' ),
+                ),
+            ),
+            'Battery & Charging' => array(
+                'icon'  => 'battery',
+                'specs' => array(
+                    array( 'key' => 'battery.capacity', 'label' => 'Battery Capacity', 'unit' => 'Wh' ),
+                    array( 'key' => 'battery.voltage', 'label' => 'Voltage', 'unit' => 'V' ),
+                    array( 'key' => 'battery.amphours', 'label' => 'Amp Hours', 'unit' => 'Ah' ),
+                    array( 'key' => 'battery.battery_type', 'label' => 'Battery Type' ),
+                    array( 'key' => 'battery.brand', 'label' => 'Battery Brand' ),
+                    array( 'key' => 'battery.configuration', 'label' => 'Configuration' ),
+                    array( 'key' => 'battery.charging_time', 'label' => 'Charge Time', 'unit' => 'hrs' ),
+                ),
+            ),
+            'Deck & Trucks' => array(
+                'icon'  => 'layers',
+                'specs' => array(
+                    array( 'key' => 'deck.length', 'label' => 'Deck Length', 'unit' => '"' ),
+                    array( 'key' => 'deck.width', 'label' => 'Deck Width', 'unit' => '"' ),
+                    array( 'key' => 'deck.material', 'label' => 'Deck Material' ),
+                    array( 'key' => 'deck.concave', 'label' => 'Concave' ),
+                    array( 'key' => 'trucks.trucks', 'label' => 'Trucks' ),
+                    array( 'key' => 'trucks.bushings', 'label' => 'Bushings' ),
+                ),
+            ),
+            'Wheels & Suspension' => array(
+                'icon'  => 'circle',
+                'specs' => array(
+                    array( 'key' => 'wheels.wheel_size', 'label' => 'Wheel Size', 'unit' => 'mm' ),
+                    array( 'key' => 'wheels.wheel_width', 'label' => 'Wheel Width', 'unit' => 'mm' ),
+                    array( 'key' => 'wheels.durometer', 'label' => 'Durometer', 'unit' => 'A' ),
+                    array( 'key' => 'wheels.wheel_type', 'label' => 'Wheel Type' ),
+                    array( 'key' => 'wheels.wheel_material', 'label' => 'Wheel Material' ),
+                    array( 'key' => 'wheels.terrain', 'label' => 'Terrain' ),
+                    array( 'key' => 'suspension.has_suspension', 'label' => 'Suspension', 'format' => 'feature_check', 'feature_value' => true ),
+                    array( 'key' => 'suspension.suspension_type', 'label' => 'Suspension Type' ),
+                ),
+            ),
+            'Weight & Dimensions' => array(
+                'icon'  => 'box',
+                'specs' => array(
+                    array( 'key' => 'dimensions.weight', 'label' => 'Weight', 'unit' => 'lbs' ),
+                    array( 'key' => 'dimensions.max_load', 'label' => 'Max Rider Weight', 'unit' => 'lbs' ),
+                    array( 'key' => 'dimensions.wheelbase', 'label' => 'Wheelbase', 'unit' => '"' ),
+                    array( 'key' => 'dimensions.ground_clearance', 'label' => 'Ground Clearance', 'unit' => '"' ),
+                ),
+            ),
+            'Electronics & Features' => array(
+                'icon'  => 'settings',
+                'specs' => array(
+                    array( 'key' => 'electronics.esc', 'label' => 'ESC' ),
+                    array( 'key' => 'electronics.remote_type', 'label' => 'Remote' ),
+                    array( 'key' => 'other.ip_rating', 'label' => 'IP Rating', 'format' => 'ip', 'higherBetter' => true ),
+                    array( 'key' => 'lighting.lights', 'label' => 'Lights', 'format' => 'array' ),
+                    array( 'key' => 'lighting.ambient_lights', 'label' => 'Ambient Lights', 'format' => 'feature_check', 'feature_value' => true ),
+                    array( 'key' => 'features', 'label' => 'Cruise Control', 'format' => 'feature_check', 'feature_value' => 'Cruise Control' ),
+                    array( 'key' => 'features', 'label' => 'Speed Modes', 'format' => 'feature_check', 'feature_value' => 'Speed Modes' ),
+                    array( 'key' => 'features', 'label' => 'App', 'format' => 'feature_check', 'feature_value' => 'App' ),
+                    array( 'key' => 'features', 'label' => 'Regenerative Braking', 'format' => 'feature_check', 'feature_value' => 'Regenerative Braking' ),
+                    array( 'key' => 'features', 'label' => 'Push Start', 'format' => 'feature_check', 'feature_value' => 'Push Start' ),
+                    array( 'key' => 'features', 'label' => 'Quick-Swap Battery', 'format' => 'feature_check', 'feature_value' => 'Quick-Swap Battery' ),
+                    array( 'key' => 'features', 'label' => 'Reverse', 'format' => 'feature_check', 'feature_value' => 'Reverse' ),
+                    array( 'key' => 'features', 'label' => 'Braking Modes', 'format' => 'feature_check', 'feature_value' => 'Braking Modes' ),
+                    array( 'key' => 'features', 'label' => 'Bindings Compatible', 'format' => 'feature_check', 'feature_value' => 'Bindings Compatible' ),
+                    array( 'key' => 'features', 'label' => 'Handle', 'format' => 'feature_check', 'feature_value' => 'Handle' ),
+                ),
+            ),
+        ),
     );
 
     return $configs[ $category ] ?? array();

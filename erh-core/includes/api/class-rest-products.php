@@ -307,7 +307,7 @@ class RestProducts extends WP_REST_Controller {
         $this->log('Product type', ['type' => $product_type]);
 
         // Supported product types for analysis.
-        $supported_types = ['Electric Scooter', 'Electric Bike', 'Hoverboard', 'Electric Unicycle'];
+        $supported_types = ['Electric Scooter', 'Electric Bike', 'Hoverboard', 'Electric Unicycle', 'Electric Skateboard'];
         if (!in_array($product_type, $supported_types, true)) {
             $this->log('Unsupported product type', ['type' => $product_type]);
             return new WP_Error(

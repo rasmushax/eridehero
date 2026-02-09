@@ -71,7 +71,7 @@ $json_url   = $upload_dir['baseurl'] . '/comparison_products.json';
                     $category_labels = array(
                         'escooter'   => 'e-scooters',
                         'ebike'      => 'e-bikes',
-                        'eskate'     => 'e-skateboards',
+                        'eskateboard' => 'e-skateboards',
                         'euc'        => 'electric unicycles',
                         'hoverboard' => 'hoverboards',
                     );

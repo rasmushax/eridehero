@@ -84,6 +84,23 @@ class PriceBracketConfig {
 	];
 
 	/**
+	 * E-Skateboard specific price brackets.
+	 *
+	 * E-skateboards range from ~$200 budget to $3,000+ high-end,
+	 * with most of the market in the $500-$2,000 range.
+	 *
+	 * @var array<string, array{min: int, max: int, label: string}>
+	 */
+	public const SKATEBOARD_BRACKETS = [
+		'budget'      => [ 'min' => 0,    'max' => 500,         'label' => 'Budget' ],
+		'midrange'    => [ 'min' => 500,  'max' => 1000,        'label' => 'Mid-Range' ],
+		'performance' => [ 'min' => 1000, 'max' => 1500,        'label' => 'Performance' ],
+		'premium'     => [ 'min' => 1500, 'max' => 2000,        'label' => 'Premium' ],
+		'high_end'    => [ 'min' => 2000, 'max' => 3000,        'label' => 'High-End' ],
+		'ultra'       => [ 'min' => 3000, 'max' => PHP_INT_MAX, 'label' => 'Ultra' ],
+	];
+
+	/**
 	 * Minimum products needed in bracket for bracket-based comparison.
 	 * If fewer products exist, falls back to category-wide percentile.
 	 */
@@ -117,9 +134,10 @@ class PriceBracketConfig {
 		$type = strtolower( trim( $product_type ) );
 
 		return match ( $type ) {
-			'ebike', 'electric bike', 'e-bike'           => self::EBIKE_BRACKETS,
-			'hoverboard'                                  => self::HOVERBOARD_BRACKETS,
-			'euc', 'electric unicycle', 'electric-unicycle' => self::EUC_BRACKETS,
+			'ebike', 'electric bike', 'e-bike'                        => self::EBIKE_BRACKETS,
+			'hoverboard'                                               => self::HOVERBOARD_BRACKETS,
+			'euc', 'electric unicycle', 'electric-unicycle'            => self::EUC_BRACKETS,
+			'eskateboard', 'electric skateboard', 'e-skateboard'      => self::SKATEBOARD_BRACKETS,
 			default => self::BRACKETS,
 		};
 	}
@@ -219,6 +237,12 @@ class PriceBracketConfig {
 	public static function is_advantage( float $percentile, float $pct_vs_avg, bool $higher_better ): bool {
 		$percentile_threshold = 100 - self::ADVANTAGE_PERCENTILE; // 80
 
+		// Sanity gate: if value is within 5% of average, don't flag as notable.
+		// Prevents "4h vs 4h avg" being flagged as a strength due to skewed distributions.
+		if ( abs( $pct_vs_avg ) < 5.0 ) {
+			return false;
+		}
+
 		// Percentile check: top 20% (percentile >= 80) - same for all specs.
 		if ( $percentile >= $percentile_threshold ) {
 			return true;
@@ -250,6 +274,11 @@ class PriceBracketConfig {
 	 * @return bool True if qualifies as weakness.
 	 */
 	public static function is_weakness( float $percentile, float $pct_vs_avg, bool $higher_better ): bool {
+		// Sanity gate: if value is within 5% of average, don't flag as notable.
+		if ( abs( $pct_vs_avg ) < 5.0 ) {
+			return false;
+		}
+
 		// Percentile check: bottom 20% (percentile <= 20) - same for all specs.
 		if ( $percentile <= self::WEAKNESS_PERCENTILE ) {
 			return true;

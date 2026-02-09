@@ -96,6 +96,7 @@ function getCategoryWeights() {
 let products = [];
 let allProducts = [];
 let category = 'escooter';
+let finderKey = 'escooter';
 let userGeo = { geo: 'US', currency: 'USD' };
 let radarChart = null;
 let isFullWidthMode = false;
@@ -181,6 +182,7 @@ export async function init() {
 
     const config = window.erhData?.compareConfig;
     category = config?.category || page.dataset.category || 'escooter';
+    finderKey = config?.finderKey || category;
 
     // Empty state
     if (!config?.productIds?.length || config.productIds.length < 2) {
@@ -997,7 +999,7 @@ async function loadAllProducts() {
     if (allProducts.length) return;
 
     const baseUrl = window.erhData?.siteUrl || '';
-    const url = `${baseUrl}/wp-content/uploads/finder_${category}.json`;
+    const url = `${baseUrl}/wp-content/uploads/finder_${finderKey}.json`;
 
     const res = await fetch(url);
     if (!res.ok) throw new Error(`HTTP ${res.status}`);

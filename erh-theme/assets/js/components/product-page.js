@@ -57,6 +57,13 @@ const SCORE_CONFIG = {
         portability: { name: 'Portability', icon: 'box' },
         features: { name: 'Features', icon: 'settings' },
     },
+    eskateboard: {
+        motor_performance: { name: 'Motor', icon: 'zap' },
+        battery_range: { name: 'Battery & Range', icon: 'battery' },
+        ride_quality: { name: 'Ride Quality', icon: 'smile' },
+        portability: { name: 'Portability', icon: 'box' },
+        features: { name: 'Features', icon: 'settings' },
+    },
 };
 
 /**

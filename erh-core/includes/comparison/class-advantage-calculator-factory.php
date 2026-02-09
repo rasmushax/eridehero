@@ -18,6 +18,7 @@ use ERH\Comparison\Calculators\EscooterAdvantages;
 use ERH\Comparison\Calculators\EbikeAdvantages;
 use ERH\Comparison\Calculators\HoverboardAdvantages;
 use ERH\Comparison\Calculators\EucAdvantages;
+use ERH\Comparison\Calculators\EskateboardAdvantages;
 
 /**
  * Factory for creating advantage calculators.
@@ -77,7 +78,7 @@ class AdvantageCalculatorFactory {
             'ebike',
             'hoverboard',
             'euc',
-            // Future: 'eskateboard'
+            'eskateboard',
         ];
     }
 
@@ -101,9 +102,8 @@ class AdvantageCalculatorFactory {
             case 'euc':
                 return new EucAdvantages();
 
-            // Future implementations:
-            // case 'eskateboard':
-            //     return new EskateboardAdvantages();
+            case 'eskateboard':
+                return new EskateboardAdvantages();
 
             default:
                 return null;

@@ -53,6 +53,13 @@ class ProductScorer {
     private ?EucScorer $euc_scorer = null;
 
     /**
+     * E-skateboard scorer instance.
+     *
+     * @var EskateboardScorer|null
+     */
+    private ?EskateboardScorer $eskateboard_scorer = null;
+
+    /**
      * Calculate all category scores for a product.
      *
      * @param array  $specs        The product specs array.
@@ -102,6 +109,12 @@ class ProductScorer {
                 }
                 return $this->euc_scorer;
 
+            case 'Electric Skateboard':
+                if ($this->eskateboard_scorer === null) {
+                    $this->eskateboard_scorer = new EskateboardScorer();
+                }
+                return $this->eskateboard_scorer;
+
             default:
                 return null;
         }
@@ -145,6 +158,18 @@ class ProductScorer {
                 'battery_range'     => null,
                 'ride_quality'      => null,
                 'safety'            => null,
+                'portability'       => null,
+                'features'          => null,
+                'overall'           => null,
+            ];
+        }
+
+        // E-skateboards have 5 categories.
+        if ($product_type === 'Electric Skateboard') {
+            return [
+                'motor_performance' => null,
+                'battery_range'     => null,
+                'ride_quality'      => null,
                 'portability'       => null,
                 'features'          => null,
                 'overall'           => null,

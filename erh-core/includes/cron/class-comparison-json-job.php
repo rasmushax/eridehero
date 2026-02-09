@@ -205,7 +205,7 @@ class ComparisonJsonJob implements CronJobInterface {
      * @return string The normalized category slug.
      */
     private function normalize_category(string $product_type): string {
-        $key = CategoryConfig::type_to_finder_key( $product_type );
+        $key = CategoryConfig::type_to_key( $product_type );
         return $key ?: strtolower(str_replace(' ', '-', $product_type));
     }
 

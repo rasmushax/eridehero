@@ -60,6 +60,7 @@ $is_hub_page  = ! $has_products;
 $category      = 'escooter';
 $category_name = 'E-Scooters';
 $category_slug = 'escooter';
+$finder_key    = 'escooter';
 
 if ( ! empty( $product_ids[0] ) ) {
 	// Try ACF field first.
@@ -78,6 +79,7 @@ if ( ! empty( $product_ids[0] ) ) {
 		$category      = $category_data['key'];
 		$category_name = $category_data['name'];
 		$category_slug = $category_data['slug'];
+		$finder_key    = $category_data['finderKey'];
 	}
 }
 
@@ -500,6 +502,7 @@ window.erhData = window.erhData || {};
 window.erhData.compareConfig = {
 	productIds: <?php echo wp_json_encode( array_map( 'intval', $product_ids ), JSON_HEX_TAG | JSON_HEX_AMP ); ?>,
 	category: <?php echo wp_json_encode( $category, JSON_HEX_TAG | JSON_HEX_AMP ); ?>,
+	finderKey: <?php echo wp_json_encode( $finder_key, JSON_HEX_TAG | JSON_HEX_AMP ); ?>,
 	categoryName: <?php echo wp_json_encode( $category_name, JSON_HEX_TAG | JSON_HEX_AMP ); ?>,
 	categorySlug: <?php echo wp_json_encode( $category_slug, JSON_HEX_TAG | JSON_HEX_AMP ); ?>,
 	geo: <?php echo wp_json_encode( $geo, JSON_HEX_TAG | JSON_HEX_AMP ); ?>,
@@ -688,11 +691,12 @@ function erh_get_category_from_type( ?string $product_type ): array {
 	$category = CategoryConfig::get_by_type( $product_type ?? '' );
 	if ( $category ) {
 		return [
-			'key'  => $category['key'],
-			'name' => $category['name'],
-			'slug' => $category['key'], // Note: uses key for internal slug, not URL slug.
+			'key'       => $category['key'],
+			'name'      => $category['name'],
+			'slug'      => $category['key'], // Note: uses key for internal slug, not URL slug.
+			'finderKey' => $category['finder_key'],
 		];
 	}
 	// Default to escooter.
-	return [ 'key' => 'escooter', 'name' => 'E-Scooters', 'slug' => 'escooter' ];
+	return [ 'key' => 'escooter', 'name' => 'E-Scooters', 'slug' => 'escooter', 'finderKey' => 'escooter' ];
 }

@@ -121,7 +121,7 @@ export async function initComparison(options = {}) {
     const categoryLabels = {
         'escooter': 'E-Scooters',
         'ebike': 'E-Bikes',
-        'eskate': 'E-Skateboards',
+        'eskateboard': 'E-Skateboards',
         'euc': 'Electric Unicycles',
         'hoverboard': 'Hoverboards'
     };

@@ -295,7 +295,7 @@ function erh_get_range_filter_config( string $product_type = 'escooter' ): array
         'deck_width' => [
             'label'        => 'Deck Width',
             'field'        => 'deck_width',
-            'spec_paths'   => [ 'dimensions.deck_width' ],
+            'spec_paths'   => [ 'dimensions.deck_width', 'deck.width' ],
             'unit'         => 'in',
             'prefix'       => '',
             'suffix'       => '"',
@@ -306,7 +306,7 @@ function erh_get_range_filter_config( string $product_type = 'escooter' ): array
         'deck_length' => [
             'label'        => 'Deck Length',
             'field'        => 'deck_length',
-            'spec_paths'   => [ 'dimensions.deck_length' ],
+            'spec_paths'   => [ 'dimensions.deck_length', 'deck.length' ],
             'unit'         => 'in',
             'prefix'       => '',
             'suffix'       => '"',
@@ -347,6 +347,7 @@ function erh_get_range_filter_config( string $product_type = 'escooter' ): array
                 'wheels.tire_size_front',        // E-scooter (front wheel).
                 'wheels_and_tires.wheel_size',   // E-bike.
                 'wheel.tire_size',               // EUC.
+                'wheels.wheel_size',             // E-skateboard (mm).
             ],
             'unit'         => 'in',
             'prefix'       => '',
@@ -362,6 +363,7 @@ function erh_get_range_filter_config( string $product_type = 'escooter' ): array
                 'wheels.tire_width',             // E-scooter.
                 'wheels_and_tires.tire_width',   // E-bike.
                 'wheel.tire_width',              // EUC.
+                'wheels.wheel_width',            // E-skateboard (mm).
             ],
             'unit'         => 'in',
             'prefix'       => '',
@@ -701,7 +703,7 @@ function erh_get_checkbox_filter_config(): array {
         'terrain' => [
             'label'         => 'Terrain',
             'field'         => 'terrain',
-            'spec_paths'    => [ 'other.terrain' ],
+            'spec_paths'    => [ 'other.terrain', 'wheels.terrain' ],
             'visible_limit' => 10,
             'searchable'    => false,
         ],
@@ -892,6 +894,31 @@ function erh_get_checkbox_filter_config(): array {
             'visible_limit' => 5,
             'searchable'    => false,
         ],
+
+        // =================================================================
+        // E-Skateboard Specific Checkbox Filters
+        // =================================================================
+        'drive_type' => [
+            'label'         => 'Drive',
+            'field'         => 'drive_type',
+            'spec_paths'    => [ 'motor.drive' ],
+            'visible_limit' => 5,
+            'searchable'    => false,
+        ],
+        'wheel_material' => [
+            'label'         => 'Wheel Material',
+            'field'         => 'wheel_material',
+            'spec_paths'    => [ 'wheels.wheel_material' ],
+            'visible_limit' => 5,
+            'searchable'    => false,
+        ],
+        'concave' => [
+            'label'         => 'Deck Concave',
+            'field'         => 'concave',
+            'spec_paths'    => [ 'deck.concave' ],
+            'visible_limit' => 5,
+            'searchable'    => false,
+        ],
     ];
 }
 
@@ -1076,6 +1103,20 @@ function erh_get_tristate_filter_config(): array {
             'label'      => 'Adjustable pedals',
             'field'      => 'adjustable_pedals',
             'spec_paths' => [ 'pedals.adjustable_pedals' ],
+        ],
+
+        // =================================================================
+        // E-Skateboard Specific Tristate Filters
+        // =================================================================
+        'has_suspension' => [
+            'label'      => 'Has suspension',
+            'field'      => 'has_suspension',
+            'spec_paths' => [ 'suspension.has_suspension' ],
+        ],
+        'ambient_lights' => [
+            'label'      => 'Ambient lights',
+            'field'      => 'ambient_lights',
+            'spec_paths' => [ 'lighting.ambient_lights' ],
         ],
     ];
 }
@@ -1834,6 +1875,7 @@ function erh_get_js_filter_config( string $product_type = 'escooter' ): array {
         'escooter' => [ 'speed', 'battery', 'motor_power', 'weight', 'weight_limit', 'voltage', 'tires', 'suspension', 'brakes' ],
         'ebike'      => [ 'category', 'motor_power', 'motor_type', 'torque', 'battery', 'weight', 'frame_material', 'frame_style', 'wheel_size', 'tires' ],
         'hoverboard' => [ 'speed', 'battery', 'motor_power', 'weight', 'weight_limit' ],
+        'skateboard' => [ 'speed', 'battery', 'motor_power', 'weight', 'deck_length', 'tire_size' ],
     ];
 
     // Column groups for table view modal.
