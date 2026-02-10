@@ -215,7 +215,7 @@ class LinkPopulator {
                                 <?php endforeach; ?>
                             </select>
                             <p class="description">
-                                <?php esc_html_e('Uses Amazon PA-API SearchItems endpoint.', 'erh-core'); ?>
+                                <?php esc_html_e('Uses Amazon Creators API SearchItems endpoint.', 'erh-core'); ?>
                             </p>
                         <?php else : ?>
                             <div class="notice notice-warning inline" style="margin: 0;">

@@ -1,6 +1,6 @@
 <?php
 /**
- * Amazon API Client - Uses PA-API 5.0 SearchItems to find products.
+ * Amazon API Client - Uses Creators API SearchItems to find products.
  *
  * @package ERH\Admin
  */
@@ -10,17 +10,16 @@ declare(strict_types=1);
 namespace ERH\Admin;
 
 use ERH\Amazon\AmazonLocales;
-use ERH\Amazon\AwsV4Signer;
 
 /**
- * Handles Amazon PA-API 5.0 SearchItems requests.
+ * Handles Amazon Creators API SearchItems requests.
  */
 class AmazonApiClient {
 
     /**
-     * Service name for PA-API.
+     * Creators API endpoint.
      */
-    private const SERVICE_NAME = 'ProductAdvertisingAPI';
+    private const API_ENDPOINT = 'https://creatorsapi.amazon/catalog/v1/searchItems';
 
     /**
      * Request timeout in seconds.
@@ -28,16 +27,20 @@ class AmazonApiClient {
     private const TIMEOUT = 15;
 
     /**
-     * Resources to request from PA-API for product verification.
-     * See: https://webservices.amazon.com/paapi5/documentation/search-items.html#resources-parameter
+     * Token cache duration in seconds (55 minutes — tokens last 1 hour).
+     */
+    private const TOKEN_TTL = 3300;
+
+    /**
+     * Resources to request from Creators API for product verification.
      */
     private const SEARCH_RESOURCES = [
-        'ItemInfo.Title',
-        'ItemInfo.ByLineInfo',
-        'Images.Primary.Small',
-        'Offers.Listings.Price',
-        'Offers.Listings.Availability.Message',
-        'Offers.Listings.DeliveryInfo.IsPrimeEligible',
+        'itemInfo.title',
+        'itemInfo.byLineInfo',
+        'images.primary.small',
+        'offersV2.listings.price',
+        'offersV2.listings.availability',
+        'offersV2.listings.merchantInfo',
     ];
 
     /**
@@ -54,11 +57,19 @@ class AmazonApiClient {
      */
     public function is_configured(): bool {
         $settings = $this->get_settings();
-        $api_key = !empty($settings['amazon_api_key']);
-        $api_secret = !empty($settings['amazon_api_secret']);
+        $credentials = $settings['amazon_credentials'] ?? [];
         $tags = !empty($settings['amazon_associate_tags']);
 
-        return $api_key && $api_secret && $tags;
+        // Need at least one region group with credentials.
+        $has_credentials = false;
+        foreach (['NA', 'EU', 'FE'] as $group) {
+            if (!empty($credentials[$group]['credential_id']) && !empty($credentials[$group]['credential_secret'])) {
+                $has_credentials = true;
+                break;
+            }
+        }
+
+        return $has_credentials && $tags;
     }
 
     /**
@@ -110,7 +121,7 @@ class AmazonApiClient {
         ];
 
         if (!$this->is_configured()) {
-            $default_response['error'] = 'Amazon PA-API not configured. Check HFT settings.';
+            $default_response['error'] = 'Amazon Creators API not configured. Check HFT settings.';
             return $default_response;
         }
 
@@ -121,35 +132,53 @@ class AmazonApiClient {
             return $default_response;
         }
 
-        $settings = $this->get_settings();
-        $api_key = trim($settings['amazon_api_key']);
-        $api_secret = trim($settings['amazon_api_secret']);
-        $associate_tag = $this->get_associate_tag_for_locale($locale);
+        // Get region group for this locale.
+        $region_group = AmazonLocales::get_region_group($locale);
+        if (!$region_group) {
+            $default_response['error'] = "No region group mapping for locale: {$locale}";
+            return $default_response;
+        }
 
+        // Get credentials for this region group.
+        $settings = $this->get_settings();
+        $credentials = $settings['amazon_credentials'][$region_group] ?? [];
+
+        if (empty($credentials['credential_id']) || empty($credentials['credential_secret'])) {
+            $default_response['error'] = "No Creators API credentials configured for region group: {$region_group}";
+            return $default_response;
+        }
+
+        $associate_tag = $this->get_associate_tag_for_locale($locale);
         if (!$associate_tag) {
             $default_response['error'] = "No associate tag configured for locale: {$locale}";
             return $default_response;
         }
 
+        // Get bearer token.
+        $token = $this->get_bearer_token($region_group);
+        if (!$token) {
+            $default_response['error'] = "Failed to obtain OAuth token for region group: {$region_group}";
+            return $default_response;
+        }
+
         // Get locale details.
-        $api_host = AmazonLocales::get_api_host($locale);
-        $aws_region = AmazonLocales::get_region($locale);
         $marketplace = AmazonLocales::get_marketplace_name($locale);
         $retail_host = AmazonLocales::get_retail_host($locale);
+        $version = AmazonLocales::get_credential_version($region_group);
 
-        if (!$api_host || !$aws_region || !$marketplace) {
+        if (!$marketplace) {
             $default_response['error'] = "Could not determine Amazon marketplace for locale: {$locale}";
             return $default_response;
         }
 
-        // Build request payload.
+        // Build request payload (camelCase for Creators API).
         $payload_array = [
-            'Keywords'    => $keywords,
-            'Resources'   => self::SEARCH_RESOURCES,
-            'PartnerTag'  => $associate_tag,
-            'PartnerType' => 'Associates',
-            'Marketplace' => $marketplace,
-            'ItemCount'   => 3, // Get top 3 results.
+            'keywords'    => $keywords,
+            'resources'   => self::SEARCH_RESOURCES,
+            'partnerTag'  => $associate_tag,
+            'partnerType' => 'Associates',
+            'marketplace' => $marketplace,
+            'itemCount'   => 3, // Get top 3 results.
         ];
 
         $payload = wp_json_encode($payload_array);
@@ -158,36 +187,16 @@ class AmazonApiClient {
             return $default_response;
         }
 
-        // Sign the request.
-        $api_path = '/paapi5/searchitems';
-        $target_header = 'com.amazon.paapi5.v1.ProductAdvertisingAPIv1.SearchItems';
-
-        try {
-            $signer = new AwsV4Signer($api_key, $api_secret);
-            $signer->setRegionName($aws_region);
-            $signer->setServiceName(self::SERVICE_NAME);
-            $signer->setPath($api_path);
-            $signer->setPayload($payload);
-            $signer->setRequestMethod('POST');
-
-            $signer->addHeader('host', $api_host);
-            $signer->addHeader('content-encoding', 'amz-1.0');
-            $signer->addHeader('content-type', 'application/json; charset=utf-8');
-            $signer->addHeader('x-amz-target', $target_header);
-
-            $headers = $signer->getHeaders();
-        } catch (\Exception $e) {
-            $default_response['error'] = 'AWS signing error: ' . $e->getMessage();
-            return $default_response;
-        }
-
-        // Make the API request.
-        $api_url = "https://{$api_host}{$api_path}";
-
-        $response = wp_remote_post($api_url, [
+        // Make the API request with OAuth bearer token.
+        $response = wp_remote_post(self::API_ENDPOINT, [
             'timeout' => self::TIMEOUT,
-            'headers' => $headers,
-            'body'    => $payload,
+            'headers' => [
+                'Authorization' => "Bearer {$token}",
+                'Content-Type'  => 'application/json; charset=utf-8',
+                'x-marketplace' => $marketplace,
+                'Version'       => $version,
+            ],
+            'body' => $payload,
         ]);
 
         if (is_wp_error($response)) {
@@ -206,17 +215,17 @@ class AmazonApiClient {
         }
 
         // Handle errors.
-        if ($status_code >= 400 || isset($parsed['Errors'])) {
+        if ($status_code >= 400 || isset($parsed['errors'])) {
             $error_msg = "Amazon API error (HTTP {$status_code})";
-            if (isset($parsed['Errors'][0])) {
-                $error_msg .= ': ' . ($parsed['Errors'][0]['Code'] ?? '') . ' - ' . ($parsed['Errors'][0]['Message'] ?? '');
+            if (isset($parsed['errors'][0])) {
+                $error_msg .= ': ' . ($parsed['errors'][0]['code'] ?? '') . ' - ' . ($parsed['errors'][0]['message'] ?? '');
             }
             $default_response['error'] = $error_msg;
             return $default_response;
         }
 
-        // Parse results.
-        $items = $parsed['SearchResult']['Items'] ?? [];
+        // Parse results (camelCase response).
+        $items = $parsed['searchResult']['items'] ?? [];
 
         if (empty($items)) {
             $default_response['success'] = true;
@@ -226,7 +235,7 @@ class AmazonApiClient {
 
         // Return the first (best matching) item.
         $item = $items[0];
-        $asin = $item['ASIN'] ?? null;
+        $asin = $item['asin'] ?? null;
 
         if (!$asin) {
             $default_response['success'] = true;
@@ -235,22 +244,22 @@ class AmazonApiClient {
         }
 
         // Extract product details for verification.
-        $title = $item['ItemInfo']['Title']['DisplayValue'] ?? null;
-        $brand = $item['ItemInfo']['ByLineInfo']['Brand']['DisplayValue'] ?? null;
-        $image = $item['Images']['Primary']['Small']['URL'] ?? null;
+        $title = $item['itemInfo']['title']['displayValue'] ?? null;
+        $brand = $item['itemInfo']['byLineInfo']['brand']['displayValue'] ?? null;
+        $image = $item['images']['primary']['small']['url'] ?? null;
 
-        // Extract offer/price details.
-        $listing = $item['Offers']['Listings'][0] ?? null;
+        // Extract offer/price details (offersV2 in Creators API).
+        $listing = $item['offersV2']['listings'][0] ?? null;
         $price = null;
         $price_display = null;
-        $is_prime = false;
         $availability = null;
+        $merchant = null;
 
         if ($listing) {
-            $price = $listing['Price']['Amount'] ?? null;
-            $price_display = $listing['Price']['DisplayAmount'] ?? null;
-            $is_prime = $listing['DeliveryInfo']['IsPrimeEligible'] ?? false;
-            $availability = $listing['Availability']['Message'] ?? null;
+            $price = $listing['price']['amount'] ?? null;
+            $price_display = $listing['price']['displayAmount'] ?? null;
+            $availability = $listing['availability']['message'] ?? null;
+            $merchant = $listing['merchantInfo']['name'] ?? null;
         }
 
         return [
@@ -261,7 +270,7 @@ class AmazonApiClient {
             'image'         => $image,
             'price'         => $price,
             'price_display' => $price_display,
-            'is_prime'      => $is_prime,
+            'merchant'      => $merchant,
             'availability'  => $availability,
             'url'           => "https://{$retail_host}/dp/{$asin}",
             'error'         => null,
@@ -309,13 +318,18 @@ class AmazonApiClient {
         }
 
         $settings = $this->get_settings();
+        $credentials = $settings['amazon_credentials'] ?? [];
 
-        if (empty($settings['amazon_api_key'])) {
-            return 'Amazon API Key not configured in HFT settings.';
+        $has_any = false;
+        foreach (['NA', 'EU', 'FE'] as $group) {
+            if (!empty($credentials[$group]['credential_id']) && !empty($credentials[$group]['credential_secret'])) {
+                $has_any = true;
+                break;
+            }
         }
 
-        if (empty($settings['amazon_api_secret'])) {
-            return 'Amazon API Secret not configured in HFT settings.';
+        if (!$has_any) {
+            return 'Amazon Creators API credentials not configured in HFT settings. Need credential_id and credential_secret for at least one region group (NA/EU/FE).';
         }
 
         if (empty($settings['amazon_associate_tags'])) {
@@ -323,5 +337,69 @@ class AmazonApiClient {
         }
 
         return null;
+    }
+
+    /**
+     * Fetch and cache an OAuth 2.0 bearer token for a region group.
+     *
+     * @param string $region_group Region group (NA/EU/FE).
+     * @return string|null Bearer token or null on failure.
+     */
+    private function get_bearer_token(string $region_group): ?string {
+        $cache_key = 'erh_creators_token_' . strtoupper($region_group);
+
+        // Check cache first.
+        $cached = get_transient($cache_key);
+        if ($cached !== false) {
+            return $cached;
+        }
+
+        // Get credentials and endpoint.
+        $settings = $this->get_settings();
+        $credentials = $settings['amazon_credentials'][$region_group] ?? [];
+        $credential_id = $credentials['credential_id'] ?? '';
+        $credential_secret = $credentials['credential_secret'] ?? '';
+
+        if (empty($credential_id) || empty($credential_secret)) {
+            return null;
+        }
+
+        $token_endpoint = AmazonLocales::get_token_endpoint($region_group);
+        if (!$token_endpoint) {
+            return null;
+        }
+
+        // Request token via client_credentials grant.
+        $response = wp_remote_post($token_endpoint, [
+            'timeout' => self::TIMEOUT,
+            'headers' => [
+                'Content-Type'  => 'application/x-www-form-urlencoded',
+                'Authorization' => 'Basic ' . base64_encode($credential_id . ':' . $credential_secret),
+            ],
+            'body' => [
+                'grant_type' => 'client_credentials',
+            ],
+        ]);
+
+        if (is_wp_error($response)) {
+            return null;
+        }
+
+        $status_code = wp_remote_retrieve_response_code($response);
+        if ($status_code !== 200) {
+            return null;
+        }
+
+        $body = json_decode(wp_remote_retrieve_body($response), true);
+        $token = $body['access_token'] ?? null;
+
+        if (!$token) {
+            return null;
+        }
+
+        // Cache for 55 minutes (tokens are valid for 1 hour).
+        set_transient($cache_key, $token, self::TOKEN_TTL);
+
+        return $token;
     }
 }

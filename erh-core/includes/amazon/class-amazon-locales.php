@@ -1,8 +1,8 @@
 <?php
 /**
- * Amazon Locales - GEO to PA-API mapping.
+ * Amazon Locales - GEO to Amazon API mapping.
  *
- * Based on HFT_Amazon_Locales for Amazon PA-API 5.0.
+ * Provides locale data for Amazon Creators API and product URLs.
  *
  * @package ERH\Amazon
  */
@@ -12,9 +12,40 @@ declare(strict_types=1);
 namespace ERH\Amazon;
 
 /**
- * Provides mapping between GEO codes and Amazon PA-API 5.0 details.
+ * Provides mapping between GEO codes and Amazon API details.
  */
 class AmazonLocales {
+
+    /**
+     * Creators API region groups.
+     * Maps locale codes to their region group (NA/EU/FE).
+     */
+    public const REGION_GROUPS = [
+        'US' => 'NA', 'CA' => 'NA', 'MX' => 'NA', 'BR' => 'NA',
+        'GB' => 'EU', 'DE' => 'EU', 'FR' => 'EU', 'IT' => 'EU',
+        'ES' => 'EU', 'NL' => 'EU', 'BE' => 'EU', 'PL' => 'EU',
+        'SE' => 'EU', 'TR' => 'EU', 'AE' => 'EU', 'EG' => 'EU',
+        'SA' => 'EU', 'IN' => 'EU',
+        'JP' => 'FE', 'AU' => 'FE', 'SG' => 'FE',
+    ];
+
+    /**
+     * OAuth 2.0 token endpoints per region group (Cognito).
+     */
+    public const TOKEN_ENDPOINTS = [
+        'NA' => 'https://creatorsapi.auth.us-east-1.amazoncognito.com/oauth2/token',
+        'EU' => 'https://creatorsapi.auth.eu-south-2.amazoncognito.com/oauth2/token',
+        'FE' => 'https://creatorsapi.auth.us-west-2.amazoncognito.com/oauth2/token',
+    ];
+
+    /**
+     * Credential version strings per region group.
+     */
+    public const CREDENTIAL_VERSIONS = [
+        'NA' => '2.1',
+        'EU' => '2.2',
+        'FE' => '2.3',
+    ];
 
     /**
      * Locale mapping data.
@@ -128,5 +159,40 @@ class AmazonLocales {
      */
     public static function is_valid_geo(string $geo_code): bool {
         return self::get_locale_data($geo_code) !== null;
+    }
+
+    /**
+     * Get the Creators API region group for a locale.
+     *
+     * @param string $geo_code The 2-letter country code.
+     * @return string|null Region group (NA/EU/FE) or null.
+     */
+    public static function get_region_group(string $geo_code): ?string {
+        $geo_code_upper = strtoupper(trim($geo_code));
+        // Normalize UK → GB.
+        if ($geo_code_upper === 'UK') {
+            $geo_code_upper = 'GB';
+        }
+        return self::REGION_GROUPS[$geo_code_upper] ?? null;
+    }
+
+    /**
+     * Get the OAuth 2.0 token endpoint for a region group.
+     *
+     * @param string $region_group Region group (NA/EU/FE).
+     * @return string|null Token endpoint URL or null.
+     */
+    public static function get_token_endpoint(string $region_group): ?string {
+        return self::TOKEN_ENDPOINTS[strtoupper($region_group)] ?? null;
+    }
+
+    /**
+     * Get the credential version string for a region group.
+     *
+     * @param string $region_group Region group (NA/EU/FE).
+     * @return string|null Version string or null.
+     */
+    public static function get_credential_version(string $region_group): ?string {
+        return self::CREDENTIAL_VERSIONS[strtoupper($region_group)] ?? null;
     }
 }

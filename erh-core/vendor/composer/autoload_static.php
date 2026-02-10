@@ -25,7 +25,6 @@ class ComposerStaticInitb5e889746c5280811e87a72c161db6db
         'ERH\\Admin\\SpecPopulatorHandler' => __DIR__ . '/../..' . '/includes/admin/class-spec-populator-handler.php',
         'ERH\\Admin\\UrlVerifier' => __DIR__ . '/../..' . '/includes/admin/class-url-verifier.php',
         'ERH\\Amazon\\AmazonLocales' => __DIR__ . '/../..' . '/includes/amazon/class-amazon-locales.php',
-        'ERH\\Amazon\\AwsV4Signer' => __DIR__ . '/../..' . '/includes/amazon/class-aws-v4-signer.php',
         'ERH\\Api\\RestComparisonViews' => __DIR__ . '/../..' . '/includes/api/class-rest-comparison-views.php',
         'ERH\\Api\\RestDeals' => __DIR__ . '/../..' . '/includes/api/class-rest-deals.php',
         'ERH\\Api\\RestGeo' => __DIR__ . '/../..' . '/includes/api/class-rest-geo.php',
