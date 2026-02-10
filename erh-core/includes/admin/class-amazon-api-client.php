@@ -188,13 +188,14 @@ class AmazonApiClient {
         }
 
         // Make the API request with OAuth bearer token.
+        // Authorization combines token + version per Creators API spec.
         $response = wp_remote_post(self::API_ENDPOINT, [
             'timeout' => self::TIMEOUT,
             'headers' => [
-                'Authorization' => "Bearer {$token}",
+                'Authorization' => "Bearer {$token}, Version {$version}",
                 'Content-Type'  => 'application/json; charset=utf-8',
+                'host'          => 'creatorsapi.amazon',
                 'x-marketplace' => $marketplace,
-                'Version'       => $version,
             ],
             'body' => $payload,
         ]);
@@ -373,12 +374,14 @@ class AmazonApiClient {
         $response = wp_remote_post($token_endpoint, [
             'timeout' => self::TIMEOUT,
             'headers' => [
-                'Content-Type'  => 'application/x-www-form-urlencoded',
-                'Authorization' => 'Basic ' . base64_encode($credential_id . ':' . $credential_secret),
+                'Content-Type' => 'application/x-www-form-urlencoded',
             ],
-            'body' => [
-                'grant_type' => 'client_credentials',
-            ],
+            'body' => http_build_query([
+                'grant_type'    => 'client_credentials',
+                'client_id'     => $credential_id,
+                'client_secret' => $credential_secret,
+                'scope'         => 'creatorsapi/default',
+            ]),
         ]);
 
         if (is_wp_error($response)) {
