@@ -29,6 +29,7 @@ class MigrationCli {
         \WP_CLI::add_command('erh migrate-products', [new self(), 'run_migration']);
         \WP_CLI::add_command('erh migrate-single', [new self(), 'run_single']);
         \WP_CLI::add_command('erh migrate-social', [new self(), 'run_social_migration']);
+        \WP_CLI::add_command('erh migrate-price-history', [new self(), 'run_price_history']);
     }
 
     /**
@@ -311,5 +312,248 @@ class MigrationCli {
         } else {
             \WP_CLI::success('Social login migration complete.');
         }
+    }
+
+    /**
+     * Migrate price history from remote site.
+     *
+     * Fetches daily price snapshots from production and imports them
+     * with geo=US, currency=USD. Uses upsert so safe to re-run.
+     *
+     * ## OPTIONS
+     *
+     * <secret>
+     * : API secret key configured on the export endpoint.
+     *
+     * [--source=<url>]
+     * : Source site URL.
+     * ---
+     * default: https://eridehero.com
+     * ---
+     *
+     * [--batch-size=<number>]
+     * : Records per API request.
+     * ---
+     * default: 2000
+     * ---
+     *
+     * [--start-page=<number>]
+     * : Page to start from (for resuming interrupted migrations).
+     * ---
+     * default: 1
+     * ---
+     *
+     * [--dry-run]
+     * : Preview without importing.
+     *
+     * ## EXAMPLES
+     *
+     *     wp erh migrate-price-history your-secret-key
+     *     wp erh migrate-price-history your-secret-key --batch-size=5000
+     *     wp erh migrate-price-history your-secret-key --start-page=50
+     *     wp erh migrate-price-history your-secret-key --dry-run
+     *
+     * @param array $args       Positional arguments.
+     * @param array $assoc_args Named arguments.
+     * @return void
+     */
+    public function run_price_history(array $args, array $assoc_args): void {
+        if (empty($args[0])) {
+            \WP_CLI::error('Please provide the API secret key.');
+            return;
+        }
+
+        $secret_key = $args[0];
+        $source     = $assoc_args['source'] ?? 'https://eridehero.com';
+        $batch_size = (int) ($assoc_args['batch-size'] ?? 2000);
+        $start_page = (int) ($assoc_args['start-page'] ?? 1);
+        $dry_run    = isset($assoc_args['dry-run']);
+
+        $batch_size = max(100, min(5000, $batch_size));
+
+        $migrator = new PriceHistoryMigrator($source, $secret_key);
+        $migrator->set_dry_run($dry_run);
+
+        if ($dry_run) {
+            \WP_CLI::log('DRY RUN - no changes will be made.');
+        }
+
+        // Test connection and get total count.
+        \WP_CLI::log("Testing connection to {$source}...");
+        $count_data = $migrator->test_connection();
+
+        if (!$count_data) {
+            \WP_CLI::error('Could not connect to price history API. Check URL and secret key.');
+            return;
+        }
+
+        $total_records = (int) $count_data['total_records'];
+        $total_pages   = (int) ceil($total_records / $batch_size);
+
+        \WP_CLI::log(sprintf(
+            'Found %s records (%s products, %s to %s)',
+            number_format($total_records),
+            number_format((int) $count_data['unique_products']),
+            $count_data['oldest_date'] ?? '?',
+            $count_data['newest_date'] ?? '?'
+        ));
+
+        if ($start_page > 1) {
+            \WP_CLI::log("Resuming from page {$start_page}/{$total_pages}");
+        }
+
+        \WP_CLI::log("Batch size: {$batch_size}, Total pages: {$total_pages}");
+        \WP_CLI::log('');
+
+        // Build product ID map.
+        \WP_CLI::log('Building product ID map...');
+        // We need to call run_migration-like logic but page by page with progress.
+        // Use the migrator's fetch + import directly.
+
+        $imported = 0;
+        $skipped  = 0;
+        $errors   = 0;
+        $start    = microtime(true);
+
+        $progress = \WP_CLI\Utils\make_progress_bar('Importing price history', $total_pages - $start_page + 1);
+
+        for ($page = $start_page; $page <= $total_pages; $page++) {
+            $result = $migrator->fetch_remote_data($page, $batch_size);
+
+            if (!$result) {
+                \WP_CLI::warning("Failed to fetch page {$page}, retrying...");
+                sleep(2);
+                $result = $migrator->fetch_remote_data($page, $batch_size);
+
+                if (!$result) {
+                    \WP_CLI::warning("Page {$page} failed again, skipping.");
+                    $errors++;
+                    $progress->tick();
+                    continue;
+                }
+            }
+
+            $records = $result['data'] ?? [];
+            $page_imported = 0;
+
+            foreach ($records as $record) {
+                // Validate required fields.
+                if (empty($record['product_id']) || empty($record['price']) || empty($record['date'])) {
+                    $skipped++;
+                    continue;
+                }
+
+                $price = (float) $record['price'];
+                if ($price <= 0) {
+                    $skipped++;
+                    continue;
+                }
+
+                if (!$dry_run) {
+                    $price_history = new \ERH\Database\PriceHistory();
+                    $slug = $record['product_slug'] ?? null;
+                    $local_id = $this->resolve_price_history_product_id($record);
+
+                    if (!$local_id) {
+                        $skipped++;
+                        continue;
+                    }
+
+                    $success = $price_history->record_price(
+                        $local_id,
+                        $price,
+                        'USD',
+                        $record['domain'] ?? '',
+                        'US',
+                        $record['date']
+                    );
+
+                    if ($success) {
+                        $page_imported++;
+                    } else {
+                        $errors++;
+                    }
+                } else {
+                    $page_imported++;
+                }
+            }
+
+            $imported += $page_imported;
+            $skipped_in_page = count($records) - $page_imported;
+
+            $progress->tick();
+
+            // Log every 10 pages.
+            if ($page % 10 === 0) {
+                $elapsed = round(microtime(true) - $start, 1);
+                \WP_CLI::log(sprintf(
+                    '  Page %d/%d — Imported: %s, Skipped: %s, Errors: %d (%.1fs)',
+                    $page,
+                    $total_pages,
+                    number_format($imported),
+                    number_format($skipped),
+                    $errors,
+                    $elapsed
+                ));
+            }
+        }
+
+        $progress->finish();
+
+        $elapsed = round(microtime(true) - $start, 1);
+
+        \WP_CLI::log('');
+        \WP_CLI::log('--- Price History Migration Summary ---');
+        \WP_CLI::log(sprintf('Imported:  %s', number_format($imported)));
+        \WP_CLI::log(sprintf('Skipped:   %s', number_format($skipped)));
+        \WP_CLI::log(sprintf('Errors:    %d', $errors));
+        \WP_CLI::log(sprintf('Time:      %.1fs', $elapsed));
+
+        if ($errors > 0) {
+            \WP_CLI::warning("{$errors} errors occurred. Check debug.log for details.");
+        } else {
+            \WP_CLI::success('Price history migration complete.');
+        }
+    }
+
+    /**
+     * Resolve a price history record's product to a local ID.
+     *
+     * @param array $record Record with product_id and optionally product_slug.
+     * @return int|null Local product ID or null.
+     */
+    private function resolve_price_history_product_id(array $record): ?int {
+        static $product_map = null;
+
+        // Build map once.
+        if ($product_map === null) {
+            $product_map = [];
+            $products = get_posts([
+                'post_type'      => 'products',
+                'post_status'    => 'any',
+                'posts_per_page' => -1,
+                'fields'         => 'ids',
+            ]);
+
+            foreach ($products as $pid) {
+                $post = get_post($pid);
+                if ($post) {
+                    $product_map[$post->post_name] = $pid;
+                    $product_map[$pid] = $pid;
+                }
+            }
+        }
+
+        $slug = $record['product_slug'] ?? null;
+        if ($slug && isset($product_map[$slug])) {
+            return $product_map[$slug];
+        }
+
+        $remote_id = (int) $record['product_id'];
+        if (isset($product_map[$remote_id])) {
+            return $product_map[$remote_id];
+        }
+
+        return null;
     }
 }
