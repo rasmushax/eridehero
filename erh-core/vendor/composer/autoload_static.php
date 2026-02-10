@@ -79,6 +79,7 @@ class ComposerStaticInitb5e889746c5280811e87a72c161db6db
         'ERH\\Email\\WelcomeEmailTemplate' => __DIR__ . '/../..' . '/includes/email/class-welcome-email-template.php',
         'ERH\\GeoConfig' => __DIR__ . '/../..' . '/includes/class-geo-config.php',
         'ERH\\Migration\\MigrationAdmin' => __DIR__ . '/../..' . '/includes/migration/class-migration-admin.php',
+        'ERH\\Migration\\MigrationCli' => __DIR__ . '/../..' . '/includes/migration/class-migration-cli.php',
         'ERH\\Migration\\PriceHistoryMigrator' => __DIR__ . '/../..' . '/includes/migration/class-price-history-migrator.php',
         'ERH\\Migration\\ProductMigrator' => __DIR__ . '/../..' . '/includes/migration/class-product-migrator.php',
         'ERH\\Newsletter\\NewsletterSender' => __DIR__ . '/../..' . '/includes/newsletter/class-newsletter-sender.php',

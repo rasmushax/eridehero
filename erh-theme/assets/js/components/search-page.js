@@ -221,8 +221,31 @@ export function initSearchPage() {
     // Initial search from URL
     const initialQuery = window.erhData?.searchQuery || '';
     if (initialQuery) {
+        // SSR content is already visible — keep it while JS loads data.
+        const hasSSRContent = resultsContainer && !resultsContainer.hasAttribute('hidden') && resultsContainer.children.length > 0;
         preloadOnce();
-        handleSearch(initialQuery);
+        if (!hasSSRContent) {
+            showLoading();
+        }
+        search(initialQuery).then(results => {
+            allResults = results;
+            if (results.length === 0) {
+                showEmpty(true, initialQuery);
+            } else {
+                currentFilter = 'all';
+                filterBtns.forEach(btn => {
+                    const isActive = btn.dataset.filter === 'all';
+                    btn.classList.toggle('is-active', isActive);
+                    btn.setAttribute('aria-pressed', isActive);
+                });
+                updateFilterCounts(allResults);
+                showResults();
+                renderResults(allResults);
+            }
+            if (clearBtn) clearBtn.hidden = false;
+        }).catch(() => {
+            if (!hasSSRContent) showEmpty(true, initialQuery);
+        });
     } else {
         showEmpty(false);
     }

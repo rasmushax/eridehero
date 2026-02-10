@@ -78,6 +78,7 @@ return array(
     'ERH\\Email\\WelcomeEmailTemplate' => $baseDir . '/includes/email/class-welcome-email-template.php',
     'ERH\\GeoConfig' => $baseDir . '/includes/class-geo-config.php',
     'ERH\\Migration\\MigrationAdmin' => $baseDir . '/includes/migration/class-migration-admin.php',
+    'ERH\\Migration\\MigrationCli' => $baseDir . '/includes/migration/class-migration-cli.php',
     'ERH\\Migration\\PriceHistoryMigrator' => $baseDir . '/includes/migration/class-price-history-migrator.php',
     'ERH\\Migration\\ProductMigrator' => $baseDir . '/includes/migration/class-product-migrator.php',
     'ERH\\Newsletter\\NewsletterSender' => $baseDir . '/includes/newsletter/class-newsletter-sender.php',

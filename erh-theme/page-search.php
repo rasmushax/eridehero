@@ -16,6 +16,17 @@ get_header();
 
 // Get search query from URL.
 $search_query = isset( $_GET['q'] ) ? sanitize_text_field( wp_unslash( $_GET['q'] ) ) : '';
+
+// SSR: Query results server-side for initial render.
+$ssr_results = [];
+if ( $search_query && strlen( $search_query ) >= 2 ) {
+    $ssr_results = get_posts( [
+        'post_type'      => [ 'products', 'post', 'tool' ],
+        'post_status'    => 'publish',
+        'posts_per_page' => 60,
+        's'              => $search_query,
+    ] );
+}
 ?>
 
 <main class="search-page" data-search-page>
@@ -68,13 +79,37 @@ $search_query = isset( $_GET['q'] ) ? sanitize_text_field( wp_unslash( $_GET['q'
         <div class="container">
 
             <!-- Results Grid -->
-            <div class="archive-grid" data-search-results hidden>
-                <!-- Populated by JavaScript -->
+            <div class="archive-grid" data-search-results <?php echo empty( $ssr_results ) ? 'hidden' : ''; ?>>
+                <?php foreach ( $ssr_results as $ssr_post ) :
+                    $is_product = $ssr_post->post_type === 'products';
+                    $type_label = match( $ssr_post->post_type ) {
+                        'products' => get_field( 'product_type', $ssr_post->ID ) ?: 'Product',
+                        'tool'     => 'Tool',
+                        default    => 'Article',
+                    };
+                    $thumb_url = get_the_post_thumbnail_url( $ssr_post->ID, $is_product ? 'large' : 'erh-card' );
+                ?>
+                    <a class="archive-card" href="<?php echo esc_url( get_permalink( $ssr_post->ID ) ); ?>">
+                        <div class="archive-card-img<?php echo $is_product ? ' archive-card-img--product' : ''; ?>">
+                            <?php if ( $thumb_url ) : ?>
+                                <img src="<?php echo esc_url( $thumb_url ); ?>" alt="" loading="lazy">
+                            <?php endif; ?>
+                            <span class="archive-card-tag"><?php echo esc_html( $type_label ); ?></span>
+                        </div>
+                        <h3 class="archive-card-title"><?php echo esc_html( $ssr_post->post_title ); ?></h3>
+                    </a>
+                <?php endforeach; ?>
             </div>
 
             <!-- Empty State -->
-            <div class="archive-empty" data-search-empty>
-                <p data-empty-text><?php esc_html_e( 'Start typing to search products, reviews, and guides.', 'erh' ); ?></p>
+            <div class="archive-empty" data-search-empty <?php echo ! empty( $ssr_results ) ? 'hidden' : ''; ?>>
+                <p data-empty-text>
+                    <?php if ( $search_query && empty( $ssr_results ) ) : ?>
+                        <?php printf( esc_html__( 'No results found for "%s"', 'erh' ), esc_html( $search_query ) ); ?>
+                    <?php else : ?>
+                        <?php esc_html_e( 'Start typing to search products, reviews, and guides.', 'erh' ); ?>
+                    <?php endif; ?>
+                </p>
             </div>
 
             <!-- Loading State -->

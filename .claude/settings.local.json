@@ -49,7 +49,11 @@
       "Bash(powershell:*)",
       "Bash(php:*)",
       "Bash(dir nul)",
-      "Bash(git log:*)"
+      "Bash(git log:*)",
+      "Bash(test:*)",
+      "Bash(npm install:*)",
+      "Bash(npm run build:*)",
+      "Bash(tar:*)"
     ]
   }
 }

@@ -26,9 +26,9 @@ class MigrationCli {
             return;
         }
 
-        \WP_CLI::add_command('erh migrate', [new self(), 'run_migration']);
-        \WP_CLI::add_command('erh migrate single', [new self(), 'run_single']);
-        \WP_CLI::add_command('erh migrate social', [new self(), 'run_social_migration']);
+        \WP_CLI::add_command('erh migrate-products', [new self(), 'run_migration']);
+        \WP_CLI::add_command('erh migrate-single', [new self(), 'run_single']);
+        \WP_CLI::add_command('erh migrate-social', [new self(), 'run_social_migration']);
     }
 
     /**

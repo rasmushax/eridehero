@@ -680,7 +680,7 @@ class Comparison {
      * @param int         $limit    Max number to return.
      * @return array<\WP_Post>
      */
-    public static function get_featured(string $category = null, int $limit = 10): array {
+    public static function get_featured(?string $category = null, int $limit = 10): array {
         $args = [
             'post_type'      => self::POST_TYPE,
             'posts_per_page' => $limit,

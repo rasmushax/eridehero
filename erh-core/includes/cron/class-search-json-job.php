@@ -22,7 +22,7 @@ class SearchJsonJob implements CronJobInterface {
     /**
      * Default thumbnail URL.
      */
-    private const DEFAULT_THUMBNAIL = 'https://eridehero.com/wp-content/uploads/2024/07/kick-scooter-1.svg';
+    private const DEFAULT_THUMBNAIL_PATH = '/wp-content/uploads/2024/07/kick-scooter-1.svg';
 
     /**
      * Cron manager reference for locking.
@@ -163,8 +163,8 @@ class SearchJsonJob implements CronJobInterface {
      * @return array|null The search item or null on failure.
      */
     private function build_search_item(object $post): ?array {
-        $thumbnail_url = self::DEFAULT_THUMBNAIL;
-        $card_image_url = self::DEFAULT_THUMBNAIL;
+        $thumbnail_url = home_url(self::DEFAULT_THUMBNAIL_PATH);
+        $card_image_url = home_url(self::DEFAULT_THUMBNAIL_PATH);
         $type = '';
         $product_type = '';
 
@@ -228,7 +228,7 @@ class SearchJsonJob implements CronJobInterface {
             }
         }
 
-        return self::DEFAULT_THUMBNAIL;
+        return home_url(self::DEFAULT_THUMBNAIL_PATH);
     }
 
     /**
@@ -246,6 +246,6 @@ class SearchJsonJob implements CronJobInterface {
             }
         }
 
-        return self::DEFAULT_THUMBNAIL;
+        return home_url(self::DEFAULT_THUMBNAIL_PATH);
     }
 }
