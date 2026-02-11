@@ -100,13 +100,16 @@ class GoogleImageClient {
         }
 
         $code = wp_remote_retrieve_response_code($response);
-        $body = json_decode(wp_remote_retrieve_body($response), true);
+        $raw_body = wp_remote_retrieve_body($response);
+        $body = json_decode($raw_body, true);
 
         if ($code !== 200) {
             $error = $body['error']['message'] ?? 'Unknown API error (HTTP ' . $code . ')';
+            error_log('[ERH Image Populator] API error (HTTP ' . $code . '): ' . $error);
+            error_log('[ERH Image Populator] Response body: ' . substr($raw_body, 0, 1000));
             return [
                 'success' => false,
-                'error'   => $error,
+                'error'   => $error . ' (HTTP ' . $code . ')',
             ];
         }
 
