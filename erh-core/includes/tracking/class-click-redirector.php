@@ -18,6 +18,7 @@ declare(strict_types=1);
 
 namespace ERH\Tracking;
 
+use ERH\GeoConfig;
 use ERH\Pricing\PriceFetcher;
 
 /**
@@ -291,6 +292,7 @@ class ClickRedirector {
                     tl.affiliate_link_override,
                     tl.parser_identifier,
                     tl.geo_target,
+                    tl.market_prices,
                     s.affiliate_link_format
                 FROM {$tracked_links_table} tl
                 LEFT JOIN {$scrapers_table} s ON tl.scraper_id = s.id
@@ -302,6 +304,14 @@ class ClickRedirector {
 
         if (!$row) {
             return null;
+        }
+
+        // For Shopify Markets links, use the geo-localized URL for the visitor's region.
+        if (!empty($row['market_prices'])) {
+            $geo_url = $this->get_market_url_for_user($row['market_prices']);
+            if ($geo_url) {
+                $row['tracking_url'] = $geo_url;
+            }
         }
 
         // Build the affiliate URL.
@@ -348,6 +358,38 @@ class ClickRedirector {
             'product_id' => $best_price['product_id'],
             'url'        => $best_price['url'],
         ];
+    }
+
+    /**
+     * Get the geo-localized product URL for the current visitor from market_prices JSON.
+     *
+     * Matches the visitor's region to a Shopify Markets entry and returns
+     * that market's URL (e.g., /en-ca/ for Canada instead of base US URL).
+     *
+     * @param string $market_prices_json The market_prices JSON from hft_tracked_links.
+     * @return string|null The geo-localized URL, or null if no match.
+     */
+    private function get_market_url_for_user(string $market_prices_json): ?string {
+        $markets = json_decode($market_prices_json, true);
+        if (!is_array($markets) || empty($markets)) {
+            return null;
+        }
+
+        $user_geo = $this->get_user_geo();
+
+        foreach ($markets as $market) {
+            if (empty($market['url']) || empty($market['countries'])) {
+                continue;
+            }
+
+            foreach ($market['countries'] as $country) {
+                if (GeoConfig::get_region(strtoupper($country)) === $user_geo) {
+                    return $market['url'];
+                }
+            }
+        }
+
+        return null;
     }
 
     /**

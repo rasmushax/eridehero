@@ -474,6 +474,11 @@ class PriceFetcher {
                 $market_row['geo_target'] = implode(',', $countries);
                 $market_row['market_prices'] = null; // Prevent re-processing downstream.
 
+                // Use the market's geo-localized URL for affiliate link generation.
+                if (!empty($market['url'])) {
+                    $market_row['tracking_url'] = $market['url'];
+                }
+
                 $expanded[] = $market_row;
             }
         }
