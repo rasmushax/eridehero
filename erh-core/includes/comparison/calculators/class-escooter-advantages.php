@@ -1358,7 +1358,7 @@ class EscooterAdvantages extends AdvantageCalculatorBase {
         $rank = $this->calculate_rank( (float) $product_value, $values, $higher_better );
 
         // Calculate percentage vs average.
-        $pct_vs_avg = $avg > 0 ? ( ( $product_value - $avg ) / $avg ) * 100 : 0;
+        $pct_vs_avg = $avg > 0 ? ( ( (float) $product_value - $avg ) / $avg ) * 100 : 0;
 
         // Determine if advantage or weakness.
         $is_advantage = PriceBracketConfig::is_advantage( $percentile, $pct_vs_avg, $higher_better );

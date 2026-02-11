@@ -1554,7 +1554,7 @@ class EbikeAdvantages extends AdvantageCalculatorBase {
 		// Calculate percentile and pct vs avg.
 		$percentile = $this->calculate_percentile( (float) $product_value, $values, $higher_better );
 		$rank       = $this->calculate_rank( (float) $product_value, $values, $higher_better );
-		$pct_vs_avg = $avg > 0 ? ( ( $product_value - $avg ) / $avg ) * 100 : 0;
+		$pct_vs_avg = $avg > 0 ? ( ( (float) $product_value - $avg ) / $avg ) * 100 : 0;
 
 		// Determine advantage/weakness.
 		$is_advantage = PriceBracketConfig::is_advantage( $percentile, $pct_vs_avg, $higher_better );
