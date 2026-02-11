@@ -72,14 +72,14 @@ if ( ! class_exists( 'HFT_Ajax' ) ) {
          * @param int $tracked_link_id
          * @return array
          */
-        private function get_updated_link_meta_for_ajax( int $tracked_link_id ): array { // Renamed and changed param
+        private function get_updated_link_meta_for_ajax( int $tracked_link_id ): array {
             global $wpdb;
             $tracked_link_table = $wpdb->prefix . 'hft_tracked_links';
             $link_details = $wpdb->get_row(
                 $wpdb->prepare(
-                    "SELECT parser_identifier, current_price, current_currency, current_status, last_scraped_at 
-                     FROM {$tracked_link_table} 
-                     WHERE id = %d", // Query by tracked_link_id
+                    "SELECT parser_identifier, current_price, current_currency, current_status, last_scraped_at, market_prices
+                     FROM {$tracked_link_table}
+                     WHERE id = %d",
                     $tracked_link_id
                 ),
                 ARRAY_A
@@ -90,12 +90,21 @@ if ( ! class_exists( 'HFT_Ajax' ) ) {
                 $formatted_price = number_format((float) $link_details['current_price'], 2) . ' ' . esc_html($link_details['current_currency'] ?? '');
             }
 
-            return [
-                // 'parser_identifier' => esc_html($link_details['parser_identifier'] ?? 'N/A'), // JS currently doesn't update this specific field by ID
+            $result = [
                 'current_price_display' => $formatted_price,
                 'current_status'    => esc_html($link_details['current_status'] ?? 'N/A'),
                 'last_scraped_at'   => isset($link_details['last_scraped_at']) ? date_i18n( get_option( 'date_format' ) . ' ' . get_option( 'time_format' ), strtotime( $link_details['last_scraped_at'] ) ) : '-',
             ];
+
+            // Include market_prices if present (Shopify Markets)
+            if (!empty($link_details['market_prices'])) {
+                $market_prices = json_decode($link_details['market_prices'], true);
+                if (is_array($market_prices)) {
+                    $result['market_prices'] = $market_prices;
+                }
+            }
+
+            return $result;
         }
 
     }

@@ -104,6 +104,7 @@ class PriceFetcher {
                     tl.current_status,
                     tl.current_shipping_info,
                     tl.last_scraped_at,
+                    tl.market_prices,
                     s.name AS retailer_name,
                     s.domain AS retailer_domain,
                     s.affiliate_link_format
@@ -120,12 +121,15 @@ class PriceFetcher {
         // 1. tl.geo_target - for API-based links (single code like "US") or scraper links (comma-separated like "AT,BE,DE")
         // 2. s.geos - scraper's applicable geos (comma-separated like "AT,BE,DE" or single like "US")
         // We filter by expected currency for the geo to avoid mixing currencies.
+        // Shopify Markets links bypass the currency filter — their current_currency only reflects
+        // the first market, but they may have the correct currency in market_prices JSON.
         if ($geo !== null) {
             $geo = strtoupper($geo);
             $expected_currency = $this->get_currency_for_geo($geo);
 
             // Filter by expected currency for this geo.
-            $sql .= " AND tl.current_currency = %s";
+            // SM links bypass this — their per-market prices are checked after expansion.
+            $sql .= " AND (tl.current_currency = %s OR tl.market_prices IS NOT NULL)";
             $params[] = $expected_currency;
 
             // EU region needs to match EU or any individual EU country code.
@@ -180,6 +184,27 @@ class PriceFetcher {
         if (empty($results)) {
             return [];
         }
+
+        // Expand Shopify Markets rows into per-market offers.
+        $results = $this->expand_shopify_market_rows($results, $geo);
+
+        // Post-filter: SM rows bypassed the SQL currency filter, so filter by currency now.
+        if ($geo !== null) {
+            $expected_currency = $this->get_currency_for_geo($geo);
+            $results = array_values(array_filter($results, function (array $row) use ($expected_currency): bool {
+                return strtoupper($row['current_currency'] ?: 'USD') === $expected_currency;
+            }));
+        }
+
+        // Re-sort after expansion: in-stock first, then price ascending.
+        usort($results, function (array $a, array $b): int {
+            $a_stock = ($a['current_status'] === 'In Stock') ? 0 : 1;
+            $b_stock = ($b['current_status'] === 'In Stock') ? 0 : 1;
+            if ($a_stock !== $b_stock) {
+                return $a_stock - $b_stock;
+            }
+            return ((float) $a['current_price']) <=> ((float) $b['current_price']);
+        });
 
         // Transform results to match expected format.
         return array_map([$this, 'transform_price_row'], $results);
@@ -262,6 +287,7 @@ class PriceFetcher {
                     tl.current_status,
                     tl.current_shipping_info,
                     tl.last_scraped_at,
+                    tl.market_prices,
                     s.name AS retailer_name,
                     s.domain AS retailer_domain,
                     s.affiliate_link_format
@@ -277,13 +303,21 @@ class PriceFetcher {
             $geo = strtoupper($geo);
 
             // EU region needs to match EU + individual EU country codes.
+            // FIND_IN_SET handles comma-separated geo_target (e.g., SM links with "US,DE,GB").
+            // SM links always pass through — their per-market filtering happens after expansion.
             if ($geo === 'EU') {
                 $eu_countries = array_merge(['EU'], GeoConfig::EU_COUNTRIES);
-                $placeholders = implode(',', array_fill(0, count($eu_countries), '%s'));
-                $sql .= " AND (tl.geo_target IS NULL OR tl.geo_target = '' OR tl.geo_target IN ({$placeholders}))";
-                $params = array_merge($params, $eu_countries);
+                $eu_placeholders = implode(',', array_fill(0, count($eu_countries), '%s'));
+                $find_conditions = [];
+                foreach ($eu_countries as $country) {
+                    $find_conditions[] = "FIND_IN_SET(%s, tl.geo_target)";
+                }
+                $find_clause = implode(' OR ', $find_conditions);
+                $sql .= " AND (tl.geo_target IS NULL OR tl.geo_target = '' OR tl.geo_target IN ({$eu_placeholders}) OR ({$find_clause}) OR tl.market_prices IS NOT NULL)";
+                $params = array_merge($params, $eu_countries, $eu_countries);
             } else {
-                $sql .= " AND (tl.geo_target IS NULL OR tl.geo_target = '' OR tl.geo_target = %s)";
+                $sql .= " AND (tl.geo_target IS NULL OR tl.geo_target = '' OR tl.geo_target = %s OR FIND_IN_SET(%s, tl.geo_target) OR tl.market_prices IS NOT NULL)";
+                $params[] = $geo;
                 $params[] = $geo;
             }
         }
@@ -299,10 +333,13 @@ class PriceFetcher {
             ARRAY_A
         );
 
+        // Expand Shopify Markets rows into per-market offers.
+        $results = $this->expand_shopify_market_rows($results, $geo);
+
         // Group by product ID.
         $grouped = [];
         foreach ($results as $row) {
-            $pid = (int)$row['product_post_id'];
+            $pid = (int) $row['product_post_id'];
             if (!isset($grouped[$pid])) {
                 $grouped[$pid] = [];
             }
@@ -360,13 +397,20 @@ class PriceFetcher {
             $geo = strtoupper($geo);
 
             // EU region needs to match EU + individual EU country codes.
+            // FIND_IN_SET handles comma-separated geo_target values (e.g., SM links).
             if ($geo === 'EU') {
                 $eu_countries = array_merge(['EU'], GeoConfig::EU_COUNTRIES);
-                $placeholders = implode(',', array_fill(0, count($eu_countries), '%s'));
-                $sql .= " AND (geo_target IS NULL OR geo_target = '' OR geo_target IN ({$placeholders}))";
-                $params = array_merge($params, $eu_countries);
+                $eu_placeholders = implode(',', array_fill(0, count($eu_countries), '%s'));
+                $find_conditions = [];
+                foreach ($eu_countries as $country) {
+                    $find_conditions[] = "FIND_IN_SET(%s, geo_target)";
+                }
+                $find_clause = implode(' OR ', $find_conditions);
+                $sql .= " AND (geo_target IS NULL OR geo_target = '' OR geo_target IN ({$eu_placeholders}) OR ({$find_clause}))";
+                $params = array_merge($params, $eu_countries, $eu_countries);
             } else {
-                $sql .= " AND (geo_target IS NULL OR geo_target = '' OR geo_target = %s)";
+                $sql .= " AND (geo_target IS NULL OR geo_target = '' OR geo_target = %s OR FIND_IN_SET(%s, geo_target))";
+                $params[] = $geo;
                 $params[] = $geo;
             }
         }
@@ -380,9 +424,89 @@ class PriceFetcher {
     }
 
     /**
+     * Expand Shopify Markets rows into per-market offers.
+     *
+     * A single SM tracked link with N markets becomes N rows, each with the
+     * correct price, currency, status, and geo for that market.
+     * Regular (non-SM) rows pass through unchanged.
+     *
+     * @param array<int, array<string, mixed>> $rows Raw database rows.
+     * @param string|null $geo Optional geo filter to only include matching markets.
+     * @return array<int, array<string, mixed>> Expanded rows.
+     */
+    private function expand_shopify_market_rows(array $rows, ?string $geo): array {
+        $expanded = [];
+
+        foreach ($rows as $row) {
+            $market_json = $row['market_prices'] ?? null;
+
+            if (empty($market_json)) {
+                // Regular link — pass through unchanged.
+                $expanded[] = $row;
+                continue;
+            }
+
+            $markets = json_decode($market_json, true);
+            if (!is_array($markets) || empty($markets)) {
+                // Invalid or empty JSON — fall back to regular behavior.
+                $expanded[] = $row;
+                continue;
+            }
+
+            // Expand each market into a separate row.
+            foreach ($markets as $market_key => $market) {
+                if (!isset($market['price']) || !is_numeric($market['price'])) {
+                    continue;
+                }
+
+                $countries = $market['countries'] ?? [$market_key];
+
+                // If geo filter active, only include markets matching the requested geo.
+                if ($geo !== null && !$this->market_matches_geo($countries, $geo)) {
+                    continue;
+                }
+
+                // Create row copy with market-specific values.
+                $market_row = $row;
+                $market_row['current_price'] = $market['price'];
+                $market_row['current_currency'] = $market['currency'] ?? 'USD';
+                $market_row['current_status'] = $market['status'] ?? $row['current_status'];
+                $market_row['geo_target'] = implode(',', $countries);
+                $market_row['market_prices'] = null; // Prevent re-processing downstream.
+
+                $expanded[] = $market_row;
+            }
+        }
+
+        return $expanded;
+    }
+
+    /**
+     * Check if a market's countries match the requested geo/region.
+     *
+     * Maps each country to ERH's 5-region model (US, GB, EU, CA, AU) via GeoConfig
+     * and checks for a match.
+     *
+     * @param array<string> $countries Country codes from the market's countries array.
+     * @param string        $geo       Requested geo/region code.
+     * @return bool True if any country maps to the requested region.
+     */
+    private function market_matches_geo(array $countries, string $geo): bool {
+        $geo = strtoupper($geo);
+
+        foreach ($countries as $country) {
+            if (GeoConfig::get_region(strtoupper($country)) === $geo) {
+                return true;
+            }
+        }
+
+        return false;
+    }
+
+    /**
      * Transform a database row into the expected price format.
      *
-     * @param array<string, mixed> $row Database row.
+     * @param array<string, mixed> $row Database row (may be SM-expanded).
      * @return array<string, mixed> Transformed price data.
      */
     private function transform_price_row(array $row): array {

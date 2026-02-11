@@ -221,12 +221,45 @@
                     if (response.success) {
                         $messageDiv.html('<p class="notice notice-success is-inline">Scrape successful!</p>');
                         if (response.data.updated_display) {
-                            // Update display fields within this specific row
-                            $row.find('.hft-last-scraped .value').text(response.data.updated_display.last_scraped_at || 'N/A');
-                            $row.find('.hft-current-price .value').text(response.data.updated_display.current_price_display || 'N/A');
-                            $row.find('.hft-current-status .value').text(response.data.updated_display.current_status || 'N/A');
-                            // Potentially update parser identifier if it can change or is part of the display
-                            // $row.find('.hft-parser-identifier-display-class .value').text(response.data.updated_display.parser_identifier || 'N/A');
+                            var display = response.data.updated_display;
+
+                            // Update last scraped timestamp
+                            $row.find('.hft-last-scraped .value').text(display.last_scraped_at || 'N/A');
+
+                            // Check if multi-market prices are returned
+                            if (display.market_prices && typeof display.market_prices === 'object') {
+                                // Build multi-market HTML
+                                var marketHtml = '<div class="hft-market-prices">';
+                                $.each(display.market_prices, function(geoKey, market) {
+                                    var priceFormatted = parseFloat(market.price).toLocaleString(undefined, {minimumFractionDigits: 2, maximumFractionDigits: 2});
+                                    marketHtml += '<div class="hft-market-price-row">';
+                                    marketHtml += '<span class="hft-market-currency">' + $('<span>').text(market.currency).html() + '</span> ';
+                                    marketHtml += '<span class="hft-market-price-value">' + $('<span>').text(priceFormatted).html() + '</span> ';
+                                    marketHtml += '<span class="hft-market-geo">(' + $('<span>').text(geoKey).html() + ')</span>';
+                                    marketHtml += ' &mdash; ';
+                                    marketHtml += '<span class="hft-market-status">' + $('<span>').text(market.status).html() + '</span>';
+                                    marketHtml += '</div>';
+                                });
+                                marketHtml += '</div>';
+
+                                // Replace single-price display with multi-market display
+                                var $statusDisplay = $row.find('.hft-status-display');
+                                $statusDisplay.find('.hft-market-prices').remove();
+                                // Remove single-price elements and their separator text nodes
+                                $statusDisplay.find('.hft-current-price, .hft-current-status').each(function() {
+                                    // Remove adjacent pipe separator text nodes
+                                    var nextNode = this.nextSibling;
+                                    if (nextNode && nextNode.nodeType === 3 && nextNode.textContent.trim() === '|') {
+                                        nextNode.parentNode.removeChild(nextNode);
+                                    }
+                                    $(this).remove();
+                                });
+                                $statusDisplay.prepend(marketHtml);
+                            } else {
+                                // Single-price update
+                                $row.find('.hft-current-price .value').text(display.current_price_display || 'N/A');
+                                $row.find('.hft-current-status .value').text(display.current_status || 'N/A');
+                            }
                         }
                         setTimeout(function() { $messageDiv.hide().empty(); }, 4000);
                     } else {

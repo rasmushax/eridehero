@@ -345,6 +345,18 @@ if ( ! class_exists( 'HFT_Loader' ) ) {
 				require_once $registry_file;
 			}
 
+			// Load Shopify currencies mapping (needed by parsers and admin)
+			$shopify_currencies_file = HFT_PLUGIN_PATH . 'includes/class-hft-shopify-currencies.php';
+			if (file_exists($shopify_currencies_file)) {
+				require_once $shopify_currencies_file;
+			}
+
+			// Load Shopify Market Detector (needed by AJAX handler)
+			$shopify_market_detector_file = HFT_PLUGIN_PATH . 'includes/class-hft-shopify-market-detector.php';
+			if (file_exists($shopify_market_detector_file)) {
+				require_once $shopify_market_detector_file;
+			}
+
 			// Load parser classes for dynamic scraper system
 			// First load the parser interface
 			$parser_interface_file = HFT_PLUGIN_PATH . 'includes/parsers/interface-hft-parserinterface.php';
@@ -379,6 +391,12 @@ if ( ! class_exists( 'HFT_Loader' ) ) {
 			$dynamic_parser_file = HFT_PLUGIN_PATH . 'includes/parsers/class-hft-dynamic-parser.php';
 			if (file_exists($dynamic_parser_file)) {
 				require_once $dynamic_parser_file;
+			}
+
+			// Load Shopify Storefront API parser
+			$shopify_storefront_parser_file = HFT_PLUGIN_PATH . 'includes/parsers/class-hft-shopify-storefront-parser.php';
+			if (file_exists($shopify_storefront_parser_file)) {
+				require_once $shopify_storefront_parser_file;
 			}
 
 			// Finally load the parser factory

@@ -100,8 +100,15 @@ class HFT_Scraper_Repository {
             'use_base_parser' => $scraper->use_base_parser,
             'use_curl' => $scraper->use_curl,
             'use_scrapingrobot' => $scraper->use_scrapingrobot,
-            'test_url' => $scraper->test_url
+            'scrapingrobot_render_js' => $scraper->scrapingrobot_render_js,
+            'test_url' => $scraper->test_url,
+            'shopify_markets' => $scraper->shopify_markets,
+            'shopify_method' => $scraper->shopify_method,
+            'shopify_storefront_token' => $scraper->shopify_storefront_token,
+            'shopify_shop_domain' => $scraper->shopify_shop_domain,
         ];
+
+        $format = ['%s', '%s', '%d', '%s', '%s', '%s', '%s', '%d', '%d', '%d', '%d', '%d', '%s', '%d', '%s', '%s', '%s'];
 
         if ($scraper->id > 0) {
             // Update
@@ -109,7 +116,7 @@ class HFT_Scraper_Repository {
                 $this->scrapers_table,
                 $data,
                 ['id' => $scraper->id],
-                ['%s', '%s', '%d', '%s', '%s', '%s', '%s', '%d', '%d', '%d', '%d', '%s'],
+                $format,
                 ['%d']
             );
 
@@ -122,7 +129,7 @@ class HFT_Scraper_Repository {
             $result = $wpdb->insert(
                 $this->scrapers_table,
                 $data,
-                ['%s', '%s', '%d', '%s', '%s', '%s', '%s', '%d', '%d', '%d', '%d', '%s']
+                $format
             );
             
             if ($result === false) {

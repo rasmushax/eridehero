@@ -20,6 +20,7 @@ if ( ! class_exists( 'HFT_Base_Parser' ) && interface_exists('HFT_ParserInterfac
 	 */
 	abstract class HFT_Base_Parser implements HFT_ParserInterface {
 
+		protected ?string $fetch_geo_target = null;
 		protected ?HFT_Structured_Data_Helper $structured_data_helper_instance = null;
 
 		/**
@@ -146,6 +147,11 @@ if ( ! class_exists( 'HFT_Base_Parser' ) && interface_exists('HFT_ParserInterfac
 				return null;
 			}
 
+			// Geo-aware scraping requires cURL for Shopify Markets cookie injection
+			if ($this->fetch_geo_target && !$this->should_use_scrapingrobot()) {
+				return $this->_fetch_html_curl($url, $error_ref);
+			}
+
 			// Check if we should use ScrapingRobot first
 			if ($this->should_use_scrapingrobot()) {
 				return $this->_fetch_html_scrapingrobot($url, $error_ref);
@@ -235,8 +241,14 @@ if ( ! class_exists( 'HFT_Base_Parser' ) && interface_exists('HFT_ParserInterfac
 			curl_setopt($ch, CURLOPT_CONNECTTIMEOUT, 10);
 			curl_setopt($ch, CURLOPT_USERAGENT, 'Mozilla/5.0 (Windows NT 10.0; Win64; x64) AppleWebKit/537.36 (KHTML, like Gecko) Chrome/120.0.0.0 Safari/537.36');
 			
-			// Cookie handling
-			$cookie_file = wp_upload_dir()['basedir'] . '/hft-cookies-' . md5($url) . '.txt';
+			// Cookie handling - use geo-specific cookies for Shopify Markets
+			if ($this->fetch_geo_target) {
+				$currency = HFT_Shopify_Currencies::get_currency($this->fetch_geo_target);
+				curl_setopt($ch, CURLOPT_COOKIE, "cart_currency={$currency}; localization={$this->fetch_geo_target}");
+				$cookie_file = wp_upload_dir()['basedir'] . '/hft-cookies-' . md5($url . '-' . $this->fetch_geo_target) . '.txt';
+			} else {
+				$cookie_file = wp_upload_dir()['basedir'] . '/hft-cookies-' . md5($url) . '.txt';
+			}
 			curl_setopt($ch, CURLOPT_COOKIEJAR, $cookie_file);
 			curl_setopt($ch, CURLOPT_COOKIEFILE, $cookie_file);
 			

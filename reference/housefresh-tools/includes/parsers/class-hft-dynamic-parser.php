@@ -53,6 +53,12 @@ class HFT_Dynamic_Parser extends HFT_Base_Parser {
         // Log parse attempt
         $this->logParseAttempt($url_or_identifier);
 
+        // Set geo context for Shopify Markets cookie injection
+        if ($this->scraper->shopify_markets && !empty($link_meta['geo_target'])) {
+            $geo_parts = explode(',', $link_meta['geo_target']);
+            $this->fetch_geo_target = trim($geo_parts[0]);
+        }
+
         // Fetch HTML
         $fetch_error = null;
         $html_content = $this->_fetch_html($url_or_identifier, $fetch_error);
@@ -82,8 +88,16 @@ class HFT_Dynamic_Parser extends HFT_Base_Parser {
             }
         }
 
-        // Always use the configured currency
-        $result['currency'] = $this->scraper->currency;
+        // For Shopify Markets: currency comes from page structured data (OG/JSON-LD tags)
+        // For regular scrapers: use the configured currency
+        if ($this->scraper->shopify_markets) {
+            if ($result['currency'] === null) {
+                $scrape_geo = trim(explode(',', $link_meta['geo_target'] ?? 'US')[0]);
+                $result['currency'] = HFT_Shopify_Currencies::get_currency($scrape_geo);
+            }
+        } else {
+            $result['currency'] = $this->scraper->currency;
+        }
 
         // If use_base_parser is enabled and we're missing data, try base parser
         if ($this->scraper->use_base_parser && $this->needsBaseParser($result)) {

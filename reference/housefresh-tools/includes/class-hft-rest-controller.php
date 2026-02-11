@@ -252,9 +252,9 @@ if ( ! class_exists( 'HFT_REST_Controller' ) ) {
 
 			$table_name = $wpdb->prefix . 'hft_tracked_links';
 			$query = $wpdb->prepare(
-				"SELECT id, tracking_url, parser_identifier, current_price, current_currency, geo_target, affiliate_link_override 
-				 FROM {$table_name} 
-				 WHERE product_post_id = %d 
+				"SELECT id, tracking_url, parser_identifier, scraper_id, current_price, current_currency, geo_target, affiliate_link_override, market_prices
+				 FROM {$table_name}
+				 WHERE product_post_id = %d
 				 ORDER BY id ASC",
 				$product_id
 			);
@@ -299,32 +299,60 @@ if ( ! class_exists( 'HFT_REST_Controller' ) ) {
 			                    $is_row_for_target_geo = true;
 			                }
 			            } else {
+			                // Resolve scraper config key early (needed for affiliate link format later)
 			                $scraper_config_key_to_try = $parser_id_from_db;
                                 $alt_config_key = str_replace('.', '-', $parser_id_from_db);
 			                if (!isset($scraper_configs[$scraper_config_key_to_try]) && isset($scraper_configs[$alt_config_key])) {
 			                    $scraper_config_key_to_try = $alt_config_key;
 			                }
 
-			                if (isset($scraper_configs[$scraper_config_key_to_try])) {
-			                    $config = $scraper_configs[$scraper_config_key_to_try];
-			                    $geos_json = $config['geos'] ?? '[]';
-			                    $allowed_geos_for_format = [];
-			                    $configured_geos_objects = json_decode($geos_json, true);
+			                // Check if this link has market_prices (Shopify Markets with aggregated data)
+			                $market_prices_raw = $db_row['market_prices'] ?? '';
+			                $market_prices_decoded = !empty($market_prices_raw) ? json_decode($market_prices_raw, true) : null;
 
-			                    if (is_array($configured_geos_objects)) {
-			                        foreach ($configured_geos_objects as $geo_obj) {
-			                            if (is_array($geo_obj) && isset($geo_obj['value'])) {
-			                                $allowed_geos_for_format[] = strtoupper(trim($geo_obj['value']));
+			                if (!empty($market_prices_decoded) && is_array($market_prices_decoded)) {
+			                    // Shopify Markets: check if user's geo is in any market's countries array
+			                    foreach ($market_prices_decoded as $geo_key => $market_data) {
+			                        $market_countries = $market_data['countries'] ?? [$geo_key];
+			                        if (in_array($current_geo_to_process, array_map('strtoupper', $market_countries), true)) {
+			                            $is_row_for_target_geo = true;
+			                            // Store matched market for later price extraction
+			                            $db_row['_matched_market'] = $market_data;
+			                            $db_row['_matched_market_geo'] = $geo_key;
+			                            break;
+			                        }
+			                    }
+			                } else {
+			                    // Regular link: check geo_target field
+			                    $link_geo_target = $db_row['geo_target'] ?? '';
+			                    if (!empty($link_geo_target)) {
+			                        $link_geos = array_map('trim', array_map('strtoupper', explode(',', $link_geo_target)));
+			                        if (in_array($current_geo_to_process, $link_geos, true)) {
+			                            $is_row_for_target_geo = true;
+			                        }
+			                    }
+
+			                    // Fall back to scraper config geos lookup if tracked link geo_target didn't match
+			                    if (!$is_row_for_target_geo) {
+			                        if (isset($scraper_configs[$scraper_config_key_to_try])) {
+			                            $config = $scraper_configs[$scraper_config_key_to_try];
+			                            $geos_json = $config['geos'] ?? '[]';
+			                            $allowed_geos_for_format = [];
+			                            $configured_geos_objects = json_decode($geos_json, true);
+
+			                            if (is_array($configured_geos_objects)) {
+			                                foreach ($configured_geos_objects as $geo_obj) {
+			                                    if (is_array($geo_obj) && isset($geo_obj['value'])) {
+			                                        $allowed_geos_for_format[] = strtoupper(trim($geo_obj['value']));
+			                                    }
+			                                }
+			                            }
+			                            if (!empty($allowed_geos_for_format) && in_array($current_geo_to_process, $allowed_geos_for_format, true)) {
+			                                $is_row_for_target_geo = true;
 			                            }
 			                        }
 			                    }
-			                    if (!empty($allowed_geos_for_format) && in_array($current_geo_to_process, $allowed_geos_for_format, true)) {
-			                        $is_row_for_target_geo = true;
-			                    } else {
-                                        }
-			                } else {
-                                        $alt_config_key_for_log = str_replace('.', '-', $parser_id_from_db);
-                                    }
+			                }
 			            }
 
 			            if ($is_row_for_target_geo) {
@@ -361,9 +389,19 @@ if ( ! class_exists( 'HFT_REST_Controller' ) ) {
 			                if ($final_affiliate_url !== null) {
 			                    $retailer_name = $this->get_retailer_name_from_parser_id($parser_id_from_db);
 			                    $price_string = '';
-			                    if (!empty($db_row['current_price'])) {
-			                        $price = number_format((float)$db_row['current_price'], 2);
-			                        $currency_symbol = $this->get_currency_symbol($db_row['current_currency']);
+
+			                    // Use market-specific price if available (Shopify Markets)
+			                    $display_price = $db_row['current_price'];
+			                    $display_currency = $db_row['current_currency'];
+			                    if (!empty($db_row['_matched_market'])) {
+			                        $matched = $db_row['_matched_market'];
+			                        $display_price = $matched['price'] ?? $display_price;
+			                        $display_currency = $matched['currency'] ?? $display_currency;
+			                    }
+
+			                    if (!empty($display_price)) {
+			                        $price = number_format((float)$display_price, 2);
+			                        $currency_symbol = $this->get_currency_symbol($display_currency);
 			                        $price_string = $currency_symbol . $price;
 			                    } else {
 			                        $price_string = sprintf( __('View at %s', 'housefresh-tools'), $retailer_name );
@@ -471,8 +509,8 @@ if ( ! class_exists( 'HFT_REST_Controller' ) ) {
 			if ($currency_code === null) return '';
 			$symbols = [
 				'USD' => '$',
-				'CAD' => '$',
-				'AUD' => '$',
+				'CAD' => 'CA$',
+				'AUD' => 'AU$',
 				'GBP' => '£',
 				'EUR' => '€',
 				'JPY' => '¥',
@@ -604,9 +642,9 @@ if ( ! class_exists( 'HFT_REST_Controller' ) ) {
 
 			$product_tracked_links_data = $wpdb->get_results(
 				$wpdb->prepare(
-					"SELECT id, tracking_url, parser_identifier, current_price, current_currency 
-					 FROM {$tracked_links_table} 
-					 WHERE product_post_id = %d 
+					"SELECT id, tracking_url, parser_identifier, current_price, current_currency, market_prices
+					 FROM {$tracked_links_table}
+					 WHERE product_post_id = %d
 					 ORDER BY id ASC",
 					$product_id
 				),
@@ -635,7 +673,7 @@ if ( ! class_exists( 'HFT_REST_Controller' ) ) {
 			$placeholders = implode(',', array_fill(0, count($tracked_link_ids), '%d'));
 			$all_price_history = $wpdb->get_results(
 				$wpdb->prepare(
-					"SELECT tracked_link_id, price, currency, status, scraped_at
+					"SELECT tracked_link_id, price, currency, status, geo, scraped_at
 					 FROM {$price_history_table}
 					 WHERE tracked_link_id IN ($placeholders)
 					 ORDER BY tracked_link_id ASC, scraped_at ASC",
@@ -659,62 +697,144 @@ if ( ! class_exists( 'HFT_REST_Controller' ) ) {
 			// Use pre-fetched history instead of querying in loop
 			$link_history_raw = $history_by_link[$tracked_link_id] ?? [];
 
-				$history_for_chart = [];
-				$link_lowest = null;
-				$link_highest = null;
-				$link_sum_prices = 0;
-				$link_price_points = 0;
+				// Check if this is a Shopify Markets link
+				$market_prices_raw = $link_meta['market_prices'] ?? '';
+				$market_prices_decoded = !empty($market_prices_raw) ? json_decode($market_prices_raw, true) : null;
 
-				foreach ($link_history_raw as $history_entry) {
-					$price = (float) $history_entry['price'];
-					$history_for_chart[] = [
-						'scraped_at' => $history_entry['scraped_at'], // Keep full datetime for chart JS
-						'price'      => $price,
-						// 'status'     => $history_entry['status'] // Optional: include status if chart needs it
+				if (!empty($market_prices_decoded) && is_array($market_prices_decoded)) {
+					// Shopify Markets link: emit one entry per market
+					$url_parts = parse_url($link_meta['tracking_url']);
+					$host_display = $url_parts['host'] ?? $link_meta['tracking_url'];
+
+					// Check if any history entries have geo tags
+					$has_geo_entries = false;
+					foreach ($link_history_raw as $entry) {
+						if (!empty($entry['geo'])) {
+							$has_geo_entries = true;
+							break;
+						}
+					}
+
+					foreach ($market_prices_decoded as $geo_key => $market_data) {
+						$market_currency = $market_data['currency'] ?? $link_meta['current_currency'];
+						$market_current_price = $market_data['price'] ?? null;
+						$geo_upper = strtoupper($geo_key);
+
+						// Filter history to entries matching this market's geo
+						if ($has_geo_entries) {
+							$filtered_history = array_values(array_filter($link_history_raw, function($entry) use ($geo_upper) {
+								return !empty($entry['geo']) && strtoupper($entry['geo']) === $geo_upper;
+							}));
+						} else {
+							// No geo-tagged entries yet — include all as fallback
+							$filtered_history = $link_history_raw;
+						}
+
+						$history_for_chart = [];
+						$link_lowest = null;
+						$link_highest = null;
+						$link_sum_prices = 0;
+						$link_price_points = 0;
+
+						foreach ($filtered_history as $history_entry) {
+							$price = (float) $history_entry['price'];
+							$history_for_chart[] = [
+								'scraped_at' => $history_entry['scraped_at'],
+								'price'      => $price,
+							];
+
+							if ($link_lowest === null || $price < $link_lowest['price']) {
+								$link_lowest = ['price' => $price, 'date' => $history_entry['scraped_at']];
+							}
+							if ($link_highest === null || $price > $link_highest['price']) {
+								$link_highest = ['price' => $price, 'date' => $history_entry['scraped_at']];
+							}
+							$link_sum_prices += $price;
+							$link_price_points++;
+
+							if ($all_time_lowest === null || $price < $all_time_lowest['price']) {
+								$all_time_lowest = ['price' => $price, 'date' => $history_entry['scraped_at'], 'source_id' => $tracked_link_id];
+							}
+							if ($all_time_highest === null || $price > $all_time_highest['price']) {
+								$all_time_highest = ['price' => $price, 'date' => $history_entry['scraped_at'], 'source_id' => $tracked_link_id];
+							}
+							$total_sum_prices += $price;
+							$total_price_points++;
+						}
+
+						$link_average_price = ($link_price_points > 0) ? round($link_sum_prices / $link_price_points, 2) : null;
+						$currency_symbol = $this->get_currency_symbol($market_currency);
+						$identifier_display = $host_display . ' (' . strtoupper($market_currency) . ' / ' . $geo_upper . ')';
+
+						$response_data['links'][] = [
+							'trackedLinkId'    => $tracked_link_id,
+							'identifier'       => $identifier_display,
+							'currencySymbol'   => $currency_symbol,
+							'history'          => $history_for_chart,
+							'summary'          => [
+								'currentPrice'   => $market_current_price !== null ? (float) $market_current_price : null,
+								'lowestPrice'    => $link_lowest,
+								'highestPrice'   => $link_highest,
+								'averagePrice'   => $link_average_price,
+							]
+						];
+					}
+				} else {
+					// Regular (non-SM) link: single entry, unchanged logic
+					$history_for_chart = [];
+					$link_lowest = null;
+					$link_highest = null;
+					$link_sum_prices = 0;
+					$link_price_points = 0;
+
+					foreach ($link_history_raw as $history_entry) {
+						$price = (float) $history_entry['price'];
+						$history_for_chart[] = [
+							'scraped_at' => $history_entry['scraped_at'],
+							'price'      => $price,
+						];
+
+						if ($link_lowest === null || $price < $link_lowest['price']) {
+							$link_lowest = ['price' => $price, 'date' => $history_entry['scraped_at']];
+						}
+						if ($link_highest === null || $price > $link_highest['price']) {
+							$link_highest = ['price' => $price, 'date' => $history_entry['scraped_at']];
+						}
+						$link_sum_prices += $price;
+						$link_price_points++;
+
+						if ($all_time_lowest === null || $price < $all_time_lowest['price']) {
+							$all_time_lowest = ['price' => $price, 'date' => $history_entry['scraped_at'], 'source_id' => $tracked_link_id];
+						}
+						if ($all_time_highest === null || $price > $all_time_highest['price']) {
+							$all_time_highest = ['price' => $price, 'date' => $history_entry['scraped_at'], 'source_id' => $tracked_link_id];
+						}
+						$total_sum_prices += $price;
+						$total_price_points++;
+					}
+
+					$link_average_price = ($link_price_points > 0) ? round($link_sum_prices / $link_price_points, 2) : null;
+					$identifier_display = $link_meta['parser_identifier'];
+					if ($link_meta['parser_identifier'] === 'amazon' && !empty($link_meta['tracking_url'])) {
+						$identifier_display .= ' (' . esc_html($link_meta['tracking_url']) . ')';
+					} elseif ($link_meta['parser_identifier'] !== 'amazon') {
+						$url_parts = parse_url($link_meta['tracking_url']);
+						$identifier_display = $url_parts['host'] ?? $link_meta['tracking_url'];
+					}
+
+					$response_data['links'][] = [
+						'trackedLinkId'    => $tracked_link_id,
+						'identifier'       => $identifier_display,
+						'currencySymbol'   => $this->get_currency_symbol($link_meta['current_currency']),
+						'history'          => $history_for_chart,
+						'summary'          => [
+							'currentPrice'   => (float) $link_meta['current_price'],
+							'lowestPrice'    => $link_lowest,
+							'highestPrice'   => $link_highest,
+							'averagePrice'   => $link_average_price,
+						]
 					];
-
-					// Link-specific summary
-					if ($link_lowest === null || $price < $link_lowest['price']) {
-						$link_lowest = ['price' => $price, 'date' => $history_entry['scraped_at']];
-					}
-					if ($link_highest === null || $price > $link_highest['price']) {
-						$link_highest = ['price' => $price, 'date' => $history_entry['scraped_at']];
-					}
-					$link_sum_prices += $price;
-					$link_price_points++;
-
-                    // Overall summary (assuming same currency for simplicity in overall calculation for now)
-                    if ($all_time_lowest === null || $price < $all_time_lowest['price']) {
-                        $all_time_lowest = ['price' => $price, 'date' => $history_entry['scraped_at'], 'source_id' => $tracked_link_id];
-                    }
-                    if ($all_time_highest === null || $price > $all_time_highest['price']) {
-                        $all_time_highest = ['price' => $price, 'date' => $history_entry['scraped_at'], 'source_id' => $tracked_link_id];
-                    }
-                    $total_sum_prices += $price;
-                    $total_price_points++;
 				}
-
-				$link_average_price = ($link_price_points > 0) ? round($link_sum_prices / $link_price_points, 2) : null;
-				$identifier_display = $link_meta['parser_identifier'];
-				if ($link_meta['parser_identifier'] === 'amazon' && !empty($link_meta['tracking_url'])) {
-				    $identifier_display .= ' (' . esc_html($link_meta['tracking_url']) . ')'; // Add ASIN
-				} elseif ($link_meta['parser_identifier'] !== 'amazon') {
-                    $url_parts = parse_url($link_meta['tracking_url']);
-                    $identifier_display = $url_parts['host'] ?? $link_meta['tracking_url'];
-                }
-
-				$response_data['links'][] = [
-					'trackedLinkId'    => $tracked_link_id,
-					'identifier'       => $identifier_display,
-					'currencySymbol'   => $this->get_currency_symbol($link_meta['current_currency']),
-					'history'          => $history_for_chart,
-					'summary'          => [
-						'currentPrice'   => (float) $link_meta['current_price'],
-						'lowestPrice'    => $link_lowest, // ['price' => X, 'date' => Y]
-						'highestPrice'   => $link_highest, // ['price' => X, 'date' => Y]
-						'averagePrice'   => $link_average_price,
-					]
-				];
 			}
 
             // Prepare overall summary (basic version)
@@ -766,9 +886,9 @@ if ( ! class_exists( 'HFT_REST_Controller' ) ) {
 			// Get all tracked links for this product
 			$all_tracked_links_for_product = $wpdb->get_results(
 				$wpdb->prepare(
-					"SELECT id, tracking_url, parser_identifier, current_price, current_currency, geo_target 
-					 FROM {$tracked_links_table} 
-					 WHERE product_post_id = %d 
+					"SELECT id, tracking_url, parser_identifier, scraper_id, current_price, current_currency, geo_target, market_prices
+					 FROM {$tracked_links_table}
+					 WHERE product_post_id = %d
 					 ORDER BY id ASC",
 					$product_id
 				),
@@ -780,7 +900,6 @@ if ( ! class_exists( 'HFT_REST_Controller' ) ) {
 			}
 
 			// Load scraper configs for GEO filtering (same logic as affiliate links)
-			// Load scraper configs from database instead of options
 			$scraper_configs = $this->load_scraper_configs_from_db();
 
 			$geos_to_attempt = [$user_target_geo];
@@ -793,7 +912,8 @@ if ( ! class_exists( 'HFT_REST_Controller' ) ) {
 				'targetGeo' => $user_target_geo,
 				'links'     => [],
 			];
-		// Optimize: Fetch all price history in a single query to avoid N+1 problem
+
+		// Optimize: Fetch all price history in a single query (include geo column)
 		$tracked_link_ids = array_column($all_tracked_links_for_product, 'id');
 		$history_by_link = [];
 
@@ -801,7 +921,7 @@ if ( ! class_exists( 'HFT_REST_Controller' ) ) {
 			$placeholders = implode(',', array_fill(0, count($tracked_link_ids), '%d'));
 			$all_price_history = $wpdb->get_results(
 				$wpdb->prepare(
-					"SELECT tracked_link_id, price, currency, status, scraped_at
+					"SELECT tracked_link_id, price, currency, status, geo, scraped_at
 					 FROM {$price_history_table}
 					 WHERE tracked_link_id IN ($placeholders)
 					 ORDER BY tracked_link_id ASC, scraped_at ASC",
@@ -820,16 +940,16 @@ if ( ! class_exists( 'HFT_REST_Controller' ) ) {
 			}
 		}
 
-
 			foreach ($geos_to_attempt as $current_geo_to_process) {
 				// If we already found links for primary GEO, skip US fallback
-				if (!empty($response_data['links']) && $current_geo_to_process === 'US' && $user_target_geo !== 'US') { 
+				if (!empty($response_data['links']) && $current_geo_to_process === 'US' && $user_target_geo !== 'US') {
 					break;
 				}
 
 				foreach ($all_tracked_links_for_product as $db_row) {
 					$is_row_for_target_geo = false;
 					$parser_id_from_db = $db_row['parser_identifier'];
+					$matched_market_geo = null;
 
 					// Same GEO filtering logic as affiliate links
 					if (strtolower($parser_id_from_db) === 'amazon') {
@@ -844,31 +964,76 @@ if ( ! class_exists( 'HFT_REST_Controller' ) ) {
 							$scraper_config_key_to_try = $alt_config_key;
 						}
 
-						if (isset($scraper_configs[$scraper_config_key_to_try])) {
-							$config = $scraper_configs[$scraper_config_key_to_try];
-							$geos_json = $config['geos'] ?? '[]';
-							$allowed_geos_for_format = [];
-							$configured_geos_objects = json_decode($geos_json, true);
+						// Check if this link has market_prices (Shopify Markets)
+						$market_prices_raw = $db_row['market_prices'] ?? '';
+						$market_prices_decoded = !empty($market_prices_raw) ? json_decode($market_prices_raw, true) : null;
 
-							if (is_array($configured_geos_objects)) {
-								foreach ($configured_geos_objects as $geo_obj) {
-									if (is_array($geo_obj) && isset($geo_obj['value'])) {
-										$allowed_geos_for_format[] = strtoupper(trim($geo_obj['value']));
-									}
+						if (!empty($market_prices_decoded) && is_array($market_prices_decoded)) {
+							foreach ($market_prices_decoded as $geo_key => $market_data) {
+								$market_countries = $market_data['countries'] ?? [$geo_key];
+								if (in_array($current_geo_to_process, array_map('strtoupper', $market_countries), true)) {
+									$is_row_for_target_geo = true;
+									$matched_market_geo = $geo_key;
+									break;
 								}
 							}
-							if (!empty($allowed_geos_for_format) && in_array($current_geo_to_process, $allowed_geos_for_format, true)) {
-								$is_row_for_target_geo = true;
+						} else {
+							// Regular link: check geo_target field
+							$link_geo_target = $db_row['geo_target'] ?? '';
+							if (!empty($link_geo_target)) {
+								$link_geos = array_map('trim', array_map('strtoupper', explode(',', $link_geo_target)));
+								if (in_array($current_geo_to_process, $link_geos, true)) {
+									$is_row_for_target_geo = true;
+								}
+							}
+
+							// Fall back to scraper config geos lookup
+							if (!$is_row_for_target_geo && isset($scraper_configs[$scraper_config_key_to_try])) {
+								$config = $scraper_configs[$scraper_config_key_to_try];
+								$geos_json = $config['geos'] ?? '[]';
+								$allowed_geos_for_format = [];
+								$configured_geos_objects = json_decode($geos_json, true);
+
+								if (is_array($configured_geos_objects)) {
+									foreach ($configured_geos_objects as $geo_obj) {
+										if (is_array($geo_obj) && isset($geo_obj['value'])) {
+											$allowed_geos_for_format[] = strtoupper(trim($geo_obj['value']));
+										}
+									}
+								}
+								if (!empty($allowed_geos_for_format) && in_array($current_geo_to_process, $allowed_geos_for_format, true)) {
+									$is_row_for_target_geo = true;
+								}
 							}
 						}
 					}
 
 					if ($is_row_for_target_geo) {
 						$tracked_link_id = (int) $db_row['id'];
-						
+
 						// Get price history for this tracked link
-					// Use pre-fetched history instead of querying in loop
-					$link_history_raw = $history_by_link[$tracked_link_id] ?? [];
+						$link_history_raw = $history_by_link[$tracked_link_id] ?? [];
+
+						// For Shopify Markets: filter history by geo column
+						if ($matched_market_geo !== null && !empty($link_history_raw)) {
+							// Check if any entries have the geo column set
+							$has_geo_entries = false;
+							foreach ($link_history_raw as $entry) {
+								if (!empty($entry['geo'])) {
+									$has_geo_entries = true;
+									break;
+								}
+							}
+
+							$link_history_raw = array_values(array_filter($link_history_raw, function($entry) use ($matched_market_geo, $has_geo_entries) {
+								if ($has_geo_entries) {
+									// Only include entries matching this specific market geo
+									return !empty($entry['geo']) && strtoupper($entry['geo']) === strtoupper($matched_market_geo);
+								}
+								// No geo-tagged entries yet (all legacy) — include all as fallback
+								return true;
+							}));
+						}
 
 						// Skip if no price history available
 						if (empty($link_history_raw)) {
@@ -878,24 +1043,30 @@ if ( ! class_exists( 'HFT_REST_Controller' ) ) {
 						$history_for_chart = [];
 						foreach ($link_history_raw as $history_entry) {
 							$history_for_chart[] = [
-								'x' => $history_entry['scraped_at'], // Chart.js expects 'x' for time
-								'y' => (float) $history_entry['price'], // Chart.js expects 'y' for value
-								'date' => $history_entry['scraped_at'], // For tooltip
-								'status' => $history_entry['status'], // For tooltip
+								'x' => $history_entry['scraped_at'],
+								'y' => (float) $history_entry['price'],
+								'date' => $history_entry['scraped_at'],
+								'status' => $history_entry['status'],
 							];
 						}
 
 						// Create retailer name for display
 						$retailer_name = $this->get_retailer_name_from_parser_id($parser_id_from_db);
 						if ($parser_id_from_db === 'amazon' && !empty($db_row['tracking_url'])) {
-							$retailer_name .= ' (' . esc_html($db_row['tracking_url']) . ')'; // Add ASIN
+							$retailer_name .= ' (' . esc_html($db_row['tracking_url']) . ')';
+						}
+
+						// Use market-specific currency symbol if available
+						$currency_for_display = $db_row['current_currency'];
+						if ($matched_market_geo !== null && !empty($market_prices_decoded[$matched_market_geo]['currency'])) {
+							$currency_for_display = $market_prices_decoded[$matched_market_geo]['currency'];
 						}
 
 						$response_data['links'][] = [
 							'trackedLinkId'    => $tracked_link_id,
 							'retailerName'     => $retailer_name,
 							'parserIdentifier' => $parser_id_from_db,
-							'currencySymbol'   => $this->get_currency_symbol($db_row['current_currency']),
+							'currencySymbol'   => $this->get_currency_symbol($currency_for_display),
 							'history'          => $history_for_chart,
 							'geo'              => $current_geo_to_process,
 						];

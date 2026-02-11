@@ -1543,8 +1543,10 @@ add_action('wp_enqueue_scripts', function() {
 $settings = get_option('hft_settings', []);
 
 // Available keys:
-// 'amazon_api_key'        - AWS API Access Key (for Amazon PA-API)
-// 'amazon_api_secret'     - AWS API Secret
+// 'amazon_credentials'    - Per-region Creators API credentials:
+//                           ['NA' => ['credential_id' => '...', 'credential_secret' => '...'],
+//                            'EU' => ['credential_id' => '...', 'credential_secret' => '...'],
+//                            'FE' => ['credential_id' => '...', 'credential_secret' => '...']]
 // 'amazon_associate_tags' - Array of [{geo: 'US', tag: 'yourtag-20'}, ...]
 // 'scrape_interval'       - 'five_minutes', 'hourly', 'daily', etc.
 // 'products_per_batch'    - Number of links to process per cron run

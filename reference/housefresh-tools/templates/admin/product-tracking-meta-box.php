@@ -189,16 +189,38 @@ function hft_render_meta_box_row( $index, array $link_data, bool $is_template = 
             <div class="hft-grid-col hft-col-status">
                 <label><?php esc_html_e( 'Current Status', 'housefresh-tools' ); ?></label>
                 <div class="hft-status-display">
-                    <span class="hft-current-price">P: <span class="value"><?php echo esc_html($formatted_price); ?></span></span> | 
-                    <span class="hft-current-status">S: <span class="value"><?php echo esc_html($formatted_status); ?></span></span> | 
-                    <span class="hft-last-scraped">Last: <span class="value"><?php echo esc_html($formatted_last_scraped); ?></span></span>
-                    <?php if ( !$is_template && ! empty( $link_data['product_page_url'] ) ) : ?>
-                        | <span class="hft-product-page-link-inline">
-                            <a href="<?php echo esc_url( $link_data['product_page_url'] ); ?>" target="_blank" rel="noopener noreferrer">
-                                <?php echo esc_html( $link_data['product_page_link_text'] ); ?>
-                            </a>
-                        </span>
+                    <?php
+                    $market_prices_json = $is_template ? '' : ($link_data['market_prices'] ?? '');
+                    $market_prices_data = !empty($market_prices_json) ? json_decode($market_prices_json, true) : null;
+
+                    if (!empty($market_prices_data) && is_array($market_prices_data)) :
+                        // Multi-market display (Shopify Markets)
+                    ?>
+                        <div class="hft-market-prices">
+                            <?php foreach ($market_prices_data as $geo_key => $market) : ?>
+                                <div class="hft-market-price-row">
+                                    <span class="hft-market-currency"><?php echo esc_html($market['currency']); ?></span>
+                                    <span class="hft-market-price-value"><?php echo esc_html(number_format((float)$market['price'], 2)); ?></span>
+                                    <span class="hft-market-geo">(<?php echo esc_html($geo_key); ?>)</span>
+                                    &mdash;
+                                    <span class="hft-market-status"><?php echo esc_html($market['status']); ?></span>
+                                </div>
+                            <?php endforeach; ?>
+                        </div>
+                    <?php else : ?>
+                        <span class="hft-current-price">P: <span class="value"><?php echo esc_html($formatted_price); ?></span></span> |
+                        <span class="hft-current-status">S: <span class="value"><?php echo esc_html($formatted_status); ?></span></span>
                     <?php endif; ?>
+                    <div class="hft-status-meta">
+                        <span class="hft-last-scraped">Last: <span class="value"><?php echo esc_html($formatted_last_scraped); ?></span></span>
+                        <?php if ( !$is_template && ! empty( $link_data['product_page_url'] ) ) : ?>
+                            | <span class="hft-product-page-link-inline">
+                                <a href="<?php echo esc_url( $link_data['product_page_url'] ); ?>" target="_blank" rel="noopener noreferrer">
+                                    <?php echo esc_html( $link_data['product_page_link_text'] ); ?>
+                                </a>
+                            </span>
+                        <?php endif; ?>
+                    </div>
                     <span class="hft-last-error" style="<?php echo empty($last_error) ? 'display:none;' : ''; ?>">Error: <span class="value"><?php echo esc_html( $last_error ); ?></span></span>
                 </div>
             </div>

@@ -50,11 +50,16 @@ class HFT_Parser_Factory {
      */
     public static function create_parser_by_scraper_id(int $scraper_id): ?HFT_ParserInterface {
         $scraper = HFT_Scraper_Registry::get_instance()->get_scraper($scraper_id);
-        
+
         if (!$scraper || !$scraper->is_active) {
             return null;
         }
-        
+
+        // Use Shopify Storefront API parser when configured
+        if ($scraper->shopify_markets && $scraper->shopify_method === 'api' && !empty($scraper->shopify_storefront_token)) {
+            return new HFT_Shopify_Storefront_Parser($scraper);
+        }
+
         return new HFT_Dynamic_Parser($scraper);
     }
     

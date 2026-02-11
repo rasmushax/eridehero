@@ -248,29 +248,27 @@ if ( ! class_exists( 'HFT_Meta_Boxes' ) ) {
                     $url_input = isset( $link_row['tracking_url'] ) ? sanitize_url( $link_row['tracking_url'] ) : '';
                     if (!empty($url_input)) {
                         $identifier_input = $url_input;
-                        $url_parts = wp_parse_url( $url_input ); 
+                        $url_parts = wp_parse_url( $url_input );
                         $host = isset( $url_parts['host'] ) ? strtolower( $url_parts['host'] ) : 'unknown_host';
-                        
-                        // Normalize to base domain: remove www., shop., etc. then take last two parts for common TLDs
-                        // More robust base domain extraction might be needed for complex TLDs (e.g. .co.uk)
-                        $host_parts = explode('.', $host);
-                        if (count($host_parts) > 2) {
-                            // Check for common TLDs like .co.uk, .com.au, etc.
-                            if (in_array($host_parts[count($host_parts)-2], ['co', 'com', 'org', 'net', 'gov', 'edu']) && count($host_parts) > 2) {
-                                $base_domain = $host_parts[count($host_parts)-3] . '.' . $host_parts[count($host_parts)-2] . '.' . $host_parts[count($host_parts)-1];
-                            } else {
-                                $base_domain = $host_parts[count($host_parts)-2] . '.' . $host_parts[count($host_parts)-1];
-                            }
-                        } else {
-                            $base_domain = $host; // Already a base domain or too short to tell
-                        }
-                        // Remove leading 'www.' if it's still there after potential subdomain stripping for base domain logic
-                        if (strpos($base_domain, 'www.') === 0) {
-                            $base_domain = substr($base_domain, 4);
+
+                        // Preserve full domain including subdomains, only strip www. prefix
+                        if (strpos($host, 'www.') === 0) {
+                            $host = substr($host, 4);
                         }
 
-                        $parser_slug_to_save = $base_domain; 
-                        $geo_target_to_save = null;
+                        $parser_slug_to_save = $host;
+
+                        // Get geo_target from scraper configuration
+                        if ($scraper_id) {
+                            $scrapers_table = $wpdb->prefix . 'hft_scrapers';
+                            $scraper_geos = $wpdb->get_var($wpdb->prepare(
+                                "SELECT geos FROM {$scrapers_table} WHERE id = %d",
+                                $scraper_id
+                            ));
+                            if (!empty($scraper_geos)) {
+                                $geo_target_to_save = $scraper_geos;
+                            }
+                        }
                     } else {
                         continue; // Skip if URL is empty
                     }
@@ -301,12 +299,12 @@ if ( ! class_exists( 'HFT_Meta_Boxes' ) ) {
 					$wpdb->update( $table_name, $data, [ 'id' => $tracked_link_id ], $format, ['%d'] );
 					$submitted_link_ids[] = (string) $tracked_link_id;
 				} elseif (str_starts_with((string)$row_key, 'new_')) {
-                    $data['created_at'] = current_time( 'mysql', true );
-                    $format[] = '%s';
+					$data['created_at'] = current_time( 'mysql', true );
+					$format[] = '%s';
 					$wpdb->insert( $table_name, $data, $format );
 					$new_id = $wpdb->insert_id;
 					if ($new_id) {
-					    $submitted_link_ids[] = (string) $new_id;
+						$submitted_link_ids[] = (string) $new_id;
 					}
 				}
 			}

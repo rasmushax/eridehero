@@ -183,6 +183,49 @@
     font-weight: normal;
 }
 
+/* --- Multi-Market Price Display (Shopify Markets) --- */
+.hft-market-prices {
+    margin-bottom: 6px;
+}
+
+.hft-market-price-row {
+    padding: 3px 0;
+    border-bottom: 1px solid #eee;
+    line-height: 1.5;
+}
+
+.hft-market-price-row:last-child {
+    border-bottom: none;
+}
+
+.hft-market-currency {
+    font-weight: 700;
+    color: #1d2327;
+    margin-right: 2px;
+}
+
+.hft-market-price-value {
+    color: #1d2327;
+}
+
+.hft-market-geo {
+    color: #787c82;
+    font-size: 11px;
+    margin-left: 2px;
+}
+
+.hft-market-status {
+    color: #2c3338;
+}
+
+.hft-status-meta {
+    margin-top: 6px;
+    padding-top: 6px;
+    border-top: 1px solid #eee;
+    color: #787c82;
+    font-size: 11px;
+}
+
 /* --- Remove Tagify Specific Styles --- */
 /* Commenting out old rules */
 /*

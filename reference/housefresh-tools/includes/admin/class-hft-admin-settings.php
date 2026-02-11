@@ -22,7 +22,28 @@ if ( ! class_exists( 'HFT_Admin_Settings' ) ) {
 		 * Constructor.
 		 */
 		public function __construct() {
-			// Hooks will be added by the loader.
+			add_action( 'admin_notices', [ $this, 'maybe_show_migration_notice' ] );
+		}
+
+		/**
+		 * Show admin notice if old PA-API credentials exist but new Creators API ones don't.
+		 */
+		public function maybe_show_migration_notice(): void {
+			$options = get_option( $this->main_settings_option_name, [] );
+			$has_old_keys = ! empty( $options['amazon_api_key'] ) || ! empty( $options['amazon_api_secret'] );
+			$has_new_creds = ! empty( $options['amazon_credentials'] );
+
+			if ( $has_old_keys && ! $has_new_creds ) {
+				$settings_url = admin_url( 'admin.php?page=' . $this->settings_page_slug );
+				echo '<div class="notice notice-warning is-dismissible">';
+				echo '<p><strong>' . esc_html__( 'Housefresh Tools: Amazon API Migration Required', 'housefresh-tools' ) . '</strong></p>';
+				echo '<p>' . sprintf(
+					/* translators: %s: URL to settings page */
+					esc_html__( 'Amazon has replaced the Product Advertising API (PA-API) with the new Creators API. Your old AWS access keys will no longer work. Please enter your new Creators API credentials on the %s.', 'housefresh-tools' ),
+					'<a href="' . esc_url( $settings_url ) . '">' . esc_html__( 'Settings page', 'housefresh-tools' ) . '</a>'
+				) . '</p>';
+				echo '</div>';
+			}
 		}
 
 		/**
@@ -54,28 +75,20 @@ if ( ! class_exists( 'HFT_Admin_Settings' ) ) {
 			// --- Tab 1: API Keys & General ---
 			$tab1_page_group = $this->settings_page_slug . '_tab1';
 
-			// Section: Amazon API Settings
+			// Section: Amazon Creators API Settings
 			add_settings_section(
 				'hft_amazon_api_section',
-				__( 'Amazon Product Advertising API Settings', 'housefresh-tools' ),
+				__( 'Amazon Creators API Settings', 'housefresh-tools' ),
 				[ $this, 'render_section_callback' ],
 				$tab1_page_group
 			);
 			add_settings_field(
-				'amazon_api_key',
-				__( 'Access Key ID', 'housefresh-tools' ),
-				[ $this, 'render_text_field' ],
+				'amazon_credentials',
+				__( 'API Credentials by Region', 'housefresh-tools' ),
+				[ $this, 'render_amazon_credentials_repeater' ],
 				$tab1_page_group,
 				'hft_amazon_api_section',
-				[ 'id' => 'amazon_api_key', 'name' => $this->main_settings_option_name . '[amazon_api_key]', 'description' => __( 'Enter your Amazon Product Advertising API Access Key ID.', 'housefresh-tools' ) ]
-			);
-			add_settings_field(
-				'amazon_api_secret',
-				__( 'Secret Access Key', 'housefresh-tools' ),
-				[ $this, 'render_password_field' ],
-				$tab1_page_group,
-				'hft_amazon_api_section',
-				[ 'id' => 'amazon_api_secret', 'name' => $this->main_settings_option_name . '[amazon_api_secret]', 'description' => __( 'Enter your Amazon Product Advertising API Secret Access Key.', 'housefresh-tools' ) ]
+				[ 'name' => $this->main_settings_option_name . '[amazon_credentials]', 'description' => __( 'Enter your Amazon Creators API credentials for each region. Credentials are region-specific: NA (Americas), EU (Europe/Middle East/India), FE (Far East/Pacific).', 'housefresh-tools' ) ]
 			);
 			add_settings_field(
 				'amazon_associate_tags',
@@ -183,33 +196,64 @@ if ( ! class_exists( 'HFT_Admin_Settings' ) ) {
 			$sanitized_input = [];
 			$options = get_option($this->main_settings_option_name);
 
-			if ( isset( $input['amazon_api_key'] ) ) {
-				$sanitized_input['amazon_api_key'] = sanitize_text_field( $input['amazon_api_key'] );
-			} elseif (isset($options['amazon_api_key'])) {
-                $sanitized_input['amazon_api_key'] = $options['amazon_api_key'];
-            }
+			// Sanitize Amazon Creators API Credentials (per-region)
+			if ( isset( $input['amazon_credentials'] ) && is_array( $input['amazon_credentials'] ) ) {
+				$sanitized_creds = [];
+				$valid_regions = ['NA', 'EU', 'FE'];
+				$existing_creds = $options['amazon_credentials'] ?? [];
 
-			// Handle amazon_api_secret with remove functionality
-			if ( isset( $input['amazon_api_secret_removed'] ) && $input['amazon_api_secret_removed'] === 'true' ) {
-				// User clicked remove button
-				$sanitized_input['amazon_api_secret'] = '';
-			} elseif ( isset( $input['amazon_api_secret'] ) ) {
-                if ( ! empty( $input['amazon_api_secret'] ) ) {
-                    // A new secret has been entered. Store it directly.
-                    // WordPress handles slashing for DB. Avoid sanitization that might corrupt the secret.
-                    $sanitized_input['amazon_api_secret'] = $input['amazon_api_secret'];
-                } elseif ( isset( $options['amazon_api_secret'] ) ) {
-                    // No new secret was entered, but an old one exists. Keep the old one.
-                    $sanitized_input['amazon_api_secret'] = $options['amazon_api_secret'];
-                } else {
-                    // No new secret, and no old secret. Store an empty string.
-                    $sanitized_input['amazon_api_secret'] = '';
-                }
-            } elseif ( isset( $options['amazon_api_secret'] ) ) {
-                // The field might not be in $input if it was empty and the form didn't send it.
-                // Preserve the old value if it exists and the field wasn't part of the submission.
-                $sanitized_input['amazon_api_secret'] = $options['amazon_api_secret'];
-            }
+				foreach ( $valid_regions as $region ) {
+					if ( ! isset( $input['amazon_credentials'][$region] ) ) {
+						// Preserve existing if not submitted
+						if ( isset( $existing_creds[$region] ) ) {
+							$sanitized_creds[$region] = $existing_creds[$region];
+						}
+						continue;
+					}
+
+					$region_input = $input['amazon_credentials'][$region];
+					$region_existing = $existing_creds[$region] ?? [];
+
+					// Handle credential_id
+					$cred_id = '';
+					if ( isset( $region_input['credential_id'] ) ) {
+						$cred_id = sanitize_text_field( $region_input['credential_id'] );
+					} elseif ( isset( $region_existing['credential_id'] ) ) {
+						$cred_id = $region_existing['credential_id'];
+					}
+
+					// Handle credential_secret with remove functionality
+					$cred_secret = '';
+					if ( isset( $region_input['credential_secret_removed'] ) && $region_input['credential_secret_removed'] === 'true' ) {
+						$cred_secret = '';
+					} elseif ( isset( $region_input['credential_secret'] ) ) {
+						if ( ! empty( $region_input['credential_secret'] ) ) {
+							$cred_secret = $region_input['credential_secret'];
+						} elseif ( isset( $region_existing['credential_secret'] ) ) {
+							$cred_secret = $region_existing['credential_secret'];
+						}
+					} elseif ( isset( $region_existing['credential_secret'] ) ) {
+						$cred_secret = $region_existing['credential_secret'];
+					}
+
+					// Only store the region if at least one field has a value
+					if ( ! empty( $cred_id ) || ! empty( $cred_secret ) ) {
+						$sanitized_creds[$region] = [
+							'credential_id'     => $cred_id,
+							'credential_secret' => $cred_secret,
+						];
+					}
+				}
+
+				$sanitized_input['amazon_credentials'] = $sanitized_creds;
+
+				// Clear cached tokens when credentials are updated
+				if ( class_exists('Housefresh\Tools\Libs\Amazon\HFT_Creators_Api_Auth') ) {
+					\Housefresh\Tools\Libs\Amazon\HFT_Creators_Api_Auth::clear_all_cached_tokens();
+				}
+			} elseif ( isset( $options['amazon_credentials'] ) ) {
+				$sanitized_input['amazon_credentials'] = $options['amazon_credentials'];
+			}
 
 			if ( isset( $input['scrape_interval'] ) ) {
 				$allowed_intervals = [ 'hourly', 'twicedaily', 'daily' ];
@@ -286,9 +330,8 @@ if ( ! class_exists( 'HFT_Admin_Settings' ) ) {
 		public function render_section_callback( array $args ): void {
 			if ( isset( $args['description'] ) && !empty( $args['description'] ) ) {
 				echo '<p>' . esc_html( $args['description'] ) . '</p>';
-			} elseif (isset($args['title']) && $args['title'] === __( 'Amazon Product Advertising API Settings', 'housefresh-tools' )) {
-                // Default description for Amazon section if not provided
-                echo '<p>' . esc_html__( 'Configure your Amazon API credentials and associate tags here.', 'housefresh-tools' ) . '</p>';
+			} elseif (isset($args['title']) && $args['title'] === __( 'Amazon Creators API Settings', 'housefresh-tools' )) {
+                echo '<p>' . esc_html__( 'Configure your Amazon Creators API credentials and associate tags here. Credentials are region-specific (NA/EU/FE).', 'housefresh-tools' ) . '</p>';
             } elseif (isset($args['title']) && $args['title'] === __( 'Scraping Configuration', 'housefresh-tools' )) {
                  echo '<p>' . esc_html__( 'Set general scraping parameters.', 'housefresh-tools' ) . '</p>';
             }
@@ -312,9 +355,9 @@ if ( ! class_exists( 'HFT_Admin_Settings' ) ) {
 		public function render_password_field( array $args ): void {
 			$options = get_option( $this->main_settings_option_name );
 			$has_value = isset( $options[ $args['id'] ] ) && ! empty( $options[ $args['id'] ] );
-			
+
 			echo '<div class="hft-password-field-wrapper">';
-			
+
 			if ( $has_value ) {
 				// Show masked value and remove button
 				echo '<input type="text" value="' . esc_attr( str_repeat('*', 16) ) . '" class="regular-text hft-masked-secret" readonly style="background-color: #f0f0f1; color: #72777c;">';
@@ -325,9 +368,9 @@ if ( ! class_exists( 'HFT_Admin_Settings' ) ) {
 				// Show password input
 				echo '<input type="password" id="' . esc_attr( $args['id'] ) . '" name="' . esc_attr( $args['name'] ) . '" value="" class="regular-text">';
 			}
-			
+
 			echo '</div>';
-			
+
 			if ( isset( $args['description'] ) ) {
 				echo '<p class="description">' . esc_html( $args['description'] ) . '</p>';
 			}
@@ -347,6 +390,103 @@ if ( ! class_exists( 'HFT_Admin_Settings' ) ) {
 			if ( isset( $args['description'] ) ) {
 				echo '<p class="description">' . esc_html( $args['description'] ) . '</p>';
 			}
+		}
+
+		/**
+		 * Render the per-region credentials fields for Amazon Creators API.
+		 */
+		public function render_amazon_credentials_repeater( array $args ): void {
+			$options = get_option( $this->main_settings_option_name );
+			$credentials = isset( $options['amazon_credentials'] ) && is_array( $options['amazon_credentials'] ) ? $options['amazon_credentials'] : [];
+			$field_name_base = esc_attr( $args['name'] );
+
+			$regions = [
+				'NA' => [
+					'label'   => __( 'NA (Americas)', 'housefresh-tools' ),
+					'version' => '2.1',
+					'geos'    => 'US, CA, MX, BR',
+				],
+				'EU' => [
+					'label'   => __( 'EU (Europe/Middle East/India)', 'housefresh-tools' ),
+					'version' => '2.2',
+					'geos'    => 'GB, DE, FR, ES, IT, NL, BE, PL, SE, TR, AE, EG, SA, IN',
+				],
+				'FE' => [
+					'label'   => __( 'FE (Far East/Pacific)', 'housefresh-tools' ),
+					'version' => '2.3',
+					'geos'    => 'JP, AU, SG',
+				],
+			];
+
+			foreach ( $regions as $region_code => $region_info ) :
+				$cred_id = $credentials[$region_code]['credential_id'] ?? '';
+				$cred_secret = $credentials[$region_code]['credential_secret'] ?? '';
+				$has_secret = ! empty( $cred_secret );
+			?>
+				<div class="hft-region-credentials" style="margin-bottom: 20px; padding: 12px 16px; background: #f9f9f9; border: 1px solid #ddd; border-radius: 4px;">
+					<h4 style="margin: 0 0 8px 0;">
+						<?php echo esc_html( $region_info['label'] ); ?>
+						<span style="font-weight: normal; color: #666; font-size: 12px;">
+							&mdash; <?php printf( esc_html__( 'Version %s', 'housefresh-tools' ), esc_html( $region_info['version'] ) ); ?>
+							&mdash; <?php echo esc_html( $region_info['geos'] ); ?>
+						</span>
+					</h4>
+
+					<p style="margin: 4px 0;">
+						<label>
+							<?php esc_html_e( 'Credential ID:', 'housefresh-tools' ); ?>
+							<input type="text"
+								name="<?php echo $field_name_base; ?>[<?php echo esc_attr( $region_code ); ?>][credential_id]"
+								value="<?php echo esc_attr( $cred_id ); ?>"
+								class="regular-text"
+								placeholder="<?php esc_attr_e( 'Enter Credential ID', 'housefresh-tools' ); ?>">
+						</label>
+					</p>
+
+					<p style="margin: 4px 0;">
+						<label>
+							<?php esc_html_e( 'Credential Secret:', 'housefresh-tools' ); ?>
+						</label>
+						<div class="hft-password-field-wrapper">
+						<?php if ( $has_secret ) : ?>
+							<input type="text" value="<?php echo esc_attr( str_repeat('*', 16) ); ?>" class="regular-text hft-masked-secret" readonly style="background-color: #f0f0f1; color: #72777c;">
+							<button type="button" class="button button-secondary hft-remove-region-secret" data-region="<?php echo esc_attr( $region_code ); ?>"><?php esc_html_e( 'Remove', 'housefresh-tools' ); ?></button>
+							<input type="hidden"
+								name="<?php echo $field_name_base; ?>[<?php echo esc_attr( $region_code ); ?>][credential_secret]"
+								value="<?php echo esc_attr( $cred_secret ); ?>">
+						<?php else : ?>
+							<input type="password"
+								name="<?php echo $field_name_base; ?>[<?php echo esc_attr( $region_code ); ?>][credential_secret]"
+								value=""
+								class="regular-text"
+								placeholder="<?php esc_attr_e( 'Enter Credential Secret', 'housefresh-tools' ); ?>">
+						<?php endif; ?>
+						</div>
+					</p>
+				</div>
+			<?php endforeach;
+
+			if ( isset( $args['description'] ) ) {
+				echo '<p class="description">' . esc_html( $args['description'] ) . '</p>';
+			}
+			?>
+			<script type="text/javascript">
+				jQuery(document).ready(function($) {
+					$('.hft-remove-region-secret').on('click', function(e) {
+						e.preventDefault();
+						var $button = $(this);
+						var region = $button.data('region');
+						var $wrapper = $button.closest('.hft-password-field-wrapper');
+						var fieldNameBase = '<?php echo $field_name_base; ?>';
+
+						$wrapper.html(
+							'<input type="password" name="' + fieldNameBase + '[' + region + '][credential_secret]" value="" class="regular-text" placeholder="<?php esc_attr_e( 'Enter Credential Secret', 'housefresh-tools' ); ?>">' +
+							'<input type="hidden" name="' + fieldNameBase + '[' + region + '][credential_secret_removed]" value="true">'
+						);
+					});
+				});
+			</script>
+			<?php
 		}
 
 		/**
@@ -454,4 +594,4 @@ if ( ! class_exists( 'HFT_Admin_Settings' ) ) {
 		}
 
 	}
-} 
+}

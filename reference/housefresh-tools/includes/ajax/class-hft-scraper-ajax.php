@@ -20,6 +20,8 @@ class HFT_Scraper_Ajax {
         add_action('wp_ajax_hft_test_selector', [$this, 'handle_test_selector']);
         add_action('wp_ajax_hft_view_source', [$this, 'handle_view_source']);
         add_action('wp_ajax_hft_quick_test_scraper', [$this, 'handle_quick_test']);
+        add_action('wp_ajax_hft_detect_shopify_markets', [$this, 'handle_detect_markets']);
+        add_action('wp_ajax_hft_autodetect_shopify', [$this, 'handle_autodetect_shopify']);
     }
     
     /**
@@ -631,5 +633,145 @@ class HFT_Scraper_Ajax {
             // Invalid XPath syntax
             return false;
         }
+    }
+
+    /**
+     * Handle Shopify market detection
+     */
+    public function handle_detect_markets(): void {
+        // Check nonce
+        if (!check_ajax_referer('hft_scraper_admin', 'nonce', false)) {
+            wp_send_json_error(['message' => __('Invalid security token.', 'housefresh-tools')]);
+        }
+
+        // Check capabilities
+        if (!current_user_can('manage_options')) {
+            wp_send_json_error(['message' => __('Insufficient permissions.', 'housefresh-tools')]);
+        }
+
+        // Get parameters
+        $test_url = isset($_POST['test_url']) ? esc_url_raw($_POST['test_url']) : '';
+        $method = isset($_POST['method']) ? sanitize_text_field($_POST['method']) : 'cookie';
+        $geos_raw = isset($_POST['geos']) ? sanitize_text_field($_POST['geos']) : '';
+        $api_token = isset($_POST['api_token']) ? sanitize_text_field($_POST['api_token']) : '';
+        $shop_domain = isset($_POST['shop_domain']) ? sanitize_text_field($_POST['shop_domain']) : '';
+
+        // Validate required parameters
+        if (!$test_url || !$geos_raw) {
+            wp_send_json_error(['message' => __('Missing required parameters. test_url and geos are required.', 'housefresh-tools')]);
+        }
+
+        // Validate method-specific requirements
+        if ($method === 'api' && (!$api_token || !$shop_domain)) {
+            wp_send_json_error(['message' => __('API method requires api_token and shop_domain.', 'housefresh-tools')]);
+        }
+
+        // Parse geos into array
+        $geos = array_filter(array_map('trim', explode(',', $geos_raw)));
+
+        if (empty($geos)) {
+            wp_send_json_error(['message' => __('No valid geo codes provided.', 'housefresh-tools')]);
+        }
+
+        try {
+            $detector = new HFT_Shopify_Market_Detector();
+            $results = $detector->detect($test_url, $method, $geos, $api_token, $shop_domain);
+
+            wp_send_json_success(['results' => $results]);
+
+        } catch (Exception $e) {
+            wp_send_json_error([
+                'message' => __('Detection failed:', 'housefresh-tools') . ' ' . $e->getMessage()
+            ]);
+        }
+    }
+
+    /**
+     * Handle auto-detection of Shopify Storefront API token and shop domain
+     */
+    public function handle_autodetect_shopify(): void {
+        if (!check_ajax_referer('hft_scraper_admin', 'nonce', false)) {
+            wp_send_json_error(['message' => __('Invalid security token.', 'housefresh-tools')]);
+        }
+
+        if (!current_user_can('manage_options')) {
+            wp_send_json_error(['message' => __('Insufficient permissions.', 'housefresh-tools')]);
+        }
+
+        $domain = isset($_POST['domain']) ? sanitize_text_field(wp_unslash($_POST['domain'])) : '';
+        if (empty($domain)) {
+            wp_send_json_error(['message' => __('Please enter a domain first.', 'housefresh-tools')]);
+        }
+
+        // Fetch the store homepage
+        $url = 'https://' . ltrim($domain, 'https://');
+        $url = esc_url_raw($url);
+
+        $response = wp_remote_get($url, [
+            'timeout' => 30,
+            'user-agent' => 'Mozilla/5.0 (Windows NT 10.0; Win64; x64) AppleWebKit/537.36 (KHTML, like Gecko) Chrome/120.0.0.0 Safari/537.36',
+            'headers' => [
+                'Accept' => 'text/html,application/xhtml+xml,application/xml;q=0.9,*/*;q=0.8',
+                'Accept-Language' => 'en-US,en;q=0.9',
+            ],
+            'sslverify' => true,
+        ]);
+
+        if (is_wp_error($response)) {
+            wp_send_json_error(['message' => __('Failed to fetch store page: ', 'housefresh-tools') . $response->get_error_message()]);
+        }
+
+        $http_code = wp_remote_retrieve_response_code($response);
+        if ($http_code < 200 || $http_code >= 400) {
+            wp_send_json_error(['message' => sprintf(__('Store returned HTTP %d.', 'housefresh-tools'), $http_code)]);
+        }
+
+        $html = wp_remote_retrieve_body($response);
+        if (empty($html)) {
+            wp_send_json_error(['message' => __('Empty response from store.', 'housefresh-tools')]);
+        }
+
+        $found = [];
+
+        // Extract .myshopify.com domain
+        // Patterns: Shopify.shop = "xxx.myshopify.com" or "myshopify_domain":"xxx.myshopify.com"
+        $shop_domain = null;
+        if (preg_match('/Shopify\.shop\s*=\s*["\']([a-zA-Z0-9\-]+\.myshopify\.com)["\']/', $html, $m)) {
+            $shop_domain = $m[1];
+        } elseif (preg_match('/["\']myshopify_domain["\']\s*:\s*["\']([a-zA-Z0-9\-]+\.myshopify\.com)["\']/', $html, $m)) {
+            $shop_domain = $m[1];
+        } elseif (preg_match('/([a-zA-Z0-9\-]+\.myshopify\.com)/', $html, $m)) {
+            $shop_domain = $m[1];
+        }
+
+        if ($shop_domain) {
+            $found['shop_domain'] = sanitize_text_field($shop_domain);
+        }
+
+        // Extract Storefront API token
+        // Priority: X-Shopify-Storefront-Access-Token header in JS fetch calls (most reliable,
+        // always has product read scope), then storefrontAccessToken, then meta tag, then generic accessToken
+        $api_token = null;
+        if (preg_match('/X-Shopify-Storefront-Access-Token["\']?\s*:\s*["\']([a-f0-9]{32,})["\']/', $html, $m)) {
+            $api_token = $m[1];
+        } elseif (preg_match('/storefrontAccessToken["\']?\s*[:=]\s*["\']([a-f0-9]{32,})["\']/', $html, $m)) {
+            $api_token = $m[1];
+        } elseif (preg_match('/<meta[^>]+name=["\']shopify-checkout-api-token["\'][^>]+content=["\']([a-f0-9]{32,})["\']/', $html, $m)) {
+            $api_token = $m[1];
+        } elseif (preg_match('/<meta[^>]+content=["\']([a-f0-9]{32,})["\'][^>]+name=["\']shopify-checkout-api-token["\']/', $html, $m)) {
+            $api_token = $m[1];
+        } elseif (preg_match('/accessToken["\']?\s*[:=]\s*["\']([a-f0-9]{32,})["\']/', $html, $m)) {
+            $api_token = $m[1];
+        }
+
+        if ($api_token) {
+            $found['api_token'] = sanitize_text_field($api_token);
+        }
+
+        if (empty($found)) {
+            wp_send_json_error(['message' => __('Could not find Shopify API credentials in the store page. The store may not expose them publicly.', 'housefresh-tools')]);
+        }
+
+        wp_send_json_success($found);
     }
 }

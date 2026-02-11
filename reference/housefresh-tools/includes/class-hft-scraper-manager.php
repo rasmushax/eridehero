@@ -33,6 +33,9 @@ if ( ! class_exists( 'HFT_Scraper_Manager' ) ) {
 		/**
 		 * Scrapes a single tracked link.
 		 *
+		 * For Shopify Markets scrapers, iterates through all active currency markets
+		 * and stores aggregated results in the market_prices JSON column.
+		 *
 		 * @param int $tracked_link_id The ID of the link in hft_tracked_links table.
 		 * @return bool True on successful scrape and DB update, false otherwise.
 		 */
@@ -44,13 +47,10 @@ if ( ! class_exists( 'HFT_Scraper_Manager' ) ) {
 			$link_data = $wpdb->get_row( $wpdb->prepare( "SELECT * FROM {$tracked_links_table} WHERE id = %d", $tracked_link_id ), ARRAY_A );
 
 			if ( ! $link_data ) {
-				// Link not found
 				return false;
 			}
 
-			$parser = null;
-			// $parser_identifier will be the source_type_slug: 'amazon' or a hostname like 'shop.levoit.com'
-			$parser_identifier = $link_data['source_type_slug'] ?? ($link_data['parser_identifier'] ?? 'unknown'); // Use new column, fallback to old for a bit
+			$parser_identifier = $link_data['parser_identifier'] ?? 'unknown';
 			$tracking_url = $link_data['tracking_url'];
 
 			// Ensure the HFT_ParserInterface is loaded
@@ -66,11 +66,9 @@ if ( ! class_exists( 'HFT_Scraper_Manager' ) ) {
 			// 1. Determine and instantiate the parser
 			$parser = null;
 
-			// Check if we have a scraper_id (new system)
 			if (!empty($link_data['scraper_id'])) {
 				$parser = HFT_Parser_Factory::create_parser_by_scraper_id((int)$link_data['scraper_id']);
 			} else {
-				// Fall back to old system
 				$parser = HFT_Parser_Factory::create_parser($tracking_url, $parser_identifier);
 			}
 
@@ -86,7 +84,37 @@ if ( ! class_exists( 'HFT_Scraper_Manager' ) ) {
 				return false;
 			}
 
-			// 2. Execute the parser
+			// 2. Fetch scraper row early to determine if this is a Shopify Markets scraper
+			$scraper = null;
+			$is_shopify_markets = false;
+			if (!empty($link_data['scraper_id'])) {
+				$scrapers_table = $wpdb->prefix . 'hft_scrapers';
+				$scraper = $wpdb->get_row($wpdb->prepare(
+					"SELECT domain, geos, shopify_markets FROM {$scrapers_table} WHERE id = %d",
+					(int) $link_data['scraper_id']
+				), ARRAY_A);
+				if ($scraper) {
+					$is_shopify_markets = (bool) ($scraper['shopify_markets'] ?? false);
+				}
+			}
+
+			// 3. Branch: Shopify Markets multi-market scrape vs. regular single scrape
+			if ($is_shopify_markets && $scraper && !empty($scraper['geos'])) {
+				return $this->scrape_shopify_markets($tracked_link_id, $link_data, $parser, $scraper, $tracking_url);
+			}
+
+			// --- Regular single-market scrape flow ---
+			return $this->scrape_single($tracked_link_id, $link_data, $parser, $scraper, $tracking_url);
+		}
+
+		/**
+		 * Performs a regular single-market scrape.
+		 */
+		private function scrape_single( int $tracked_link_id, array $link_data, HFT_ParserInterface $parser, ?array $scraper, string $tracking_url ): bool {
+			global $wpdb;
+			$tracked_links_table = $wpdb->prefix . 'hft_tracked_links';
+			$price_history_table = $wpdb->prefix . 'hft_price_history';
+
 			try {
 				$parsed_data = $parser->parse( $tracking_url, $link_data );
 			} catch ( Exception $e ) {
@@ -94,16 +122,13 @@ if ( ! class_exists( 'HFT_Scraper_Manager' ) ) {
 				return false;
 			}
 
-			// 3. Process parser response
-			$current_time_mysql = current_time( 'mysql', true ); // GMT
+			$current_time_mysql = current_time( 'mysql', true );
 
 			if ( ! empty( $parsed_data['error'] ) ) {
-				// Scrape failed according to parser
 				$this->update_scrape_status( $tracked_link_id, false, $link_data['consecutive_failures'] + 1, $parsed_data['error'] );
 				return false;
 			}
 
-			// Scrape successful
 			$update_data = [
 				'current_price'          => $parsed_data['price'],
 				'current_currency'       => $parsed_data['currency'],
@@ -115,6 +140,18 @@ if ( ! class_exists( 'HFT_Scraper_Manager' ) ) {
 				'last_error_message'     => null,
 			];
 			$update_format = ['%f', '%s', '%s', '%s', '%s', '%d', '%d', '%s'];
+
+			// Sync geo_target and parser_identifier from scraper on successful scrape
+			if ($scraper) {
+				if (!empty($scraper['geos'])) {
+					$update_data['geo_target'] = $scraper['geos'];
+					$update_format[] = '%s';
+				}
+				if (!empty($scraper['domain'])) {
+					$update_data['parser_identifier'] = $scraper['domain'];
+					$update_format[] = '%s';
+				}
+			}
 
 			$wpdb->update( $tracked_links_table, $update_data, [ 'id' => $tracked_link_id ], $update_format, ['%d'] );
 
@@ -131,16 +168,129 @@ if ( ! class_exists( 'HFT_Scraper_Manager' ) ) {
 					],
 					['%d', '%f', '%s', '%s', '%s']
 				);
-				
-				// Trigger cache invalidation hook
-				$product_id = $wpdb->get_var( $wpdb->prepare( 
-					"SELECT product_post_id FROM {$tracked_links_table} WHERE id = %d", 
-					$tracked_link_id 
-				) );
-				if ( $product_id ) {
-					do_action( 'hft_price_updated', $tracked_link_id, (int) $product_id );
+
+				if ( !empty($link_data['product_post_id']) ) {
+					do_action( 'hft_price_updated', $tracked_link_id, (int) $link_data['product_post_id'] );
 				}
 			}
+			return true;
+		}
+
+		/**
+		 * Performs a multi-market scrape for Shopify Markets scrapers.
+		 *
+		 * Iterates through all currency groups from the scraper's geos,
+		 * scrapes each market, and stores aggregated results in market_prices JSON.
+		 */
+		private function scrape_shopify_markets( int $tracked_link_id, array $link_data, HFT_ParserInterface $parser, array $scraper, string $tracking_url ): bool {
+			global $wpdb;
+			$tracked_links_table = $wpdb->prefix . 'hft_tracked_links';
+			$price_history_table = $wpdb->prefix . 'hft_price_history';
+			$current_time_mysql = current_time( 'mysql', true );
+
+			$geos_array = array_map('trim', explode(',', $scraper['geos']));
+			$currency_groups = HFT_Shopify_Currencies::group_by_currency($geos_array);
+
+			$market_prices = [];
+			$first_market = null;
+			$errors = [];
+
+			foreach ($currency_groups as $currency => $countries) {
+				$representative = $countries[0]; // First country in the group
+
+				// Build link_data context for this market
+				$market_link_data = $link_data;
+				$market_link_data['geo_target'] = $representative;
+				$market_link_data['tracked_link_id'] = $tracked_link_id;
+
+				try {
+					$parsed_data = $parser->parse($tracking_url, $market_link_data);
+				} catch ( Exception $e ) {
+					$errors[] = sprintf('%s/%s: %s', $representative, $currency, $e->getMessage());
+					continue;
+				}
+
+				if (!empty($parsed_data['error'])) {
+					$errors[] = sprintf('%s/%s: %s', $representative, $currency, $parsed_data['error']);
+					continue;
+				}
+
+				// Validate returned currency matches expected
+				$expected_currency = $currency;
+				$actual_currency = strtoupper($parsed_data['currency'] ?? '');
+				if (!empty($actual_currency) && $actual_currency !== $expected_currency) {
+					$errors[] = sprintf('Currency mismatch for %s: expected %s, got %s', $representative, $expected_currency, $actual_currency);
+					continue;
+				}
+
+				// Store market result
+				$market_prices[$representative] = [
+					'price'     => (float) $parsed_data['price'],
+					'currency'  => $parsed_data['currency'],
+					'status'    => $parsed_data['status'],
+					'countries' => $countries,
+				];
+
+				// Track the first market for backward-compatible fields
+				if ($first_market === null) {
+					$first_market = $parsed_data;
+				}
+
+				// Insert price history entry for this market
+				if (isset($parsed_data['price']) && is_numeric($parsed_data['price']) && isset($parsed_data['currency']) && isset($parsed_data['status'])) {
+					$wpdb->insert(
+						$price_history_table,
+						[
+							'tracked_link_id' => $tracked_link_id,
+							'price'           => (float) $parsed_data['price'],
+							'currency'        => $parsed_data['currency'],
+							'status'          => $parsed_data['status'],
+							'geo'             => $representative,
+							'scraped_at'      => $current_time_mysql,
+						],
+						['%d', '%f', '%s', '%s', '%s', '%s']
+					);
+				}
+			}
+
+			// If no markets succeeded at all, report failure
+			if (empty($market_prices)) {
+				$error_msg = 'All markets failed: ' . implode('; ', $errors);
+				$this->update_scrape_status($tracked_link_id, false, $link_data['consecutive_failures'] + 1, $error_msg);
+				return false;
+			}
+
+			// Build update data using first market for backward-compatible fields
+			$update_data = [
+				'current_price'          => $first_market['price'],
+				'current_currency'       => $first_market['currency'],
+				'current_status'         => $first_market['status'],
+				'current_shipping_info'  => $first_market['shipping_info'] ?? null,
+				'market_prices'          => wp_json_encode($market_prices),
+				'last_scraped_at'        => $current_time_mysql,
+				'last_scrape_successful' => true,
+				'consecutive_failures'   => 0,
+				'last_error_message'     => !empty($errors) ? 'Partial: ' . implode('; ', $errors) : null,
+			];
+			$update_format = ['%f', '%s', '%s', '%s', '%s', '%s', '%d', '%d', '%s'];
+
+			// Sync geo_target from scraper's geos and parser_identifier from domain
+			if (!empty($scraper['geos'])) {
+				$update_data['geo_target'] = $scraper['geos'];
+				$update_format[] = '%s';
+			}
+			if (!empty($scraper['domain'])) {
+				$update_data['parser_identifier'] = $scraper['domain'];
+				$update_format[] = '%s';
+			}
+
+			$wpdb->update($tracked_links_table, $update_data, ['id' => $tracked_link_id], $update_format, ['%d']);
+
+			// Trigger cache invalidation
+			if (!empty($link_data['product_post_id'])) {
+				do_action('hft_price_updated', $tracked_link_id, (int) $link_data['product_post_id']);
+			}
+
 			return true;
 		}
 

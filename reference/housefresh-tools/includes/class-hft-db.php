@@ -43,6 +43,7 @@ if ( ! class_exists( 'HFT_Db' ) ) {
 				current_currency VARCHAR(10) NULL,
 				current_status VARCHAR(50) NULL,
 				current_shipping_info TEXT NULL,
+				market_prices TEXT NULL,
 				last_scraped_at DATETIME NULL,
 				last_scrape_successful BOOLEAN NULL,
 				consecutive_failures INT UNSIGNED NOT NULL DEFAULT 0,
@@ -64,6 +65,7 @@ if ( ! class_exists( 'HFT_Db' ) ) {
 				price DECIMAL(10,2) NOT NULL,
 				currency VARCHAR(10) NOT NULL,
 				status VARCHAR(50) NOT NULL,
+				geo VARCHAR(5) NULL,
 				scraped_at DATETIME NOT NULL DEFAULT CURRENT_TIMESTAMP,
 				PRIMARY KEY (id),
 				KEY tracked_link_id (tracked_link_id)
@@ -210,6 +212,28 @@ if ( ! class_exists( 'HFT_Db' ) ) {
 			$geos_input_exists = $wpdb->get_var("SHOW COLUMNS FROM `{$scrapers_table}` LIKE 'geos_input'");
 			if (!$geos_input_exists) {
 				$wpdb->query("ALTER TABLE `{$scrapers_table}` ADD COLUMN `geos_input` TEXT NULL AFTER `geos`");
+			}
+
+			// Add Shopify Markets columns to hft_scrapers
+			$shopify_markets_exists = $wpdb->get_var("SHOW COLUMNS FROM `{$scrapers_table}` LIKE 'shopify_markets'");
+			if (!$shopify_markets_exists) {
+				$wpdb->query("ALTER TABLE `{$scrapers_table}` ADD COLUMN `shopify_markets` BOOLEAN NOT NULL DEFAULT 0 AFTER `scrapingrobot_render_js`");
+				$wpdb->query("ALTER TABLE `{$scrapers_table}` ADD COLUMN `shopify_method` VARCHAR(20) NULL DEFAULT NULL AFTER `shopify_markets`");
+				$wpdb->query("ALTER TABLE `{$scrapers_table}` ADD COLUMN `shopify_storefront_token` VARCHAR(255) NULL AFTER `shopify_method`");
+				$wpdb->query("ALTER TABLE `{$scrapers_table}` ADD COLUMN `shopify_shop_domain` VARCHAR(255) NULL AFTER `shopify_storefront_token`");
+			}
+
+			// Add market_prices column to hft_tracked_links (multi-market JSON storage)
+			$market_prices_exists = $wpdb->get_var("SHOW COLUMNS FROM `{$tracked_links_table}` LIKE 'market_prices'");
+			if (!$market_prices_exists) {
+				$wpdb->query("ALTER TABLE `{$tracked_links_table}` ADD COLUMN `market_prices` TEXT NULL AFTER `current_shipping_info`");
+			}
+
+			// Add geo column to hft_price_history (identifies which geo a price entry belongs to)
+			$price_history_table = $wpdb->prefix . 'hft_price_history';
+			$geo_col_exists = $wpdb->get_var("SHOW COLUMNS FROM `{$price_history_table}` LIKE 'geo'");
+			if (!$geo_col_exists) {
+				$wpdb->query("ALTER TABLE `{$price_history_table}` ADD COLUMN `geo` VARCHAR(5) NULL AFTER `status`");
 			}
 
 			// Migration for enhanced extraction system (hft_scraper_rules)

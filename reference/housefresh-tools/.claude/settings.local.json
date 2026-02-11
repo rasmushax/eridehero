@@ -13,7 +13,9 @@
       "Bash(rg:*)",
       "Bash(wp eval:*)",
       "WebFetch(domain:github.com)",
-      "WebFetch(domain:ipinfo.io)"
+      "WebFetch(domain:ipinfo.io)",
+      "WebFetch(domain:affiliate-program.amazon.com)",
+      "Bash(git add:*)"
     ],
     "deny": []
   }

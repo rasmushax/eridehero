@@ -143,6 +143,11 @@ class HFT_Scraper_Admin {
                 'selectLogo' => __('Select Logo', 'housefresh-tools'),
                 'useLogo' => __('Use this logo', 'housefresh-tools'),
                 'removeLogo' => __('Remove', 'housefresh-tools'),
+                'detectingMarkets' => __('Detecting markets...', 'housefresh-tools'),
+                'detectMarkets' => __('Detect Markets', 'housefresh-tools'),
+                'detectMarketsNoUrl' => __('Please enter a Test URL first.', 'housefresh-tools'),
+                'detectMarketsNoGeos' => __('Please configure GEOs first.', 'housefresh-tools'),
+                'detectMarketsFailed' => __('Market detection failed.', 'housefresh-tools'),
             ],
         ]);
     }
@@ -473,6 +478,89 @@ class HFT_Scraper_Admin {
                         </tr>
                     </tbody>
                 </table>
+
+                <h2><?php _e('Shopify Markets', 'housefresh-tools'); ?></h2>
+                <table class="form-table" id="hft-shopify-markets-section">
+                    <tbody>
+                        <tr>
+                            <th scope="row"><label for="shopify_markets"><?php _e('Shopify Markets', 'housefresh-tools'); ?></label></th>
+                            <td>
+                                <input type="checkbox" name="shopify_markets" id="shopify_markets" value="1"
+                                       <?php checked($scraper ? $scraper->shopify_markets : false); ?>>
+                                <p class="description"><?php _e('Enable for Shopify sites that serve different prices by country. When enabled, each product URL auto-creates one tracked link per currency market.', 'housefresh-tools'); ?></p>
+                            </td>
+                        </tr>
+                        <tr class="hft-shopify-option" style="<?php echo ($scraper && $scraper->shopify_markets) ? '' : 'display: none;'; ?>">
+                            <th scope="row"><?php _e('Method', 'housefresh-tools'); ?></th>
+                            <td>
+                                <?php $shopify_method = $scraper ? ($scraper->shopify_method ?? 'cookie') : 'cookie'; ?>
+                                <label>
+                                    <input type="radio" name="shopify_method" value="cookie"
+                                           <?php checked($shopify_method, 'cookie'); ?>>
+                                    <?php _e('Cookie Injection', 'housefresh-tools'); ?>
+                                </label>
+                                <p class="description" style="margin-left: 24px;"><?php _e('Sets cart_currency and localization cookies. Works for stores like Backfire Boards.', 'housefresh-tools'); ?></p>
+                                <label style="display: block; margin-top: 8px;">
+                                    <input type="radio" name="shopify_method" value="api"
+                                           <?php checked($shopify_method, 'api'); ?>>
+                                    <?php _e('Storefront API', 'housefresh-tools'); ?>
+                                </label>
+                                <p class="description" style="margin-left: 24px;"><?php _e('Uses GraphQL @inContext directive. Works for stores like Aventon.', 'housefresh-tools'); ?></p>
+                            </td>
+                        </tr>
+                        <tr class="hft-shopify-option hft-shopify-api-option" style="<?php echo ($scraper && $scraper->shopify_markets && $shopify_method === 'api') ? '' : 'display: none;'; ?>">
+                            <th scope="row"><?php _e('API Settings', 'housefresh-tools'); ?></th>
+                            <td>
+                                <button type="button" id="hft-autodetect-shopify" class="button button-secondary">
+                                    <?php _e('Auto-detect from store', 'housefresh-tools'); ?>
+                                </button>
+                                <span id="hft-autodetect-status" style="margin-left: 8px;"></span>
+                                <p class="description"><?php _e('Fetches the store homepage and extracts the Storefront API token and .myshopify.com domain automatically.', 'housefresh-tools'); ?></p>
+                            </td>
+                        </tr>
+                        <tr class="hft-shopify-option hft-shopify-api-option" style="<?php echo ($scraper && $scraper->shopify_markets && $shopify_method === 'api') ? '' : 'display: none;'; ?>">
+                            <th scope="row"><label for="shopify_storefront_token"><?php _e('Storefront API Token', 'housefresh-tools'); ?></label></th>
+                            <td>
+                                <input type="text" name="shopify_storefront_token" id="shopify_storefront_token" class="regular-text"
+                                       value="<?php echo $scraper ? esc_attr($scraper->shopify_storefront_token ?? '') : ''; ?>"
+                                       placeholder="<?php esc_attr_e('e.g., d59e266083bdb8dc53e0ec8ad52ef19f', 'housefresh-tools'); ?>">
+                                <p class="description"><?php _e('Found in the store\'s theme JavaScript (search for "storefrontAccessToken" in page source).', 'housefresh-tools'); ?></p>
+                            </td>
+                        </tr>
+                        <tr class="hft-shopify-option hft-shopify-api-option" style="<?php echo ($scraper && $scraper->shopify_markets && $shopify_method === 'api') ? '' : 'display: none;'; ?>">
+                            <th scope="row"><label for="shopify_shop_domain"><?php _e('Shop Domain', 'housefresh-tools'); ?></label></th>
+                            <td>
+                                <input type="text" name="shopify_shop_domain" id="shopify_shop_domain" class="regular-text"
+                                       value="<?php echo $scraper ? esc_attr($scraper->shopify_shop_domain ?? '') : ''; ?>"
+                                       placeholder="<?php esc_attr_e('e.g., mystore.myshopify.com', 'housefresh-tools'); ?>">
+                                <p class="description"><?php _e('The .myshopify.com domain (found in page source or Storefront API endpoint).', 'housefresh-tools'); ?></p>
+                            </td>
+                        </tr>
+                        <tr class="hft-shopify-option" style="<?php echo ($scraper && $scraper->shopify_markets) ? '' : 'display: none;'; ?>">
+                            <th scope="row"><?php _e('Detect Markets', 'housefresh-tools'); ?></th>
+                            <td>
+                                <button type="button" id="hft-detect-markets" class="button button-secondary">
+                                    <?php _e('Detect Markets', 'housefresh-tools'); ?>
+                                </button>
+                                <p class="description"><?php _e('Tests which geo markets are available for this store. Requires a Test URL and GEOs to be configured above.', 'housefresh-tools'); ?></p>
+                                <div id="hft-detect-markets-results" style="display: none; margin-top: 10px;">
+                                    <table class="widefat" id="hft-markets-table">
+                                        <thead>
+                                            <tr>
+                                                <th style="width: 40px;"><?php _e('OK', 'housefresh-tools'); ?></th>
+                                                <th><?php _e('Market', 'housefresh-tools'); ?></th>
+                                                <th><?php _e('Countries', 'housefresh-tools'); ?></th>
+                                                <th><?php _e('Price', 'housefresh-tools'); ?></th>
+                                                <th><?php _e('Status', 'housefresh-tools'); ?></th>
+                                            </tr>
+                                        </thead>
+                                        <tbody></tbody>
+                                    </table>
+                                </div>
+                            </td>
+                        </tr>
+                    </tbody>
+                </table>
 				
 				<h2><?php _e('Test Scraper', 'housefresh-tools'); ?></h2>
                 <table class="form-table">
@@ -591,7 +679,11 @@ class HFT_Scraper_Admin {
         $use_curl = isset($_POST['use_curl']);
         $use_scrapingrobot = isset($_POST['use_scrapingrobot']);
         $scrapingrobot_render_js = isset($_POST['scrapingrobot_render_js']);
-        
+        $shopify_markets = isset($_POST['shopify_markets']);
+        $shopify_method = sanitize_text_field($_POST['shopify_method'] ?? 'cookie');
+        $shopify_storefront_token = sanitize_text_field($_POST['shopify_storefront_token'] ?? '');
+        $shopify_shop_domain = sanitize_text_field($_POST['shopify_shop_domain'] ?? '');
+
         if (empty($domain) || empty($name)) {
             $this->add_admin_notice('error', 'Domain and name are required.');
             return;
@@ -621,6 +713,10 @@ class HFT_Scraper_Admin {
             $scraper->use_curl = $use_curl;
             $scraper->use_scrapingrobot = $use_scrapingrobot;
             $scraper->scrapingrobot_render_js = $scrapingrobot_render_js;
+            $scraper->shopify_markets = $shopify_markets;
+            $scraper->shopify_method = $shopify_markets ? $shopify_method : null;
+            $scraper->shopify_storefront_token = ($shopify_markets && $shopify_method === 'api') ? $shopify_storefront_token : null;
+            $scraper->shopify_shop_domain = ($shopify_markets && $shopify_method === 'api') ? $shopify_shop_domain : null;
 
             if ($this->repository->update($scraper)) {
                 // Store success message in transient for display after redirect
@@ -650,6 +746,10 @@ class HFT_Scraper_Admin {
             $scraper->use_curl = $use_curl;
             $scraper->use_scrapingrobot = $use_scrapingrobot;
             $scraper->scrapingrobot_render_js = $scrapingrobot_render_js;
+            $scraper->shopify_markets = $shopify_markets;
+            $scraper->shopify_method = $shopify_markets ? $shopify_method : null;
+            $scraper->shopify_storefront_token = ($shopify_markets && $shopify_method === 'api') ? $shopify_storefront_token : null;
+            $scraper->shopify_shop_domain = ($shopify_markets && $shopify_method === 'api') ? $shopify_shop_domain : null;
             $scraper->is_active = true; // Default to active
 
             $scraper_id = $this->repository->create($scraper);

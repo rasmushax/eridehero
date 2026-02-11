@@ -22,6 +22,10 @@ class HFT_Scraper {
     public bool $use_curl;
     public bool $use_scrapingrobot;
     public bool $scrapingrobot_render_js;
+    public bool $shopify_markets;
+    public ?string $shopify_method;
+    public ?string $shopify_storefront_token;
+    public ?string $shopify_shop_domain;
     public int $consecutive_successes;
     public ?string $health_reset_at;
     public ?string $test_url;
@@ -43,6 +47,10 @@ class HFT_Scraper {
         $this->use_curl = (bool) ($data['use_curl'] ?? false);
         $this->use_scrapingrobot = (bool) ($data['use_scrapingrobot'] ?? false);
         $this->scrapingrobot_render_js = (bool) ($data['scrapingrobot_render_js'] ?? false);
+        $this->shopify_markets = (bool) ($data['shopify_markets'] ?? false);
+        $this->shopify_method = $data['shopify_method'] ?? null;
+        $this->shopify_storefront_token = $data['shopify_storefront_token'] ?? null;
+        $this->shopify_shop_domain = $data['shopify_shop_domain'] ?? null;
         $this->consecutive_successes = (int) ($data['consecutive_successes'] ?? 0);
         $this->health_reset_at = $data['health_reset_at'] ?? null;
         $this->test_url = $data['test_url'] ?? null;
@@ -65,6 +73,10 @@ class HFT_Scraper {
             'use_curl' => $this->use_curl,
             'use_scrapingrobot' => $this->use_scrapingrobot,
             'scrapingrobot_render_js' => $this->scrapingrobot_render_js,
+            'shopify_markets' => $this->shopify_markets,
+            'shopify_method' => $this->shopify_method,
+            'shopify_storefront_token' => $this->shopify_storefront_token,
+            'shopify_shop_domain' => $this->shopify_shop_domain,
             'consecutive_successes' => $this->consecutive_successes,
             'health_reset_at' => $this->health_reset_at,
             'test_url' => $this->test_url,

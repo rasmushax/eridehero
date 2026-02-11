@@ -906,4 +906,192 @@ jQuery(document).ready(function($) {
             $button.prop('disabled', false).text(originalText);
         });
     });
+
+    // ===========================================
+    // Shopify Markets UI
+    // ===========================================
+
+    const $shopifyMarketsCheckbox = $('#shopify_markets');
+    const $shopifyOptions = $('.hft-shopify-option');
+    const $shopifyApiOptions = $('.hft-shopify-api-option');
+    const $shopifyMethodRadios = $('input[name="shopify_method"]');
+
+    // Toggle Shopify Markets section visibility
+    $shopifyMarketsCheckbox.on('change', function() {
+        if ($(this).is(':checked')) {
+            $shopifyOptions.slideDown();
+            // Show/hide API fields based on current method
+            updateShopifyApiVisibility();
+        } else {
+            $shopifyOptions.slideUp();
+        }
+    });
+
+    // Toggle Storefront API fields based on method selection
+    $shopifyMethodRadios.on('change', function() {
+        updateShopifyApiVisibility();
+    });
+
+    function updateShopifyApiVisibility() {
+        const method = $('input[name="shopify_method"]:checked').val();
+        if (method === 'api') {
+            $shopifyApiOptions.slideDown();
+        } else {
+            $shopifyApiOptions.slideUp();
+        }
+    }
+
+    // Auto-detect Shopify API settings button handler
+    $('#hft-autodetect-shopify').on('click', function(e) {
+        e.preventDefault();
+
+        var $button = $(this);
+        var $status = $('#hft-autodetect-status');
+        var domain = $('#domain').val().trim();
+
+        if (!domain) {
+            alert('Please enter a domain first.');
+            return;
+        }
+
+        $button.prop('disabled', true);
+        $status.html('<span class="spinner is-active" style="float: none; margin: 0;"></span> Detecting...');
+
+        $.post(hftScraperAdmin.ajaxUrl, {
+            action: 'hft_autodetect_shopify',
+            nonce: hftScraperAdmin.nonce,
+            domain: domain
+        })
+        .done(function(response) {
+            if (response.success) {
+                var messages = [];
+                if (response.data.api_token) {
+                    $('#shopify_storefront_token').val(response.data.api_token);
+                    messages.push('Token found');
+                }
+                if (response.data.shop_domain) {
+                    $('#shopify_shop_domain').val(response.data.shop_domain);
+                    messages.push('Domain found');
+                }
+                $status.html('<span style="color: green;">' + escapeHtml(messages.join(', ')) + '</span>');
+            } else {
+                $status.html('<span style="color: red;">' + escapeHtml(response.data ? response.data.message : 'Detection failed') + '</span>');
+            }
+        })
+        .fail(function() {
+            $status.html('<span style="color: red;">Request failed</span>');
+        })
+        .always(function() {
+            $button.prop('disabled', false);
+            setTimeout(function() { $status.empty(); }, 10000);
+        });
+    });
+
+    // Detect Markets button handler
+    $('#hft-detect-markets').on('click', function(e) {
+        e.preventDefault();
+
+        const $button = $(this);
+        const $resultsContainer = $('#hft-detect-markets-results');
+        const $resultsBody = $('#hft-markets-table tbody');
+
+        // Get test URL
+        const testUrl = $testUrl.val().trim();
+        if (!testUrl) {
+            alert(hftScraperAdmin.strings.detectMarketsNoUrl);
+            return;
+        }
+
+        // Get current GEOs from Tagify
+        let geos = '';
+        if (hftGeosTagify && hftGeosTagify.value.length > 0) {
+            geos = hftGeosTagify.value.map(tag => tag.value).join(',');
+        }
+        if (!geos) {
+            alert(hftScraperAdmin.strings.detectMarketsNoGeos);
+            return;
+        }
+
+        // Get method and API settings
+        const method = $('input[name="shopify_method"]:checked').val() || 'cookie';
+        const apiToken = $('#shopify_storefront_token').val().trim();
+        const shopDomain = $('#shopify_shop_domain').val().trim();
+
+        // Validate API fields if API method
+        if (method === 'api' && (!apiToken || !shopDomain)) {
+            alert('Storefront API Token and Shop Domain are required for API method.');
+            return;
+        }
+
+        // Show loading state
+        $button.prop('disabled', true).text(hftScraperAdmin.strings.detectingMarkets);
+        $resultsBody.empty();
+        $resultsContainer.show();
+        $resultsBody.html('<tr><td colspan="5" style="text-align: center;"><span class="spinner is-active" style="float: none;"></span> ' + hftScraperAdmin.strings.detectingMarkets + '</td></tr>');
+
+        // Make AJAX request
+        $.post(hftScraperAdmin.ajaxUrl, {
+            action: 'hft_detect_shopify_markets',
+            nonce: hftScraperAdmin.nonce,
+            test_url: testUrl,
+            method: method,
+            geos: geos,
+            api_token: apiToken,
+            shop_domain: shopDomain
+        })
+        .done(function(response) {
+            if (response.success && response.data.results) {
+                renderMarketResults(response.data.results, $resultsBody);
+            } else {
+                $resultsBody.html('<tr><td colspan="5" class="error">' +
+                    escapeHtml(response.data ? response.data.message : hftScraperAdmin.strings.detectMarketsFailed) +
+                    '</td></tr>');
+            }
+        })
+        .fail(function() {
+            $resultsBody.html('<tr><td colspan="5" class="error">' +
+                hftScraperAdmin.strings.detectMarketsFailed +
+                '</td></tr>');
+        })
+        .always(function() {
+            $button.prop('disabled', false).text(hftScraperAdmin.strings.detectMarkets);
+        });
+    });
+
+    /**
+     * Render market detection results into the table
+     */
+    function renderMarketResults(results, $tbody) {
+        $tbody.empty();
+
+        if (!results || results.length === 0) {
+            $tbody.html('<tr><td colspan="5">No markets detected.</td></tr>');
+            return;
+        }
+
+        results.forEach(function(market) {
+            const isSuccess = market.success;
+            const icon = isSuccess ? '<span style="color: green;">&#10003;</span>' : '<span style="color: red;">&#10007;</span>';
+            const countriesList = (market.countries || []).join(', ');
+            const priceDisplay = market.price ? (market.price + ' ' + (market.currency || '')) : '-';
+            const statusClass = isSuccess ? '' : ' style="color: #999;"';
+
+            let statusText = '';
+            if (isSuccess) {
+                statusText = '<span style="color: green;">Available</span>';
+            } else {
+                statusText = '<span style="color: red;">' + escapeHtml(market.error || 'Failed') + '</span>';
+            }
+
+            const row = '<tr' + statusClass + '>' +
+                '<td>' + icon + '</td>' +
+                '<td><strong>' + escapeHtml(market.expected_currency || '?') + '</strong></td>' +
+                '<td>' + escapeHtml(countriesList) + '</td>' +
+                '<td>' + escapeHtml(priceDisplay) + '</td>' +
+                '<td>' + statusText + '</td>' +
+                '</tr>';
+
+            $tbody.append(row);
+        });
+    }
 });
