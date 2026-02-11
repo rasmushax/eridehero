@@ -154,6 +154,18 @@ class SettingsPage {
             'sanitize_callback' => 'sanitize_text_field',
             'default'           => '',
         ]);
+
+        register_setting(self::OPTION_GROUP_APIS, 'erh_google_api_key', [
+            'type'              => 'string',
+            'sanitize_callback' => 'sanitize_text_field',
+            'default'           => '',
+        ]);
+
+        register_setting(self::OPTION_GROUP_APIS, 'erh_google_search_engine_id', [
+            'type'              => 'string',
+            'sanitize_callback' => 'sanitize_text_field',
+            'default'           => '',
+        ]);
     }
 
     /**
@@ -518,6 +530,73 @@ class SettingsPage {
                 <th scope="row"><?php esc_html_e('Status', 'erh-core'); ?></th>
                 <td>
                     <?php if ($is_configured) : ?>
+                        <span style="color: #46b450;">&#10003; <?php esc_html_e('Configured', 'erh-core'); ?></span>
+                    <?php else : ?>
+                        <span style="color: #dc3232;">&#10007; <?php esc_html_e('Not configured', 'erh-core'); ?></span>
+                    <?php endif; ?>
+                </td>
+            </tr>
+        </table>
+
+        <?php
+        $google_key = get_option('erh_google_api_key', '');
+        $google_cse = get_option('erh_google_search_engine_id', '');
+        $google_configured = !empty($google_key) && !empty($google_cse);
+        ?>
+
+        <table class="form-table" role="presentation">
+            <tr>
+                <th scope="row" colspan="2">
+                    <h3 style="margin-bottom: 0;"><?php esc_html_e('Google Custom Search', 'erh-core'); ?></h3>
+                    <p class="description" style="font-weight: normal;">
+                        <?php esc_html_e('Used by the Image Populator to find product images.', 'erh-core'); ?>
+                        <?php
+                        printf(
+                            /* translators: %s: Google API Console URL */
+                            esc_html__('Set up at %s.', 'erh-core'),
+                            '<a href="https://console.cloud.google.com/apis/credentials" target="_blank">Google API Console</a>'
+                        );
+                        ?>
+                    </p>
+                </th>
+            </tr>
+            <tr>
+                <th scope="row">
+                    <label for="erh_google_api_key"><?php esc_html_e('API Key', 'erh-core'); ?></label>
+                </th>
+                <td>
+                    <input type="password"
+                           id="erh_google_api_key"
+                           name="erh_google_api_key"
+                           value="<?php echo esc_attr($google_key); ?>"
+                           class="regular-text">
+                </td>
+            </tr>
+            <tr>
+                <th scope="row">
+                    <label for="erh_google_search_engine_id"><?php esc_html_e('Search Engine ID', 'erh-core'); ?></label>
+                </th>
+                <td>
+                    <input type="text"
+                           id="erh_google_search_engine_id"
+                           name="erh_google_search_engine_id"
+                           value="<?php echo esc_attr($google_cse); ?>"
+                           class="regular-text">
+                    <p class="description">
+                        <?php
+                        printf(
+                            /* translators: %s: Programmable Search Engine URL */
+                            esc_html__('Create a search engine at %s with "Search the entire web" enabled and "Image search" on.', 'erh-core'),
+                            '<a href="https://programmablesearchengine.google.com/" target="_blank">Programmable Search Engine</a>'
+                        );
+                        ?>
+                    </p>
+                </td>
+            </tr>
+            <tr>
+                <th scope="row"><?php esc_html_e('Status', 'erh-core'); ?></th>
+                <td>
+                    <?php if ($google_configured) : ?>
                         <span style="color: #46b450;">&#10003; <?php esc_html_e('Configured', 'erh-core'); ?></span>
                     <?php else : ?>
                         <span style="color: #dc3232;">&#10007; <?php esc_html_e('Not configured', 'erh-core'); ?></span>

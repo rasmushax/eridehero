@@ -12,6 +12,8 @@ return array(
     'ERH\\Admin\\ClickStatsPage' => $baseDir . '/includes/admin/class-click-stats-page.php',
     'ERH\\Admin\\ComparisonDashboardWidget' => $baseDir . '/includes/admin/class-comparison-dashboard-widget.php',
     'ERH\\Admin\\EmailTestPage' => $baseDir . '/includes/admin/class-email-test-page.php',
+    'ERH\\Admin\\GoogleImageClient' => $baseDir . '/includes/admin/class-google-image-client.php',
+    'ERH\\Admin\\ImagePopulator' => $baseDir . '/includes/admin/class-image-populator.php',
     'ERH\\Admin\\LinkPopulator' => $baseDir . '/includes/admin/class-link-populator.php',
     'ERH\\Admin\\NewsletterAdmin' => $baseDir . '/includes/admin/class-newsletter-admin.php',
     'ERH\\Admin\\PerplexityClient' => $baseDir . '/includes/admin/class-perplexity-client.php',

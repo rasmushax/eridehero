@@ -1,0 +1,287 @@
+/**
+ * Image Populator - Product image finder modal styles.
+ *
+ * @package ERH\Admin
+ */
+
+/* Floating Trigger Button */
+.erh-ip-trigger {
+    position: fixed;
+    bottom: 30px;
+    right: 180px;
+    z-index: 99999;
+    display: flex;
+    align-items: center;
+    gap: 8px;
+    padding: 12px 20px;
+    background: #8c5fc7;
+    color: #fff;
+    border: none;
+    border-radius: 8px;
+    font-size: 14px;
+    font-weight: 600;
+    cursor: pointer;
+    box-shadow: 0 4px 12px rgba(0, 0, 0, 0.15);
+    transition: all 0.2s ease;
+}
+
+.erh-ip-trigger:hover {
+    background: #6e44a8;
+    box-shadow: 0 6px 16px rgba(0, 0, 0, 0.2);
+    transform: translateY(-1px);
+}
+
+.erh-ip-trigger:active {
+    transform: translateY(0);
+}
+
+.erh-ip-trigger-icon {
+    font-size: 18px;
+}
+
+/* Modal Overlay */
+.erh-ip-overlay {
+    position: fixed;
+    top: 0;
+    left: 0;
+    right: 0;
+    bottom: 0;
+    z-index: 100000;
+    display: flex;
+    align-items: center;
+    justify-content: center;
+    background: rgba(0, 0, 0, 0.6);
+    padding: 20px;
+}
+
+/* Modal Container */
+.erh-ip-modal {
+    background: #fff;
+    border-radius: 8px;
+    box-shadow: 0 10px 40px rgba(0, 0, 0, 0.25);
+    width: 100%;
+    max-width: 860px;
+    max-height: 90vh;
+    display: flex;
+    flex-direction: column;
+}
+
+/* Modal Header */
+.erh-ip-header {
+    display: flex;
+    align-items: center;
+    justify-content: space-between;
+    padding: 16px 20px;
+    border-bottom: 1px solid #c3c4c7;
+}
+
+.erh-ip-header h2 {
+    margin: 0;
+    font-size: 18px;
+    font-weight: 600;
+    color: #1d2327;
+}
+
+.erh-ip-close {
+    background: none;
+    border: none;
+    font-size: 24px;
+    color: #646970;
+    cursor: pointer;
+    padding: 0 4px;
+    line-height: 1;
+}
+
+.erh-ip-close:hover {
+    color: #1d2327;
+}
+
+/* Modal Body */
+.erh-ip-body {
+    padding: 20px;
+    overflow-y: auto;
+    flex: 1;
+}
+
+/* Search Bar */
+.erh-ip-search-bar {
+    display: flex;
+    gap: 8px;
+    margin-bottom: 15px;
+}
+
+.erh-ip-search-input {
+    flex: 1;
+    padding: 8px 12px;
+    font-size: 14px;
+    border: 1px solid #c3c4c7;
+    border-radius: 4px;
+}
+
+.erh-ip-search-input:focus {
+    border-color: #2271b1;
+    box-shadow: 0 0 0 1px #2271b1;
+    outline: none;
+}
+
+/* Warning */
+.erh-ip-warning {
+    margin: 0 0 12px;
+    padding: 8px 12px;
+    background: #fcf9e8;
+    color: #996800;
+    border-radius: 4px;
+    font-size: 13px;
+}
+
+/* Status Messages */
+.erh-ip-status {
+    margin-bottom: 15px;
+    padding: 10px 15px;
+    border-radius: 4px;
+    font-size: 13px;
+    background: #f6f7f7;
+    color: #646970;
+}
+
+.erh-ip-status.is-error {
+    background: #fcf0f1;
+    color: #d63638;
+}
+
+.erh-ip-status.is-success {
+    background: #edfaef;
+    color: #00a32a;
+}
+
+.erh-ip-status.is-info {
+    background: #f0f6fc;
+    color: #2271b1;
+}
+
+/* Image Grid */
+.erh-ip-grid {
+    display: grid;
+    grid-template-columns: repeat(auto-fill, minmax(160px, 1fr));
+    gap: 12px;
+}
+
+/* Image Card */
+.erh-ip-card {
+    border: 2px solid #dcdcde;
+    border-radius: 6px;
+    overflow: hidden;
+    cursor: pointer;
+    transition: all 0.15s ease;
+    background: #fff;
+}
+
+.erh-ip-card:hover {
+    border-color: #8c5fc7;
+    box-shadow: 0 2px 8px rgba(140, 95, 199, 0.2);
+}
+
+.erh-ip-card.is-selected {
+    border-color: #8c5fc7;
+    box-shadow: 0 0 0 2px rgba(140, 95, 199, 0.3);
+}
+
+.erh-ip-card.is-done {
+    border-color: #00a32a;
+    box-shadow: 0 0 0 2px rgba(0, 163, 42, 0.3);
+}
+
+.erh-ip-card.is-loading {
+    opacity: 0.7;
+    pointer-events: none;
+}
+
+.erh-ip-card.is-loading .erh-ip-card-img::after {
+    content: '';
+    position: absolute;
+    top: 0;
+    left: 0;
+    right: 0;
+    bottom: 0;
+    background: rgba(255, 255, 255, 0.7) url('data:image/svg+xml,<svg xmlns="http://www.w3.org/2000/svg" width="24" height="24" viewBox="0 0 24 24"><style>@keyframes spin{to{transform:rotate(360deg)}}</style><circle cx="12" cy="12" r="10" fill="none" stroke="%238c5fc7" stroke-width="3" stroke-dasharray="31.4 31.4" style="animation:spin 1s linear infinite"/></svg>') center center no-repeat;
+}
+
+/* Card Image */
+.erh-ip-card-img {
+    position: relative;
+    height: 130px;
+    background: #f6f7f7;
+    display: flex;
+    align-items: center;
+    justify-content: center;
+}
+
+.erh-ip-card-img img {
+    max-width: 100%;
+    max-height: 100%;
+    object-fit: contain;
+}
+
+/* Card Info */
+.erh-ip-card-info {
+    padding: 6px 8px;
+    display: flex;
+    flex-wrap: wrap;
+    gap: 4px;
+    align-items: center;
+    border-top: 1px solid #f0f0f1;
+    min-height: 28px;
+}
+
+.erh-ip-card-dims {
+    font-size: 11px;
+    color: #646970;
+}
+
+.erh-ip-card-format {
+    font-size: 10px;
+    font-weight: 600;
+    text-transform: uppercase;
+    padding: 1px 5px;
+    border-radius: 3px;
+    background: #f0f6fc;
+    color: #2271b1;
+}
+
+.erh-ip-card-source {
+    font-size: 11px;
+    color: #a7aaad;
+    margin-left: auto;
+    overflow: hidden;
+    text-overflow: ellipsis;
+    white-space: nowrap;
+    max-width: 100px;
+}
+
+/* Responsive */
+@media screen and (max-width: 782px) {
+    .erh-ip-trigger {
+        bottom: 16px;
+        right: 16px;
+        padding: 10px 16px;
+        font-size: 13px;
+    }
+
+    .erh-ip-modal {
+        max-width: 100%;
+        max-height: 95vh;
+    }
+
+    .erh-ip-overlay {
+        padding: 10px;
+    }
+
+    .erh-ip-grid {
+        grid-template-columns: repeat(auto-fill, minmax(120px, 1fr));
+        gap: 8px;
+    }
+
+    .erh-ip-card-img {
+        height: 100px;
+    }
+}

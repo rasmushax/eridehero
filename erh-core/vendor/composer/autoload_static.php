@@ -13,6 +13,8 @@ class ComposerStaticInitb5e889746c5280811e87a72c161db6db
         'ERH\\Admin\\ClickStatsPage' => __DIR__ . '/../..' . '/includes/admin/class-click-stats-page.php',
         'ERH\\Admin\\ComparisonDashboardWidget' => __DIR__ . '/../..' . '/includes/admin/class-comparison-dashboard-widget.php',
         'ERH\\Admin\\EmailTestPage' => __DIR__ . '/../..' . '/includes/admin/class-email-test-page.php',
+        'ERH\\Admin\\GoogleImageClient' => __DIR__ . '/../..' . '/includes/admin/class-google-image-client.php',
+        'ERH\\Admin\\ImagePopulator' => __DIR__ . '/../..' . '/includes/admin/class-image-populator.php',
         'ERH\\Admin\\LinkPopulator' => __DIR__ . '/../..' . '/includes/admin/class-link-populator.php',
         'ERH\\Admin\\NewsletterAdmin' => __DIR__ . '/../..' . '/includes/admin/class-newsletter-admin.php',
         'ERH\\Admin\\PerplexityClient' => __DIR__ . '/../..' . '/includes/admin/class-perplexity-client.php',

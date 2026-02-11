@@ -50,6 +50,7 @@ use ERH\Admin\ProductPopularityPage;
 use ERH\Admin\ProductPopularityWidget;
 use ERH\Admin\SpecEditor;
 use ERH\Admin\SpecPopulator;
+use ERH\Admin\ImagePopulator;
 use ERH\Admin\EmailTestPage;
 use ERH\Admin\NewsletterAdmin;
 use ERH\Migration\MigrationAdmin;
@@ -224,6 +225,13 @@ class Core {
      * @var SpecPopulator
      */
     private SpecPopulator $spec_populator;
+
+    /**
+     * Image populator admin tool instance.
+     *
+     * @var ImagePopulator
+     */
+    private ImagePopulator $image_populator;
 
     /**
      * Email test page instance.
@@ -622,6 +630,10 @@ class Core {
         // Initialize spec populator admin page.
         $this->spec_populator = new SpecPopulator();
         $this->spec_populator->register();
+
+        // Initialize image populator on product edit screens.
+        $this->image_populator = new ImagePopulator();
+        $this->image_populator->register();
 
         // Initialize email test page.
         $this->email_test_page = new EmailTestPage();
