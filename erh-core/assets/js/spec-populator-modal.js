@@ -193,14 +193,17 @@
                 statusClass = 'erh-sp-badge-same';
             }
 
-            rows += '<tr data-field="' + escAttr(fieldPath) + '">'
+            const isChecked = isValid ? ' checked' : '';
+            const fieldType = fieldSchema.type || 'text';
+
+            rows += '<tr data-field="' + escAttr(fieldPath) + '" data-type="' + escAttr(fieldType) + '">'
                 + '<td class="erh-sp-check-col">'
-                + (isValid ? '<input type="checkbox" checked data-value=\'' + escAttr(JSON.stringify(suggestedVal)) + '\'>' : '')
+                + '<input type="checkbox"' + isChecked + '>'
                 + '</td>'
                 + '<td>' + escHtml(fieldSchema.label || fieldPath) + '</td>'
                 + '<td>' + escHtml(fieldSchema.group || '') + '</td>'
                 + '<td>' + formatValue(currentVal, fieldSchema) + '</td>'
-                + '<td>' + formatValue(suggestedVal, fieldSchema)
+                + '<td>' + buildEditInput(suggestedVal, fieldSchema)
                 + (suggestion.message ? '<span class="erh-sp-validation-msg">' + escHtml(suggestion.message) + '</span>' : '')
                 + '</td>'
                 + '<td><span class="erh-sp-badge ' + statusClass + '">' + status + '</span></td>'
@@ -240,7 +243,10 @@
         resultsEl.querySelectorAll('tr[data-field]').forEach(row => {
             const cb = row.querySelector('input[type="checkbox"]');
             if (!cb || !cb.checked) return;
-            specs[row.dataset.field] = JSON.parse(cb.dataset.value);
+            const value = getEditValue(row);
+            if (value !== null) {
+                specs[row.dataset.field] = value;
+            }
         });
 
         if (!Object.keys(specs).length) {
@@ -277,7 +283,7 @@
     }
 
     /**
-     * Format a value for display.
+     * Format a value for display (read-only).
      */
     function formatValue(value, schema) {
         if (value === null || value === undefined || value === '') {
@@ -294,6 +300,69 @@
             display += ' <span class="erh-sp-unit">' + escHtml(schema.append) + '</span>';
         }
         return display;
+    }
+
+    /**
+     * Build an editable input for the suggested value column.
+     */
+    function buildEditInput(suggestedVal, fieldSchema) {
+        const type = fieldSchema.type || 'text';
+        const val = (suggestedVal !== null && suggestedVal !== undefined) ? suggestedVal : '';
+
+        if (type === 'true_false') {
+            const isTrue = val === 1 || val === '1' || val === true;
+            const isFalse = val === 0 || val === '0' || val === false;
+            return '<select class="erh-sp-edit-value">'
+                + '<option value=""' + (!isTrue && !isFalse ? ' selected' : '') + '>\u2014</option>'
+                + '<option value="1"' + (isTrue ? ' selected' : '') + '>Yes</option>'
+                + '<option value="0"' + (isFalse ? ' selected' : '') + '>No</option>'
+                + '</select>';
+        }
+
+        if (type === 'select' && fieldSchema.choices && Object.keys(fieldSchema.choices).length) {
+            let html = '<select class="erh-sp-edit-value">'
+                + '<option value="">\u2014</option>';
+            for (const [optVal, optLabel] of Object.entries(fieldSchema.choices)) {
+                const selected = String(val) === String(optVal) ? ' selected' : '';
+                html += '<option value="' + escAttr(optVal) + '"' + selected + '>' + escHtml(String(optLabel)) + '</option>';
+            }
+            html += '</select>';
+            return html;
+        }
+
+        if (type === 'textarea') {
+            return '<textarea class="erh-sp-edit-value" rows="2">' + escHtml(String(val)) + '</textarea>';
+        }
+
+        const displayVal = Array.isArray(val) ? val.join(', ') : String(val);
+        return '<input type="text" class="erh-sp-edit-value" value="' + escAttr(displayVal) + '">';
+    }
+
+    /**
+     * Read the edited value from a result row's input.
+     */
+    function getEditValue(row) {
+        const type = row.dataset.type || 'text';
+        const input = row.querySelector('.erh-sp-edit-value');
+        if (!input) return null;
+
+        const raw = (input.tagName === 'TEXTAREA' ? input.value : input.value).trim();
+        if (raw === '' || raw === '\u2014') return null;
+
+        if (type === 'number') {
+            const num = parseFloat(raw);
+            return isNaN(num) ? raw : num;
+        }
+
+        if (type === 'true_false') {
+            return raw === '1' ? 1 : (raw === '0' ? 0 : null);
+        }
+
+        if (type === 'checkbox') {
+            return raw.split(',').map(function(s) { return s.trim(); }).filter(Boolean);
+        }
+
+        return raw;
     }
 
     /**

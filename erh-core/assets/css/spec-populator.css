@@ -378,6 +378,39 @@
     margin-top: 2px;
 }
 
+/* Editable suggested values */
+.erh-sp-edit-value {
+    width: 100%;
+    padding: 4px 6px;
+    border: 1px solid #c3c4c7;
+    border-radius: 3px;
+    font-size: 13px;
+    font-family: inherit;
+    background: #fff;
+    color: #1d2327;
+    box-sizing: border-box;
+}
+
+.erh-sp-edit-value:focus {
+    border-color: #2271b1;
+    box-shadow: 0 0 0 1px #2271b1;
+    outline: none;
+}
+
+textarea.erh-sp-edit-value {
+    resize: vertical;
+    min-height: 36px;
+}
+
+select.erh-sp-edit-value {
+    max-width: 200px;
+}
+
+/* Modal editable inputs */
+.erh-spm-table .erh-sp-edit-value {
+    max-width: 180px;
+}
+
 /* Actions Bottom */
 .erh-sp-actions-bottom {
     display: flex;

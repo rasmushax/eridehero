@@ -214,6 +214,31 @@
     padding: 6px 8px !important;
 }
 
+/* Editable suggested values in modal */
+.erh-spm-results .erh-sp-edit-value {
+    width: 100%;
+    max-width: 180px;
+    padding: 4px 6px;
+    border: 1px solid #c3c4c7;
+    border-radius: 3px;
+    font-size: 13px;
+    font-family: inherit;
+    background: #fff;
+    color: #1d2327;
+    box-sizing: border-box;
+}
+
+.erh-spm-results .erh-sp-edit-value:focus {
+    border-color: #2271b1;
+    box-shadow: 0 0 0 1px #2271b1;
+    outline: none;
+}
+
+.erh-spm-results textarea.erh-sp-edit-value {
+    resize: vertical;
+    min-height: 36px;
+}
+
 /* Modal Footer */
 .erh-spm-footer {
     display: flex;
