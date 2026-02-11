@@ -28,15 +28,15 @@ class ImagePopulator {
     /**
      * Google Image client.
      *
-     * @var GoogleImageClient
+     * @var SerpApiImageClient
      */
-    private GoogleImageClient $google;
+    private SerpApiImageClient $google;
 
     /**
      * Constructor.
      */
     public function __construct() {
-        $this->google = new GoogleImageClient();
+        $this->google = new SerpApiImageClient();
     }
 
     /**
