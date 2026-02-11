@@ -596,6 +596,13 @@
             cb.addEventListener('change', updateAddCount);
         });
 
+        // Bind URL input events for manual entry
+        if (currentMode !== 'amazon') {
+            tbody.querySelectorAll('.erh-lp-url-input').forEach(input => {
+                input.addEventListener('input', handleManualUrlInput);
+            });
+        }
+
         updateAddCount();
     }
 
@@ -621,7 +628,6 @@
                 <td class="check-column">
                     <input type="checkbox"
                            ${hasUrl && isVerified ? 'checked' : ''}
-                           ${!hasUrl ? 'disabled' : ''}
                            data-product-id="${result.product_id}"
                            data-link-id="${result.link_id || ''}">
                 </td>
@@ -630,10 +636,8 @@
                     ${escapeHtml(result.product_name)} ${overwriteIndicator}
                 </td>
                 <td class="url-cell">
-                    ${hasUrl
-                        ? `<input type="text" class="erh-lp-url-input" value="${escapeHtml(result.url)}" data-product-id="${result.product_id}">
-                           <a href="${escapeHtml(result.url)}" target="_blank" class="erh-lp-url-open" title="Open URL">&#8599;</a>`
-                        : '<span class="erh-lp-not-found">--</span>'}
+                    <input type="text" class="erh-lp-url-input" value="${hasUrl ? escapeHtml(result.url) : ''}" data-product-id="${result.product_id}" placeholder="${hasUrl ? '' : 'Paste URL...'}">
+                    ${hasUrl ? `<a href="${escapeHtml(result.url)}" target="_blank" class="erh-lp-url-open" title="Open URL">&#8599;</a>` : ''}
                 </td>
                 <td class="status-cell">
                     <span class="erh-lp-status erh-lp-status-${statusClass}">
@@ -744,6 +748,57 @@
         if (addLinksBtn) {
             addLinksBtn.disabled = checked.length === 0;
         }
+    }
+
+    /**
+     * Handle manual URL input on not-found rows.
+     * Auto-checks the checkbox and adds the open-link icon when a URL is entered.
+     */
+    function handleManualUrlInput(e) {
+        const input = e.target;
+        const row = input.closest('tr');
+        const cb = row.querySelector('input[type="checkbox"]');
+        const url = input.value.trim();
+        const urlCell = input.closest('.url-cell');
+
+        if (url) {
+            cb.checked = true;
+            // Add open-link icon if not already present
+            if (!urlCell.querySelector('.erh-lp-url-open')) {
+                const link = document.createElement('a');
+                link.href = url;
+                link.target = '_blank';
+                link.className = 'erh-lp-url-open';
+                link.title = 'Open URL';
+                link.innerHTML = '&#8599;';
+                urlCell.appendChild(link);
+            } else {
+                urlCell.querySelector('.erh-lp-url-open').href = url;
+            }
+            // Update row status to manual
+            row.className = row.className.replace(/\bstatus-\w+/, 'status-warning');
+            const statusSpan = row.querySelector('.erh-lp-status');
+            if (statusSpan) {
+                statusSpan.className = 'erh-lp-status erh-lp-status-warning';
+                statusSpan.innerHTML = '&#9998; Manual';
+            }
+        } else {
+            cb.checked = false;
+            // Remove open-link icon
+            const openLink = urlCell.querySelector('.erh-lp-url-open');
+            if (openLink && !input.defaultValue) {
+                openLink.remove();
+            }
+            // Revert status
+            row.className = row.className.replace(/\bstatus-\w+/, 'status-error');
+            const statusSpan = row.querySelector('.erh-lp-status');
+            if (statusSpan) {
+                statusSpan.className = 'erh-lp-status erh-lp-status-error';
+                statusSpan.innerHTML = '&#10007; NOT_FOUND';
+            }
+        }
+
+        updateAddCount();
     }
 
     /**
