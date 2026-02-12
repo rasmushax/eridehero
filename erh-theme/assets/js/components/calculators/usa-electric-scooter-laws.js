@@ -400,4 +400,7 @@ export function init(container) {
     setupScrollObserver();
     initFloatingButtons();
     initOutsideClicks();
+
+    // Enable hover transitions now that colors are applied (prevents grey→color fade)
+    requestAnimationFrame(() => container.classList.add('js-ready'));
 }

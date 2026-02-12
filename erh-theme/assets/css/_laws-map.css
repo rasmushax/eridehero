@@ -28,6 +28,12 @@
     fill: #D3D3D3;
     stroke: var(--color-white);
     stroke-width: 1;
+}
+
+/* Enable fill transition only after JS init (prevents grey→color fade on load) */
+.laws-map.js-ready svg#us-map path[id],
+.laws-map.js-ready svg#us-map g#DC path,
+.laws-map.js-ready svg#us-map g#DC circle {
     transition: fill var(--transition-fast);
 }
 

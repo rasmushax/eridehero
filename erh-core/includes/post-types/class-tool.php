@@ -165,6 +165,7 @@ class Tool {
                         'tool-battery-degradation' => 'Battery Degradation',
                         'tool-charging-time'       => 'Charging Time',
                         'tool-battery-capacity'    => 'Battery Capacity',
+                        'tool-laws-map'            => 'Laws / Legal Scale',
                         'range'                    => 'Range / Distance',
                         'calculator'               => 'Calculator (generic)',
                         'zap'                      => 'Lightning Bolt',

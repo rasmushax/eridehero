@@ -73,6 +73,36 @@ if ( file_exists( $json_path ) ) {
                         </div>
                     </div>
 
+                    <?php
+                    // Server-side state colors — prevents grey flash before JS runs.
+                    $color_map = [
+                        'specific_escooter' => '#a3d9a3',
+                        'local_rule'        => '#ffe0b3',
+                        'unclear_or_local'  => '#ffe0b3',
+                        'prohibited'        => '#ff9999',
+                    ];
+                    $groups = [];
+                    foreach ( $laws_data as $sid => $sdata ) {
+                        $c = $color_map[ $sdata['classification'] ] ?? null;
+                        if ( $c ) {
+                            $groups[ $c ][] = $sid;
+                        }
+                    }
+                    if ( $groups ) :
+                    ?>
+                    <style>
+                        <?php foreach ( $groups as $color => $ids ) :
+                            $selectors = array_map(
+                                fn( $id ) => $id === 'DC'
+                                    ? "#us-map [id=\"DC\"] path, #us-map [id=\"DC\"] circle"
+                                    : "#us-map [id=\"{$id}\"]",
+                                $ids
+                            );
+                            echo implode( ",\n", $selectors ) . " { fill: {$color}; }\n";
+                        endforeach; ?>
+                    </style>
+                    <?php endif; ?>
+
                     <?php get_template_part( 'template-parts/tools/laws-map-svg' ); ?>
 
                     <div id="info-box"></div>
