@@ -2,6 +2,18 @@
    Laws Map - E-Scooter Laws Interactive Map
    ============================================= */
 
+/* --- Subtitle (the_content output) --- */
+
+div.tool-description {
+    font-size: var(--text-lg);
+    color: var(--color-body);
+    line-height: var(--leading-relaxed);
+}
+
+div.tool-description p {
+    margin: 0;
+}
+
 /* --- Map Container --- */
 
 .laws-map #map-container {
@@ -256,32 +268,55 @@
 /* --- Search --- */
 
 .laws-map .search-container {
-    margin: var(--space-8) 0;
+    display: flex;
+    align-items: center;
+    gap: var(--space-4);
+    margin: var(--space-8) 0 0;
     width: 90%;
     max-width: 500px;
     position: relative;
-}
-
-.laws-map #state-search {
-    width: 100%;
     padding: var(--space-4) var(--space-5);
-    font-size: var(--text-sm);
-    border: var(--border-width) solid var(--color-border);
-    color: var(--color-body);
-    font-family: inherit;
-    border-radius: var(--radius-sm);
+    background: var(--color-background);
+    border-radius: var(--radius-lg);
+    border: var(--border-width-2) solid transparent;
+    transition: all var(--transition-fast);
     box-sizing: border-box;
 }
 
-.laws-map #state-search:focus {
-    outline: none;
+.laws-map .search-container:focus-within {
+    background: var(--color-white);
     border-color: var(--color-primary);
     box-shadow: var(--shadow-focus);
+}
+
+.laws-map .search-container > svg {
+    width: 18px;
+    height: 18px;
+    color: var(--color-muted);
+    flex-shrink: 0;
+}
+
+.laws-map #state-search {
+    flex: 1;
+    border: none;
+    background: transparent;
+    font-family: var(--font-family);
+    font-size: var(--text-sm);
+    color: var(--color-dark);
+    outline: none;
+    min-width: 0;
+    padding: 0;
+}
+
+.laws-map #state-search::placeholder {
+    color: var(--color-muted);
 }
 
 .laws-map #suggestions-box {
     display: none;
     position: absolute;
+    top: 100%;
+    left: 0;
     background-color: var(--color-white);
     border: var(--border-width) solid var(--color-border);
     border-top: none;
@@ -290,7 +325,7 @@
     overflow-y: auto;
     z-index: var(--z-search-dropdown);
     box-sizing: border-box;
-    border-radius: 0 0 var(--radius-sm) var(--radius-sm);
+    border-radius: 0 0 var(--radius-lg) var(--radius-lg);
     box-shadow: var(--shadow-dropdown);
 }
 
@@ -715,16 +750,13 @@
 .laws-map .stat-legal .stat-count { color: #2d8a2d; }
 .laws-map .stat-conditional .stat-count { color: #c87000; }
 .laws-map .stat-prohibited .stat-count { color: #cc3333; }
-.laws-map .stat-total .stat-count { color: var(--color-dark); }
-
 /* --- Last Updated --- */
 
 .laws-map .map-last-updated {
-    text-align: center;
     color: var(--color-muted);
     font-size: var(--text-xs);
     font-style: italic;
-    margin: var(--space-2) 0 0;
+    margin: var(--space-2) 0 var(--space-6);
 }
 
 /* --- Keyboard Focus --- */

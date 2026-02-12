@@ -20,20 +20,19 @@ $tool_slug = get_post_field( 'post_name', $post_id );
 // Load and sort laws data
 $json_path = get_theme_file_path( 'assets/data/laws.json' );
 $laws_data = [];
+$classification_counts = [
+    'specific_escooter' => 0,
+    'local_rule'        => 0,
+    'unclear_or_local'  => 0,
+    'prohibited'        => 0,
+];
+$latest_verified = '';
 
 if ( file_exists( $json_path ) ) {
     $json_contents = file_get_contents( $json_path );
     $laws_data     = json_decode( $json_contents, true ) ?: [];
     uasort( $laws_data, fn( $a, $b ) => strcmp( $a['name'] ?? '', $b['name'] ?? '' ) );
 
-    // Compute stats for summary
-    $classification_counts = [
-        'specific_escooter' => 0,
-        'local_rule'        => 0,
-        'unclear_or_local'  => 0,
-        'prohibited'        => 0,
-    ];
-    $latest_verified = '';
     foreach ( $laws_data as $sdata ) {
         $cls = $sdata['classification'] ?? '';
         if ( isset( $classification_counts[ $cls ] ) ) {
@@ -59,9 +58,7 @@ if ( file_exists( $json_path ) ) {
                     ] );
                     ?>
                     <h1 class="tool-title"><?php the_title(); ?></h1>
-                    <?php if ( has_excerpt() ) : ?>
-                        <p class="tool-description"><?php echo esc_html( get_the_excerpt() ); ?></p>
-                    <?php endif; ?>
+                    <div class="tool-description"><?php the_content(); ?></div>
                 </div>
             </div>
 
@@ -70,9 +67,13 @@ if ( file_exists( $json_path ) ) {
 
                 <!-- Search -->
                 <div class="search-container">
-                    <input type="text" id="state-search" placeholder="Enter state name or abbreviation..." autocomplete="off">
+                    <?php erh_the_icon( 'search' ); ?>
+                    <input type="text" id="state-search" placeholder="Search by state name or abbreviation..." autocomplete="off" aria-label="Search states">
                     <div id="suggestions-box"></div>
                 </div>
+                <?php if ( ! empty( $latest_verified ) ) : ?>
+                    <p class="map-last-updated">Data last verified: <?php echo esc_html( date( 'F j, Y', strtotime( $latest_verified ) ) ); ?></p>
+                <?php endif; ?>
 
                 <!-- Map + Info Box -->
                 <div id="map-container">
@@ -142,14 +143,7 @@ if ( file_exists( $json_path ) ) {
                         <span class="stat-count"><?php echo (int) $classification_counts['prohibited']; ?></span>
                         <span class="stat-label">Prohibited</span>
                     </div>
-                    <div class="stat-item stat-total">
-                        <span class="stat-count"><?php echo count( $laws_data ); ?></span>
-                        <span class="stat-label">States + DC</span>
-                    </div>
                 </div>
-                <?php if ( $latest_verified ) : ?>
-                    <p class="map-last-updated">Data last verified: <?php echo esc_html( date( 'F j, Y', strtotime( $latest_verified ) ) ); ?></p>
-                <?php endif; ?>
 
                 <!-- State Details -->
                 <div id="details-container">
@@ -196,8 +190,6 @@ if ( file_exists( $json_path ) ) {
                 </div>
 
                 <?php get_template_part( 'template-parts/tools/laws-map-icons' ); ?>
-
-                <?php the_content(); ?>
             </div>
         </div>
     </div>
