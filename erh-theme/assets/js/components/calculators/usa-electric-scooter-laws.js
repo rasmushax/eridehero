@@ -14,10 +14,6 @@ const CLASSIFICATION_MAP = {
     prohibited:        { cssClass: 'state-prohibited',  label: 'Prohibited',         icon: 'cross-circle',  iconColor: 'icon-red' },
 };
 
-// Enum values → semantic category (for icon color)
-const POSITIVE_VALUES  = ['allowed', 'required', 'yes'];
-const NEGATIVE_VALUES  = ['prohibited', 'not_allowed', 'none', 'not_required'];
-
 /**
  * Inline SVG icon reference from the page sprite.
  */
@@ -31,53 +27,6 @@ function svgRef(name, cls = '') {
 function enumLabel(value) {
     if (value == null || value === '') return 'N/A';
     return value.replace(/_/g, ' ').replace(/\b\w/g, c => c.toUpperCase());
-}
-
-/**
- * Enum value → HTML with status icon.
- */
-function formatEnum(value) {
-    if (value == null || value === '') return null;
-
-    const label = enumLabel(value);
-
-    if (POSITIVE_VALUES.includes(value)) {
-        return `${svgRef('check-circle', 'status-icon icon-green')} ${label}`;
-    }
-    if (NEGATIVE_VALUES.includes(value)) {
-        return `${svgRef('cross-circle', 'status-icon icon-red')} ${label}`;
-    }
-    // Conditional / local / unclear
-    return `${svgRef('interrogation', 'status-icon icon-orange')} ${label}`;
-}
-
-/**
- * Boolean value → HTML with status icon.
- */
-function formatBool(value) {
-    if (value === true)  return `${svgRef('check-circle', 'status-icon icon-green')} Yes`;
-    if (value === false) return `${svgRef('cross-circle', 'status-icon icon-red')} No`;
-    return null;
-}
-
-/**
- * Enhance a single data-field element based on its JS value.
- * Booleans get check/cross icons; strings get enum formatting.
- * Returns early (no-op) for null/undefined so PHP output is preserved.
- */
-function enhanceField(el, value) {
-    if (value == null || value === '') return;
-
-    if (typeof value === 'boolean') {
-        const html = formatBool(value);
-        if (html) el.innerHTML = html;
-        return;
-    }
-
-    if (typeof value === 'string') {
-        const html = formatEnum(value);
-        if (html) el.innerHTML = html;
-    }
 }
 
 // ─────────────────────────────────────────────────────────────
@@ -104,14 +53,6 @@ export function init(container) {
 
     let activeStateId      = null;
     let activeSuggestionIdx = -1;
-
-    // Fields to enhance with icons in detail cards
-    const ENHANCE_FIELDS = [
-        'classification', 'helmetRequired', 'sidewalkRiding',
-        'bikeLaneRiding', 'streetRiding', 'lightsRequired',
-        'licenseRequired', 'registrationRequired',
-        'brakesRequired', 'duiApplies',
-    ];
 
     // ── Map Coloring ──
 
@@ -346,47 +287,9 @@ export function init(container) {
         activeSuggestionIdx = -1;
     }
 
-    // ── Detail Enhancement ──
+    // ── Table of Contents (PHP-rendered, JS binds events) ──
 
-    function enhanceDetails() {
-        for (const [stateId, data] of Object.entries(lawsData)) {
-            const section = container.querySelector(`#${stateId}-details`);
-            if (!section) continue;
-
-            // Classification gets special label from config
-            const classEl = section.querySelector('[data-field="classification"]');
-            if (classEl) {
-                const config = CLASSIFICATION_MAP[data.classification];
-                if (config) {
-                    classEl.innerHTML = `${svgRef(config.icon, `status-icon ${config.iconColor}`)} ${config.label}`;
-                }
-            }
-
-            // All other enhanceable fields
-            for (const field of ENHANCE_FIELDS) {
-                if (field === 'classification') continue;
-                const el = section.querySelector(`[data-field="${field}"]`);
-                if (el) enhanceField(el, data[field]);
-            }
-        }
-    }
-
-    // ── Table of Contents ──
-
-    function generateToc() {
-        if (!desktopTocList && !mobileTocList) return;
-
-        const sorted = Object.entries(lawsData)
-            .sort(([, a], [, b]) => (a.name || '').localeCompare(b.name || ''));
-
-        const html = sorted.map(([id, data]) =>
-            `<li><a href="#${id}-details" class="toc-link" data-state="${id}">${data.name}</a></li>`
-        ).join('');
-
-        if (desktopTocList) desktopTocList.innerHTML = html;
-        if (mobileTocList)  mobileTocList.innerHTML = html;
-
-        // Delegated smooth-scroll
+    function initTocLinks() {
         [desktopTocList, mobileTocList].forEach(list => {
             if (!list) return;
             list.addEventListener('click', (e) => {
@@ -493,8 +396,7 @@ export function init(container) {
     addMapTooltips();
     initMapClicks();
     initSearch();
-    enhanceDetails();
-    generateToc();
+    initTocLinks();
     setupScrollObserver();
     initFloatingButtons();
     initOutsideClicks();

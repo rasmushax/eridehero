@@ -16,6 +16,7 @@
 .laws-map svg#us-map {
     width: 100%;
     height: auto;
+    aspect-ratio: 959 / 593;
     stroke-linecap: round;
     stroke-linejoin: round;
     display: block;
@@ -114,19 +115,20 @@
     box-shadow: var(--shadow-lg);
     width: 280px;
     box-sizing: border-box;
-    display: none;
+    display: flex;
     flex-direction: column;
     gap: var(--space-3);
     z-index: var(--z-dropdown);
     opacity: 0;
     visibility: hidden;
+    pointer-events: none;
     transition: opacity var(--transition-fast), visibility 0s ease-in-out 0.2s;
 }
 
 .laws-map #info-box.visible {
-    display: flex;
     opacity: 1;
     visibility: visible;
+    pointer-events: auto;
     transition: opacity var(--transition-fast), visibility 0s ease-in-out 0s;
 }
 
@@ -708,6 +710,7 @@
         transform: translateY(0);
         opacity: 1;
         visibility: visible;
+        pointer-events: auto;
         transition: transform var(--transition-base), opacity var(--transition-base), visibility 0s linear 0s;
     }
 
