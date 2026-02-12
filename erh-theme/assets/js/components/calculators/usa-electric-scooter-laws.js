@@ -29,6 +29,17 @@ function enumLabel(value) {
     return value.replace(/_/g, ' ').replace(/\b\w/g, c => c.toUpperCase());
 }
 
+/**
+ * Simple debounce helper.
+ */
+function debounce(fn, ms) {
+    let timer;
+    return (...args) => {
+        clearTimeout(timer);
+        timer = setTimeout(() => fn(...args), ms);
+    };
+}
+
 // ─────────────────────────────────────────────────────────────
 //  Main init — called by calculator dispatcher
 // ─────────────────────────────────────────────────────────────
@@ -50,6 +61,7 @@ export function init(container) {
     const tocMobileBtn     = container.querySelector('#toc-mobile-btn');
     const mobileTocPopup   = container.querySelector('#mobile-toc-popup');
     const closeMobileTocBtn = container.querySelector('.close-mobile-toc');
+    const mapHint          = container.querySelector('#map-hint');
 
     let activeStateId      = null;
     let activeSuggestionIdx = -1;
@@ -74,6 +86,14 @@ export function init(container) {
             const title = document.createElementNS('http://www.w3.org/2000/svg', 'title');
             title.textContent = `${data.name}: ${CLASSIFICATION_MAP[data.classification]?.label || 'No data'}`;
             el.prepend(title);
+        }
+    }
+
+    // ── Interaction Hint ──
+
+    function dismissHint() {
+        if (mapHint && !mapHint.classList.contains('hidden')) {
+            mapHint.classList.add('hidden');
         }
     }
 
@@ -124,6 +144,19 @@ export function init(container) {
 
         positionInfoBox(stateId);
         infoBox.classList.add('visible');
+
+        // Update URL hash for deep linking
+        history.replaceState(null, '', `#${stateId}-details`);
+
+        // Dismiss interaction hint on first use
+        dismissHint();
+
+        // On mobile, auto-scroll to detail section after info box appears
+        if (window.innerWidth <= 991) {
+            setTimeout(() => {
+                container.querySelector(`#${stateId}-details`)?.scrollIntoView({ behavior: 'smooth', block: 'start' });
+            }, 600);
+        }
 
         // Bind close / detail-link inside fresh info-box markup
         infoBox.querySelector('.close-info-box')?.addEventListener('click', closeInfoBox);
@@ -188,6 +221,31 @@ export function init(container) {
         });
     }
 
+    // ── Keyboard Accessibility ──
+
+    function initKeyboardNav() {
+        if (!mapSvg) return;
+        for (const [id, data] of Object.entries(lawsData)) {
+            const el = mapSvg.querySelector(`#${id}`);
+            if (!el) continue;
+            el.setAttribute('tabindex', '0');
+            el.setAttribute('role', 'button');
+            el.setAttribute('aria-label', `${data.name}: ${CLASSIFICATION_MAP[data.classification]?.label || 'No data'}`);
+        }
+        mapSvg.addEventListener('keydown', (e) => {
+            if (e.key !== 'Enter' && e.key !== ' ') return;
+            let target = e.target;
+            while (target && target !== mapSvg) {
+                if (target.id && lawsData[target.id]) {
+                    e.preventDefault();
+                    showInfoBox(target.id);
+                    return;
+                }
+                target = target.parentElement;
+            }
+        });
+    }
+
     // ── Search Autocomplete ──
 
     const stateList = Object.entries(lawsData).map(([id, data]) => ({
@@ -199,7 +257,7 @@ export function init(container) {
     function initSearch() {
         if (!searchInput || !suggestionsBox) return;
 
-        searchInput.addEventListener('input', onSearchInput);
+        searchInput.addEventListener('input', debounce(onSearchInput, 100));
         searchInput.addEventListener('keydown', onSearchKeydown);
         searchInput.addEventListener('focus', () => {
             if (searchInput.value.trim().length >= 1) onSearchInput();
@@ -395,6 +453,7 @@ export function init(container) {
     applyStateColors();
     addMapTooltips();
     initMapClicks();
+    initKeyboardNav();
     initSearch();
     initTocLinks();
     setupScrollObserver();
@@ -403,4 +462,17 @@ export function init(container) {
 
     // Enable hover transitions now that colors are applied (prevents grey→color fade)
     requestAnimationFrame(() => container.classList.add('js-ready'));
+
+    // Handle initial URL hash (e.g. #CA-details)
+    const hash = window.location.hash;
+    if (hash) {
+        const match = hash.match(/^#([A-Z]{2})-details$/);
+        if (match && lawsData[match[1]]) {
+            const stateId = match[1];
+            showInfoBox(stateId);
+            setTimeout(() => {
+                container.querySelector(`#${stateId}-details`)?.scrollIntoView({ behavior: 'smooth', block: 'start' });
+            }, 300);
+        }
+    }
 }

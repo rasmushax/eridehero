@@ -663,6 +663,78 @@
     color: var(--color-primary);
 }
 
+/* --- Interaction Hint --- */
+
+.laws-map .map-hint {
+    text-align: center;
+    color: var(--color-muted);
+    font-size: var(--text-sm);
+    margin: var(--space-3) 0 0;
+    transition: opacity var(--transition-base);
+}
+
+.laws-map .map-hint.hidden {
+    opacity: 0;
+    pointer-events: none;
+}
+
+/* --- Stats Summary --- */
+
+.laws-map .map-stats {
+    display: flex;
+    justify-content: center;
+    gap: var(--space-5);
+    margin: var(--space-8) auto var(--space-3);
+    flex-wrap: wrap;
+}
+
+.laws-map .stat-item {
+    display: flex;
+    flex-direction: column;
+    align-items: center;
+    gap: var(--space-1);
+    padding: var(--space-4) var(--space-6);
+    border-radius: var(--radius-sm);
+    border: var(--border-width) solid var(--color-border);
+    background: var(--color-white);
+    min-width: 100px;
+}
+
+.laws-map .stat-count {
+    font-size: var(--text-3xl);
+    font-weight: var(--font-bold);
+    line-height: 1;
+}
+
+.laws-map .stat-label {
+    font-size: var(--text-xs);
+    color: var(--color-muted);
+    text-align: center;
+}
+
+.laws-map .stat-legal .stat-count { color: #2d8a2d; }
+.laws-map .stat-conditional .stat-count { color: #c87000; }
+.laws-map .stat-prohibited .stat-count { color: #cc3333; }
+.laws-map .stat-total .stat-count { color: var(--color-dark); }
+
+/* --- Last Updated --- */
+
+.laws-map .map-last-updated {
+    text-align: center;
+    color: var(--color-muted);
+    font-size: var(--text-xs);
+    font-style: italic;
+    margin: var(--space-2) 0 0;
+}
+
+/* --- Keyboard Focus --- */
+
+.laws-map svg#us-map path[id]:focus-visible,
+.laws-map svg#us-map g#DC:focus-visible {
+    outline: 2px solid var(--color-primary);
+    outline-offset: -1px;
+}
+
 /* --- Responsive --- */
 
 @media (min-width: 768px) {
@@ -794,6 +866,19 @@
 @media (max-width: 562px) {
     .laws-map .map-legend {
         gap: var(--space-4);
+    }
+
+    .laws-map .map-stats {
+        gap: var(--space-3);
+    }
+
+    .laws-map .stat-item {
+        padding: var(--space-3) var(--space-4);
+        min-width: 70px;
+    }
+
+    .laws-map .stat-count {
+        font-size: var(--text-xl);
     }
 
     .laws-map #details-container h2 {

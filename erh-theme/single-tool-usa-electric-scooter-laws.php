@@ -25,6 +25,24 @@ if ( file_exists( $json_path ) ) {
     $json_contents = file_get_contents( $json_path );
     $laws_data     = json_decode( $json_contents, true ) ?: [];
     uasort( $laws_data, fn( $a, $b ) => strcmp( $a['name'] ?? '', $b['name'] ?? '' ) );
+
+    // Compute stats for summary
+    $classification_counts = [
+        'specific_escooter' => 0,
+        'local_rule'        => 0,
+        'unclear_or_local'  => 0,
+        'prohibited'        => 0,
+    ];
+    $latest_verified = '';
+    foreach ( $laws_data as $sdata ) {
+        $cls = $sdata['classification'] ?? '';
+        if ( isset( $classification_counts[ $cls ] ) ) {
+            $classification_counts[ $cls ]++;
+        }
+        if ( ! empty( $sdata['lastVerified'] ) && $sdata['lastVerified'] > $latest_verified ) {
+            $latest_verified = $sdata['lastVerified'];
+        }
+    }
 }
 ?>
 
@@ -105,8 +123,33 @@ if ( file_exists( $json_path ) ) {
 
                     <?php get_template_part( 'template-parts/tools/laws-map-svg' ); ?>
 
+                    <p class="map-hint" id="map-hint">Click or tap a state to view its e-scooter laws</p>
+
                     <div id="info-box"></div>
                 </div>
+
+                <!-- Stats Summary -->
+                <div class="map-stats">
+                    <div class="stat-item stat-legal">
+                        <span class="stat-count"><?php echo (int) $classification_counts['specific_escooter']; ?></span>
+                        <span class="stat-label">States with E-Scooter Laws</span>
+                    </div>
+                    <div class="stat-item stat-conditional">
+                        <span class="stat-count"><?php echo (int) ( $classification_counts['local_rule'] + $classification_counts['unclear_or_local'] ); ?></span>
+                        <span class="stat-label">Varies / Unclear</span>
+                    </div>
+                    <div class="stat-item stat-prohibited">
+                        <span class="stat-count"><?php echo (int) $classification_counts['prohibited']; ?></span>
+                        <span class="stat-label">Prohibited</span>
+                    </div>
+                    <div class="stat-item stat-total">
+                        <span class="stat-count"><?php echo count( $laws_data ); ?></span>
+                        <span class="stat-label">States + DC</span>
+                    </div>
+                </div>
+                <?php if ( $latest_verified ) : ?>
+                    <p class="map-last-updated">Data last verified: <?php echo esc_html( date( 'F j, Y', strtotime( $latest_verified ) ) ); ?></p>
+                <?php endif; ?>
 
                 <!-- State Details -->
                 <div id="details-container">
