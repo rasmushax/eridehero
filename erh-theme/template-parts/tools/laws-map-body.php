@@ -84,8 +84,8 @@ foreach ( $laws_data as $sdata ) {
             <?php foreach ( $groups as $color => $ids ) :
                 $selectors = array_map(
                     fn( $id ) => $id === 'DC'
-                        ? "#us-map [id=\"DC\"] path, #us-map [id=\"DC\"] circle"
-                        : "#us-map [id=\"{$id}\"]",
+                        ? ".laws-map svg#us-map g#DC path, .laws-map svg#us-map g#DC circle"
+                        : ".laws-map svg#us-map path[id=\"{$id}\"]",
                     $ids
                 );
                 echo implode( ",\n", $selectors ) . " { fill: {$color}; }\n";
