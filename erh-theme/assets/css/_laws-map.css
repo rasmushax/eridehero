@@ -120,6 +120,7 @@ div.tool-description p {
 .laws-map .legend-item.state-legal .legend-color { background-color: #a3d9a3; }
 .laws-map .legend-item.state-conditional .legend-color { background-color: #ffe0b3; }
 .laws-map .legend-item.state-prohibited .legend-color { background-color: #ff9999; }
+.laws-map .legend-item.state-no-law .legend-color { background-color: #D3D3D3; }
 .laws-map .legend-label { white-space: nowrap; }
 
 /* --- Info Box --- */
@@ -240,6 +241,7 @@ div.tool-description p {
 .laws-map .icon-green { fill: var(--color-success); }
 .laws-map .icon-red { fill: var(--color-error); }
 .laws-map .icon-orange { fill: var(--color-info); }
+.laws-map .icon-muted { fill: var(--color-muted); }
 
 .laws-map .details-link-container {
     display: flex;
@@ -750,6 +752,8 @@ div.tool-description p {
 .laws-map .stat-legal .stat-count { color: #2d8a2d; }
 .laws-map .stat-conditional .stat-count { color: #c87000; }
 .laws-map .stat-prohibited .stat-count { color: #cc3333; }
+.laws-map .stat-no-law .stat-count { color: var(--color-muted); }
+
 /* --- Last Updated --- */
 
 .laws-map .map-last-updated {
@@ -757,6 +761,81 @@ div.tool-description p {
     font-size: var(--text-xs);
     font-style: italic;
     margin: var(--space-2) 0 var(--space-6);
+}
+
+/* --- E-Bike Class Table --- */
+
+.laws-map .ebike-class-table-wrapper {
+    overflow-x: auto;
+    margin: var(--space-7) 0;
+    padding-bottom: var(--space-7);
+    border-bottom: 1px solid var(--color-border);
+}
+
+.laws-map .ebike-class-table {
+    width: 100%;
+    border-collapse: collapse;
+    font-size: var(--text-sm);
+}
+
+.laws-map .ebike-class-table th,
+.laws-map .ebike-class-table td {
+    padding: var(--space-4) var(--space-5);
+    text-align: center;
+    border-bottom: 1px solid var(--color-border);
+}
+
+.laws-map .ebike-class-table th {
+    font-weight: var(--font-semibold);
+    color: var(--color-dark);
+    background: var(--color-background);
+    white-space: nowrap;
+}
+
+.laws-map .ebike-class-table td {
+    color: var(--color-dark);
+    font-weight: var(--font-medium);
+}
+
+.laws-map .ebike-class-table .row-label {
+    text-align: left;
+    color: var(--color-muted);
+    font-weight: var(--font-normal);
+    white-space: nowrap;
+    padding-left: 0;
+}
+
+.laws-map .ebike-class-table .status-icon {
+    width: 1.1em;
+    height: 1.1em;
+    vertical-align: -0.15em;
+    margin-right: 2px;
+}
+
+.laws-map .ebike-class-table tr:last-child td,
+.laws-map .ebike-class-table tr:last-child th {
+    border-bottom: none;
+}
+
+/* --- E-Bike General Rules --- */
+
+.laws-map .ebike-general-rules {
+    margin: var(--space-7) 0;
+    padding-bottom: var(--space-7);
+    border-bottom: 1px solid var(--color-border);
+}
+
+.laws-map .ebike-general-rules h3 {
+    margin-top: 0;
+    margin-bottom: var(--space-5);
+    font-size: var(--text-xl);
+    color: var(--color-dark);
+}
+
+.laws-map .ebike-general-rules .details-grid {
+    border-bottom: none;
+    padding-bottom: 0;
+    margin-bottom: 0;
 }
 
 /* --- Keyboard Focus --- */
