@@ -389,7 +389,7 @@ class SpecPopulatorHandler {
             case 'number':
                 return 1000;
             case 'boolean':
-                return true;
+                return 1;
             case 'select':
                 $choices = array_keys($column['choices'] ?? []);
                 return $choices[0] ?? 'value';
@@ -460,7 +460,7 @@ class SpecPopulatorHandler {
                 return 'array of strings';
 
             case 'boolean':
-                return 'true or false';
+                return '1 for yes/true, 0 for no/false';
 
             case 'textarea':
                 return 'text string (can be multi-line)';

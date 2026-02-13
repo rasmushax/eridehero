@@ -499,7 +499,8 @@ class AcfSchemaParser {
                 return is_numeric($value) ? floatval($value) : $value;
 
             case 'boolean':
-                return filter_var($value, FILTER_VALIDATE_BOOLEAN);
+                // ACF true_false fields expect 1/0, not PHP true/false.
+                return filter_var($value, FILTER_VALIDATE_BOOLEAN) ? 1 : 0;
 
             case 'checkbox':
                 if (is_string($value)) {

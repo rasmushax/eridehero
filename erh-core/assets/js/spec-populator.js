@@ -572,6 +572,11 @@
             return escHtml(value.join(', '));
         }
 
+        // Boolean/true_false fields: ACF stores as 1/0, show as Yes/No.
+        if (schema && schema.type === 'boolean') {
+            return (value === true || value === 1 || value === '1') ? 'Yes' : 'No';
+        }
+
         if (typeof value === 'boolean') {
             return value ? 'Yes' : 'No';
         }
@@ -591,9 +596,9 @@
         const type = fieldSchema.type || 'text';
         const val = (suggestedVal !== null && suggestedVal !== undefined) ? suggestedVal : '';
 
-        if (type === 'true_false') {
-            const isTrue = val === 1 || val === '1' || val === true;
-            const isFalse = val === 0 || val === '0' || val === false;
+        if (type === 'boolean') {
+            const isTrue = val === 1 || val === '1' || val === true || val === 'true';
+            const isFalse = val === 0 || val === '0' || val === false || val === 'false';
             return '<select class="erh-sp-edit-value">'
                 + '<option value=""' + (!isTrue && !isFalse ? ' selected' : '') + '>\u2014</option>'
                 + '<option value="1"' + (isTrue ? ' selected' : '') + '>Yes</option>'
@@ -636,7 +641,7 @@
             return isNaN(num) ? raw : num;
         }
 
-        if (type === 'true_false') {
+        if (type === 'boolean') {
             return raw === '1' ? 1 : (raw === '0' ? 0 : null);
         }
 
