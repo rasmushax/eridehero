@@ -176,10 +176,14 @@
             const currentVal = currentValues[fieldPath];
             const fieldSchema = schema[fieldPath] || {};
             const isValid = suggestion.valid;
+            const isNoData = suggestion.no_data === true;
             const suggestedVal = suggestion.value;
 
             let status, statusClass;
-            if (!isValid) {
+            if (isNoData) {
+                status = 'No data';
+                statusClass = 'erh-sp-badge-nodata';
+            } else if (!isValid) {
                 status = 'Invalid';
                 statusClass = 'erh-sp-badge-error';
             } else if (currentVal === null || currentVal === '' || (Array.isArray(currentVal) && !currentVal.length)) {
@@ -193,18 +197,21 @@
                 statusClass = 'erh-sp-badge-same';
             }
 
-            const isChecked = isValid ? ' checked' : '';
+            const isChecked = (isValid && !isNoData) ? ' checked' : '';
             const fieldType = fieldSchema.type || 'text';
 
-            rows += '<tr data-field="' + escAttr(fieldPath) + '" data-type="' + escAttr(fieldType) + '">'
+            rows += '<tr data-field="' + escAttr(fieldPath) + '" data-type="' + escAttr(fieldType) + '"'
+                + (isNoData ? ' data-nodata="1"' : '') + '>'
                 + '<td class="erh-sp-check-col">'
-                + '<input type="checkbox"' + isChecked + '>'
+                + (isNoData ? '' : '<input type="checkbox"' + isChecked + '>')
                 + '</td>'
                 + '<td>' + escHtml(fieldSchema.label || fieldPath) + '</td>'
                 + '<td>' + escHtml(fieldSchema.group || '') + '</td>'
                 + '<td>' + formatValue(currentVal, fieldSchema) + '</td>'
-                + '<td>' + buildEditInput(suggestedVal, fieldSchema)
-                + (suggestion.message ? '<span class="erh-sp-validation-msg">' + escHtml(suggestion.message) + '</span>' : '')
+                + '<td>' + (isNoData
+                    ? '<span class="erh-sp-nodata">—</span>'
+                    : buildEditInput(suggestedVal, fieldSchema)
+                      + (suggestion.message ? '<span class="erh-sp-validation-msg">' + escHtml(suggestion.message) + '</span>' : ''))
                 + '</td>'
                 + '<td><span class="erh-sp-badge ' + statusClass + '">' + status + '</span></td>'
                 + '</tr>';
@@ -222,9 +229,9 @@
             + '<tbody>' + rows + '</tbody>'
             + '</table>';
 
-        // Bind check-all.
+        // Bind check-all (skip no-data rows).
         container.querySelector('.erh-spm-check-all').addEventListener('change', function() {
-            container.querySelectorAll('tbody input[type="checkbox"]').forEach(cb => {
+            container.querySelectorAll('tbody tr:not([data-nodata]) input[type="checkbox"]').forEach(cb => {
                 cb.checked = this.checked;
             });
         });

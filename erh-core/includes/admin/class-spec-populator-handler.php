@@ -30,15 +30,26 @@ class SpecPopulatorHandler {
         'editor_rating',
         'obsolete.is_product_obsolete',
         'obsolete.has_the_product_been_superseded',
+        'review.youtube_video',
     ];
 
     /**
-     * ACF group keys to exclude entirely (e.g., performance tests).
+     * ACF group keys to exclude entirely.
      *
      * @var array<string>
      */
-    private const EXCLUDED_GROUP_KEYS = [
-        'group_erh_performance_tests',
+    private const EXCLUDED_GROUP_KEYS = [];
+
+    /**
+     * Performance test fields to INCLUDE (all others in that group are excluded).
+     * These are manufacturer-claimed specs that Perplexity can research.
+     *
+     * @var array<string>
+     */
+    private const PERF_TEST_ALLOWED_FIELDS = [
+        'manufacturer_top_speed',
+        'manufacturer_range',
+        'max_incline',
     ];
 
     /**
@@ -157,7 +168,19 @@ class SpecPopulatorHandler {
         // Validate each suggestion against schema.
         $validated = $this->validate_suggestions($suggestions, $fields_to_populate);
 
-        error_log('[ERH Spec Populator] Validated ' . count($validated) . ' field(s)');
+        // Include ALL populatable fields — even those AI didn't return data for.
+        foreach ($fields_to_populate as $column) {
+            if (!isset($validated[$column['key']])) {
+                $validated[$column['key']] = [
+                    'value'   => null,
+                    'valid'   => false,
+                    'message' => 'No data returned by AI',
+                    'no_data' => true,
+                ];
+            }
+        }
+
+        error_log('[ERH Spec Populator] Total fields: ' . count($validated) . ' (' . count($suggestions) . ' from AI)');
 
         // Build schema map for frontend (keyed by field path).
         $schema_map = [];
@@ -283,6 +306,11 @@ class SpecPopulatorHandler {
             // Skip excluded group keys.
             if (!empty($column['group_key']) && in_array($column['group_key'], self::EXCLUDED_GROUP_KEYS, true)) {
                 return false;
+            }
+
+            // Performance tests group: only allow specific manufacturer-spec fields.
+            if (!empty($column['group_key']) && $column['group_key'] === 'group_erh_performance_tests') {
+                return in_array($column['key'], self::PERF_TEST_ALLOWED_FIELDS, true);
             }
 
             // Skip excluded field paths.

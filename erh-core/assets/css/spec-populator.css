@@ -351,6 +351,20 @@
     color: #d63638;
 }
 
+.erh-sp-badge-nodata {
+    background: #f0f0f1;
+    color: #a7aaad;
+}
+
+tr[data-nodata] {
+    opacity: 0.55;
+}
+
+.erh-sp-nodata {
+    color: #a7aaad;
+    font-style: italic;
+}
+
 .erh-sp-badge-info {
     background: #f0f6fc;
     color: #2271b1;

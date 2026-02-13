@@ -193,6 +193,20 @@
     color: #d63638;
 }
 
+.erh-spm-results .erh-sp-badge-nodata {
+    background: #f0f0f1;
+    color: #a7aaad;
+}
+
+.erh-spm-results tr[data-nodata] {
+    opacity: 0.55;
+}
+
+.erh-spm-results .erh-sp-nodata {
+    color: #a7aaad;
+    font-style: italic;
+}
+
 .erh-spm-results .erh-sp-empty-val {
     color: #c3c4c7;
 }
