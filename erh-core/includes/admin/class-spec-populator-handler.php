@@ -129,7 +129,7 @@ class SpecPopulatorHandler {
         $product_type_label = $this->get_product_type_label($product_type);
 
         // Build and send prompt — uses numbered keys for reliable matching.
-        [$system_prompt, $user_prompt, $index_map] = $this->build_prompt(
+        [$system_prompt, $user_prompt, $index_map, $checkbox_map] = $this->build_prompt(
             $product_name,
             $brand,
             $product_type_label,
@@ -160,8 +160,8 @@ class SpecPopulatorHandler {
 
         error_log('[ERH Spec Populator] Parsed JSON keys: ' . implode(', ', array_keys($raw_json)));
 
-        // Map numbered keys back to field paths.
-        $suggestions = $this->map_numbered_response($raw_json, $index_map);
+        // Map numbered keys back to field paths (and reassemble checkbox arrays).
+        $suggestions = $this->map_numbered_response($raw_json, $index_map, $checkbox_map);
 
         error_log('[ERH Spec Populator] Mapped ' . count($suggestions) . ' field(s): ' . implode(', ', array_keys($suggestions)));
 
@@ -334,15 +334,42 @@ class SpecPopulatorHandler {
     private function build_prompt(string $product_name, string $brand, string $product_type_label, array $fields): array {
         $system_prompt = 'You are a product specification researcher. '
             . 'Return ONLY a valid JSON object where keys are the field numbers (as strings) and values are the specs. '
-            . 'Include as many fields as you can find. Only omit a field if you truly cannot find the information. '
+            . 'Use null for any field you cannot find reliable data for. Do NOT guess, estimate, or use 0 as a placeholder. '
             . 'No markdown, no explanation, just JSON.';
 
         // Build numbered field list and index map.
+        // Checkbox fields are exploded into per-option boolean questions.
         $field_lines = [];
-        $index_map = []; // number => field_path
+        $index_map = [];        // number => field_path
+        $checkbox_map = [];     // number => [ 'field' => field_path, 'option' => choice_key ]
+        $num = 0;
 
-        foreach ($fields as $i => $column) {
-            $num = $i + 1;
+        foreach ($fields as $column) {
+            $type = $column['type'] ?? 'text';
+
+            // Explode checkbox fields into individual yes/no questions per option.
+            if ($type === 'checkbox' && !empty($column['choices'])) {
+                foreach ($column['choices'] as $choice_key => $choice_label) {
+                    $num++;
+                    $checkbox_map[(string) $num] = [
+                        'field'  => $column['key'],
+                        'option' => $choice_key,
+                    ];
+                    $line = sprintf(
+                        '%d. %s — %s: 1 for yes/true, 0 for no/false',
+                        $num,
+                        $column['label'],
+                        $choice_label
+                    );
+                    if (!empty($column['instructions'])) {
+                        $line .= ' — ' . $column['instructions'];
+                    }
+                    $field_lines[] = $line;
+                }
+                continue;
+            }
+
+            $num++;
             $index_map[(string) $num] = $column['key'];
 
             $desc = $this->describe_field($column);
@@ -355,17 +382,27 @@ class SpecPopulatorHandler {
             $field_lines[] = $line;
         }
 
-        // Build example with first 3 fields.
+        // Build example with first 3 non-checkbox fields.
         $example = [];
-        $example_count = min(3, count($fields));
-        for ($i = 0; $i < $example_count; $i++) {
-            $example[(string) ($i + 1)] = $this->get_example_value($fields[$i]);
+        $example_nums = array_slice(array_keys($index_map), 0, 3);
+        foreach ($example_nums as $ex_num) {
+            $field_path = $index_map[$ex_num];
+            $col = null;
+            foreach ($fields as $f) {
+                if ($f['key'] === $field_path) {
+                    $col = $f;
+                    break;
+                }
+            }
+            if ($col) {
+                $example[$ex_num] = $this->get_example_value($col);
+            }
         }
 
         $user_prompt = sprintf(
             "Find the specifications for the %s \"%s\"%s.\n\n"
             . "Fields to populate:\n%s\n\n"
-            . "Return JSON with the field numbers as keys. Example:\n%s",
+            . "Return JSON with the field numbers as keys. Use null if you don't know. Example:\n%s",
             $product_type_label,
             $product_name,
             $brand ? " by {$brand}" : '',
@@ -373,7 +410,7 @@ class SpecPopulatorHandler {
             wp_json_encode($example, JSON_PRETTY_PRINT | JSON_UNESCAPED_SLASHES)
         );
 
-        return [$system_prompt, $user_prompt, $index_map];
+        return [$system_prompt, $user_prompt, $index_map, $checkbox_map];
     }
 
     /**
@@ -404,19 +441,51 @@ class SpecPopulatorHandler {
     /**
      * Map numbered AI response keys back to field paths.
      *
-     * @param array $raw_json   Parsed JSON with numbered string keys.
-     * @param array $index_map  Number => field_path mapping.
+     * Checkbox fields are reassembled from individual boolean responses
+     * into arrays of selected option keys.
+     *
+     * @param array $raw_json      Parsed JSON with numbered string keys.
+     * @param array $index_map     Number => field_path mapping (regular fields).
+     * @param array $checkbox_map  Number => ['field' => path, 'option' => key] (checkbox options).
      * @return array Field path => value mapping.
      */
-    private function map_numbered_response(array $raw_json, array $index_map): array {
+    private function map_numbered_response(array $raw_json, array $index_map, array $checkbox_map = []): array {
         $mapped = [];
 
+        // Map regular fields.
         foreach ($raw_json as $key => $value) {
             $str_key = (string) $key;
 
             if (isset($index_map[$str_key])) {
                 $mapped[$index_map[$str_key]] = $value;
             }
+        }
+
+        // Reassemble checkbox fields from individual boolean responses.
+        $checkbox_fields = []; // field_path => [ option_key => bool, ... ]
+        foreach ($checkbox_map as $num => $info) {
+            $str_num = (string) $num;
+            if (!isset($raw_json[$str_num])) {
+                continue;
+            }
+            $val = $raw_json[$str_num];
+            $field_path = $info['field'];
+            $option_key = $info['option'];
+
+            if (!isset($checkbox_fields[$field_path])) {
+                $checkbox_fields[$field_path] = [];
+            }
+
+            // Accept 1, true, "1", "true" as selected.
+            $is_selected = ($val === 1 || $val === true || $val === '1' || $val === 'true');
+            if ($is_selected) {
+                $checkbox_fields[$field_path][] = $option_key;
+            }
+        }
+
+        // Merge reassembled checkbox arrays into mapped results.
+        foreach ($checkbox_fields as $field_path => $selected_options) {
+            $mapped[$field_path] = $selected_options;
         }
 
         return $mapped;
