@@ -347,6 +347,11 @@ class SpecPopulatorHandler {
         foreach ($fields as $column) {
             $type = $column['type'] ?? 'text';
 
+            // Debug: log checkbox fields to trace explosion.
+            if ($type === 'checkbox') {
+                error_log('[ERH Spec Populator] Checkbox field "' . $column['key'] . '" choices=' . count($column['choices'] ?? []) . ' raw=' . wp_json_encode($column['choices'] ?? []));
+            }
+
             // Explode checkbox fields into individual yes/no questions per option.
             if ($type === 'checkbox' && !empty($column['choices'])) {
                 foreach ($column['choices'] as $choice_key => $choice_label) {
