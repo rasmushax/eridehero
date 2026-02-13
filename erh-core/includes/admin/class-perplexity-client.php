@@ -21,10 +21,10 @@ class PerplexityClient {
 
     /**
      * Model to use for requests.
-     * sonar has web search enabled and is cost-effective.
+     * sonar-pro has web search and better structured output accuracy.
      * See: https://docs.perplexity.ai/getting-started/models
      */
-    private const MODEL = 'sonar';
+    private const MODEL = 'sonar-pro';
 
     /**
      * Option name for API key.
