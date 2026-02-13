@@ -523,6 +523,17 @@ class SpecPopulatorHandler {
                 continue;
             }
 
+            // Treat empty/null/placeholder AI responses as no data.
+            if ($this->is_empty_ai_value($value)) {
+                $validated[$field_path] = [
+                    'value'   => null,
+                    'valid'   => false,
+                    'message' => 'No data returned by AI',
+                    'no_data' => true,
+                ];
+                continue;
+            }
+
             $column = $field_map[$field_path];
 
             // Validate against schema.
@@ -551,6 +562,33 @@ class SpecPopulatorHandler {
 
         if (is_array($value) && empty($value)) {
             return true;
+        }
+
+        return false;
+    }
+
+    /**
+     * Check if an AI-returned value is effectively empty / a non-answer.
+     *
+     * @param mixed $value AI response value.
+     * @return bool True if the value should be treated as "no data".
+     */
+    private function is_empty_ai_value($value): bool {
+        if ($value === null || $value === '') {
+            return true;
+        }
+
+        if (is_array($value) && empty($value)) {
+            return true;
+        }
+
+        // Catch common AI placeholder responses.
+        if (is_string($value)) {
+            $lower = strtolower(trim($value));
+            $placeholders = ['n/a', 'na', 'unknown', 'not available', 'not specified', 'none', '-', '—', 'null', 'tbd'];
+            if (in_array($lower, $placeholders, true)) {
+                return true;
+            }
         }
 
         return false;
