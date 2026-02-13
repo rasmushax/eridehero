@@ -167,24 +167,28 @@ class ImagePopulator {
             wp_send_json_error(['message' => $download['error']]);
         }
 
-        // Transcode to JPG if needed.
-        $jpg_path = $this->transcode_to_jpg($download['tmp_path'], $download['mime']);
-        if (!$jpg_path) {
+        // Transcode to web-safe format (PNG kept for transparency, others → JPG).
+        $processed = $this->transcode_image($download['tmp_path'], $download['mime']);
+        if (!$processed) {
             @unlink($download['tmp_path']);
             wp_send_json_error(['message' => __('Failed to process image.', 'erh-core')]);
         }
 
+        $processed_path = $processed['path'];
+        $output_mime    = $processed['mime'];
+        $ext            = $output_mime === 'image/png' ? '.png' : '.jpg';
+
         // Generate filename from product title.
-        $filename = sanitize_title($post->post_title) . '.jpg';
+        $filename = sanitize_title($post->post_title) . $ext;
 
         // Upload to media library.
-        $attachment_id = $this->upload_to_media_library($jpg_path, $filename, $product_id);
+        $attachment_id = $this->upload_to_media_library($processed_path, $filename, $product_id, $output_mime);
 
         // Clean up temp file.
-        if ($jpg_path !== $download['tmp_path']) {
+        if ($processed_path !== $download['tmp_path']) {
             @unlink($download['tmp_path']);
         }
-        @unlink($jpg_path);
+        @unlink($processed_path);
 
         if (!$attachment_id) {
             wp_send_json_error(['message' => __('Failed to upload image to media library.', 'erh-core')]);
@@ -297,31 +301,60 @@ class ImagePopulator {
     }
 
     /**
-     * Transcode an image to JPG using WordPress image editor.
+     * Transcode image to a web-safe format.
+     *
+     * PNGs are kept as PNG to preserve transparency.
+     * All other formats (WebP, AVIF, GIF) are converted to JPG with a white background.
+     * JPEGs pass through as-is.
      *
      * @param string $source_path Path to source image.
      * @param string $mime        Source MIME type.
-     * @return string|null Path to JPG file, or null on failure.
+     * @return array{path: string, mime: string}|null Processed file info, or null on failure.
      */
-    private function transcode_to_jpg(string $source_path, string $mime): ?string {
+    private function transcode_image(string $source_path, string $mime): ?array {
         // Already JPEG — return as-is.
         if ($mime === 'image/jpeg') {
-            return $source_path;
+            return ['path' => $source_path, 'mime' => 'image/jpeg'];
         }
 
-        $editor = wp_get_image_editor($source_path);
-        if (is_wp_error($editor)) {
-            return null;
+        // PNG — keep as PNG to preserve transparency.
+        if ($mime === 'image/png') {
+            return ['path' => $source_path, 'mime' => 'image/png'];
         }
+
+        // WebP, AVIF, GIF → JPG with white background to avoid black/broken transparency.
+        $gd_image = match ($mime) {
+            'image/webp' => @imagecreatefromwebp($source_path),
+            'image/avif' => function_exists('imagecreatefromavif') ? @imagecreatefromavif($source_path) : false,
+            'image/gif'  => @imagecreatefromgif($source_path),
+            default      => false,
+        };
+
+        if (!$gd_image) {
+            // GD failed — fall back to WP Image Editor (no white bg, but better than nothing).
+            $editor = wp_get_image_editor($source_path);
+            if (is_wp_error($editor)) {
+                return null;
+            }
+            $jpg_path = $source_path . '.jpg';
+            $saved = $editor->save($jpg_path, 'image/jpeg');
+            return is_wp_error($saved) ? null : ['path' => $saved['path'], 'mime' => 'image/jpeg'];
+        }
+
+        // Flatten onto white background.
+        $width  = imagesx($gd_image);
+        $height = imagesy($gd_image);
+        $flat   = imagecreatetruecolor($width, $height);
+        $white  = imagecolorallocate($flat, 255, 255, 255);
+        imagefill($flat, 0, 0, $white);
+        imagecopy($flat, $gd_image, 0, 0, 0, 0, $width, $height);
+        imagedestroy($gd_image);
 
         $jpg_path = $source_path . '.jpg';
-        $saved = $editor->save($jpg_path, 'image/jpeg');
+        $success = imagejpeg($flat, $jpg_path, 90);
+        imagedestroy($flat);
 
-        if (is_wp_error($saved)) {
-            return null;
-        }
-
-        return $saved['path'];
+        return $success ? ['path' => $jpg_path, 'mime' => 'image/jpeg'] : null;
     }
 
     /**
@@ -330,11 +363,10 @@ class ImagePopulator {
      * @param string $file_path  Path to the image file.
      * @param string $filename   Desired filename (e.g. "product-name.jpg").
      * @param int    $product_id Product post ID to attach to.
+     * @param string $mime       MIME type of the image.
      * @return int|null Attachment ID or null on failure.
      */
-    private function upload_to_media_library(string $file_path, string $filename, int $product_id): ?int {
-        $upload_dir = wp_upload_dir();
-
+    private function upload_to_media_library(string $file_path, string $filename, int $product_id, string $mime = 'image/jpeg'): ?int {
         // Read file contents.
         $file_data = file_get_contents($file_path);
         if ($file_data === false) {
@@ -349,7 +381,7 @@ class ImagePopulator {
 
         // Prepare attachment data.
         $attachment = [
-            'post_mime_type' => 'image/jpeg',
+            'post_mime_type' => $mime,
             'post_title'     => pathinfo($filename, PATHINFO_FILENAME),
             'post_content'   => '',
             'post_status'    => 'inherit',
