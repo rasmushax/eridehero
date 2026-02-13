@@ -430,15 +430,13 @@
                 fieldRows += '<tr class="erh-sp-field-row" data-product="' + productId + '" data-field="' + escAttr(fieldPath) + '" data-type="' + escAttr(fieldType) + '"'
                     + (isNoData ? ' data-nodata="1"' : '') + '>'
                     + '<td class="erh-sp-check-col">'
-                    + (isNoData ? '' : '<input type="checkbox"' + isChecked + '>')
+                    + '<input type="checkbox"' + isChecked + '>'
                     + '</td>'
                     + '<td class="erh-sp-field-col">' + escHtml(fieldSchema.label || fieldPath) + '</td>'
                     + '<td class="erh-sp-group-col">' + escHtml(fieldSchema.group || '') + '</td>'
                     + '<td class="erh-sp-current-col">' + formatValue(currentVal, fieldSchema) + '</td>'
-                    + '<td class="erh-sp-suggested-col">' + (isNoData
-                        ? '<span class="erh-sp-nodata">—</span>'
-                        : buildEditInput(suggestedVal, fieldSchema)
-                          + (suggestion.message ? '<span class="erh-sp-validation-msg">' + escHtml(suggestion.message) + '</span>' : ''))
+                    + '<td class="erh-sp-suggested-col">' + buildEditInput(isNoData ? '' : suggestedVal, fieldSchema)
+                          + (suggestion.message && !isNoData ? '<span class="erh-sp-validation-msg">' + escHtml(suggestion.message) + '</span>' : '')
                     + '</td>'
                     + '<td class="erh-sp-status-col"><span class="erh-sp-badge ' + statusClass + '">' + status + '</span></td>'
                     + '</tr>';

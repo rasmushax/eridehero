@@ -203,15 +203,13 @@
             rows += '<tr data-field="' + escAttr(fieldPath) + '" data-type="' + escAttr(fieldType) + '"'
                 + (isNoData ? ' data-nodata="1"' : '') + '>'
                 + '<td class="erh-sp-check-col">'
-                + (isNoData ? '' : '<input type="checkbox"' + isChecked + '>')
+                + '<input type="checkbox"' + isChecked + '>'
                 + '</td>'
                 + '<td>' + escHtml(fieldSchema.label || fieldPath) + '</td>'
                 + '<td>' + escHtml(fieldSchema.group || '') + '</td>'
                 + '<td>' + formatValue(currentVal, fieldSchema) + '</td>'
-                + '<td>' + (isNoData
-                    ? '<span class="erh-sp-nodata">—</span>'
-                    : buildEditInput(suggestedVal, fieldSchema)
-                      + (suggestion.message ? '<span class="erh-sp-validation-msg">' + escHtml(suggestion.message) + '</span>' : ''))
+                + '<td>' + buildEditInput(isNoData ? '' : suggestedVal, fieldSchema)
+                      + (suggestion.message && !isNoData ? '<span class="erh-sp-validation-msg">' + escHtml(suggestion.message) + '</span>' : '')
                 + '</td>'
                 + '<td><span class="erh-sp-badge ' + statusClass + '">' + status + '</span></td>'
                 + '</tr>';

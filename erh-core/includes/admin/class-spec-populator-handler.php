@@ -347,11 +347,6 @@ class SpecPopulatorHandler {
         foreach ($fields as $column) {
             $type = $column['type'] ?? 'text';
 
-            // Debug: log checkbox fields to trace explosion.
-            if ($type === 'checkbox') {
-                error_log('[ERH Spec Populator] Checkbox field "' . $column['key'] . '" choices=' . count($column['choices'] ?? []) . ' raw=' . wp_json_encode($column['choices'] ?? []));
-            }
-
             // Explode checkbox fields into individual yes/no questions per option.
             if ($type === 'checkbox' && !empty($column['choices'])) {
                 foreach ($column['choices'] as $choice_key => $choice_label) {
@@ -407,6 +402,7 @@ class SpecPopulatorHandler {
         $user_prompt = sprintf(
             "Find the specifications for the %s \"%s\"%s.\n\n"
             . "Fields to populate:\n%s\n\n"
+            . "Hint: For battery specs, Wh = V × Ah. If you know two of these three values, calculate and return the third.\n\n"
             . "Return JSON with the field numbers as keys. Use null if you don't know. Example:\n%s",
             $product_type_label,
             $product_name,
