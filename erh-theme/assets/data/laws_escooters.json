@@ -22,7 +22,7 @@
     "maxWeightLbs": null,
     "generalNotes": "Conflicting sources suggest possible Class M2 license requirements for riders 14-15 operating <50cc equivalents, but statutory basis for e-scooter classification remains unclear. Low-Speed Vehicle (LSV) regulations in AS 28.90.990 don't apply to standard e-scooters.",
     "sourceLink": "https://www.akleg.gov/basis/Bill/Text/33?Hsid=HB0008A",
-    "lastVerified": "2025-04-23"
+    "lastVerified": "2026-02-13"
   },
   "AL": {
     "id": "AL",
@@ -47,15 +47,15 @@
     "maxWeightLbs": 100,
     "generalNotes": "Alabama Act 2019-361 (SB312) defines 'Scooter' (<100 lbs, handlebars, electric motor, max 20 mph design) and 'Shared Micromobility Device System', requiring local consent for operation. Does not set statewide operational rules beyond the definition. Cities like Birmingham (age 19+) and Montgomery (age 18+) have specific rules for shared systems. Status of privately owned scooters varies and may be unclear locally.",
     "sourceLink": "https://codes.findlaw.com/al/title-32-motor-vehicles-and-traffic/al-code-sect-32-1-1-1.html",
-    "lastVerified": "2025-04-24"
+    "lastVerified": "2026-02-13"
   },
   "AZ": {
     "id": "AZ",
     "name": "Arizona",
     "classification": "specific_escooter",
-    "summary": "Arizona law treats electric standup scooters as bicycles, exempting them from registration, licensing, and insurance requirements. Local authorities may regulate usage on paths and sidewalks, with operation permitted on roads ≤25 MPH.",
+    "summary": "Arizona law treats electric standup scooters as bicycles, exempting them from registration, licensing, and insurance requirements. Maximum speed is 20 MPH. Local authorities may regulate usage on paths and sidewalks.",
     "minAge": null,
-    "maxSpeedMph": 25,
+    "maxSpeedMph": 20,
     "helmetRequired": "none",
     "helmetNotes": "No statewide mandate, but local ordinances (e.g., Gilbert) may require helmets for minors.",
     "licenseRequired": false,
@@ -67,12 +67,12 @@
     "streetNotes": "Permitted on roads with speed limits ≤25 MPH. Prohibited on highways.",
     "lightsRequired": null,
     "brakesRequired": true,
-    "duiApplies": true,
+    "duiApplies": null,
     "maxPowerWatts": null,
     "maxWeightLbs": 75,
-    "generalNotes": "Defined as ≤75 lbs with handlebars and standing platform (ARS §28-819). Local authorities may restrict path usage. Scooters must display unique identification visible from 5 feet.",
+    "generalNotes": "Defined as ≤75 lbs with handlebars and standing platform (ARS §28-819). Maximum speed 20 MPH per statute. Local authorities may restrict path usage. Scooters must display unique identification visible from 5 feet. DUI applicability is legally questionable — ARS §28-1381 refers to 'motor vehicles' and scooters are classified as bicycles, not motor vehicles.",
     "sourceLink": "https://www.azleg.gov/ars/28/00819.htm",
-    "lastVerified": "2025-04-23"
+    "lastVerified": "2026-02-13"
   },
   "AR": {
     "id": "AR",
@@ -97,7 +97,7 @@
     "maxWeightLbs": 100,
     "generalNotes": "Electric motorized scooters are defined as devices with a weight under 100 lbs, two or three wheels, a handlebar, a floorboard for standing, and propelled by an electric motor. Local authorities retain the power to regulate additional aspects of scooter use.",
     "sourceLink": "https://law.justia.com/codes/arkansas/title-27/subtitle-4/chapter-51/subchapter-19/",
-    "lastVerified": "2025-04-23"
+    "lastVerified": "2026-02-13"
   },
   "CA": {
     "id": "CA",
@@ -118,11 +118,11 @@
     "lightsRequired": "night",
     "brakesRequired": true,
     "duiApplies": true,
-    "maxPowerWatts": 750,
+    "maxPowerWatts": null,
     "maxWeightLbs": null,
-    "generalNotes": "Device defined as 'motorized scooter' with handlebars and floorboard. No passengers allowed (CVC §21235(e)). Must keep at least one hand on handlebars (CVC §21235(f)). Specific procedure for left turns: stop, dismount, walk across (CVC §21228). Must not be parked blocking pedestrian path (CVC §21235(i)). Operator subject to same rights/responsibilities as motor vehicle drivers where applicable (CVC §21221).",
+    "generalNotes": "Device defined as 'motorized scooter' with handlebars and floorboard. The 750W limit often cited applies to e-bikes (CVC §312.5), not motorized scooters — California's e-scooter definition (CVC §407.5) does not specify a wattage cap. No passengers allowed (CVC §21235(e)). Must keep at least one hand on handlebars (CVC §21235(f)). Specific procedure for left turns: stop, dismount, walk across (CVC §21228). Must not be parked blocking pedestrian path (CVC §21235(i)). Operator subject to same rights/responsibilities as motor vehicle drivers where applicable (CVC §21221).",
     "sourceLink": "https://leginfo.legislature.ca.gov/faces/codes_displaySection.xhtml?lawCode=VEH&sectionNum=21235.",
-    "lastVerified": "2025-04-23"
+    "lastVerified": "2026-02-13"
   },
   "CO": {
     "id": "CO",
@@ -143,17 +143,17 @@
     "lightsRequired": "night",
     "brakesRequired": true,
     "duiApplies": true,
-    "maxPowerWatts": 750,
+    "maxPowerWatts": null,
     "maxWeightLbs": 100,
-    "generalNotes": "Electric scooters are defined as devices under 100 lbs, with handlebars and an electric motor, and a max speed of 20 mph on level ground. Local regulation cannot be more restrictive than for Class 1 e-bikes. Scooters must have an identifying number stamped or cast on the frame. Visibility equipment including front lamp, red rear reflector, and side reflective material is required. Brakes must be capable of stopping the scooter within 25 feet from a speed of 10 mph. Sirens and whistles are not permitted.",
+    "generalNotes": "Electric scooters are defined as devices under 100 lbs, with handlebars and an electric motor, and a max speed of 20 mph on level ground. The 750W limit often cited applies to Colorado's e-bike definition (CRS §42-1-102(28.5)), not to electric scooters — the scooter definition (CRS §42-1-102(28.3)) does not specify a wattage cap. Local regulation cannot be more restrictive than for Class 1 e-bikes. Scooters must have an identifying number stamped or cast on the frame. Visibility equipment including front lamp, red rear reflector, and side reflective material is required. Brakes must be capable of stopping the scooter within 25 feet from a speed of 10 mph. Sirens and whistles are not permitted.",
     "sourceLink": "https://leg.colorado.gov/bills/hb19-1221",
-    "lastVerified": "2025-04-23"
+    "lastVerified": "2026-02-13"
   },
   "CT": {
     "id": "CT",
     "name": "Connecticut",
     "classification": "specific_escooter",
-    "summary": "Connecticut law defines 'electric foot scooters' and treats them similarly to bicycles and e-bikes. Riders have the same rights, privileges, and responsibilities as bicyclists on the road, with no state-level age restrictions or licensing requirements.",
+    "summary": "Connecticut law defines 'electric foot scooters' (renamed from 'motorized scooter' per PA 25-159) and treats them similarly to bicycles and e-bikes. Weight limit raised to 100 lbs, and seated operation is now permitted. Riders have the same rights, privileges, and responsibilities as bicyclists on the road, with no state-level age restrictions or licensing requirements.",
     "minAge": null,
     "maxSpeedMph": 20,
     "helmetRequired": "under_16",
@@ -169,10 +169,10 @@
     "brakesRequired": true,
     "duiApplies": null,
     "maxPowerWatts": null,
-    "maxWeightLbs": 75,
-    "generalNotes": "Electric scooters ('electric foot scooters') share regulations with bicycles and e-bikes. Must be equipped with a reliable braking system, front white headlight, and rear reflector or tail light, plus reflective material on the sides. Sirens and whistles are prohibited. Exempt from motor vehicle registration and insurance requirements.",
+    "maxWeightLbs": 100,
+    "generalNotes": "PA 25-159 (effective October 2025) renamed the device category from 'motorized scooter' to 'electric foot scooter', increased the weight limit from 75 to 100 lbs, and explicitly permits seated operation. Share regulations with bicycles and e-bikes. Must be equipped with a reliable braking system, front white headlight, and rear reflector or tail light, plus reflective material on the sides. Sirens and whistles are prohibited. Exempt from motor vehicle registration and insurance requirements.",
     "sourceLink": "https://www.cga.ct.gov/current/pub/chap_246.htm",
-    "lastVerified": "2025-04-23"
+    "lastVerified": "2026-02-13"
   },
   "DC": {
     "id": "DC",
@@ -197,46 +197,46 @@
     "maxWeightLbs": 75,
     "generalNotes": "Classified as 'Electric Mobility Device' (EMD: <75 lbs, ≤24\" wide, ≤55\" long, electric motor) or 'Personal Mobility Device' (PMD: ≥75 lbs or self-balancing). EMD max design speed 20 mph (per other sources, though code doesn't specify speed in EMD def). No passengers allowed. Cannot carry items preventing two-handed operation. No headsets/earphones (except hearing aids/single ear). Shared scooters must be locked upright to approved infrastructure (bike racks, signposts etc.), not blocking access. Must have a bell.",
     "sourceLink": "https://code.dccouncil.gov/us/dc/council/code/sections/50-2201.02",
-    "lastVerified": "2025-04-24"
+    "lastVerified": "2026-02-13"
   },
   "DE": {
     "id": "DE",
     "name": "Delaware",
-    "classification": "prohibited",
-    "summary": "Delaware has restrictive regulations for electric scooters, categorizing them alongside 'motorized skateboards' with significant restrictions on their use in public spaces. Use on public highways, streets, and sidewalks is generally prohibited.",
-    "minAge": 12,
-    "maxSpeedMph": null,
-    "helmetRequired": "under_16",
-    "helmetNotes": "Riders and passengers under 16 must wear bicycle-type helmets meeting ANSI or Snell standards.",
+    "classification": "specific_escooter",
+    "summary": "Delaware legalized electric scooters via HB 114 (signed August 2025), defining them as 'electric standup scooters' with a max speed of 19 MPH. Minimum rider age is 14, helmets required under 18. No license or registration required. Sidewalk riding is prohibited. Rental scooters are banned statewide.",
+    "minAge": 14,
+    "maxSpeedMph": 19,
+    "helmetRequired": "under_18",
+    "helmetNotes": "Riders under 18 must wear a properly fitted bicycle helmet meeting CPSC standards.",
     "licenseRequired": false,
     "registrationRequired": false,
     "sidewalkRiding": "prohibited",
-    "sidewalkNotes": "Use on public sidewalks is banned.",
-    "bikeLaneRiding": "prohibited",
-    "streetRiding": "prohibited",
-    "streetNotes": "Use on public highways and streets is banned except during approved special events or when the powertrain is disengaged.",
-    "lightsRequired": null,
-    "brakesRequired": null,
+    "sidewalkNotes": "Prohibited on all sidewalks statewide.",
+    "bikeLaneRiding": "allowed",
+    "streetRiding": "conditional",
+    "streetNotes": "Permitted on roads with posted speed limits ≤35 MPH. Prohibited on limited-access highways. Must ride as far right as practicable.",
+    "lightsRequired": "night",
+    "brakesRequired": true,
     "duiApplies": null,
     "maxPowerWatts": null,
     "maxWeightLbs": null,
-    "generalNotes": "Riders under 12 must be supervised by an adult (18+) unless on property owned by their parent/guardian. Delaware requires sellers to obtain signed acknowledgment from purchasers regarding restrictions on public use. Non-compliance can result in fines starting at $25 for first offense. Electric scooters cannot be registered or insured, further limiting their use on public roadways.",
-    "sourceLink": "https://delcode.delaware.gov/title21/c001/index.html",
-    "lastVerified": "2025-04-23"
+    "generalNotes": "HB 114 (153rd General Assembly, signed August 2025) replaced Delaware's previous prohibition with a comprehensive regulatory framework. Defines 'electric standup scooter' as a device with handlebars, a floorboard for standing, an electric motor, and a max design speed of 19 MPH. Rental/shared scooters are banned statewide. No passengers allowed. Must yield to pedestrians when crossing sidewalks. Front white light and rear red light/reflector required at night. Previous restrictions on motorized skateboards remain separate.",
+    "sourceLink": "https://legis.delaware.gov/BillDetail?LegislationId=141066",
+    "lastVerified": "2026-02-13"
   },
   "FL": {
     "id": "FL",
     "name": "Florida",
     "classification": "specific_escooter",
-    "summary": "Florida law defines motorized scooters and treats riders similar to bicyclists. No license, registration, or insurance is required statewide, but local governments retain authority to regulate where scooters can operate and how they can be parked.",
+    "summary": "Florida law defines motorized scooters and treats riders similar to bicyclists. No license, registration, or insurance is required statewide. Local governments have broad authority to regulate operation, parking, and — as of 2025 — may set minimum age requirements and safety training programs.",
     "minAge": null,
     "maxSpeedMph": 20,
     "helmetRequired": "under_16",
     "helmetNotes": "Helmets must meet the standards of the American National Standards Institute (ANSI Z Bicycle Helmet Standards) or the Snell Memorial Foundation.",
     "licenseRequired": false,
     "registrationRequired": false,
-    "sidewalkRiding": "conditional",
-    "sidewalkNotes": "Generally prohibited statewide to protect pedestrians, but local ordinances may allow sidewalk riding. When permitted, riders must yield to pedestrians.",
+    "sidewalkRiding": "local_rule",
+    "sidewalkNotes": "State law defers to local governments. Many local ordinances prohibit or restrict sidewalk riding; where permitted, riders must yield to pedestrians.",
     "bikeLaneRiding": "allowed",
     "streetRiding": "conditional",
     "streetNotes": "Allowed on streets with speed limits of 35 mph or less, but prohibited on highways. E-scooter riders have 'all rights and duties applicable to the rider of a bicycle' regarding road use.",
@@ -245,9 +245,9 @@
     "duiApplies": null,
     "maxPowerWatts": null,
     "maxWeightLbs": null,
-    "generalNotes": "Motorized scooters are defined as vehicles not having a seat or saddle for the rider, with not more than three wheels, and a maximum speed of 20 mph on level ground. Florida Statute § 316.2128 establishes that e-scooter riders have most of the same rights and duties as bicycle riders, with exceptions for rules that by their nature don't apply. E-scooter rental companies are responsible for securing scooters during hurricane warnings.",
+    "generalNotes": "Motorized scooters are defined as vehicles not having a seat or saddle for the rider, with not more than three wheels, and a maximum speed of 20 mph on level ground. Florida Statute § 316.2128 establishes that e-scooter riders have most of the same rights and duties as bicycle riders. Chapter 2025-149 (effective July 2025) added subsections (7) and (8) to § 316.2128, explicitly granting local governments authority to establish minimum age requirements and mandate safety training or orientation programs for e-scooter riders. E-scooter rental companies are responsible for securing scooters during hurricane warnings.",
     "sourceLink": "http://www.leg.state.fl.us/Statutes/index.cfm?App_mode=Display_Statute&URL=0300-0399/0316/Sections/0316.2128.html",
-    "lastVerified": "2025-04-23"
+    "lastVerified": "2026-02-13"
   },
   "GA": {
     "id": "GA",
@@ -272,7 +272,7 @@
     "maxWeightLbs": 100,
     "generalNotes": "Georgia law (SB 159) defines electric scooters as devices weighing less than 100 pounds, equipped with handlebars and an electric motor, capable of a maximum speed of 20 mph. The state explicitly excludes electric scooters from the definition of 'motor vehicle' and grants local authorities broad powers to regulate their operation, including insurance requirements.",
     "sourceLink": "https://www.legis.ga.gov/api/legislation/document/20192020/189446",
-    "lastVerified": "2025-04-23"
+    "lastVerified": "2026-02-13"
   },
   "HI": {
     "id": "HI",
@@ -297,7 +297,7 @@
     "maxWeightLbs": 50,
     "generalNotes": "Electric foot scooters must be registered with a one-time $30 fee. No person shall carry passengers on an electric scooter, and riders may not carry items that prevent using both hands to operate the scooter. Scooters must have front and rear lights for night use. Operators must not exceed 15 mph or operate at speeds that are not reasonable and prudent under existing conditions. Counties may establish additional regulations for scooter operations.",
     "sourceLink": "https://www.capitol.hawaii.gov/sessions/session2021/bills/HB147_.HTM",
-    "lastVerified": "2025-04-23"
+    "lastVerified": "2026-02-13"
   },
   "ID": {
     "id": "ID",
@@ -322,7 +322,7 @@
     "maxWeightLbs": null,
     "generalNotes": "Idaho grants local authorities significant control over e-scooter regulations. In Idaho Falls, e-scooters are defined as devices with handlebars, a floorboard, and an electric motor not exceeding 20 mph. They must have brakes capable of stopping within 25 feet at 10 mph, an audible warning device, and lights for nighttime use. Operators must keep at least one hand on the handlebars at all times. Dockless e-scooter programs require a business license, and scooters must be registered with the city.",
     "sourceLink": "https://www.idahofallsidaho.gov/DocumentCenter/View/11049/Chapter-8---E-Bikes-and-E-Scooters-PDF",
-    "lastVerified": "2025-04-23"
+    "lastVerified": "2026-02-13"
   },
   "RI": {
     "id": "RI",
@@ -347,7 +347,7 @@
     "maxWeightLbs": null,
     "generalNotes": "State law primarily addresses helmet use for minors (<16) via bicycle regulations (RIGL § 31-19-2.1). Specific e-scooter operation rules are largely governed by city/town ordinances and pilot programs. Examples: Providence requires riders in its program to be 18+ and allows sidewalk riding; Pawtucket also sets age 18+ for its program but prohibits sidewalk riding. Newport is also developing local regulations.",
     "sourceLink": "https://law.justia.com/codes/rhode-island/title-31/chapter-31-19/",
-    "lastVerified": "2025-04-24"
+    "lastVerified": "2026-02-13"
   },
   "SC": {
     "id": "SC",
@@ -372,7 +372,7 @@
     "maxWeightLbs": null,
     "generalNotes": "South Carolina has no statewide definition or specific regulation for electric scooters. All rules are established at the local level. Examples: Charleston prohibits rentals and sidewalk riding, allows operation < 15 mph on roads < 25 mph. Myrtle Beach bans shared devices on public property. Greenville bans e-scooters in the central business district. Columbia bans sidewalk riding, use on roads >= 25 mph, and requires helmets. Hilton Head Island bans e-scooters on public pathways. Check local city/town ordinances for specific rules.",
     "sourceLink": null,
-    "lastVerified": "2025-04-24"
+    "lastVerified": "2026-02-13"
   },
   "SD": {
     "id": "SD",
@@ -397,7 +397,7 @@
     "maxWeightLbs": null,
     "generalNotes": "Defined as 'motorized foot scooter' in SDCL 32-26-21.4: handlebars, stand/sit design, electric motor, max speed 15 mph, <= 2 wheels of <=12-inch diameter. HB 1084 (2021) established these rules. Exempt from registration and insurance. No state age or license requirements specified. Helmets not mandated statewide. Allowed on roadways, bicycle paths, multi-use paths, and sidewalks, but local authorities can regulate usage further. Equipment requirements like lights/brakes depend on local rules or application of general bicycle laws (not explicitly stated).",
     "sourceLink": "https://sdlegislature.gov/Statutes/32-26-21.4",
-    "lastVerified": "2025-04-24"
+    "lastVerified": "2026-02-13"
   },
   "TN": {
     "id": "TN",
@@ -422,13 +422,13 @@
     "maxWeightLbs": 100,
     "generalNotes": "Defined as 'Electric foot scooter' in TCA § 55-8-301 (<100 lbs, max 20 mph design speed). Regulated under TCA Title 55, Ch 8, Part 3, applying bicycle rights/duties (TCA § 55-8-172, 55-8-302). Minimum age 16 (implied via TCA § 55-8-306(d)). Max operational speed 15 mph (TCA § 55-8-306(d)). Exempt from registration, license, insurance (TCA § 55-8-302). Requires front white light & rear red light/reflector at night (TCA § 55-8-177(a)), and brakes (TCA § 55-8-177(b)). DUI laws apply (TCA § 55-10-401 applies to vehicles, scooters subject to driver duties TCA § 55-8-172). Local governments can add restrictions.",
     "sourceLink": "https://law.justia.com/codes/tennessee/2021/title-55/chapter-8/part-3/",
-    "lastVerified": "2025-04-24"
+    "lastVerified": "2026-02-13"
   },
   "UT": {
     "id": "UT",
     "name": "Utah",
     "classification": "specific_escooter",
-    "summary": "Utah defines electric scooters as 'motor-assisted scooters' (Utah Code 41-6a-102), limited to 15 mph operation (20 mph design, 2000W max). Minimum age is 8 (with supervision) or 16 (independent). Helmets required under 21. Subject to bicycle rules, allowed on roads <= 25 mph and bike lanes. Sidewalk use depends on local rules. No license/registration.",
+    "summary": "Utah defines electric scooters as 'motor-assisted scooters' (Utah Code 41-6a-102), limited to 15 mph operation (20 mph design, 2000W max). Minimum age is 8 (with parental supervision). Helmets required under 21. Subject to bicycle rules, allowed on roads <= 25 mph and bike lanes. Sidewalk use depends on local rules. No license/registration.",
     "minAge": 8,
     "maxSpeedMph": 15,
     "helmetRequired": "under_21",
@@ -445,9 +445,9 @@
     "duiApplies": true,
     "maxPowerWatts": 2000,
     "maxWeightLbs": null,
-    "generalNotes": "Defined as 'Motor assisted scooter' (41-6a-102(44)) with max design speed 20 mph and motor <= 2000W. Regulated under 41-6a-1116. Min age 16 for independent operation; age 8-15 allowed only with direct supervision from parent/guardian (18+); under 8 prohibited. Max operational speed 15 mph. Treated like bicycles regarding rights/duties (41-6a-1114). Helmets required < 21 on highways. Exempt from license/registration/insurance. Requires brakes (per definition). Lights required sunset-sunrise (per applied bicycle rules 41-6a-1113). Prohibited in public parking structures and where skateboards are banned. Local authorities can regulate further.",
+    "generalNotes": "Defined as 'Motor assisted scooter' (41-6a-102(44)) with max design speed 20 mph and motor <= 2000W. Regulated under 41-6a-1116. Min age 8 with direct supervision from parent/guardian (18+); under 8 prohibited. The '16 for independent operation' threshold sometimes cited applies to e-bikes (41-6a-1115), not to motor-assisted scooters (41-6a-1116). Max operational speed 15 mph. Treated like bicycles regarding rights/duties (41-6a-1114). Helmets required < 21 on highways. Exempt from license/registration/insurance. Requires brakes (per definition). Lights required sunset-sunrise (per applied bicycle rules 41-6a-1113). Prohibited in public parking structures and where skateboards are banned. Local authorities can regulate further.",
     "sourceLink": "https://le.utah.gov/xcode/Title41/Chapter6A/41-6a-S102.html",
-    "lastVerified": "2025-04-24"
+    "lastVerified": "2026-02-13"
   },
   "VT": {
     "id": "VT",
@@ -472,7 +472,7 @@
     "maxWeightLbs": null,
     "generalNotes": "Vermont state law does not specifically define or regulate electric scooters. The provided statute (23 V.S.A. § 1136a) applies to electric bicycles, not scooters. E-scooter regulations are established at the municipal level. Burlington's pilot program serves as an example, requiring riders to be 18+ and restricting speed to 15 mph, allowing road use but prohibiting sidewalk use. Rules in other towns may differ or be nonexistent.",
     "sourceLink": "https://legislature.vermont.gov/statutes/section/23/013/01136a",
-    "lastVerified": "2025-04-24"
+    "lastVerified": "2026-02-13"
   },
   "VA": {
     "id": "VA",
@@ -497,7 +497,7 @@
     "maxWeightLbs": 100,
     "generalNotes": "Defined as 'Motorized skateboard or scooter' (§ 46.2-100), weighing less than 100 lbs with max speed 20 mph. Minimum age 14; riders under 14 require direct supervision by person 18+ (§ 46.2-908.1). No VIN required. Lights required at night (§ 46.2-1015). Subject to bicycle/vehicle rules on highways (§ 46.2-800), implying brake requirement and DUI applicability. Localities can regulate further.",
     "sourceLink": "https://law.lis.virginia.gov/vacode/title46.2/chapter1/section46.2-100/",
-    "lastVerified": "2025-04-24"
+    "lastVerified": "2026-02-13"
   },
   "WA": {
     "id": "WA",
@@ -522,7 +522,7 @@
     "maxWeightLbs": null,
     "generalNotes": "Defined as 'Motorized foot scooter' (RCW 46.04.336) with max design speed 20 mph. Max operational speed limited to 15 mph. Regulated similarly to bicycles. Must be equipped with reflectors. Exempt from registration/insurance. Local regulations may apply.",
     "sourceLink": "https://app.leg.wa.gov/rcw/default.aspx?cite=46.04.336",
-    "lastVerified": "2025-04-24"
+    "lastVerified": "2026-02-13"
   },
   "IL": {
     "id": "IL",
@@ -547,7 +547,7 @@
     "maxWeightLbs": 100,
     "generalNotes": "Low-speed electric scooters must have 2 or 3 wheels, handlebars, a floorboard, and be powered by electric motor and/or human power. Only one rider per scooter. Local governments may impose additional rules and must specifically authorize operation. Scooters must be maintained in good condition and equipped with lamps, brakes, and a warning device.",
     "sourceLink": "https://www.ilga.gov/legislation/publicacts/fulltext.asp?name=103-0899&GA=103&SessionId=112&DocTypeId=SB&DocNum=1960&GAID=17&SpecSess=&Session=",
-    "lastVerified": "2025-05-14"
+    "lastVerified": "2026-02-13"
   },
   "IN": {
     "id": "IN",
@@ -572,7 +572,7 @@
     "maxWeightLbs": 100,
     "generalNotes": "Electric foot scooters must be equipped with a white front light, a red rear light or reflector, and a reliable braking system for night operation. Sirens and whistles are not permitted. Local authorities may prohibit sidewalk parking if adequate alternative parking is provided nearby. Scooters have the same rights and duties as bicycles except where by their nature these have no application.",
     "sourceLink": "https://iga.in.gov/laws/2019/ic/titles/9#9-13-2-49.4",
-    "lastVerified": "2025-04-24"
+    "lastVerified": "2026-02-13"
   },
   "IA": {
     "id": "IA",
@@ -597,7 +597,7 @@
     "maxWeightLbs": 100,
     "generalNotes": "Although House File 500 was introduced to regulate electric scooters at the state level (defining them as devices under 100 pounds with handlebars and electric motors capable of 20 mph max speed), the bill did not pass. Currently, cities establish their own regulations, typically requiring riders to be at least 18 years old and equipping scooters with proper lighting, reflectors, and brakes. Electric scooters are generally exempt from motor vehicle registration, insurance, and inspection requirements.",
     "sourceLink": "https://www.legis.iowa.gov/legislation/BillBook?ga=88&ba=HF500",
-    "lastVerified": "2025-04-23"
+    "lastVerified": "2026-02-13"
   },
   "KS": {
     "id": "KS",
@@ -622,7 +622,7 @@
     "maxWeightLbs": null,
     "generalNotes": "Kansas officially defines electric-assisted scooters as self-propelled vehicles with at least two wheels, an electric motor, handlebars, brakes, and a deck designed to be stood upon when riding. They are explicitly exempt from vehicle registration requirements under state law (K.S.A. 8-128). Scooters must have a white front lamp and a rear red light or reflector for night operation. The state allows local municipalities to establish their own specific regulations, such as Topeka's 15 mph speed limit and minimum operator age of 16 years.",
     "sourceLink": "https://www.kslegislature.gov/li_2024/b2023_24/statute/008_000_0000_chapter/008_014_0000_article/008_014_0098_section/008_014_0098_k/",
-    "lastVerified": "2025-04-23"
+    "lastVerified": "2026-02-13"
   },
   "KY": {
     "id": "KY",
@@ -647,16 +647,16 @@
     "maxWeightLbs": 100,
     "generalNotes": "Electric low-speed scooters must have at least one headlamp and one rear red light for operation from sunset to sunrise or in low visibility conditions. Operators are subject to standard traffic regulations and DUI laws (KRS 189.520). Local government ordinances may impose additional requirements, which operators and rental companies must comply with. The Transportation Cabinet is authorized to establish safe operating standards, but is prohibited from including equipment or helmet use requirements.",
     "sourceLink": "https://apps.legislature.ky.gov/law/statutes/statute.aspx?id=48629",
-    "lastVerified": "2025-04-23"
-},
-"LA": {
+    "lastVerified": "2026-02-13"
+  },
+  "LA": {
     "id": "LA",
     "name": "Louisiana",
     "classification": "specific_escooter",
     "summary": "Louisiana defines 'electric low-speed scooters' and permits their operation on sidewalks, bicycle paths, and highways unless limited by local authorities. Riders under 17 must wear helmets. Scooters must weigh less than 100 lbs, have a maximum speed of 20 mph, and be equipped with brakes and appropriate lighting.",
     "minAge": null,
     "maxSpeedMph": 20,
-    "helmetRequired": "under_16",
+    "helmetRequired": "under_17",
     "helmetNotes": "Riders under 17 years of age must wear an approved helmet as specified in state law (R.S. 32:199).",
     "licenseRequired": false,
     "registrationRequired": false,
@@ -670,9 +670,9 @@
     "duiApplies": null,
     "maxPowerWatts": null,
     "maxWeightLbs": 100,
-    "generalNotes": "Electric low-speed scooters are defined as rental or commercial scooters with handlebars and an electric motor, powered solely by an electric motor or human power. They are explicitly not considered motor-driven cycles, vehicles, or motor vehicles. Operators are granted the same rights and duties as vehicle drivers with certain exceptions. No operator may carry passengers beyond the scooter's design capacity, attach to other vehicles, or carry items that prevent keeping at least one hand on the handlebars. Motor vehicles must maintain a safe passing distance of at least three feet when overtaking scooters.",
+    "generalNotes": "Louisiana's definition of 'electric low-speed scooter' (R.S. 32:1(21.1)) specifically covers rental or commercial scooters. Privately owned scooters may not fall under this definition and could be subject to different rules. Operators are granted the same rights and duties as vehicle drivers with certain exceptions. No operator may carry passengers beyond the scooter's design capacity, attach to other vehicles, or carry items that prevent keeping at least one hand on the handlebars. Motor vehicles must maintain a safe passing distance of at least three feet when overtaking scooters.",
     "sourceLink": "https://legis.la.gov/Legis/law.aspx?d=1148278",
-    "lastVerified": "2025-04-23"
+    "lastVerified": "2026-02-13"
   },
   "ME": {
     "id": "ME",
@@ -697,7 +697,7 @@
     "maxWeightLbs": null,
     "generalNotes": "Maine defines 'motorized scooter' as a scooter with 2 or 3 wheels less than 10 inches in diameter in ground contact, powered by a motor with capacity not exceeding 750 watts. Must be equipped with a white front lamp, a rear red or amber light or reflector. Riders must follow the same traffic rules as bicyclists.",
     "sourceLink": "https://legislature.maine.gov/statutes/29-A/title29-Asec101.html",
-    "lastVerified": "2025-04-23"
+    "lastVerified": "2026-02-13"
   },
   "MD": {
     "id": "MD",
@@ -722,7 +722,7 @@
     "maxWeightLbs": 100,
     "generalNotes": "Maryland legally defines 'electric low speed scooter' as a vehicle designed to transport only the operator, weighing less than 100 pounds, with single wheels in tandem or a combination of front and rear wheels, equipped with handlebars and a standing platform, powered by electric motor and human power, and capable of speeds up to 20 mph (§11-117.2). Electric scooters must be equipped with a bell, but sirens and whistles are not permitted. A white front light and rear red light or reflector are required for night riding. No insurance, registration, or titles are needed.",
     "sourceLink": "https://mgaleg.maryland.gov/mgawebsite/laws/StatuteText?article=gtr&section=11-117.2",
-    "lastVerified": "2025-04-23"
+    "lastVerified": "2026-02-13"
   },
   "MA": {
     "id": "MA",
@@ -747,7 +747,7 @@
     "maxWeightLbs": null,
     "generalNotes": "Operation is prohibited at night (from sunset to sunrise). Scooters must be equipped with operational stop and turn signals so operators can keep both hands on the handlebars. Carrying passengers is explicitly prohibited. Motorized scooters are not registered by the Massachusetts Registry of Motor Vehicles as they are not classified as motor vehicles. Violations are punishable by fines: up to $25 for first offense, $25-$50 for second, and $50-$100 for third or subsequent violations.",
     "sourceLink": "https://malegislature.gov/Laws/GeneralLaws/PartI/TitleXIV/Chapter90/Section1e",
-    "lastVerified": "2025-04-23"
+    "lastVerified": "2026-02-13"
   },
   "MI": {
     "id": "MI",
@@ -756,7 +756,7 @@
     "summary": "Michigan legally recognizes electric scooters, grouping them with electric skateboards. Riders under 12 can't operate on public roads, and those under 19 must wear helmets. Scooters must not exceed 25 mph or 2,500 watts, and can operate on roadways, bicycle paths, and sidewalks, but not on roads with speed limits above 45 mph except when crossing.",
     "minAge": 12,
     "maxSpeedMph": 25,
-    "helmetRequired": "under_18",
+    "helmetRequired": "under_19",
     "helmetNotes": "Crash helmets are mandatory for electric scooter riders under 19 years of age.",
     "licenseRequired": false,
     "registrationRequired": false,
@@ -772,7 +772,7 @@
     "maxWeightLbs": null,
     "generalNotes": "Electric scooters in Michigan must have a deck no larger than 60 inches long and 18 inches wide and be designed to transport only one person. They must be equipped with brakes, a white front lamp, and a rear red reflector. Not considered 'motor vehicles' under Michigan law, thus exempt from insurance and registration requirements. Local governments may regulate or prohibit operation in specific areas, including downtown districts, waterfront areas, or trails. Operation is prohibited in special charter cities and state parks under the jurisdiction of the Mackinac Island State Park commission.",
     "sourceLink": "https://www.legislature.mi.gov/Laws/MCL?objectName=MCL-257-13F",
-    "lastVerified": "2025-04-23"
+    "lastVerified": "2026-02-13"
   },
   "MN": {
     "id": "MN",
@@ -797,7 +797,7 @@
     "maxWeightLbs": null,
     "generalNotes": "Minnesota statutory definition (169.011, subd. 46) describes a 'motorized foot scooter' as a device with handlebars designed to be stood or sat upon by the operator, powered by an internal combustion engine or electric motor capable of propelling the device with or without human propulsion. It must have no more than two 12-inch or smaller diameter wheels and an engine or motor that can reach a maximum speed of 15 mph on a flat surface with not more than one percent grade. Scooters are designed to carry only one person, and aren't classified as motor vehicles, thus exempting them from insurance and registration requirements.",
     "sourceLink": "https://www.revisor.mn.gov/statutes/cite/169.011#stat.169.011.46",
-    "lastVerified": "2025-04-23"
+    "lastVerified": "2026-02-13"
   },
   "MS": {
     "id": "MS",
@@ -822,32 +822,7 @@
     "maxWeightLbs": 100,
     "generalNotes": "While state legislation failed in 2020, Vicksburg obtained special legislative approval to become the first Mississippi city with e-scooters, launching a pilot program with Blue Duck in September 2020 and later approving Bird Rides in 2022. Cities seeking to allow e-scooters may need to pursue similar special legislative approval to establish local regulations.",
     "sourceLink": "https://www.vicksburgpost.com/2020/09/04/electric-scooters-are-set-to-roll-out-in-downtown-vicksburg/",
-    "lastVerified": "2025-04-24"
-  },
-  "MO": {
-      "id": "MO",
-      "name": "Missouri",
-      "classification": "specific_escooter",
-      "summary": "Missouri classifies electric scooters as 'motorized bicycles' and requires riders to be at least 16 years old with a valid driver's license. Scooters must have motors rated at less than 2237.1 watts (3 horsepower) and cannot exceed 30 mph, otherwise they may be regulated as motorcycles.",
-      "minAge": 16,
-      "maxSpeedMph": 30,
-      "helmetRequired": "local_rule",
-      "helmetNotes": "State law doesn't mandate helmet use for electric scooter riders, but many local jurisdictions make it compulsory.",
-      "licenseRequired": true,
-      "registrationRequired": false,
-      "sidewalkRiding": "prohibited",
-      "sidewalkNotes": "Electric scooters cannot be operated on sidewalks according to state law.",
-      "bikeLaneRiding": "allowed",
-      "streetRiding": "allowed",
-      "streetNotes": "Electric scooters can be operated on public streets and highways but are prohibited on the interstate highway system.",
-      "lightsRequired": "night",
-      "brakesRequired": true,
-      "duiApplies": true,
-      "maxPowerWatts": 2237,
-      "maxWeightLbs": null,
-      "generalNotes": "Missouri law classifies electric scooters as 'motorized bicycles' under section 307.180, which defines them as two- or three-wheeled devices with automatic transmission and motors not exceeding 50cc, producing less than 3 gross brake horsepower (approximately 2237.1 watts), and capable of speeds up to 30 mph. Insurance requirements may vary by local jurisdiction, with cities like Springfield requiring scooter operators to have insurance. Scooters must be equipped with adequate lighting and reflectors for night use, a braking system, and an audible signaling device.",
-      "sourceLink": "https://revisor.mo.gov/main/OneSection.aspx?section=307.180",
-      "lastVerified": "2025-04-24"
+    "lastVerified": "2026-02-13"
   },
   "MO": {
     "id": "MO",
@@ -856,8 +831,8 @@
     "summary": "Missouri classifies electric scooters as 'motorized bicycles' under section 301.010. Riders must be at least 16 years old with a valid driver's license. Scooters must have motors not exceeding 50cc (less than 3 gross brake horsepower/2237.1 watts) and cannot exceed 30 mph, otherwise they may be regulated as motorcycles.",
     "minAge": 16,
     "maxSpeedMph": 30,
-    "helmetRequired": "local_rule",
-    "helmetNotes": "State law doesn't mandate helmet use for electric scooter riders, but many local jurisdictions make it compulsory.",
+    "helmetRequired": "none",
+    "helmetNotes": "No statewide helmet requirement exists for electric scooter or motorized bicycle riders per Missouri Highway Patrol guidance. Some local jurisdictions may have their own requirements.",
     "licenseRequired": true,
     "registrationRequired": false,
     "sidewalkRiding": "prohibited",
@@ -872,7 +847,7 @@
     "maxWeightLbs": null,
     "generalNotes": "Missouri statute 301.010(39) legally defines 'motorized bicycle' as 'any two-wheeled or three-wheeled device having an automatic transmission and a motor with a cylinder capacity of not more than fifty cubic centimeters, which produces less than three gross brake horsepower, and is capable of propelling the device at a maximum speed of not more than thirty miles per hour on level ground'. Under section 307.180, this classification applies to electric scooters. Insurance requirements may vary by local jurisdiction. Scooters must be equipped with adequate lighting and reflectors for night use, a braking system, and an audible signaling device.",
     "sourceLink": "https://revisor.mo.gov/main/OneSection.aspx?section=307.180",
-    "lastVerified": "2025-04-24"
+    "lastVerified": "2026-02-13"
   },
   "MT": {
     "id": "MT",
@@ -897,7 +872,7 @@
     "maxWeightLbs": null,
     "generalNotes": "Montana statute 61-1-101(47) defines a 'motorized nonstandard vehicle' as a vehicle propelled by its own power using an internal combustion engine or electric motor, with a wheelbase less than 40 inches and wheel diameter less than 10 inches, that doesn't display manufacturer's certification or have a proper VIN. This classification includes electric scooters as well as motorized skateboards. Montana doesn't have a specific statutory framework for electric scooters at the state level, leaving regulation primarily to cities.",
     "sourceLink": "https://archive.legmt.gov/bills/mca/title_0610/chapter_0010/part_0010/section_0010/0610-0010-0010-0010.html",
-    "lastVerified": "2025-04-24"
+    "lastVerified": "2026-02-13"
   },
   "NE": {
     "id": "NE",
@@ -922,7 +897,7 @@
     "maxWeightLbs": null,
     "generalNotes": "Nebraska explicitly categorizes electric scooters among vehicles exempt from registration requirements, along with other off-road vehicles such as ATVs, UTVs, and electric personal assistive devices. The state has minimal statewide legislation specific to e-scooters, with municipal governments taking the lead in creating local regulations. Cities like Omaha and Lincoln have implemented pilot programs that typically establish a minimum rider age of 18, allow use on roads and bicycle paths, prohibit sidewalk riding, and restrict operation to streets with speed limits under 35 mph.",
     "sourceLink": "https://dmv.nebraska.gov/dvr/reg/motor-vehicles-exempt-registration",
-    "lastVerified": "2025-04-24"
+    "lastVerified": "2026-02-13"
   },
   "NV": {
     "id": "NV",
@@ -947,7 +922,7 @@
     "maxWeightLbs": 100,
     "generalNotes": "Regulated under NRS 484B.785, granting operators the rights and duties of bicyclists/e-bicyclists. Max operational speed generally 15 MPH. Max weight 100 lbs (per third-party sources, statute does not specify). Exempt from registration/insurance. Requires lights/reflectors for night use and reliable brakes (implied via bicycle laws). Local authorities may regulate further (NRS 484A.469), potentially including age limits (a minimum age of 16 may apply specifically to shared scooters based on third-party info). DUI laws likely apply as operators share duties with bicyclists.",
     "sourceLink": "https://www.leg.state.nv.us/nrs/NRS-484B.html",
-    "lastVerified": "2025-04-24"
+    "lastVerified": "2026-02-13"
   },
   "NH": {
     "id": "NH",
@@ -971,7 +946,7 @@
     "maxPowerWatts": null,
     "maxWeightLbs": null,
     "generalNotes": "No statewide definition or regulation for electric scooters exists in NH RSA. They are generally not considered motor vehicles under state law, placing regulatory authority with local jurisdictions. Manchester ordinance Ch. 78 serves as an example: requires riders to be 16+, mandates local registration with Police Dept ($5 fee), allows operation on streets/sidewalks (following traffic laws), and requires lights (night) and brakes. Driver's license is not required. Helmet use is not mandated in Manchester.",
-    "lastVerified": "2025-04-24"
+    "lastVerified": "2026-02-13"
   },
   "NJ": {
     "id": "NJ",
@@ -996,7 +971,7 @@
     "maxWeightLbs": null,
     "generalNotes": "Defined as 'Low-speed electric scooter' in N.J.S.A. 39:1-1 with max speed < 19 mph. Governed by N.J.S.A. 39:4-14.16, which applies general bicycle laws (N.J.S.A. 39:4). Equipment requirements (bell, lights/reflectors for night, brakes) derived from applicable bicycle statutes (e.g., N.J.S.A. 39:4-10, 39:4-11.1). DUI laws (N.J.S.A. 39:4-50) apply as scooters fall under bicycle regulations, and bicycles are considered vehicles.",
     "sourceLink": "https://law.justia.com/codes/new-jersey/2022/title-39/section-39-4-14-16/",
-    "lastVerified": "2025-04-24"
+    "lastVerified": "2026-02-13"
   },
   "NM": {
     "id": "NM",
@@ -1021,7 +996,7 @@
     "maxWeightLbs": null,
     "generalNotes": "Currently, electric scooter regulations fall under local jurisdiction as New Mexico has no specific statewide statutes. HB 282 (2019, failed) proposed defining them as devices < 100 lbs, max 20 mph, powered solely by electric motor. It also proposed exempting them from vehicle/motor vehicle definitions, registration, and mandatory insurance, while applying bicycle rights, duties, and equipment requirements (lights, bell, brakes per §66-3-707). Parking on sidewalks (if not impeding) was also proposed. Since the bill failed, actual rules depend entirely on local city/county ordinances.",
     "sourceLink": "https://www.nmlegis.gov/Sessions/19%20Regular/bills/house/HB0282.html",
-    "lastVerified": "2025-04-24"
+    "lastVerified": "2026-02-13"
   },
   "NY": {
     "id": "NY",
@@ -1046,7 +1021,7 @@
     "maxWeightLbs": 100,
     "generalNotes": "Defined as 'Electric scooter' (VTL §114-e) with max design speed 20 mph, but illegal to operate > 15 mph. Riders have same rights/duties as bicyclists (VTL Art. 34-D). Requires reliable brakes, bell, front white light and rear red light (night), and manufacturer label. Must weigh < 100 lbs (per third-party source). Exempt from registration/insurance. Cities/towns have authority to regulate further or prohibit use.",
     "sourceLink": "https://www.nysenate.gov/legislation/laws/VAT/114-E",
-    "lastVerified": "2025-04-24"
+    "lastVerified": "2026-02-13"
   },
   "ND": {
     "id": "ND",
@@ -1071,7 +1046,7 @@
     "maxWeightLbs": null,
     "generalNotes": "North Dakota does not have specific statewide statutes for electric scooters. Regulation is handled at the municipal level. Common local rules (e.g., Bismarck, Minot, Grand Forks) include minimum ages (12-14, often 18 for rentals), helmet requirement for minors (<18), max speed of 15 mph, and requirements for brakes, headlights, and taillights. Scooters are typically distinguished from mopeds and not subject to state vehicle registration.",
     "sourceLink": null,
-    "lastVerified": "2025-04-24"
+    "lastVerified": "2026-02-13"
   },
   "NC": {
     "id": "NC",
@@ -1096,7 +1071,7 @@
     "maxWeightLbs": null,
     "generalNotes": "Electric scooters are not explicitly defined or regulated in North Carolina General Statutes (e.g., G.S. 20-4.01). SB 620 (2019) proposed definitions (max 20 mph, <12\" wheels) and regulations similar to bicycles, including exemption from motor vehicle/moped status, registration, and insurance, but these provisions were not enacted into the primary vehicle code. Consequently, regulation is inconsistent and handled locally. While sometimes compared to mopeds (requiring age 16+ and helmet), this classification is inaccurate and problematic for registration/insurance. High-power scooters (>20mph) exist in a further gray area, sometimes treated operationally like motorcycles but unable to be registered.",
     "sourceLink": "https://www.ncleg.gov/BillLookUp/2019/S620",
-    "lastVerified": "2025-04-24"
+    "lastVerified": "2026-02-13"
   },
   "OH": {
     "id": "OH",
@@ -1121,7 +1096,7 @@
     "maxWeightLbs": 100,
     "generalNotes": "Defined as 'low-speed micromobility device' (<100 lbs, max 20 mph) under ORC 4511.01(VVV). Regulated by ORC 4511.515, granting bicycle rights/duties. Allowed on streets, sidewalks (not impeding pedestrians), paths, bike lanes. Minimum age 16 *for rentals only*. Lights required (front white, rear red light/reflector) per ORC 4511.515(G). No statewide helmet, license, or registration. Brakes required (via bicycle rules). DUI laws apply (via bicycle rules). Local authorities can impose further restrictions (ORC 4511.711).",
     "sourceLink": "https://codes.ohio.gov/ohio-revised-code/section-4511.01",
-    "lastVerified": "2025-04-24"
+    "lastVerified": "2026-02-13"
   },
   "OK": {
     "id": "OK",
@@ -1146,7 +1121,7 @@
     "maxWeightLbs": null,
     "generalNotes": "Defined as 'Motorized scooter' (47 Okl. St. Ann. § 1-133.3), covering devices with <=3 wheels, handlebars, foot support/seat, and max design speed <=35 mph (electric or <50cc gas). State sets min age 14, max operational speed 25 mph (§ 11-1117), and exempts from registration/insurance/license requirements, but explicitly grants municipalities broad authority (§ 1-133.3 D) to regulate usage (including age, speed, location, license, insurance). Operators must follow traffic regulations (§ 1-133.3 C.3), implying DUI laws apply and equipment like lights/brakes are needed per general vehicle/bicycle rules.",
     "sourceLink": "https://govt.westlaw.com/okjc/Document/N41FA8040227411ED89B8BED60A034ABF",
-    "lastVerified": "2025-04-24"
+    "lastVerified": "2026-02-13"
   },
   "OR": {
     "id": "OR",
@@ -1171,7 +1146,7 @@
     "maxWeightLbs": null,
     "generalNotes": "Defined as 'Motor assisted scooter' (ORS 801.348): <=4 wheels, foot support/seat, motor/human propulsion, max design speed 24 mph, motor <= 1000W (electric) or <=35cc (gas). Regulated under ORS 814.550 - 814.562, granting bicycle rights/duties (ORS 814.550). Minimum age 16 (ORS 814.554). Helmet required (ORS 814.560). Max operational speed 15 mph (ORS 814.552). Lights required sunset-sunrise (ORS 814.556 applies ORS 815.280). Brakes required (via bicycle rules). Exempt from registration/insurance/license. DUI laws apply (ORS 813).",
     "sourceLink": "https://oregon.public.law/statutes/ors_801.348",
-    "lastVerified": "2025-04-24"
+    "lastVerified": "2026-02-13"
   },
   "PA": {
     "id": "PA",
@@ -1196,14 +1171,14 @@
     "maxWeightLbs": null,
     "generalNotes": "Pennsylvania currently lacks statewide authorization for e-scooters on public roads. PennDOT requires vehicles on roadways to be titled, registered, and insured, which is not possible for e-scooters. Proposed legislation (SB 892 / HB 2218) would define 'Electric Low Speed Scooters' (<100 lbs, max 15 mph), set minimum age to 18, apply bicycle duties, require lights, and allow local municipalities to regulate use (permitting on roads <=35 mph, bike lanes/paths, but potentially prohibiting on sidewalks in business districts). This legislation has not been enacted as of late 2024. Pittsburgh ran a pilot program (July 2021-April 2023) under specific authorization, and legislation (HB 2218) seeks its renewal. Philadelphia bans e-scooters. Use remains restricted to private property unless part of a locally authorized program.",
     "sourceLink": "https://www.legis.state.pa.us/cfdocs/legis/PN/Public/btCheck.cfm?txtType=PDF&sessYr=2023&sessInd=0&billBody=H&billTyp=B&billNbr=2218&pn=3729",
-    "lastVerified": "2025-04-24"
+    "lastVerified": "2026-02-13"
   },
   "TX": {
     "id": "TX",
     "name": "Texas",
     "classification": "specific_escooter",
-    "summary": "Texas law classifies electric scooters as motor-assisted scooters under Transportation Code §551.351, allowing operation on roads with speed limits ≤35 MPH. No statewide license, registration, or helmet requirements for adults, though local governments retain regulatory authority over operation zones and parking.",
-    "minAge": 16,
+    "summary": "Texas law classifies electric scooters as motor-assisted scooters under Transportation Code §551.351, allowing operation on roads with speed limits ≤35 MPH. No statewide license, registration, age, or helmet requirements, though local governments retain regulatory authority over operation zones and parking.",
+    "minAge": null,
     "maxSpeedMph": null,
     "helmetRequired": "none",
     "helmetNotes": "State law does not mandate helmets, but local ordinances like Dallas require helmets for riders under 18.",
@@ -1219,9 +1194,9 @@
     "duiApplies": true,
     "maxPowerWatts": null,
     "maxWeightLbs": null,
-    "generalNotes": "Defined as motor-assisted scooters with ≤40cc engine or equivalent electric motor, braking system, and standing platform. Operators have same rights/duties as bicyclists except where impractical. Local governments may impose additional restrictions on operation zones and parking.",
+    "generalNotes": "Defined as motor-assisted scooters with ≤40cc engine or equivalent electric motor, braking system, and standing platform. No statewide minimum age — Transportation Code §551.351 does not specify an age requirement (the 16-year threshold sometimes cited applies to mopeds, not scooters). Operators have same rights/duties as bicyclists except where impractical. Local governments may impose additional restrictions on operation zones, parking, and minimum age.",
     "sourceLink": "https://statutes.capitol.texas.gov/docs/tn/htm/tn.551.htm",
-    "lastVerified": "2025-04-23"
+    "lastVerified": "2026-02-13"
   },
   "WV": {
     "id": "WV",
@@ -1246,7 +1221,7 @@
     "maxWeightLbs": null,
     "generalNotes": "West Virginia has no specific state statutes defining or regulating electric scooters. They are not explicitly classified, though sometimes ambiguously linked to 'play vehicles'. All regulations (age, speed, helmets, operating areas) are determined by individual city/town ordinances. E-bike laws (e.g., WV Code §17C-11-8) do not apply to electric scooters.",
     "sourceLink": "https://code.wvlegislature.gov/17C-11-8/",
-    "lastVerified": "2025-04-24"
+    "lastVerified": "2026-02-13"
   },
   "WI": {
     "id": "WI",
@@ -1271,7 +1246,7 @@
     "maxWeightLbs": 100,
     "generalNotes": "Defined as 'Electric scooter' weighing < 100 lbs, max design speed 20 mph (Statute 340.01(15ps)). Max operational speed statewide is 15 mph (Statute 346.804(5)). Treated like bicycles regarding rights/duties (Statute 346.804(1)). Requires front white light and rear red reflector/light during darkness (Statute 346.804(6)). Brakes required (via bicycle rules 346.77). No sirens/whistles. Exempt from registration/title. Subject to DUI laws (Statute 346.94(2m)). Local authorities may enact further regulations.",
     "sourceLink": "https://docs.legis.wisconsin.gov/document/statutes/346.804",
-    "lastVerified": "2025-04-24"
+    "lastVerified": "2026-02-13"
   },
   "WY": {
     "id": "WY",
@@ -1296,6 +1271,6 @@
     "maxWeightLbs": null,
     "generalNotes": "Wyoming has no specific state statutes defining or regulating electric scooters operationally. The vague 'motorized skateboard' definition exists but offers no guidance. All regulations (age, speed, helmets, operating areas, equipment) are determined by individual city/town ordinances. Wyoming Statute SF0081 (2019) primarily concerns electric *bicycles* and does not apply to electric scooters. Check local city ordinances for specific rules.",
     "sourceLink": null,
-    "lastVerified": "2025-04-24"
+    "lastVerified": "2026-02-13"
   }
 }
