@@ -483,6 +483,93 @@ class PriceHistory {
     }
 
     /**
+     * Delete specific rows by their IDs, validated against product_id.
+     *
+     * @param int        $product_id The product post ID (security validation).
+     * @param array<int> $ids        Array of row IDs to delete.
+     * @return int Number of rows deleted.
+     */
+    public function delete_by_ids(int $product_id, array $ids): int {
+        if (empty($ids)) {
+            return 0;
+        }
+
+        $ids = array_map('intval', $ids);
+        $placeholders = implode(',', array_fill(0, count($ids), '%d'));
+
+        // phpcs:ignore WordPress.DB.PreparedSQL.InterpolatedNotPrepared
+        $result = $this->wpdb->query(
+            $this->wpdb->prepare(
+                "DELETE FROM {$this->table_name}
+                 WHERE product_id = %d AND id IN ({$placeholders})",
+                $product_id,
+                ...$ids
+            )
+        );
+
+        return $result !== false ? (int) $result : 0;
+    }
+
+    /**
+     * Delete rows in a date range, optionally filtered by geo.
+     *
+     * @param int         $product_id The product post ID.
+     * @param string      $date_from  Start date (Y-m-d).
+     * @param string      $date_to    End date (Y-m-d).
+     * @param string|null $geo        Optional geo filter.
+     * @return int Number of rows deleted.
+     */
+    public function delete_date_range(int $product_id, string $date_from, string $date_to, ?string $geo = null): int {
+        $where_clauses = ['product_id = %d', 'date >= %s', 'date <= %s'];
+        $params = [$product_id, $date_from, $date_to];
+
+        if ($geo !== null) {
+            $geo = strtoupper($geo);
+            if ($geo === 'US') {
+                $where_clauses[] = "(geo = %s OR geo = '' OR geo IS NULL)";
+            } else {
+                $where_clauses[] = 'geo = %s';
+            }
+            $params[] = $geo;
+        }
+
+        $where_sql = implode(' AND ', $where_clauses);
+
+        // phpcs:ignore WordPress.DB.PreparedSQL.InterpolatedNotPrepared
+        $result = $this->wpdb->query(
+            $this->wpdb->prepare(
+                "DELETE FROM {$this->table_name} WHERE {$where_sql}",
+                ...$params
+            )
+        );
+
+        return $result !== false ? (int) $result : 0;
+    }
+
+    /**
+     * Update price for a single row by ID, validated against product_id.
+     *
+     * Uses $wpdb->update() directly (not record_price() upsert) to avoid
+     * edge cases with the composite unique key.
+     *
+     * @param int   $product_id The product post ID (security validation).
+     * @param int   $row_id     The row primary key.
+     * @param float $price      The new price value.
+     * @return bool True on success.
+     */
+    public function update_price(int $product_id, int $row_id, float $price): bool {
+        $result = $this->wpdb->update(
+            $this->table_name,
+            ['price' => $price],
+            ['id' => $row_id, 'product_id' => $product_id],
+            ['%f'],
+            ['%d', '%d']
+        );
+
+        return $result !== false;
+    }
+
+    /**
      * Cast numeric fields in a row.
      *
      * @param array<string, mixed> $row Database row.

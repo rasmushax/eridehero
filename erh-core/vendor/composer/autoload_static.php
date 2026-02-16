@@ -18,6 +18,7 @@ class ComposerStaticInitb5e889746c5280811e87a72c161db6db
         'ERH\\Admin\\NewsletterAdmin' => __DIR__ . '/../..' . '/includes/admin/class-newsletter-admin.php',
         'ERH\\Admin\\PerplexityClient' => __DIR__ . '/../..' . '/includes/admin/class-perplexity-client.php',
         'ERH\\Admin\\PopularComparisonsPage' => __DIR__ . '/../..' . '/includes/admin/class-popular-comparisons-page.php',
+        'ERH\\Admin\\PriceHistoryEditor' => __DIR__ . '/../..' . '/includes/admin/class-price-history-editor.php',
         'ERH\\Admin\\ProductPopularityPage' => __DIR__ . '/../..' . '/includes/admin/class-product-popularity-page.php',
         'ERH\\Admin\\ProductPopularityWidget' => __DIR__ . '/../..' . '/includes/admin/class-product-popularity-widget.php',
         'ERH\\Admin\\SerpApiImageClient' => __DIR__ . '/../..' . '/includes/admin/class-serpapi-image-client.php',

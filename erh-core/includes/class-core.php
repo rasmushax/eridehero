@@ -51,6 +51,7 @@ use ERH\Admin\ProductPopularityWidget;
 use ERH\Admin\SpecEditor;
 use ERH\Admin\SpecPopulator;
 use ERH\Admin\ImagePopulator;
+use ERH\Admin\PriceHistoryEditor;
 use ERH\Admin\EmailTestPage;
 use ERH\Admin\NewsletterAdmin;
 use ERH\Migration\MigrationAdmin;
@@ -232,6 +233,13 @@ class Core {
      * @var ImagePopulator
      */
     private ImagePopulator $image_populator;
+
+    /**
+     * Price history editor meta box instance.
+     *
+     * @var PriceHistoryEditor
+     */
+    private PriceHistoryEditor $price_history_editor;
 
     /**
      * Email test page instance.
@@ -634,6 +642,10 @@ class Core {
         // Initialize image populator on product edit screens.
         $this->image_populator = new ImagePopulator();
         $this->image_populator->register();
+
+        // Initialize price history editor on product edit screens.
+        $this->price_history_editor = new PriceHistoryEditor();
+        $this->price_history_editor->register();
 
         // Initialize email test page.
         $this->email_test_page = new EmailTestPage();

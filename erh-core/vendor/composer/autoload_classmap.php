@@ -17,6 +17,7 @@ return array(
     'ERH\\Admin\\NewsletterAdmin' => $baseDir . '/includes/admin/class-newsletter-admin.php',
     'ERH\\Admin\\PerplexityClient' => $baseDir . '/includes/admin/class-perplexity-client.php',
     'ERH\\Admin\\PopularComparisonsPage' => $baseDir . '/includes/admin/class-popular-comparisons-page.php',
+    'ERH\\Admin\\PriceHistoryEditor' => $baseDir . '/includes/admin/class-price-history-editor.php',
     'ERH\\Admin\\ProductPopularityPage' => $baseDir . '/includes/admin/class-product-popularity-page.php',
     'ERH\\Admin\\ProductPopularityWidget' => $baseDir . '/includes/admin/class-product-popularity-widget.php',
     'ERH\\Admin\\SerpApiImageClient' => $baseDir . '/includes/admin/class-serpapi-image-client.php',
