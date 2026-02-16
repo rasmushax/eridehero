@@ -478,6 +478,10 @@ class ClickRedirector {
     /**
      * Build affiliate URL from tracking URL and format template.
      *
+     * Handles the case where both the tracking URL and the affiliate format
+     * contain query parameters — avoids double "?" by replacing the second
+     * "?" with "&".
+     *
      * @param array $row Database row with URL and format info.
      * @return string The affiliate URL.
      */
@@ -489,11 +493,22 @@ class ClickRedirector {
             return $tracking_url;
         }
 
-        return str_replace(
+        $url = str_replace(
             ['{URL}', '{URLE}', '{ID}'],
             [$tracking_url, urlencode($tracking_url), $this->extract_product_id($tracking_url)],
             $format
         );
+
+        // Fix double "?" when both tracking URL and format have query params.
+        $first = strpos($url, '?');
+        if ($first !== false) {
+            $second = strpos($url, '?', $first + 1);
+            if ($second !== false) {
+                $url = substr($url, 0, $second) . '&' . substr($url, $second + 1);
+            }
+        }
+
+        return $url;
     }
 
     /**
