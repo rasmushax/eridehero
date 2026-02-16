@@ -220,32 +220,22 @@ export function initSearchPage() {
 
     // Initial search from URL
     const initialQuery = window.erhData?.searchQuery || '';
-    if (initialQuery) {
-        // SSR content is already visible — keep it while JS loads data.
-        const hasSSRContent = resultsContainer && !resultsContainer.hasAttribute('hidden') && resultsContainer.children.length > 0;
+    const hasSSRContent = resultsContainer && !resultsContainer.hasAttribute('hidden') && resultsContainer.children.length > 0;
+
+    if (initialQuery && hasSSRContent) {
+        // SSR already rendered results — just preload data silently for future interactions.
+        if (clearBtn) clearBtn.hidden = false;
         preloadOnce();
-        if (!hasSSRContent) {
-            showLoading();
-        }
+        // Load data in background so filters/re-search work instantly.
         search(initialQuery).then(results => {
             allResults = results;
-            if (results.length === 0) {
-                showEmpty(true, initialQuery);
-            } else {
-                currentFilter = 'all';
-                filterBtns.forEach(btn => {
-                    const isActive = btn.dataset.filter === 'all';
-                    btn.classList.toggle('is-active', isActive);
-                    btn.setAttribute('aria-pressed', isActive);
-                });
-                updateFilterCounts(allResults);
-                showResults();
-                renderResults(allResults);
-            }
-            if (clearBtn) clearBtn.hidden = false;
-        }).catch(() => {
-            if (!hasSSRContent) showEmpty(true, initialQuery);
-        });
+            updateFilterCounts(allResults);
+            filtersContainer?.removeAttribute('hidden');
+        }).catch(() => {});
+    } else if (initialQuery) {
+        // No SSR content (e.g. JS-only navigation) — do full client search.
+        preloadOnce();
+        handleSearch(initialQuery);
     } else {
         showEmpty(false);
     }

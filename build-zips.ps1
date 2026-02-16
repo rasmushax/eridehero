@@ -33,7 +33,7 @@ $size = [math]::Round((Get-Item $coreZip).Length / 1MB, 1)
 Write-Host "Created erh-core.zip - ${size} MB"
 
 # --- housefresh-tools.zip ---
-$hftSource = "C:\wamp64\www\housefresh\wp-content\plugins\housefresh-tools"
+$hftSource = "C:\laragon\www\housefresh\wp-content\plugins\housefresh-tools"
 $hftZip = Join-Path $baseDir "housefresh-tools.zip"
 if (Test-Path $hftZip) { Remove-Item $hftZip }
 $zip = [System.IO.Compression.ZipFile]::Open($hftZip, 'Create')
