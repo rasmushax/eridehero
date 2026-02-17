@@ -306,6 +306,16 @@ import { Toast } from './components/toast.js'; // For programmatic toasts
         });
     }
 
+    // Auth page (login/register) - hash-based state switching
+    if (document.querySelector('[data-auth-page]')) {
+        import('./components/auth-page.js');
+    }
+
+    // Reset password page
+    if (document.querySelector('[data-reset-password-page]')) {
+        import('./components/auth-page.js').then(m => m.initResetPassword());
+    }
+
     // Account page - tabs, settings, and trackers
     if (document.querySelector('.account-page')) {
         import('./components/account-tabs.js');

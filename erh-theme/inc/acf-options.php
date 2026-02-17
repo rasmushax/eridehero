@@ -586,7 +586,7 @@ function erh_register_acf_fields(): void {
                 'post_type'     => array( 'page' ),
                 'return_format' => 'id',
                 'ui'            => 1,
-                'instructions'  => __( 'Select the page to link to. Defaults to /signup/ if not set.', 'erh' ),
+                'instructions'  => __( 'Select the page to link to. Defaults to /login/ if not set.', 'erh' ),
             ),
         ),
         'location' => array(
@@ -599,6 +599,33 @@ function erh_register_acf_fields(): void {
             ),
         ),
         'menu_order' => 0,
+    ) );
+
+    // Login Page Settings (Global Settings)
+    acf_add_local_field_group( array(
+        'key'      => 'group_auth_page',
+        'title'    => __( 'Login Page', 'erh' ),
+        'fields'   => array(
+            array(
+                'key'           => 'field_auth_page_image',
+                'label'         => __( 'Login Page Image', 'erh' ),
+                'name'          => 'auth_page_image',
+                'type'          => 'image',
+                'return_format' => 'array',
+                'preview_size'  => 'medium',
+                'instructions'  => __( 'Image shown on the right side of the login/register page. Recommended: 1200x1600px portrait.', 'erh' ),
+            ),
+        ),
+        'location' => array(
+            array(
+                array(
+                    'param'    => 'options_page',
+                    'operator' => '==',
+                    'value'    => 'erh-global-settings',
+                ),
+            ),
+        ),
+        'menu_order' => -2,
     ) );
 
     // Social Links (Global Settings)

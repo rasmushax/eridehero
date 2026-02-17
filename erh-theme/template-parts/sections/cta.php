@@ -46,7 +46,7 @@ $member_count = '1,200+';
 					</ul>
 				</div>
 				<div class="cta-action">
-					<a href="<?php echo esc_url( home_url( '/signup/' ) ); ?>" class="btn btn-primary btn-lg">
+					<a href="<?php echo esc_url( home_url( '/login/' ) ); ?>#register" class="btn btn-primary btn-lg">
 						<?php esc_html_e( 'Sign up free', 'erh' ); ?>
 						<?php erh_the_icon( 'arrow-right' ); ?>
 					</a>

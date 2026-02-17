@@ -27,7 +27,7 @@ if ( ! defined( 'ABSPATH' ) ) {
                     <?php esc_html_e( 'My account', 'erh' ); ?>
                 </a>
             <?php else : ?>
-                <a href="<?php echo esc_url( home_url( '/register/' ) ); ?>" class="mobile-signup-btn">
+                <a href="<?php echo esc_url( home_url( '/login/' ) ); ?>#register" class="mobile-signup-btn">
                     <?php esc_html_e( 'Sign up free', 'erh' ); ?>
                     <?php erh_the_icon( 'arrow-right' ); ?>
                 </a>

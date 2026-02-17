@@ -12,9 +12,9 @@ if ( ! defined( 'ABSPATH' ) ) {
 	exit;
 }
 
-// Redirect logged-out users to home with login modal.
+// Redirect logged-out users to login page.
 if ( ! is_user_logged_in() ) {
-	wp_redirect( home_url( '/?login=1' ) );
+	wp_redirect( home_url( '/login/?redirect=' . rawurlencode( home_url( '/account/' ) ) ) );
 	exit;
 }
 

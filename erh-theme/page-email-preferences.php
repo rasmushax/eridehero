@@ -15,7 +15,7 @@ if ( ! defined( 'ABSPATH' ) ) {
 
 // Must be logged in
 if ( ! is_user_logged_in() ) {
-    wp_redirect( home_url( '/?login=1' ) );
+    wp_redirect( home_url( '/login/?redirect=' . rawurlencode( home_url( '/email-preferences/' ) ) ) );
     exit;
 }
 

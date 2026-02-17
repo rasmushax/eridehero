@@ -64,7 +64,7 @@ if ( ! defined( 'ABSPATH' ) ) {
                     <?php erh_the_icon( 'user' ); ?>
                     <?php esc_html_e( 'Log in', 'erh' ); ?>
                 </a>
-                <a href="<?php echo esc_url( home_url( '/register/' ) ); ?>" class="btn-signup">
+                <a href="<?php echo esc_url( home_url( '/login/' ) ); ?>#register" class="btn-signup">
                     <?php esc_html_e( 'Sign up free', 'erh' ); ?>
                 </a>
             <?php endif; ?>

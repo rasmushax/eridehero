@@ -4,6 +4,8 @@
  * Authentication modal with sign-in, sign-up, and forgot password states.
  * Supports social login (Google, Facebook, Reddit) via popup windows.
  *
+ * Delegates all auth logic to auth-core.js for shared use with auth-page.js.
+ *
  * Usage:
  *   import { AuthModal } from './components/auth-modal.js';
  *
@@ -22,9 +24,15 @@
 
 import { Modal } from './modal.js';
 import { Toast } from './toast.js';
-import { getRestUrl } from '../utils/api.js';
+import {
+    submitAuthForm,
+    initSocialLogin,
+    handleAuthSuccess,
+    setSubmitLoading,
+    showFormError,
+    clearFormError,
+} from '../utils/auth-core.js';
 
-const REST_URL = getRestUrl();
 const STORAGE_KEY = 'erh_pending_action';
 
 class AuthModalManager {
@@ -61,7 +69,6 @@ class AuthModalManager {
      * @param {Object} data - Action data to store
      */
     openForAction(action, data = {}) {
-        // Store the pending action
         sessionStorage.setItem(STORAGE_KEY, JSON.stringify({ action, data }));
 
         this.open({
@@ -353,140 +360,49 @@ class AuthModalManager {
     }
 
     /**
-     * Handle form submission
+     * Handle form submission — delegates to auth-core.js
      */
     async handleFormSubmit(formType, form) {
         if (this.isSubmitting) return;
 
-        const submitBtn = form.querySelector('.auth-modal-submit');
-        const textEl = form.querySelector('.auth-modal-submit-text');
-        const loadingEl = form.querySelector('.auth-modal-submit-loading');
-        const errorEl = form.querySelector('[data-auth-error]');
+        const formData = Object.fromEntries(new FormData(form));
 
-        // Get form data
-        const formData = new FormData(form);
-        const data = Object.fromEntries(formData);
-
-        // Show loading state
         this.isSubmitting = true;
-        submitBtn.disabled = true;
-        textEl.hidden = true;
-        loadingEl.hidden = false;
-        errorEl.hidden = true;
+        setSubmitLoading(form, true, '.auth-modal-submit');
+        clearFormError(form);
 
         try {
-            let endpoint;
-            switch (formType) {
-                case 'signin':
-                    endpoint = 'auth/login';
-                    break;
-                case 'signup':
-                    endpoint = 'auth/register';
-                    break;
-                case 'forgot':
-                    endpoint = 'auth/forgot-password';
-                    break;
-            }
+            const result = await submitAuthForm(formType, formData);
 
-            const response = await fetch(`${REST_URL}${endpoint}`, {
-                method: 'POST',
-                headers: {
-                    'Content-Type': 'application/json',
-                    'X-WP-Nonce': window.erhData?.nonce || ''
-                },
-                body: JSON.stringify(data)
-            });
-
-            const result = await response.json();
-
-            if (!response.ok) {
-                throw new Error(result.message || 'Something went wrong');
-            }
-
-            // Handle success
             if (formType === 'forgot') {
                 this.renderState('forgot-sent');
             } else {
-                // Login or register success
-                this.handleAuthSuccess(formType, result.needsOnboarding || false);
+                this.close();
+                handleAuthSuccess(formType, result.needsOnboarding || false);
             }
-
         } catch (error) {
-            // Show error
-            errorEl.textContent = error.message;
-            errorEl.hidden = false;
+            showFormError(form, error.message);
         } finally {
             this.isSubmitting = false;
-            submitBtn.disabled = false;
-            textEl.hidden = false;
-            loadingEl.hidden = true;
+            setSubmitLoading(form, false, '.auth-modal-submit');
         }
     }
 
     /**
-     * Handle social login
+     * Handle social login — delegates to auth-core.js (popup mode)
      */
     handleSocialLogin(provider) {
-        const width = 500;
-        const height = 600;
-        const left = (window.innerWidth - width) / 2 + window.screenX;
-        const top = (window.innerHeight - height) / 2 + window.screenY;
-
-        const popup = window.open(
-            `${REST_URL}auth/social/${provider}`,
-            'auth-popup',
-            `width=${width},height=${height},left=${left},top=${top},popup=1`
-        );
-
-        // Listen for completion message from popup
-        const handleMessage = (event) => {
-            // Verify origin matches our site
-            if (event.origin !== window.location.origin) return;
-
-            if (event.data?.type === 'auth-success') {
-                window.removeEventListener('message', handleMessage);
-                popup?.close();
-                this.handleAuthSuccess('social', event.data.needsOnboarding);
-            } else if (event.data?.type === 'auth-error') {
-                window.removeEventListener('message', handleMessage);
-                popup?.close();
-                Toast.error(event.data.message || 'Authentication failed');
-            }
-        };
-
-        window.addEventListener('message', handleMessage);
-
-        // Fallback: Check if popup closed without sending message
-        const checkClosed = setInterval(() => {
-            if (popup?.closed) {
-                clearInterval(checkClosed);
-                window.removeEventListener('message', handleMessage);
-            }
-        }, 500);
-    }
-
-    /**
-     * Handle successful authentication
-     * @param {string} method - 'signin', 'signup', or 'social'
-     * @param {boolean} needsOnboarding - Whether user needs to set email preferences
-     */
-    handleAuthSuccess(method, needsOnboarding = false) {
-        this.close();
-
-        // Show success toast
-        Toast.success(method === 'signup' ? 'Account created!' : 'Signed in successfully');
-
-        // Redirect to onboarding or reload after brief delay
-        setTimeout(() => {
-            if (needsOnboarding) {
-                // Redirect to email preferences with current URL as return destination
-                const siteUrl = window.erhData?.siteUrl || '';
-                const returnUrl = encodeURIComponent(window.location.href);
-                window.location.href = `${siteUrl}/email-preferences/?redirect=${returnUrl}`;
-            } else {
-                window.location.reload();
-            }
-        }, 500);
+        initSocialLogin(provider, { popup: true })
+            .then((data) => {
+                this.close();
+                handleAuthSuccess('social', data.needsOnboarding || false);
+            })
+            .catch((err) => {
+                // Only show error if it wasn't a user-initiated close
+                if (err.message !== 'Popup closed') {
+                    Toast.error(err.message || 'Authentication failed');
+                }
+            });
     }
 
     /**

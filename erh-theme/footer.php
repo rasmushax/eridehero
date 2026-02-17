@@ -19,7 +19,7 @@ if ( ! defined( 'ABSPATH' ) ) {
     $cta_benefits    = get_field( 'cta_benefits', 'option' );
     $cta_button_text = get_field( 'cta_button_text', 'option' ) ?: 'Sign up free';
     $cta_button_page = get_field( 'cta_button_page', 'option' );
-    $cta_button_url  = $cta_button_page ? get_permalink( $cta_button_page ) : home_url( '/signup/' );
+    $cta_button_url  = $cta_button_page ? get_permalink( $cta_button_page ) : home_url( '/login/' ) . '#register';
 
     // Default benefits if none configured or not an array
     if ( empty( $cta_benefits ) || ! is_array( $cta_benefits ) ) {

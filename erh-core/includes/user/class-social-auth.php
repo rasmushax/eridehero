@@ -90,6 +90,10 @@ class SocialAuth {
                     'default'           => '',
                     'sanitize_callback' => 'esc_url_raw',
                 ],
+                'popup' => [
+                    'type'    => 'boolean',
+                    'default' => false,
+                ],
             ],
         ]);
 
@@ -141,6 +145,7 @@ class SocialAuth {
     public function initiate_oauth(\WP_REST_Request $request) {
         $provider_name = $request->get_param('provider');
         $redirect = $request->get_param('redirect') ?: home_url('/');
+        $popup = (bool) $request->get_param('popup');
 
         $provider = $this->get_provider($provider_name);
 
@@ -161,7 +166,7 @@ class SocialAuth {
         }
 
         // Generate state token for CSRF protection.
-        $state = $this->generate_state($provider_name, $redirect);
+        $state = $this->generate_state($provider_name, $redirect, $popup);
 
         // Get authorization URL.
         $auth_url = $provider->get_authorization_url($state);
@@ -185,6 +190,17 @@ class SocialAuth {
 
         // Check for OAuth error.
         if ($error) {
+            // Verify state to check popup flag before redirecting.
+            $state_data = $this->verify_state($state);
+            $is_popup = !empty($state_data['popup']);
+            if ($state) {
+                $this->clear_state($state);
+            }
+
+            if ($is_popup) {
+                $this->send_popup_response(false, 'OAuth error: ' . $error);
+                return;
+            }
             return $this->redirect_with_error('OAuth error: ' . $error);
         }
 
@@ -194,25 +210,47 @@ class SocialAuth {
             return $this->redirect_with_error('Invalid or expired state token.');
         }
 
+        $is_popup = !empty($state_data['popup']);
+
         // Ensure provider matches.
         if ($state_data['provider'] !== $provider_name) {
+            $this->clear_state($state);
+            if ($is_popup) {
+                $this->send_popup_response(false, 'Provider mismatch.');
+                return;
+            }
             return $this->redirect_with_error('Provider mismatch.');
         }
 
         $provider = $this->get_provider($provider_name);
         if (!$provider) {
+            $this->clear_state($state);
+            if ($is_popup) {
+                $this->send_popup_response(false, 'Invalid provider.');
+                return;
+            }
             return $this->redirect_with_error('Invalid provider.');
         }
 
         // Exchange code for token.
         $token_data = $provider->get_access_token($code);
         if (!$token_data) {
+            $this->clear_state($state);
+            if ($is_popup) {
+                $this->send_popup_response(false, 'Failed to get access token.');
+                return;
+            }
             return $this->redirect_with_error('Failed to get access token.');
         }
 
         // Get user profile from provider.
         $profile = $provider->get_user_profile($token_data['access_token']);
         if (!$profile) {
+            $this->clear_state($state);
+            if ($is_popup) {
+                $this->send_popup_response(false, 'Failed to get user profile.');
+                return;
+            }
             return $this->redirect_with_error('Failed to get user profile.');
         }
 
@@ -222,19 +260,29 @@ class SocialAuth {
         if (is_wp_error($result)) {
             // Check for special redirect case (no email, need to collect it).
             if ($result->get_error_code() === 'email_required_redirect') {
-                // Clear the OAuth state (we have a new pending state now).
                 $this->clear_state($state);
-
-                // Redirect to complete-profile page (URL is in error message).
+                // Email-required always redirects (popup shows complete-profile page).
                 wp_redirect($result->get_error_message());
                 exit;
             }
 
+            $this->clear_state($state);
+            if ($is_popup) {
+                $this->send_popup_response(false, $result->get_error_message());
+                return;
+            }
             return $this->redirect_with_error($result->get_error_message());
         }
 
         // Clear state.
         $this->clear_state($state);
+
+        // Popup mode: send postMessage back to opener.
+        if ($is_popup) {
+            $needs_onboarding = !empty($result['new_user']);
+            $this->send_popup_response(true, '', $needs_onboarding);
+            return;
+        }
 
         // Build redirect URL.
         $redirect_url = $state_data['redirect'] ?: home_url('/');
@@ -505,12 +553,13 @@ class SocialAuth {
      * @param string $redirect The redirect URL after auth.
      * @return string The state token.
      */
-    private function generate_state(string $provider, string $redirect): string {
+    private function generate_state(string $provider, string $redirect, bool $popup = false): string {
         $state = wp_generate_password(32, false);
 
         set_transient(self::STATE_TRANSIENT_PREFIX . $state, [
             'provider' => $provider,
             'redirect' => $redirect,
+            'popup'    => $popup,
             'created'  => time(),
         ], 600); // 10 minutes.
 
@@ -551,6 +600,43 @@ class SocialAuth {
      */
     private function clear_state(string $state): void {
         delete_transient(self::STATE_TRANSIENT_PREFIX . $state);
+    }
+
+    /**
+     * Send a postMessage response to the popup opener and close the popup.
+     *
+     * @param bool   $success          Whether auth succeeded.
+     * @param string $message          Error message (if failed).
+     * @param bool   $needs_onboarding Whether user needs email preferences setup.
+     * @return void
+     */
+    private function send_popup_response(bool $success, string $message = '', bool $needs_onboarding = false): void {
+        $origin = home_url();
+
+        if ($success) {
+            $data = wp_json_encode([
+                'type'            => 'auth-success',
+                'needsOnboarding' => $needs_onboarding,
+            ]);
+        } else {
+            $data = wp_json_encode([
+                'type'    => 'auth-error',
+                'message' => $message,
+            ]);
+        }
+
+        // Output minimal HTML page that sends postMessage and closes.
+        header('Content-Type: text/html; charset=utf-8');
+        echo '<!DOCTYPE html><html><head><title>Authentication</title></head><body>';
+        echo '<script>';
+        echo 'if(window.opener){';
+        echo 'window.opener.postMessage(' . $data . ',' . wp_json_encode($origin) . ');';
+        echo '}';
+        echo 'window.close();';
+        echo '</script>';
+        echo '<p>Authentication complete. You can close this window.</p>';
+        echo '</body></html>';
+        exit;
     }
 
     /**
