@@ -562,7 +562,7 @@
             // Amazon Creators API rate limit: 1 request/second per associate tag.
             // Use 1.2s to avoid 429s from timing edge cases.
             if (i < selected.length - 1) {
-                await sleep(1200);
+                await sleep(2000);
             }
         }
 
