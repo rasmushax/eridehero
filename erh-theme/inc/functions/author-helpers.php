@@ -60,9 +60,10 @@ function erh_get_author_socials( int $author_id ): array {
 		$socials['twitter'] = 'https://x.com/' . sanitize_user( $twitter );
 	}
 
-	// Parse additional profile URLs (one per line).
+	// Parse additional profile URLs (one per line, or concatenated).
 	if ( $additional_urls ) {
-		$urls = array_filter( array_map( 'trim', explode( "\n", $additional_urls ) ) );
+		// Split on whitespace or before each https:// to handle all storage formats.
+		$urls = array_filter( array_map( 'trim', preg_split( '/\s+|(?=https?:\/\/)/', $additional_urls ) ) );
 
 		foreach ( $urls as $url ) {
 			$url = esc_url( $url );
