@@ -453,8 +453,23 @@ class ClickRedirector {
      */
     private function get_amazon_associate_tag(?string $geo): ?string {
         $settings = get_option('hft_settings', []);
-        $tags_by_geo = $settings['amazon_associate_tags'] ?? [];
         $geo_upper = strtoupper($geo ?? 'US');
+
+        // Check affiliate tag overrides first (used when borrowing another account's API credentials).
+        $overrides = $settings['amazon_affiliate_tag_overrides'] ?? [];
+        foreach ($overrides as $tag_config) {
+            $config_geo = isset($tag_config['geo']) && is_string($tag_config['geo'])
+                ? strtoupper(trim($tag_config['geo']))
+                : null;
+            $tag_value = isset($tag_config['tag']) ? trim($tag_config['tag']) : null;
+
+            if ($config_geo === $geo_upper && !empty($tag_value)) {
+                return $tag_value;
+            }
+        }
+
+        // Fall back to standard associate tags.
+        $tags_by_geo = $settings['amazon_associate_tags'] ?? [];
         $global_tag = null;
 
         foreach ($tags_by_geo as $tag_config) {
