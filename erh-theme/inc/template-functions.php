@@ -20,6 +20,9 @@ if ( ! defined( 'ABSPATH' ) ) {
 // Core utilities (icons, logos).
 require_once __DIR__ . '/functions/icons.php';
 
+// Header navigation (dynamic ACF-driven nav).
+require_once __DIR__ . '/functions/header-nav.php';
+
 // Social links (centralized ACF options retrieval).
 require_once __DIR__ . '/functions/social-links.php';
 

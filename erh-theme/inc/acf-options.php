@@ -237,6 +237,254 @@ function erh_register_acf_fields(): void {
         'menu_order' => 30,
     ) );
 
+    // Header Navigation (Global Settings)
+    $icon_choices = array(
+        'search'      => 'Search',
+        'star'        => 'Star',
+        'grid'        => 'Grid',
+        'book'        => 'Book',
+        'percent'     => 'Percent',
+        'tag'         => 'Tag',
+        'escooter'    => 'E-Scooter',
+        'ebike'       => 'E-Bike',
+        'euc'         => 'EUC',
+        'hoverboard'  => 'Hoverboard',
+        'eskate'      => 'E-Skate',
+        'zap'         => 'Zap',
+        'chart'       => 'Chart',
+        'trending'    => 'Trending',
+        'shield'      => 'Shield',
+        'tool'        => 'Tool',
+        'map'         => 'Map',
+        'globe'       => 'Globe',
+        'heart'       => 'Heart',
+        'calculator'  => 'Calculator',
+    );
+
+    acf_add_local_field_group( array(
+        'key'      => 'group_header_nav',
+        'title'    => __( 'Header Navigation', 'erh' ),
+        'fields'   => array(
+            array(
+                'key'          => 'field_header_nav_items',
+                'label'        => __( 'Navigation Items', 'erh' ),
+                'name'         => 'header_nav_items',
+                'type'         => 'repeater',
+                'layout'       => 'block',
+                'button_label' => __( 'Add Nav Item', 'erh' ),
+                'sub_fields'   => array(
+                    // Common fields
+                    array(
+                        'key'      => 'field_nav_label',
+                        'label'    => __( 'Label', 'erh' ),
+                        'name'     => 'nav_label',
+                        'type'     => 'text',
+                        'required' => 1,
+                        'wrapper'  => array( 'width' => '30' ),
+                    ),
+                    array(
+                        'key'     => 'field_nav_type',
+                        'label'   => __( 'Type', 'erh' ),
+                        'name'    => 'nav_type',
+                        'type'    => 'select',
+                        'choices' => array(
+                            'mega'     => 'Mega Dropdown',
+                            'dropdown' => 'Simple Dropdown',
+                            'link'     => 'Plain Link',
+                        ),
+                        'default_value' => 'link',
+                        'wrapper'       => array( 'width' => '30' ),
+                    ),
+                    array(
+                        'key'          => 'field_nav_url',
+                        'label'        => __( 'URL', 'erh' ),
+                        'name'         => 'nav_url',
+                        'type'         => 'url',
+                        'instructions' => __( 'Destination for plain links, or "View All" URL for mega/dropdown.', 'erh' ),
+                        'wrapper'      => array( 'width' => '40' ),
+                    ),
+
+                    // Mega dropdown fields
+                    array(
+                        'key'               => 'field_mega_title',
+                        'label'             => __( 'Dropdown Title', 'erh' ),
+                        'name'              => 'mega_title',
+                        'type'              => 'text',
+                        'instructions'      => __( 'Header text inside the dropdown, e.g. "Electric scooters".', 'erh' ),
+                        'conditional_logic' => array(
+                            array(
+                                array(
+                                    'field'    => 'field_nav_type',
+                                    'operator' => '==',
+                                    'value'    => 'mega',
+                                ),
+                            ),
+                        ),
+                    ),
+                    array(
+                        'key'               => 'field_mega_grid_items',
+                        'label'             => __( 'Grid Items', 'erh' ),
+                        'name'              => 'mega_grid_items',
+                        'type'              => 'repeater',
+                        'layout'            => 'table',
+                        'button_label'      => __( 'Add Grid Item', 'erh' ),
+                        'max'               => 6,
+                        'conditional_logic' => array(
+                            array(
+                                array(
+                                    'field'    => 'field_nav_type',
+                                    'operator' => '==',
+                                    'value'    => 'mega',
+                                ),
+                            ),
+                        ),
+                        'sub_fields' => array(
+                            array(
+                                'key'     => 'field_mega_grid_icon',
+                                'label'   => __( 'Icon', 'erh' ),
+                                'name'    => 'icon',
+                                'type'    => 'select',
+                                'choices' => $icon_choices,
+                                'wrapper' => array( 'width' => '20' ),
+                            ),
+                            array(
+                                'key'     => 'field_mega_grid_title',
+                                'label'   => __( 'Title', 'erh' ),
+                                'name'    => 'title',
+                                'type'    => 'text',
+                                'wrapper' => array( 'width' => '25' ),
+                            ),
+                            array(
+                                'key'     => 'field_mega_grid_description',
+                                'label'   => __( 'Description', 'erh' ),
+                                'name'    => 'description',
+                                'type'    => 'text',
+                                'wrapper' => array( 'width' => '25' ),
+                            ),
+                            array(
+                                'key'     => 'field_mega_grid_url',
+                                'label'   => __( 'URL', 'erh' ),
+                                'name'    => 'url',
+                                'type'    => 'url',
+                                'wrapper' => array( 'width' => '30' ),
+                            ),
+                        ),
+                    ),
+                    array(
+                        'key'               => 'field_mega_footer_links',
+                        'label'             => __( 'Footer Links', 'erh' ),
+                        'name'              => 'mega_footer_links',
+                        'type'              => 'repeater',
+                        'layout'            => 'table',
+                        'button_label'      => __( 'Add Footer Link', 'erh' ),
+                        'max'               => 4,
+                        'conditional_logic' => array(
+                            array(
+                                array(
+                                    'field'    => 'field_nav_type',
+                                    'operator' => '==',
+                                    'value'    => 'mega',
+                                ),
+                            ),
+                        ),
+                        'sub_fields' => array(
+                            array(
+                                'key'     => 'field_mega_footer_icon',
+                                'label'   => __( 'Icon', 'erh' ),
+                                'name'    => 'icon',
+                                'type'    => 'select',
+                                'choices' => $icon_choices,
+                                'wrapper' => array( 'width' => '25' ),
+                            ),
+                            array(
+                                'key'     => 'field_mega_footer_title',
+                                'label'   => __( 'Title', 'erh' ),
+                                'name'    => 'title',
+                                'type'    => 'text',
+                                'wrapper' => array( 'width' => '35' ),
+                            ),
+                            array(
+                                'key'     => 'field_mega_footer_url',
+                                'label'   => __( 'URL', 'erh' ),
+                                'name'    => 'url',
+                                'type'    => 'url',
+                                'wrapper' => array( 'width' => '40' ),
+                            ),
+                        ),
+                    ),
+
+                    // Simple dropdown fields
+                    array(
+                        'key'               => 'field_dropdown_items',
+                        'label'             => __( 'Dropdown Items', 'erh' ),
+                        'name'              => 'dropdown_items',
+                        'type'              => 'repeater',
+                        'layout'            => 'table',
+                        'button_label'      => __( 'Add Dropdown Item', 'erh' ),
+                        'conditional_logic' => array(
+                            array(
+                                array(
+                                    'field'    => 'field_nav_type',
+                                    'operator' => '==',
+                                    'value'    => 'dropdown',
+                                ),
+                            ),
+                        ),
+                        'sub_fields' => array(
+                            array(
+                                'key'     => 'field_dropdown_item_icon',
+                                'label'   => __( 'Icon', 'erh' ),
+                                'name'    => 'icon',
+                                'type'    => 'select',
+                                'choices' => $icon_choices,
+                                'wrapper' => array( 'width' => '15' ),
+                            ),
+                            array(
+                                'key'     => 'field_dropdown_item_title',
+                                'label'   => __( 'Title', 'erh' ),
+                                'name'    => 'title',
+                                'type'    => 'text',
+                                'wrapper' => array( 'width' => '20' ),
+                            ),
+                            array(
+                                'key'     => 'field_dropdown_item_description',
+                                'label'   => __( 'Description', 'erh' ),
+                                'name'    => 'description',
+                                'type'    => 'text',
+                                'wrapper' => array( 'width' => '20' ),
+                            ),
+                            array(
+                                'key'     => 'field_dropdown_item_url',
+                                'label'   => __( 'URL', 'erh' ),
+                                'name'    => 'url',
+                                'type'    => 'url',
+                                'wrapper' => array( 'width' => '30' ),
+                            ),
+                            array(
+                                'key'     => 'field_dropdown_item_divider',
+                                'label'   => __( 'Divider After', 'erh' ),
+                                'name'    => 'divider_after',
+                                'type'    => 'true_false',
+                                'ui'      => 1,
+                                'wrapper' => array( 'width' => '15' ),
+                            ),
+                        ),
+                    ),
+                ),
+            ),
+        ),
+        'location' => array(
+            array(
+                array(
+                    'param'    => 'options_page',
+                    'operator' => '==',
+                    'value'    => 'erh-global-settings',
+                ),
+            ),
+        ),
+        'menu_order' => -5,
+    ) );
+
     // YouTube API Settings (Global Settings)
     acf_add_local_field_group( array(
         'key'      => 'group_youtube_settings',

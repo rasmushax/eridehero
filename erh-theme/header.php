@@ -37,15 +37,17 @@ if ( ! defined( 'ABSPATH' ) ) {
 
         <!-- Main Navigation -->
         <nav class="main-nav" role="navigation" aria-label="<?php esc_attr_e( 'Main navigation', 'erh' ); ?>">
-            <?php get_template_part( 'template-parts/header/nav-escooters' ); ?>
-            <?php get_template_part( 'template-parts/header/nav-ebikes' ); ?>
-
-            <!-- EUCs -->
-            <div class="nav-item">
-                <a href="<?php echo esc_url( home_url( '/eucs/' ) ); ?>" class="nav-link"><?php esc_html_e( 'EUCs', 'erh' ); ?></a>
-            </div>
-
-            <?php get_template_part( 'template-parts/header/nav-more' ); ?>
+            <?php foreach ( erh_get_header_nav() as $index => $item ) : ?>
+                <?php if ( 'link' === $item['nav_type'] ) : ?>
+                    <div class="nav-item">
+                        <a href="<?php echo esc_url( $item['nav_url'] ); ?>" class="nav-link"><?php echo esc_html( $item['nav_label'] ); ?></a>
+                    </div>
+                <?php elseif ( 'mega' === $item['nav_type'] ) : ?>
+                    <?php erh_render_mega_dropdown( $item, $index ); ?>
+                <?php elseif ( 'dropdown' === $item['nav_type'] ) : ?>
+                    <?php erh_render_simple_dropdown( $item, $index ); ?>
+                <?php endif; ?>
+            <?php endforeach; ?>
         </nav>
 
         <!-- Header Right -->
