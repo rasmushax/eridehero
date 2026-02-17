@@ -559,9 +559,10 @@
                 });
             }
 
-            // Longer delay for Amazon (uses sonar-pro which may have stricter rate limits)
+            // Amazon Creators API rate limit: 1 request/second per associate tag.
+            // Use 1.2s to avoid 429s from timing edge cases.
             if (i < selected.length - 1) {
-                await sleep(1000);
+                await sleep(1200);
             }
         }
 
