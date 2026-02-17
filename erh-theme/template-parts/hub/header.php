@@ -7,6 +7,7 @@
  * Expected args:
  * - category (WP_Term): The category term object
  * - product_type (string): Display name (e.g., "Electric Scooter")
+ * - description (string): Category description for subtitle
  *
  * @package ERideHero
  */
@@ -18,6 +19,7 @@ if ( ! defined( 'ABSPATH' ) ) {
 
 $category     = $args['category'] ?? null;
 $product_type = $args['product_type'] ?? '';
+$description  = $args['description'] ?? '';
 
 if ( ! $category ) {
 	return;
@@ -53,6 +55,9 @@ $nav_items = array(
 <section class="hub-header">
 	<div class="container">
 		<h1 class="hub-title"><?php echo esc_html( $title ); ?></h1>
+		<?php if ( $description ) : ?>
+			<p class="hub-subtitle"><?php echo wp_kses_post( $description ); ?></p>
+		<?php endif; ?>
 		<nav class="hub-nav" aria-label="<?php esc_attr_e( 'Page navigation', 'erh' ); ?>">
 			<?php foreach ( $nav_items as $item ) : ?>
 				<a href="#<?php echo esc_attr( $item['id'] ); ?>" class="hub-nav-link">

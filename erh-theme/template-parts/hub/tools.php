@@ -10,6 +10,9 @@
  * - category (WP_Term): The category term object
  * - product_type (string): Display name (e.g., "Electric Scooter")
  * - product_type_key (string): Type key for filtering (e.g., "escooter")
+ * - short_name (string): Short display name from ACF (e.g., "e-scooters")
+ * - finder_url (string): Finder page URL from ACF
+ * - product_count (int): Actual product count from DB
  *
  * @package ERideHero
  */
@@ -22,29 +25,9 @@ if ( ! defined( 'ABSPATH' ) ) {
 $category         = $args['category'] ?? null;
 $product_type     = $args['product_type'] ?? 'Electric Scooter';
 $product_type_key = $args['product_type_key'] ?? 'escooter';
-
-// Product counts (approximate - can be made dynamic).
-$product_counts = array(
-	'escooter'   => '200+',
-	'ebike'      => '80+',
-	'euc'        => '50+',
-	'eskate'     => '30+',
-	'hoverboard' => '20+',
-);
-$product_count = $product_counts[ $product_type_key ] ?? '100+';
-
-// Short names for display.
-$short_names = array(
-	'escooter'   => 'scooters',
-	'ebike'      => 'e-bikes',
-	'euc'        => 'EUCs',
-	'eskate'     => 'skateboards',
-	'hoverboard' => 'hoverboards',
-);
-$short_name = $short_names[ $product_type_key ] ?? 'products';
-
-// Finder page URL.
-$finder_url = home_url( '/' . $product_type_key . '-finder/' );
+$short_name       = $args['short_name'] ?? 'products';
+$finder_url       = $args['finder_url'] ?? '';
+$product_count    = $args['product_count'] ?? 0;
 
 // JSON URL for comparison.
 $upload_dir = wp_upload_dir();
@@ -64,8 +47,8 @@ $json_url   = $upload_dir['baseurl'] . '/comparison_products.json';
 						<h3 class="hub-tool-title"><?php esc_html_e( 'Product Finder', 'erh' ); ?></h3>
 						<p class="hub-tool-subtitle">
 							<?php
-							/* translators: %s: product count */
-							printf( esc_html__( 'Filter %s electric %s', 'erh' ), esc_html( $product_count ), esc_html( $short_name ) );
+							/* translators: %1$s: product count, %2$s: product short name (e.g., "e-scooters") */
+							printf( esc_html__( 'Browse %1$s+ %2$s', 'erh' ), esc_html( $product_count ), esc_html( $short_name ) );
 							?>
 						</p>
 					</div>

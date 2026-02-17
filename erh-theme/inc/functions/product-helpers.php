@@ -15,6 +15,85 @@ if ( ! defined( 'ABSPATH' ) ) {
 use ERH\CategoryConfig;
 
 /**
+ * Get hub page context from a post category term.
+ *
+ * Bridges the ACF relationship chain: post category → related_product_type →
+ * product_type term → ACF fields (finder_page, deals_page, short_name).
+ * Returns all data needed by hub page sections.
+ *
+ * @param WP_Term $category The post category term object.
+ * @return array|null Hub context array or null if not a hub category.
+ */
+function erh_get_hub_context( WP_Term $category ): ?array {
+    if ( ! function_exists( 'get_field' ) ) {
+        return null;
+    }
+
+    // Follow ACF relationship: post category → product_type term ID.
+    $product_type_id = get_field( 'related_product_type', 'category_' . $category->term_id );
+
+    if ( ! $product_type_id ) {
+        return null;
+    }
+
+    // Get the product_type taxonomy term.
+    $product_type_term = get_term( (int) $product_type_id, 'product_type' );
+
+    if ( ! $product_type_term || is_wp_error( $product_type_term ) ) {
+        return null;
+    }
+
+    // ACF fields from the product_type term.
+    $term_prefix = 'product_type_' . $product_type_term->term_id;
+    $short_name  = get_field( 'short_name', $term_prefix ) ?: '';
+    $finder_url  = get_field( 'finder_page', $term_prefix ) ?: '';
+    $deals_url   = get_field( 'deals_page', $term_prefix ) ?: '';
+
+    // Canonical key from CategoryConfig (e.g., "escooter").
+    $product_type_label = $product_type_term->name;
+    $category_config    = CategoryConfig::get_by_type( $product_type_label );
+    $product_type_key   = $category_config ? $category_config['key'] : '';
+
+    // Actual product count from the product_type term.
+    $product_count = (int) $product_type_term->count;
+
+    // Category description (WP taxonomy description field).
+    // Strip wrapping <p> tags since the template provides its own container.
+    $description = term_description( $category->term_id, 'category' );
+    $description = trim( wp_strip_all_tags( $description ) );
+
+    // Build "View all" URLs for reviews and articles.
+    $category_slug = $category->slug;
+
+    // E-scooters has a dedicated reviews page; others use hash anchors.
+    if ( 'electric-scooters' === $category_slug ) {
+        $reviews_url = home_url( '/electric-scooters/reviews/' );
+    } else {
+        $reviews_url = home_url( '/reviews/#' . $category_slug );
+    }
+    $articles_url = home_url( '/articles/#' . $category_slug );
+
+    // Short name for display: prefer ACF, fall back to CategoryConfig, then generic.
+    if ( empty( $short_name ) && $category_config ) {
+        $short_name = strtolower( $category_config['name'] );
+    }
+
+    return array(
+        'product_type'      => $product_type_label,
+        'product_type_key'  => $product_type_key,
+        'product_type_term' => $product_type_term,
+        'short_name'        => $short_name,
+        'finder_url'        => $finder_url,
+        'deals_url'         => $deals_url,
+        'product_count'     => $product_count,
+        'description'       => $description,
+        'reviews_url'       => $reviews_url,
+        'articles_url'      => $articles_url,
+        'category_config'   => $category_config,
+    );
+}
+
+/**
  * Get product type label
  *
  * @param int|null $post_id Post ID (optional, uses current post if null)

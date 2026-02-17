@@ -9,6 +9,7 @@
  * - category (string): Category slug to filter by (e.g., 'electric-scooters')
  * - limit (int): Number of reviews to show (default: 4)
  * - show_sidebar (bool): Whether to show sidebar (default: true)
+ * - view_all_url (string): Custom "View all reviews" URL (defaults to /reviews/)
  *
  * @package ERideHero
  */
@@ -19,9 +20,10 @@ if ( ! defined( 'ABSPATH' ) ) {
 }
 
 // Get args from get_template_part() or use defaults
-$category     = $args['category'] ?? '';
-$limit        = $args['limit'] ?? 4;
-$show_sidebar = $args['show_sidebar'] ?? true;
+$category      = $args['category'] ?? '';
+$limit         = $args['limit'] ?? 4;
+$show_sidebar  = $args['show_sidebar'] ?? true;
+$view_all_url  = ! empty( $args['view_all_url'] ) ? $args['view_all_url'] : home_url( '/reviews/' );
 
 // Build query args
 $query_args = array(
@@ -45,7 +47,7 @@ $reviews_query = new WP_Query( $query_args );
     <div class="container">
         <div class="section-header">
             <h2><?php esc_html_e( 'Latest reviews', 'erh' ); ?></h2>
-            <a href="<?php echo esc_url( home_url( '/reviews/' ) ); ?>" class="btn btn-secondary">
+            <a href="<?php echo esc_url( $view_all_url ); ?>" class="btn btn-secondary">
                 <?php esc_html_e( 'View all reviews', 'erh' ); ?>
                 <?php erh_the_icon( 'arrow-right' ); ?>
             </a>

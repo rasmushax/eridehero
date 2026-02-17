@@ -31,49 +31,50 @@ if ( ! $buying_guide_tag ) {
 	return;
 }
 
-// Query featured guides (is_featured_guide = true, max 2).
-$featured_args = array(
+// Query ALL buying guides in this category, ordered by date (custom sorting done in PHP).
+// Not using meta_key orderby since posts without guide_order would be excluded.
+$all_guides_args = array(
 	'post_type'      => 'post',
-	'posts_per_page' => 2,
+	'posts_per_page' => -1,
 	'post_status'    => 'publish',
 	'category_name'  => $category_slug,
 	'tag_id'         => $buying_guide_tag->term_id,
-	'meta_query'     => array(
-		array(
-			'key'     => 'is_featured_guide',
-			'value'   => '1',
-			'compare' => '=',
-		),
-	),
-	'meta_key'       => 'guide_order',
-	'orderby'        => 'meta_value_num',
-	'order'          => 'ASC',
+	'orderby'        => 'date',
+	'order'          => 'DESC',
 );
 
-$featured_guides = get_posts( $featured_args );
-$featured_ids    = wp_list_pluck( $featured_guides, 'ID' );
+$all_guides = get_posts( $all_guides_args );
 
-// Query regular guides (not featured, max 4).
-$regular_args = array(
-	'post_type'      => 'post',
-	'posts_per_page' => 4,
-	'post_status'    => 'publish',
-	'category_name'  => $category_slug,
-	'tag_id'         => $buying_guide_tag->term_id,
-	'post__not_in'   => $featured_ids,
-	'meta_key'       => 'guide_order',
-	'orderby'        => array(
-		'meta_value_num' => 'ASC',
-		'date'           => 'DESC',
-	),
-);
-
-$regular_guides = get_posts( $regular_args );
-
-// If no guides at all, don't render section.
-if ( empty( $featured_guides ) && empty( $regular_guides ) ) {
+if ( empty( $all_guides ) ) {
 	return;
 }
+
+// Separate featured from regular.
+$featured_guides = array();
+$regular_guides  = array();
+
+foreach ( $all_guides as $guide ) {
+	if ( get_field( 'is_featured_guide', $guide->ID ) ) {
+		$featured_guides[] = $guide;
+	} else {
+		$regular_guides[] = $guide;
+	}
+}
+
+// Sort each group by guide_order (if set), then date.
+$sort_by_order = function ( $a, $b ) {
+	$order_a = (int) get_field( 'guide_order', $a->ID );
+	$order_b = (int) get_field( 'guide_order', $b->ID );
+
+	if ( $order_a !== $order_b ) {
+		return $order_a - $order_b;
+	}
+
+	return strtotime( $b->post_date ) - strtotime( $a->post_date );
+};
+
+usort( $featured_guides, $sort_by_order );
+usort( $regular_guides, $sort_by_order );
 ?>
 <section class="section hub-guides" id="guides">
 	<div class="container">

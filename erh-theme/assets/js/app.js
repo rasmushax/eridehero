@@ -180,7 +180,9 @@ import { Toast } from './components/toast.js'; // For programmatic toasts
 
     if (document.getElementById('hub-comparison-container')) {
         import('./components/comparison.js').then(module => {
-            // Hub comparison (centered hero, all categories)
+            const hubContainer = document.getElementById('hub-comparison-container');
+            const hubCategoryFilter = hubContainer?.dataset.categoryFilter || null;
+
             module.initComparison({
                 containerId: 'hub-comparison-container',
                 rightColumnId: 'hub-comparison-right',
@@ -189,7 +191,8 @@ import { Toast } from './components/toast.js'; // For programmatic toasts
                 categoryTextId: 'hub-category-text',
                 categoryClearId: 'hub-category-clear',
                 announcerId: 'hub-comparison-announcer',
-                showCategoryInResults: true,
+                categoryFilter: hubCategoryFilter,
+                showCategoryInResults: !hubCategoryFilter,
                 allowDynamicInputs: true
             });
         });

@@ -9,7 +9,7 @@
  *
  * Expected args:
  * - category (WP_Term): The category term object
- * - product_type (string): Display name (e.g., "Electric Scooter")
+ * - hub_context (array): Hub context from erh_get_hub_context()
  *
  * @package ERideHero
  */
@@ -20,33 +20,25 @@ if ( ! defined( 'ABSPATH' ) ) {
 }
 
 // Get args passed from category.php.
-$category     = $args['category'] ?? null;
-$product_type = $args['product_type'] ?? '';
+$category    = $args['category'] ?? null;
+$hub_context = $args['hub_context'] ?? null;
 
-if ( ! $category ) {
+if ( ! $category || ! $hub_context ) {
 	return;
 }
 
-$category_slug = $category->slug;
+$category_slug    = $category->slug;
+$product_type     = $hub_context['product_type'];
+$product_type_key = $hub_context['product_type_key'];
 
-// Map category slugs to product type identifiers for deals/finder.
-$product_type_map = array(
-	'electric-scooters'    => 'escooter',
-	'electric-bikes'       => 'ebike',
-	'electric-unicycles'   => 'euc',
-	'electric-skateboards' => 'eskate',
-	'hoverboards'          => 'hoverboard',
-);
-
-$product_type_key = $product_type_map[ $category_slug ] ?? 'escooter';
-
-// Hub Header - Title + navigation pills.
+// Hub Header - Title + description + navigation pills.
 get_template_part( 'template-parts/hub/header', null, array(
 	'category'     => $category,
 	'product_type' => $product_type,
+	'description'  => $hub_context['description'],
 ) );
 
-// Buying Guides - Featured (2) + grid (4).
+// Buying Guides - All guides, featured sorted first.
 get_template_part( 'template-parts/hub/guides', null, array(
 	'category'      => $category,
 	'category_slug' => $category_slug,
@@ -57,6 +49,9 @@ get_template_part( 'template-parts/hub/tools', null, array(
 	'category'         => $category,
 	'product_type'     => $product_type,
 	'product_type_key' => $product_type_key,
+	'short_name'       => $hub_context['short_name'],
+	'finder_url'       => $hub_context['finder_url'],
+	'product_count'    => $hub_context['product_count'],
 ) );
 
 // Deals Section - Reuse home deals with category filter.
@@ -64,20 +59,23 @@ get_template_part( 'template-parts/home/deals', null, array(
 	'category'  => $product_type_key,
 	'show_tabs' => false,
 	'limit'     => 12,
+	'deals_url' => $hub_context['deals_url'],
 ) );
 
 // Latest Reviews - Reuse home reviews with category filter.
 get_template_part( 'template-parts/home/reviews', null, array(
-	'category'     => $category_slug,
-	'limit'        => 4,
-	'show_sidebar' => true,
+	'category'      => $category_slug,
+	'limit'         => 4,
+	'show_sidebar'  => true,
+	'view_all_url'  => $hub_context['reviews_url'],
 ) );
 
 // Latest Articles - Reuse home articles with category filter.
 get_template_part( 'template-parts/home/articles', null, array(
-	'category'     => $category_slug,
-	'limit'        => 4,
-	'show_sidebar' => true,
+	'category'      => $category_slug,
+	'limit'         => 4,
+	'show_sidebar'  => true,
+	'view_all_url'  => $hub_context['articles_url'],
 ) );
 
 // CTA Section - Sign up prompt.

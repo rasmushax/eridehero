@@ -9,6 +9,7 @@
  * - category (string): Fixed category filter (e.g., 'escooter'). When set, hides category tabs.
  * - show_tabs (bool): Whether to show category tabs (default: true, false when category is set)
  * - limit (int): Number of deals to load (default: 12)
+ * - deals_url (string): Custom "View all deals" URL (defaults to /deals/)
  *
  * @package ERideHero
  */
@@ -22,6 +23,7 @@ if ( ! defined( 'ABSPATH' ) ) {
 $fixed_category = $args['category'] ?? '';
 $show_tabs      = $args['show_tabs'] ?? ( empty( $fixed_category ) );
 $limit          = $args['limit'] ?? 12;
+$deals_url      = ! empty( $args['deals_url'] ) ? $args['deals_url'] : home_url( '/deals/' );
 
 // Category configuration for tabs.
 $categories = [
@@ -50,7 +52,7 @@ $default_category = $fixed_category ? $fixed_category : 'all';
                 <h2 class="section-title"><?php esc_html_e( "Today's Best Deals", 'erh' ); ?></h2>
                 <span class="deals-stat" id="deals-count"></span>
             </div>
-            <a href="<?php echo esc_url( home_url( '/deals/' ) ); ?>" class="btn btn-secondary">
+            <a href="<?php echo esc_url( $deals_url ); ?>" class="btn btn-secondary">
                 <?php esc_html_e( 'View all deals', 'erh' ); ?>
                 <?php erh_the_icon( 'arrow-right' ); ?>
             </a>
@@ -131,7 +133,7 @@ $default_category = $fixed_category ? $fixed_category : 'all';
 
 <!-- View All CTA Card Template -->
 <template id="deal-cta-template">
-    <a href="<?php echo esc_url( home_url( '/deals/' ) ); ?>" class="deal-card deal-card-cta">
+    <a href="<?php echo esc_url( $deals_url ); ?>" class="deal-card deal-card-cta">
         <span class="deal-card-cta-count"></span>
         <span class="deal-card-cta-text"><?php esc_html_e( 'more deals', 'erh' ); ?></span>
         <?php erh_the_icon( 'arrow-right' ); ?>

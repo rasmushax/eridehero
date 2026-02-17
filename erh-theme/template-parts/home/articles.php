@@ -8,6 +8,7 @@
  * - category (string): Category slug to filter by (e.g., 'electric-scooters')
  * - limit (int): Number of articles to show (default: 4)
  * - show_sidebar (bool): Whether to show sidebar (default: true)
+ * - view_all_url (string): Custom "View all articles" URL (defaults to /articles/)
  *
  * @package ERideHero
  */
@@ -18,9 +19,10 @@ if ( ! defined( 'ABSPATH' ) ) {
 }
 
 // Get args from get_template_part() or use defaults
-$category     = $args['category'] ?? '';
-$limit        = $args['limit'] ?? 4;
-$show_sidebar = $args['show_sidebar'] ?? true;
+$category      = $args['category'] ?? '';
+$limit         = $args['limit'] ?? 4;
+$show_sidebar  = $args['show_sidebar'] ?? true;
+$view_all_url  = ! empty( $args['view_all_url'] ) ? $args['view_all_url'] : home_url( '/articles/' );
 
 // Build query args
 $query_args = array(
@@ -47,7 +49,7 @@ $articles_query = new WP_Query( $query_args );
     <div class="container">
         <div class="section-header">
             <h2><?php esc_html_e( 'Latest articles', 'erh' ); ?></h2>
-            <a href="<?php echo esc_url( home_url( '/articles/' ) ); ?>" class="btn btn-secondary">
+            <a href="<?php echo esc_url( $view_all_url ); ?>" class="btn btn-secondary">
                 <?php esc_html_e( 'View all articles', 'erh' ); ?>
                 <?php erh_the_icon( 'arrow-right' ); ?>
             </a>

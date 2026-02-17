@@ -54,10 +54,14 @@ export async function initDeals() {
         // Use defaults
     }
 
+    // Determine category: use fixed category from hub pages, or 'all' for homepage.
+    const fixedCategory = section.dataset.fixedCategory || '';
+    currentCategory = fixedCategory || 'all';
+
     // Load deals
     try {
         const data = await fetchDeals({
-            category: 'all',
+            category: currentCategory,
             limit: CONFIG.dealsLimit,
             threshold: CONFIG.discountThreshold,
             geo: userGeo.geo,
@@ -200,7 +204,7 @@ export async function initDeals() {
         refresh: async () => {
             try {
                 const data = await fetchDeals({
-                    category: 'all',
+                    category: fixedCategory || 'all',
                     limit: CONFIG.dealsLimit,
                     geo: userGeo.geo,
                 });
