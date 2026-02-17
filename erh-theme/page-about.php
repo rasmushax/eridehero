@@ -37,7 +37,7 @@ $sections = get_field( 'about_sections', 'option' );
 // Team
 $team_heading    = get_field( 'about_team_heading', 'option' ) ?: 'The experts behind ERideHero';
 $team_subheading = get_field( 'about_team_subheading', 'option' ) ?: 'Real-world riding experience and thousands of miles logged across every category.';
-$team_members    = get_field( 'about_team_members', 'option' );
+$team_member_ids = get_field( 'about_team_members', 'option' );
 ?>
 
     <!-- HERO SECTION -->
@@ -117,7 +117,7 @@ $team_members    = get_field( 'about_team_members', 'option' );
     <?php endif; ?>
 
     <!-- TEAM SECTION -->
-    <?php if ( ! empty( $team_members ) && is_array( $team_members ) ) : ?>
+    <?php if ( ! empty( $team_member_ids ) && is_array( $team_member_ids ) ) : ?>
     <section class="about-team">
         <div class="container">
             <div class="about-team-header">
@@ -127,49 +127,49 @@ $team_members    = get_field( 'about_team_members', 'option' );
             </div>
 
             <div class="about-team-grid">
-                <?php foreach ( $team_members as $member ) :
-                    $photo = $member['photo'] ?? null;
-                    $member_socials = array();
-                    $social_platforms = array( 'youtube', 'instagram', 'tiktok', 'facebook', 'twitter', 'linkedin' );
-                    foreach ( $social_platforms as $p ) {
-                        if ( ! empty( $member[ "social_{$p}" ] ) ) {
-                            $member_socials[ $p ] = $member[ "social_{$p}" ];
-                        }
+                <?php foreach ( $team_member_ids as $user_id ) :
+                    $user = get_userdata( $user_id );
+                    if ( ! $user ) {
+                        continue;
                     }
+
+                    $name        = $user->display_name;
+                    $role        = get_field( 'user_title', 'user_' . $user_id ) ?: '';
+                    $bio         = $user->description; // WordPress biographical info
+                    $photo       = get_field( 'profile_image', 'user_' . $user_id );
+                    $author_url  = get_author_posts_url( $user_id );
+                    $socials_raw = erh_get_author_socials( $user_id );
+                    $member_socials = array_filter( $socials_raw );
                 ?>
                 <div class="about-team-card">
-                    <div class="about-team-image">
-                        <?php if ( $photo ) : ?>
+                    <a href="<?php echo esc_url( $author_url ); ?>" class="about-team-image">
+                        <?php if ( $photo && ! empty( $photo['url'] ) ) : ?>
                             <img src="<?php echo esc_url( $photo['sizes']['medium'] ?? $photo['url'] ); ?>"
-                                 alt="<?php echo esc_attr( $member['name'] ?? '' ); ?>"
+                                 alt="<?php echo esc_attr( $name ); ?>"
                                  width="<?php echo esc_attr( $photo['sizes']['medium-width'] ?? $photo['width'] ?? '' ); ?>"
                                  height="<?php echo esc_attr( $photo['sizes']['medium-height'] ?? $photo['height'] ?? '' ); ?>"
                                  loading="lazy">
                         <?php endif; ?>
-                    </div>
+                    </a>
                     <div class="about-team-info">
                         <?php if ( ! empty( $member_socials ) ) : ?>
                             <div class="about-team-socials">
-                                <?php foreach ( $member_socials as $platform => $url ) :
-                                    $label = esc_attr( $member['name'] ?? '' ) . ' on ' . ucfirst( $platform );
-                                ?>
-                                    <a href="<?php echo esc_url( $url ); ?>" aria-label="<?php echo esc_attr( $label ); ?>" target="_blank" rel="noopener">
+                                <?php foreach ( $member_socials as $platform => $url ) : ?>
+                                    <a href="<?php echo esc_url( $url ); ?>" aria-label="<?php echo esc_attr( $name . ' on ' . ucfirst( $platform ) ); ?>" target="_blank" rel="noopener">
                                         <?php erh_the_icon( $platform ); ?>
                                     </a>
                                 <?php endforeach; ?>
                             </div>
                         <?php endif; ?>
 
-                        <?php if ( ! empty( $member['name'] ) ) : ?>
-                            <h3><?php echo esc_html( $member['name'] ); ?></h3>
+                        <h3><a href="<?php echo esc_url( $author_url ); ?>"><?php echo esc_html( $name ); ?></a></h3>
+
+                        <?php if ( $role ) : ?>
+                            <span class="about-team-role"><?php echo esc_html( $role ); ?></span>
                         <?php endif; ?>
 
-                        <?php if ( ! empty( $member['role'] ) ) : ?>
-                            <span class="about-team-role"><?php echo esc_html( $member['role'] ); ?></span>
-                        <?php endif; ?>
-
-                        <?php if ( ! empty( $member['bio'] ) ) : ?>
-                            <p><?php echo esc_html( $member['bio'] ); ?></p>
+                        <?php if ( $bio ) : ?>
+                            <p><?php echo esc_html( $bio ); ?></p>
                         <?php endif; ?>
                     </div>
                 </div>

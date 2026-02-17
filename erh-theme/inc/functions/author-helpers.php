@@ -36,6 +36,7 @@ function erh_get_author_socials( int $author_id ): array {
 		'linkedin'  => '',
 		'instagram' => '',
 		'youtube'   => '',
+		'tiktok'    => '',
 	);
 
 	if ( ! $author_id ) {
@@ -76,6 +77,8 @@ function erh_get_author_socials( int $author_id ): array {
 				$socials['instagram'] = $url;
 			} elseif ( strpos( $url, 'youtube.com' ) !== false || strpos( $url, 'youtu.be' ) !== false ) {
 				$socials['youtube'] = $url;
+			} elseif ( strpos( $url, 'tiktok.com' ) !== false ) {
+				$socials['tiktok'] = $url;
 			}
 		}
 	}
