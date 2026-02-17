@@ -86,7 +86,9 @@ usort( $regular_guides, $sort_by_order );
 		<!-- Featured guides row (2 large cards) -->
 		<div class="hub-guides-featured-row">
 			<?php foreach ( $featured_guides as $guide ) :
-				$badge = get_field( 'guide_badge', $guide->ID );
+				$badge      = get_field( 'guide_badge', $guide->ID );
+				$card_title = get_field( 'buying_guide_card_title', $guide->ID );
+				$subtitle   = get_field( 'buying_guide_subtitle', $guide->ID );
 			?>
 				<a href="<?php echo esc_url( get_permalink( $guide->ID ) ); ?>" class="hub-guide-featured">
 					<div class="hub-guide-featured-img">
@@ -100,8 +102,10 @@ usort( $regular_guides, $sort_by_order );
 						<?php endif; ?>
 					</div>
 					<div class="hub-guide-featured-content">
-						<h3 class="hub-guide-featured-title"><?php echo esc_html( get_the_title( $guide->ID ) ); ?></h3>
-						<?php if ( has_excerpt( $guide->ID ) ) : ?>
+						<h3 class="hub-guide-featured-title"><?php echo esc_html( $card_title ?: get_the_title( $guide->ID ) ); ?></h3>
+						<?php if ( $subtitle ) : ?>
+							<p class="hub-guide-featured-excerpt"><?php echo esc_html( $subtitle ); ?></p>
+						<?php elseif ( has_excerpt( $guide->ID ) ) : ?>
 							<p class="hub-guide-featured-excerpt"><?php echo esc_html( get_the_excerpt( $guide->ID ) ); ?></p>
 						<?php endif; ?>
 					</div>
