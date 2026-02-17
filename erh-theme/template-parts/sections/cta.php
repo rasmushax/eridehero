@@ -12,6 +12,11 @@ if ( ! defined( 'ABSPATH' ) ) {
 	exit;
 }
 
+// Don't show signup CTA to logged-in users.
+if ( is_user_logged_in() ) {
+	return;
+}
+
 // Get member count (could be dynamic in future).
 $member_count = '1,200+';
 ?>

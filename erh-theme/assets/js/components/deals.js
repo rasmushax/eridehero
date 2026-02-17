@@ -68,7 +68,11 @@ export async function initDeals() {
         });
 
         allDeals = data.deals;
-        totalDealsCount = data.counts.all || 0;
+
+        // Use category-specific count when filtering, otherwise total.
+        totalDealsCount = (fixedCategory && data.counts[fixedCategory] !== undefined)
+            ? data.counts[fixedCategory]
+            : (data.counts.all || 0);
 
         // Update total count display
         if (dealsCountEl && totalDealsCount > 0) {

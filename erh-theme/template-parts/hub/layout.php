@@ -55,8 +55,9 @@ get_template_part( 'template-parts/hub/tools', null, array(
 ) );
 
 // Deals Section - Reuse home deals with category filter.
+// Use finder_key (not canonical key) because the deals API uses finder_key format.
 get_template_part( 'template-parts/home/deals', null, array(
-	'category'  => $product_type_key,
+	'category'  => $hub_context['finder_key'],
 	'show_tabs' => false,
 	'limit'     => 12,
 	'deals_url' => $hub_context['deals_url'],
@@ -77,6 +78,3 @@ get_template_part( 'template-parts/home/articles', null, array(
 	'show_sidebar'  => true,
 	'view_all_url'  => $hub_context['articles_url'],
 ) );
-
-// CTA Section - Sign up prompt.
-get_template_part( 'template-parts/sections/cta' );

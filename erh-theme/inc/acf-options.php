@@ -1135,8 +1135,8 @@ function erh_register_acf_fields(): void {
                 'label'         => __( 'Short Name', 'erh' ),
                 'name'          => 'short_name',
                 'type'          => 'text',
-                'instructions'  => __( 'Short display name (e.g., "E-Scooter", "E-Bike"). Used in tool labels.', 'erh' ),
-                'placeholder'   => 'e.g., E-Scooter',
+                'instructions'  => __( 'Lowercase plural display name (e.g., "e-scooters", "e-bikes", "EUCs"). Used in buttons, subtitles, and tool labels.', 'erh' ),
+                'placeholder'   => 'e.g., e-scooters',
             ),
             array(
                 'key'            => 'field_product_type_finder_page',

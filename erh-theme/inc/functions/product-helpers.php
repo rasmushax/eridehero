@@ -49,10 +49,11 @@ function erh_get_hub_context( WP_Term $category ): ?array {
     $finder_url  = get_field( 'finder_page', $term_prefix ) ?: '';
     $deals_url   = get_field( 'deals_page', $term_prefix ) ?: '';
 
-    // Canonical key from CategoryConfig (e.g., "escooter").
+    // Canonical key and finder key from CategoryConfig.
     $product_type_label = $product_type_term->name;
     $category_config    = CategoryConfig::get_by_type( $product_type_label );
     $product_type_key   = $category_config ? $category_config['key'] : '';
+    $finder_key         = $category_config ? $category_config['finder_key'] : $product_type_key;
 
     // Actual product count from the product_type term.
     $product_count = (int) $product_type_term->count;
@@ -74,13 +75,17 @@ function erh_get_hub_context( WP_Term $category ): ?array {
     $articles_url = home_url( '/articles/#' . $category_slug );
 
     // Short name for display: prefer ACF, fall back to CategoryConfig, then generic.
+    // Ensure lowercase (ACF value may be capitalized).
     if ( empty( $short_name ) && $category_config ) {
         $short_name = strtolower( $category_config['name'] );
+    } else {
+        $short_name = strtolower( $short_name );
     }
 
     return array(
         'product_type'      => $product_type_label,
         'product_type_key'  => $product_type_key,
+        'finder_key'        => $finder_key,
         'product_type_term' => $product_type_term,
         'short_name'        => $short_name,
         'finder_url'        => $finder_url,
