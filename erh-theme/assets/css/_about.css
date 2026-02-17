@@ -469,6 +469,7 @@ body.transparent-header main {
 }
 
 .about-team-image {
+    display: block;
     width: 180px;
     height: 180px;
     margin: 0 auto var(--space-5);
