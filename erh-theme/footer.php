@@ -65,13 +65,18 @@ if ( ! defined( 'ABSPATH' ) ) {
 <footer class="footer" role="contentinfo">
     <div class="container">
         <div class="footer-top">
-            <nav class="footer-categories" aria-label="<?php esc_attr_e( 'Product categories', 'erh' ); ?>">
-                <a href="<?php echo esc_url( home_url( '/e-scooters/' ) ); ?>"><?php esc_html_e( 'E-scooters', 'erh' ); ?></a>
-                <a href="<?php echo esc_url( home_url( '/e-bikes/' ) ); ?>"><?php esc_html_e( 'E-bikes', 'erh' ); ?></a>
-                <a href="<?php echo esc_url( home_url( '/eucs/' ) ); ?>"><?php esc_html_e( 'EUCs', 'erh' ); ?></a>
-                <a href="<?php echo esc_url( home_url( '/e-skating/' ) ); ?>"><?php esc_html_e( 'E-skating', 'erh' ); ?></a>
-                <a href="<?php echo esc_url( home_url( '/hoverboards/' ) ); ?>"><?php esc_html_e( 'Hoverboards', 'erh' ); ?></a>
-            </nav>
+            <?php
+            wp_nav_menu( array(
+                'theme_location'    => 'footer-categories',
+                'container'         => 'nav',
+                'container_class'   => 'footer-categories',
+                'container_aria_label' => __( 'Product categories', 'erh' ),
+                'items_wrap'        => '%3$s',
+                'depth'             => 1,
+                'walker'            => new ERH_Flat_Menu_Walker(),
+                'fallback_cb'       => false,
+            ) );
+            ?>
             <div class="footer-socials">
                 <?php
                 $socials = erh_get_social_links();
@@ -89,12 +94,18 @@ if ( ! defined( 'ABSPATH' ) ) {
             <div class="footer-left">
                 <span class="footer-copyright">&copy; <?php echo esc_html( date( 'Y' ) ); ?> <?php bloginfo( 'name' ); ?></span>
                 <span class="footer-separator">&middot;</span>
-                <nav class="footer-legal" aria-label="<?php esc_attr_e( 'Legal links', 'erh' ); ?>">
-                    <a href="<?php echo esc_url( home_url( '/privacy-policy/' ) ); ?>"><?php esc_html_e( 'Privacy', 'erh' ); ?></a>
-                    <a href="<?php echo esc_url( home_url( '/cookies/' ) ); ?>"><?php esc_html_e( 'Cookies', 'erh' ); ?></a>
-                    <a href="<?php echo esc_url( home_url( '/terms/' ) ); ?>"><?php esc_html_e( 'Terms', 'erh' ); ?></a>
-                    <a href="<?php echo esc_url( home_url( '/disclaimers/' ) ); ?>"><?php esc_html_e( 'Disclaimers', 'erh' ); ?></a>
-                </nav>
+                <?php
+                wp_nav_menu( array(
+                    'theme_location'    => 'footer-legal',
+                    'container'         => 'nav',
+                    'container_class'   => 'footer-legal',
+                    'container_aria_label' => __( 'Legal links', 'erh' ),
+                    'items_wrap'        => '%3$s',
+                    'depth'             => 1,
+                    'walker'            => new ERH_Flat_Menu_Walker(),
+                    'fallback_cb'       => false,
+                ) );
+                ?>
             </div>
             <div class="footer-right">
                 <?php
@@ -123,12 +134,18 @@ if ( ! defined( 'ABSPATH' ) ) {
                     ),
                 );
                 ?>
-                <nav class="footer-links" aria-label="<?php esc_attr_e( 'Footer navigation', 'erh' ); ?>">
-                    <a href="<?php echo esc_url( home_url( '/about/' ) ); ?>"><?php esc_html_e( 'About', 'erh' ); ?></a>
-                    <a href="<?php echo esc_url( home_url( '/contact/' ) ); ?>"><?php esc_html_e( 'Contact', 'erh' ); ?></a>
-                    <a href="<?php echo esc_url( home_url( '/how-we-test/' ) ); ?>"><?php esc_html_e( 'How we test', 'erh' ); ?></a>
-                    <a href="<?php echo esc_url( home_url( '/editorial/' ) ); ?>"><?php esc_html_e( 'Editorial', 'erh' ); ?></a>
-                </nav>
+                <?php
+                wp_nav_menu( array(
+                    'theme_location'    => 'footer',
+                    'container'         => 'nav',
+                    'container_class'   => 'footer-links',
+                    'container_aria_label' => __( 'Footer navigation', 'erh' ),
+                    'items_wrap'        => '%3$s',
+                    'depth'             => 1,
+                    'walker'            => new ERH_Flat_Menu_Walker(),
+                    'fallback_cb'       => false,
+                ) );
+                ?>
 
                 <div class="footer-region" data-region-picker-wrapper>
                     <button type="button" class="footer-region-trigger" data-region-picker-trigger aria-expanded="false" aria-haspopup="listbox">

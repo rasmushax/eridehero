@@ -41,9 +41,10 @@ function erh_theme_setup(): void {
 
     // Register navigation menus
     register_nav_menus( array(
-        'primary'      => __( 'Primary Menu', 'erh' ),
-        'footer'       => __( 'Footer Menu', 'erh' ),
-        'footer-legal' => __( 'Footer Legal Menu', 'erh' ),
+        'primary'           => __( 'Primary Menu', 'erh' ),
+        'footer'            => __( 'Footer Menu', 'erh' ),
+        'footer-legal'      => __( 'Footer Legal Menu', 'erh' ),
+        'footer-categories' => __( 'Footer Categories', 'erh' ),
     ) );
 
     // HTML5 support for various elements
@@ -98,6 +99,39 @@ function erh_widgets_init(): void {
     ) );
 }
 add_action( 'widgets_init', 'erh_widgets_init' );
+
+/**
+ * Flat menu walker — outputs <a> tags without <ul>/<li> wrapping.
+ *
+ * Used for simple footer nav sections where items are direct children of <nav>.
+ */
+class ERH_Flat_Menu_Walker extends Walker_Nav_Menu {
+    public function start_lvl( &$output, $depth = 0, $args = null ): void {}
+    public function end_lvl( &$output, $depth = 0, $args = null ): void {}
+
+    public function start_el( &$output, $data_object, $depth = 0, $args = null, $current_object_id = 0 ): void {
+        $atts = array(
+            'href' => esc_url( $data_object->url ),
+        );
+
+        if ( $data_object->target ) {
+            $atts['target'] = $data_object->target;
+        }
+
+        if ( $data_object->current ) {
+            $atts['aria-current'] = 'page';
+        }
+
+        $attr_str = '';
+        foreach ( $atts as $name => $value ) {
+            $attr_str .= ' ' . $name . '="' . esc_attr( $value ) . '"';
+        }
+
+        $output .= '<a' . $attr_str . '>' . esc_html( $data_object->title ) . '</a>';
+    }
+
+    public function end_el( &$output, $data_object, $depth = 0, $args = null ): void {}
+}
 
 /**
  * Add custom body classes
