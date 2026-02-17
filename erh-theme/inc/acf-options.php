@@ -556,6 +556,7 @@ function erh_register_acf_fields(): void {
                         'label'          => __( 'Link Page', 'erh' ),
                         'name'           => 'link_url',
                         'type'           => 'page_link',
+                        'post_type'      => array( 'page', 'post' ),
                         'allow_null'     => 1,
                         'allow_archives' => 0,
                         'wrapper'        => array( 'width' => '33' ),
