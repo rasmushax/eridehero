@@ -49,6 +49,15 @@ function erh_register_options_pages(): void {
         'menu_slug'   => 'erh-global-settings',
         'capability'  => 'manage_options',
     ) );
+
+    // About Page sub-page
+    acf_add_options_sub_page( array(
+        'page_title'  => __( 'About Page', 'erh' ),
+        'menu_title'  => __( 'About', 'erh' ),
+        'parent_slug' => 'erh-theme-settings',
+        'menu_slug'   => 'erh-about-settings',
+        'capability'  => 'manage_options',
+    ) );
 }
 add_action( 'acf/init', 'erh_register_options_pages' );
 
@@ -362,6 +371,12 @@ function erh_register_acf_fields(): void {
                 'type'  => 'url',
             ),
             array(
+                'key'   => 'field_social_tiktok',
+                'label' => __( 'TikTok URL', 'erh' ),
+                'name'  => 'social_tiktok',
+                'type'  => 'url',
+            ),
+            array(
                 'key'   => 'field_social_facebook',
                 'label' => __( 'Facebook URL', 'erh' ),
                 'name'  => 'social_facebook',
@@ -391,6 +406,301 @@ function erh_register_acf_fields(): void {
         ),
         'menu_order' => 0,
     ) );
+    // ===========================================
+    // ABOUT PAGE FIELD GROUPS
+    // ===========================================
+
+    // About Hero Section
+    acf_add_local_field_group( array(
+        'key'      => 'group_about_hero',
+        'title'    => __( 'About Hero', 'erh' ),
+        'fields'   => array(
+            array(
+                'key'           => 'field_about_hero_eyebrow',
+                'label'         => __( 'Eyebrow Text', 'erh' ),
+                'name'          => 'about_hero_eyebrow',
+                'type'          => 'text',
+                'default_value' => 'About ERideHero',
+            ),
+            array(
+                'key'           => 'field_about_hero_title',
+                'label'         => __( 'Title', 'erh' ),
+                'name'          => 'about_hero_title',
+                'type'          => 'text',
+                'default_value' => 'The data-driven guide',
+            ),
+            array(
+                'key'           => 'field_about_hero_title_highlight',
+                'label'         => __( 'Title Highlight', 'erh' ),
+                'name'          => 'about_hero_title_highlight',
+                'type'          => 'text',
+                'default_value' => 'to electric rides',
+                'instructions'  => __( 'This text appears with the purple highlight color.', 'erh' ),
+            ),
+            array(
+                'key'           => 'field_about_hero_subtitle',
+                'label'         => __( 'Subtitle', 'erh' ),
+                'name'          => 'about_hero_subtitle',
+                'type'          => 'textarea',
+                'rows'          => 2,
+                'default_value' => 'In-depth reviews backed by real performance data. Price tracking, comparison tools, and buying guides to help you find the right ride.',
+            ),
+        ),
+        'location' => array(
+            array(
+                array(
+                    'param'    => 'options_page',
+                    'operator' => '==',
+                    'value'    => 'erh-about-settings',
+                ),
+            ),
+        ),
+        'menu_order' => 0,
+    ) );
+
+    // About Stats Section
+    acf_add_local_field_group( array(
+        'key'      => 'group_about_stats',
+        'title'    => __( 'About Stats', 'erh' ),
+        'fields'   => array(
+            array(
+                'key'          => 'field_about_stats',
+                'label'        => __( 'Stats', 'erh' ),
+                'name'         => 'about_stats',
+                'type'         => 'repeater',
+                'layout'       => 'table',
+                'button_label' => __( 'Add Stat', 'erh' ),
+                'max'          => 4,
+                'sub_fields'   => array(
+                    array(
+                        'key'   => 'field_about_stat_value',
+                        'label' => __( 'Value', 'erh' ),
+                        'name'  => 'value',
+                        'type'  => 'text',
+                        'wrapper' => array( 'width' => '50' ),
+                    ),
+                    array(
+                        'key'   => 'field_about_stat_label',
+                        'label' => __( 'Label', 'erh' ),
+                        'name'  => 'label',
+                        'type'  => 'text',
+                        'wrapper' => array( 'width' => '50' ),
+                    ),
+                ),
+            ),
+        ),
+        'location' => array(
+            array(
+                array(
+                    'param'    => 'options_page',
+                    'operator' => '==',
+                    'value'    => 'erh-about-settings',
+                ),
+            ),
+        ),
+        'menu_order' => 10,
+    ) );
+
+    // About Approach Sections
+    acf_add_local_field_group( array(
+        'key'      => 'group_about_sections',
+        'title'    => __( 'About Sections', 'erh' ),
+        'fields'   => array(
+            array(
+                'key'          => 'field_about_sections',
+                'label'        => __( 'Content Sections', 'erh' ),
+                'name'         => 'about_sections',
+                'type'         => 'repeater',
+                'layout'       => 'block',
+                'button_label' => __( 'Add Section', 'erh' ),
+                'sub_fields'   => array(
+                    array(
+                        'key'   => 'field_about_section_eyebrow',
+                        'label' => __( 'Eyebrow', 'erh' ),
+                        'name'  => 'eyebrow',
+                        'type'  => 'text',
+                        'wrapper' => array( 'width' => '33' ),
+                    ),
+                    array(
+                        'key'   => 'field_about_section_heading',
+                        'label' => __( 'Heading', 'erh' ),
+                        'name'  => 'heading',
+                        'type'  => 'text',
+                        'wrapper' => array( 'width' => '67' ),
+                    ),
+                    array(
+                        'key'     => 'field_about_section_body',
+                        'label'   => __( 'Body', 'erh' ),
+                        'name'    => 'body',
+                        'type'    => 'wysiwyg',
+                        'toolbar' => 'basic',
+                        'media_upload' => 0,
+                    ),
+                    array(
+                        'key'           => 'field_about_section_image',
+                        'label'         => __( 'Image', 'erh' ),
+                        'name'          => 'image',
+                        'type'          => 'image',
+                        'return_format' => 'array',
+                        'preview_size'  => 'medium',
+                    ),
+                    array(
+                        'key'   => 'field_about_section_link_text',
+                        'label' => __( 'Link Text (optional)', 'erh' ),
+                        'name'  => 'link_text',
+                        'type'  => 'text',
+                        'wrapper' => array( 'width' => '33' ),
+                    ),
+                    array(
+                        'key'            => 'field_about_section_link_url',
+                        'label'          => __( 'Link Page', 'erh' ),
+                        'name'           => 'link_url',
+                        'type'           => 'page_link',
+                        'allow_null'     => 1,
+                        'allow_archives' => 0,
+                        'wrapper'        => array( 'width' => '33' ),
+                    ),
+                    array(
+                        'key'          => 'field_about_section_flipped',
+                        'label'        => __( 'Flip Layout', 'erh' ),
+                        'name'         => 'flipped',
+                        'type'         => 'true_false',
+                        'ui'           => 1,
+                        'ui_on_text'   => __( 'Image left', 'erh' ),
+                        'ui_off_text'  => __( 'Image right', 'erh' ),
+                        'instructions' => __( 'When enabled, image appears on the left.', 'erh' ),
+                        'wrapper'      => array( 'width' => '34' ),
+                    ),
+                ),
+            ),
+        ),
+        'location' => array(
+            array(
+                array(
+                    'param'    => 'options_page',
+                    'operator' => '==',
+                    'value'    => 'erh-about-settings',
+                ),
+            ),
+        ),
+        'menu_order' => 20,
+    ) );
+
+    // About Team Section
+    acf_add_local_field_group( array(
+        'key'      => 'group_about_team',
+        'title'    => __( 'About Team', 'erh' ),
+        'fields'   => array(
+            array(
+                'key'           => 'field_about_team_heading',
+                'label'         => __( 'Heading', 'erh' ),
+                'name'          => 'about_team_heading',
+                'type'          => 'text',
+                'default_value' => 'The experts behind ERideHero',
+            ),
+            array(
+                'key'           => 'field_about_team_subheading',
+                'label'         => __( 'Subheading', 'erh' ),
+                'name'          => 'about_team_subheading',
+                'type'          => 'textarea',
+                'rows'          => 2,
+                'default_value' => 'Real-world riding experience and thousands of miles logged across every category.',
+            ),
+            array(
+                'key'          => 'field_about_team_members',
+                'label'        => __( 'Team Members', 'erh' ),
+                'name'         => 'about_team_members',
+                'type'         => 'repeater',
+                'layout'       => 'block',
+                'button_label' => __( 'Add Team Member', 'erh' ),
+                'sub_fields'   => array(
+                    array(
+                        'key'           => 'field_about_member_photo',
+                        'label'         => __( 'Photo', 'erh' ),
+                        'name'          => 'photo',
+                        'type'          => 'image',
+                        'return_format' => 'array',
+                        'preview_size'  => 'thumbnail',
+                        'wrapper'       => array( 'width' => '25' ),
+                    ),
+                    array(
+                        'key'     => 'field_about_member_name',
+                        'label'   => __( 'Name', 'erh' ),
+                        'name'    => 'name',
+                        'type'    => 'text',
+                        'wrapper' => array( 'width' => '25' ),
+                    ),
+                    array(
+                        'key'     => 'field_about_member_role',
+                        'label'   => __( 'Role', 'erh' ),
+                        'name'    => 'role',
+                        'type'    => 'text',
+                        'wrapper' => array( 'width' => '25' ),
+                    ),
+                    array(
+                        'key'     => 'field_about_member_bio',
+                        'label'   => __( 'Bio', 'erh' ),
+                        'name'    => 'bio',
+                        'type'    => 'textarea',
+                        'rows'    => 3,
+                    ),
+                    array(
+                        'key'     => 'field_about_member_social_youtube',
+                        'label'   => __( 'YouTube URL', 'erh' ),
+                        'name'    => 'social_youtube',
+                        'type'    => 'url',
+                        'wrapper' => array( 'width' => '33' ),
+                    ),
+                    array(
+                        'key'     => 'field_about_member_social_instagram',
+                        'label'   => __( 'Instagram URL', 'erh' ),
+                        'name'    => 'social_instagram',
+                        'type'    => 'url',
+                        'wrapper' => array( 'width' => '33' ),
+                    ),
+                    array(
+                        'key'     => 'field_about_member_social_tiktok',
+                        'label'   => __( 'TikTok URL', 'erh' ),
+                        'name'    => 'social_tiktok',
+                        'type'    => 'url',
+                        'wrapper' => array( 'width' => '34' ),
+                    ),
+                    array(
+                        'key'     => 'field_about_member_social_facebook',
+                        'label'   => __( 'Facebook URL', 'erh' ),
+                        'name'    => 'social_facebook',
+                        'type'    => 'url',
+                        'wrapper' => array( 'width' => '33' ),
+                    ),
+                    array(
+                        'key'     => 'field_about_member_social_twitter',
+                        'label'   => __( 'Twitter URL', 'erh' ),
+                        'name'    => 'social_twitter',
+                        'type'    => 'url',
+                        'wrapper' => array( 'width' => '33' ),
+                    ),
+                    array(
+                        'key'     => 'field_about_member_social_linkedin',
+                        'label'   => __( 'LinkedIn URL', 'erh' ),
+                        'name'    => 'social_linkedin',
+                        'type'    => 'url',
+                        'wrapper' => array( 'width' => '34' ),
+                    ),
+                ),
+            ),
+        ),
+        'location' => array(
+            array(
+                array(
+                    'param'    => 'options_page',
+                    'operator' => '==',
+                    'value'    => 'erh-about-settings',
+                ),
+            ),
+        ),
+        'menu_order' => 30,
+    ) );
+
     // ===========================================
     // POST-LEVEL FIELD GROUPS (for individual posts)
     // ===========================================

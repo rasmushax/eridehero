@@ -144,43 +144,14 @@ $business_address  = get_field( 'business_address', 'option' ) ?: "Doktorens Gyd
                         <h3 class="contact-card-title"><?php esc_html_e( 'Follow us', 'erh' ); ?></h3>
                         <div class="footer-socials">
                             <?php
-                            $youtube_url   = get_field( 'youtube_url', 'option' );
-                            $instagram_url = get_field( 'instagram_url', 'option' );
-                            $tiktok_url    = get_field( 'tiktok_url', 'option' );
-                            $facebook_url  = get_field( 'facebook_url', 'option' );
-                            $twitter_url   = get_field( 'twitter_url', 'option' );
-                            $linkedin_url  = get_field( 'linkedin_url', 'option' );
-                            ?>
-                            <?php if ( $youtube_url ) : ?>
-                                <a href="<?php echo esc_url( $youtube_url ); ?>" class="footer-social" aria-label="YouTube" target="_blank" rel="noopener">
-                                    <?php erh_the_icon( 'youtube', 'icon' ); ?>
+                            $socials = erh_get_social_links();
+                            foreach ( $socials as $platform => $url ) :
+                                $label = 'twitter' === $platform ? 'X (Twitter)' : ucfirst( $platform );
+                                ?>
+                                <a href="<?php echo esc_url( $url ); ?>" class="footer-social" aria-label="<?php echo esc_attr( $label ); ?>" target="_blank" rel="noopener">
+                                    <?php erh_the_icon( $platform, 'icon' ); ?>
                                 </a>
-                            <?php endif; ?>
-                            <?php if ( $instagram_url ) : ?>
-                                <a href="<?php echo esc_url( $instagram_url ); ?>" class="footer-social" aria-label="Instagram" target="_blank" rel="noopener">
-                                    <?php erh_the_icon( 'instagram', 'icon' ); ?>
-                                </a>
-                            <?php endif; ?>
-                            <?php if ( $tiktok_url ) : ?>
-                                <a href="<?php echo esc_url( $tiktok_url ); ?>" class="footer-social" aria-label="TikTok" target="_blank" rel="noopener">
-                                    <?php erh_the_icon( 'tiktok', 'icon' ); ?>
-                                </a>
-                            <?php endif; ?>
-                            <?php if ( $facebook_url ) : ?>
-                                <a href="<?php echo esc_url( $facebook_url ); ?>" class="footer-social" aria-label="Facebook" target="_blank" rel="noopener">
-                                    <?php erh_the_icon( 'facebook', 'icon' ); ?>
-                                </a>
-                            <?php endif; ?>
-                            <?php if ( $twitter_url ) : ?>
-                                <a href="<?php echo esc_url( $twitter_url ); ?>" class="footer-social" aria-label="X (Twitter)" target="_blank" rel="noopener">
-                                    <?php erh_the_icon( 'twitter', 'icon' ); ?>
-                                </a>
-                            <?php endif; ?>
-                            <?php if ( $linkedin_url ) : ?>
-                                <a href="<?php echo esc_url( $linkedin_url ); ?>" class="footer-social" aria-label="LinkedIn" target="_blank" rel="noopener">
-                                    <?php erh_the_icon( 'linkedin', 'icon' ); ?>
-                                </a>
-                            <?php endif; ?>
+                            <?php endforeach; ?>
                         </div>
                     </div>
                 </aside>

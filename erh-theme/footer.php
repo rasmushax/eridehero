@@ -74,13 +74,7 @@ if ( ! defined( 'ABSPATH' ) ) {
             </nav>
             <div class="footer-socials">
                 <?php
-                $socials = array(
-                    'youtube'   => 'https://youtube.com/@eridehero',
-                    'instagram' => 'https://instagram.com/eridehero',
-                    'facebook'  => 'https://facebook.com/eridehero',
-                    'twitter'   => 'https://twitter.com/eridehero',
-                    'linkedin'  => 'https://linkedin.com/company/eridehero',
-                );
+                $socials = erh_get_social_links();
 
                 foreach ( $socials as $platform => $url ) :
                     ?>

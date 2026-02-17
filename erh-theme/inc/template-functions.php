@@ -20,6 +20,9 @@ if ( ! defined( 'ABSPATH' ) ) {
 // Core utilities (icons, logos).
 require_once __DIR__ . '/functions/icons.php';
 
+// Social links (centralized ACF options retrieval).
+require_once __DIR__ . '/functions/social-links.php';
+
 // Formatting functions (price, date, text utilities).
 require_once __DIR__ . '/functions/formatting.php';
 
