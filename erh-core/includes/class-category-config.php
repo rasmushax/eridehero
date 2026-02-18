@@ -46,7 +46,7 @@ class CategoryConfig {
             'name'          => 'E-Bikes',
             'name_plural'   => 'Electric Bikes',
             'name_short'    => 'E-Bike',
-            'slug'          => 'e-bikes',
+            'slug'          => 'electric-bikes',
             'archive_slug'  => 'e-bikes',
             'finder_slug'   => 'electric-bike-finder', // WP page slug.
             'finder_key'    => 'ebike',
@@ -60,7 +60,7 @@ class CategoryConfig {
             'name'          => 'E-Skateboards',
             'name_plural'   => 'Electric Skateboards',
             'name_short'    => 'E-Skateboard',
-            'slug'          => 'e-skateboards',
+            'slug'          => 'electric-skateboards',
             'archive_slug'  => 'e-skateboards',
             'finder_slug'   => 'electric-skateboard-finder',
             'finder_key'    => 'eskate',
@@ -172,7 +172,7 @@ class CategoryConfig {
     /**
      * Get category by URL slug.
      *
-     * @param string $slug URL slug (e.g., 'electric-scooters', 'e-bikes').
+     * @param string $slug URL slug (e.g., 'electric-scooters', 'electric-bikes').
      * @return array<string, mixed>|null Category definition or null if not found.
      */
     public static function get_by_slug( string $slug ): ?array {

@@ -154,18 +154,21 @@ ol.spacing li {
 }
 
 .article-body .wp-block-image,
-.guide-body .wp-block-image {
+.guide-body .wp-block-image,
+.review-body .wp-block-image {
     margin: var(--space-6) 0;
 }
 
 .article-body .wp-block-image img,
-.guide-body .wp-block-image img {
+.guide-body .wp-block-image img,
+.review-body .wp-block-image img {
     border-radius: var(--radius-lg);
     box-shadow: var(--shadow-md);
 }
 
 .article-body .wp-block-image.noshadow img,
-.guide-body .wp-block-image.noshadow img {
+.guide-body .wp-block-image.noshadow img,
+.review-body .wp-block-image.noshadow img {
     box-shadow: none;
 }
 

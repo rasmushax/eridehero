@@ -28,9 +28,6 @@
 /* ===== SECTION HEADER (title + link/popover) ===== */
 
 .section-header {
-    display: flex;
-    align-items: center;
-    justify-content: space-between;
     flex-wrap: wrap;
     gap: var(--space-3) var(--space-4);
     margin-bottom: var(--space-6);

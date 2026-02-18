@@ -163,6 +163,7 @@
 .compare-category-card-arrow .icon {
     width: 20px;
     height: 20px;
+    display: flex;
 }
 
 /* ==========================================================================
@@ -515,35 +516,34 @@
 
 .compare-category-hero {
     padding: var(--space-10) 0;
-    background: var(--color-background);
-    text-align: center;
 }
 
 .compare-category-title {
-    font-size: var(--text-4xl);
+    font-size: var(--text-5xl);
     font-weight: var(--font-bold);
     color: var(--color-dark);
     margin: 0 0 var(--space-3);
+    line-height: 1.1;
+}
+
+.compare-category-title span {
+    color: var(--color-primary);
 }
 
 .compare-category-subtitle {
     font-size: var(--text-lg);
     color: var(--color-body);
     margin: 0;
-    max-width: 500px;
-    margin-left: auto;
-    margin-right: auto;
+    max-width: 600px;
 }
 
 /* Category Quick Compare */
 .compare-category-quick {
-    padding: var(--space-10) 0;
+    padding: 0 0 var(--space-10);
 }
 
 .compare-category-quick .comparison-section {
     padding: 0;
-    max-width: 800px;
-    margin: 0 auto;
 }
 
 /* Category Featured */
@@ -554,7 +554,11 @@
 /* Category Popular */
 .compare-category-popular {
     padding: var(--space-10) 0;
-    background: var(--color-background);
+}
+
+/* Category Browse Other */
+.compare-category-browse {
+    padding: var(--space-10) 0;
 }
 
 /* ==========================================================================
@@ -723,7 +727,7 @@
     }
 
     .compare-category-title {
-        font-size: var(--text-2xl);
+        font-size: var(--text-3xl);
     }
 }
 

@@ -32,13 +32,13 @@ function erh_compare_fallback_categories(): array {
             'name_plural' => 'Electric Scooters',
             'type'        => 'Electric Scooter',
         ],
-        'e-bikes' => [
+        'electric-bikes' => [
             'key'         => 'ebike',
             'name'        => 'E-Bikes',
             'name_plural' => 'Electric Bikes',
             'type'        => 'Electric Bike',
         ],
-        'e-skateboards' => [
+        'electric-skateboards' => [
             'key'         => 'eskateboard',
             'name'        => 'E-Skateboards',
             'name_plural' => 'Electric Skateboards',
@@ -82,7 +82,7 @@ function erh_compare_rewrite_rules() {
         'top'
     );
 
-    // Category landing pages: /compare/electric-scooters/, /compare/e-bikes/, etc.
+    // Category landing pages: /compare/electric-scooters/, /compare/electric-bikes/, etc.
     $category_slugs = implode( '|', array_keys( erh_compare_category_map() ) );
     add_rewrite_rule(
         '^compare/(' . $category_slugs . ')/?$',

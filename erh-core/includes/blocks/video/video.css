@@ -9,6 +9,7 @@
     margin: var(--space-6) 0;
     cursor: pointer;
     outline: none;
+    aspect-ratio: 16 / 9;
 }
 
 .erh-video:focus-visible {
@@ -28,7 +29,7 @@
 
 .erh-video-thumbnail {
     width: 100%;
-    aspect-ratio: 16 / 9;
+    height: 100%;
     object-fit: cover;
     margin: 0;
     border-radius: var(--radius-lg);
