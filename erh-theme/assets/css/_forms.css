@@ -381,6 +381,13 @@
 }
 
 
+/* Hide native selects until JS transforms them into custom dropdowns */
+select[data-custom-select] {
+    opacity: 0;
+    position: absolute;
+    pointer-events: none;
+}
+
 /* ===== INLINE SELECT VARIANT ===== */
 /* Minimal inline style - just bold text + chevron, no button styling */
 
