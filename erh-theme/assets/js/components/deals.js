@@ -40,11 +40,21 @@ export async function initDeals() {
 
     if (!grid || !template) return null;
 
+    // Category slug → deals page URL path mapping.
+    const CATEGORY_URLS = {
+        escooter:   '/deals/electric-scooters/',
+        ebike:      '/deals/electric-bikes/',
+        eskate:     '/deals/electric-skateboards/',
+        euc:        '/deals/electric-unicycles/',
+        hoverboard: '/deals/hoverboards/',
+    };
+
     // State
     let allDeals = [];
     let currentCategory = 'all';
     let userGeo = { geo: 'US', currency: 'USD' };
     let totalDealsCount = 0;
+    let dealCounts = {};
     let carouselInstance = null;
 
     // Get user geo
@@ -68,16 +78,15 @@ export async function initDeals() {
         });
 
         allDeals = data.deals;
+        dealCounts = data.counts || {};
 
         // Use category-specific count when filtering, otherwise total.
-        totalDealsCount = (fixedCategory && data.counts[fixedCategory] !== undefined)
-            ? data.counts[fixedCategory]
-            : (data.counts.all || 0);
+        totalDealsCount = (fixedCategory && dealCounts[fixedCategory] !== undefined)
+            ? dealCounts[fixedCategory]
+            : (dealCounts.all || 0);
 
         // Update total count display
-        if (dealsCountEl && totalDealsCount > 0) {
-            dealsCountEl.textContent = `🔥 ${totalDealsCount} deals cooking`;
-        }
+        updateCountDisplay(totalDealsCount);
     } catch (error) {
         console.error('[Deals] Failed to load deals:', error);
         showEmptyState(true);
@@ -130,14 +139,12 @@ export async function initDeals() {
             grid.appendChild(createDealCard(template, deal, userGeo));
         });
 
-        // Add CTA card if there are more deals
+        // Add CTA card if there are more deals beyond what's displayed.
         if (ctaTemplate && totalDealsCount > deals.length) {
             const ctaCard = ctaTemplate.content.cloneNode(true);
-            const countEl = ctaCard.querySelector('.deal-card-cta-count');
-            if (countEl) {
-                countEl.textContent = `+${totalDealsCount - deals.length}`;
-            }
             grid.appendChild(ctaCard);
+            // Use updateCtaCard to set count and link consistently.
+            updateCtaCard(deals.length, totalDealsCount, currentCategory);
         }
 
         // Update carousel scroll state
@@ -157,13 +164,21 @@ export async function initDeals() {
         cards.forEach(card => {
             const cardCategory = card.dataset.category;
 
-            // Always show CTA card
+            // Skip CTA card — handled separately below.
             if (card.classList.contains('deal-card-cta')) return;
 
             const show = category === 'all' || cardCategory === category;
             card.classList.toggle('hidden', !show);
             if (show) visibleCount++;
         });
+
+        // Update header stat and CTA card for active category.
+        const categoryTotal = category === 'all'
+            ? (dealCounts.all || 0)
+            : (dealCounts[category] || 0);
+
+        updateCountDisplay(categoryTotal);
+        updateCtaCard(visibleCount, categoryTotal, category);
 
         if (visibleCount === 0) {
             showEmptyState();
@@ -187,6 +202,48 @@ export async function initDeals() {
             tab.classList.toggle('active', isActive);
             tab.setAttribute('aria-selected', isActive ? 'true' : 'false');
         });
+    }
+
+    /**
+     * Update the header deal count display.
+     */
+    function updateCountDisplay(count) {
+        if (!dealsCountEl) return;
+        if (count > 0) {
+            dealsCountEl.textContent = `🔥 ${count} deals cooking`;
+            dealsCountEl.style.display = '';
+        } else {
+            dealsCountEl.style.display = 'none';
+        }
+    }
+
+    /**
+     * Update the CTA card count, link, and visibility.
+     */
+    function updateCtaCard(visibleCount, categoryTotal, category) {
+        const ctaCard = grid.querySelector('.deal-card-cta');
+        if (!ctaCard) return;
+
+        const remaining = categoryTotal - visibleCount;
+
+        if (remaining <= 0) {
+            ctaCard.classList.add('hidden');
+            return;
+        }
+
+        ctaCard.classList.remove('hidden');
+
+        const countEl = ctaCard.querySelector('.deal-card-cta-count');
+        if (countEl) {
+            countEl.textContent = `+${remaining}`;
+        }
+
+        // Point CTA to the category-specific deals page.
+        if (category !== 'all' && CATEGORY_URLS[category]) {
+            ctaCard.href = (window.erhData?.siteUrl || '') + CATEGORY_URLS[category];
+        } else {
+            ctaCard.href = (window.erhData?.siteUrl || '') + '/deals/';
+        }
     }
 
     /**
