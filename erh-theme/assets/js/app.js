@@ -83,9 +83,14 @@ import { Toast } from './components/toast.js'; // For programmatic toasts
         });
     }
 
-    // Archive filters/sort - only on archive pages
+    // Archive filters + pagination - only on archive pages
     if (document.querySelector('[data-archive-filters]')) {
-        import('./components/archive-filter.js');
+        import('./components/archive-filter.js').then(m => m.initArchiveFilter());
+    } else if (document.querySelector('[data-archive-paginate]')) {
+        // Grid with pagination but no filters (edge case).
+        import('./components/archive-pagination.js').then(m => {
+            m.initPagination(document.querySelector('[data-archive-paginate]'));
+        });
     }
     if (document.querySelector('[data-archive-sort]')) {
         import('./components/archive-sort.js');

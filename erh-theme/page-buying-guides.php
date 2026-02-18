@@ -14,6 +14,9 @@ if ( ! defined( 'ABSPATH' ) ) {
 
 get_header();
 
+// SSR filter: read from query param.
+$current_filter = isset( $_GET['category'] ) ? sanitize_key( $_GET['category'] ) : 'all';
+
 // Query all posts tagged "buying-guide".
 $guides_query = new WP_Query( array(
 	'post_type'      => 'post',
@@ -75,6 +78,20 @@ foreach ( $all_categories as $cat ) {
 usort( $active_categories, function( $a, $b ) use ( $category_counts ) {
 	return $category_counts[ $b->slug ] - $category_counts[ $a->slug ];
 } );
+
+// Validate that current_filter is a real category (or 'all').
+if ( 'all' !== $current_filter ) {
+	$valid = false;
+	foreach ( $active_categories as $cat ) {
+		if ( $cat->slug === $current_filter ) {
+			$valid = true;
+			break;
+		}
+	}
+	if ( ! $valid ) {
+		$current_filter = 'all';
+	}
+}
 ?>
 
 <!-- Archive Header -->
@@ -87,6 +104,7 @@ usort( $active_categories, function( $a, $b ) use ( $category_counts ) {
 		get_template_part( 'template-parts/archive/filters', null, array(
 			'category_counts'   => $category_counts,
 			'active_categories' => $active_categories,
+			'current_filter'    => $current_filter,
 		) );
 		?>
 	</div>
@@ -96,15 +114,20 @@ usort( $active_categories, function( $a, $b ) use ( $category_counts ) {
 <section class="section archive-content">
 	<div class="container">
 		<?php if ( ! empty( $guides_data ) ) : ?>
-			<div class="archive-grid" data-archive-grid>
+			<div class="archive-grid" data-archive-grid data-archive-paginate="12">
 				<?php
 				foreach ( $guides_data as $guide ) :
+					// SSR: hide cards that don't match the current filter.
+					$matches_filter = ( 'all' === $current_filter )
+						|| in_array( $current_filter, explode( ' ', $guide['category_slugs'] ), true );
+
 					get_template_part( 'template-parts/archive/card', null, array(
 						'type'           => 'guide',
 						'post_id'        => $guide['post_id'],
 						'category_slugs' => $guide['category_slugs'],
 						'category_name'  => $guide['category_name'],
 						'custom_title'   => $guide['custom_title'],
+						'hidden'         => ! $matches_filter,
 					) );
 				endforeach;
 				?>
@@ -114,6 +137,12 @@ usort( $active_categories, function( $a, $b ) use ( $category_counts ) {
 			<div class="archive-empty" data-archive-empty hidden>
 				<p><?php esc_html_e( 'No guides found in this category yet.', 'erh' ); ?></p>
 			</div>
+
+			<!-- Client-side pagination container -->
+			<div data-archive-pagination></div>
+			<noscript>
+				<p class="archive-noscript"><?php esc_html_e( 'Enable JavaScript for pagination and filtering.', 'erh' ); ?></p>
+			</noscript>
 		<?php else : ?>
 			<div class="archive-empty">
 				<p><?php esc_html_e( 'No buying guides available yet.', 'erh' ); ?></p>

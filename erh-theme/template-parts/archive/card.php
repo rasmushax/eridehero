@@ -15,6 +15,7 @@
  * - reading_time (int): Minutes to read (article only)
  * - rating (float|null): Rating score (review only)
  * - custom_title (string): Custom card title (guide only)
+ * - hidden (bool): SSR filter — hide card on initial render (default false)
  *
  * @package ERideHero
  */
@@ -38,6 +39,7 @@ $excerpt      = $args['excerpt'] ?? '';
 $reading_time = $args['reading_time'] ?? 0;
 $rating       = $args['rating'] ?? null;
 $custom_title = $args['custom_title'] ?? '';
+$is_hidden    = ! empty( $args['hidden'] );
 
 // Card class modifier.
 $card_class = 'archive-card';
@@ -63,7 +65,7 @@ if ( 'review' === $type ) {
 }
 ?>
 
-<a href="<?php echo esc_url( $permalink ); ?>" class="<?php echo esc_attr( $card_class ); ?>" <?php echo $data_attrs; ?>>
+<a href="<?php echo esc_url( $permalink ); ?>" class="<?php echo esc_attr( $card_class ); ?>" <?php echo $data_attrs; ?><?php echo $is_hidden ? ' hidden' : ''; ?>>
 	<div class="archive-card-img">
 		<?php if ( $thumbnail ) : ?>
 			<img src="<?php echo esc_url( $thumbnail ); ?>" alt="<?php echo esc_attr( $title ); ?>" loading="lazy">
