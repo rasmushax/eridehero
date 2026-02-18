@@ -1002,22 +1002,6 @@ class EscooterAdvantages extends AdvantageCalculatorBase {
             $comparison_set = $this->get_single_comparison_set( null, $geo, false );
         }
 
-        // DEBUG: Log analysis context.
-        $bracket_label = $bracket ? $bracket['label'] : 'All';
-        $product_names = array_map( fn( $p ) => $p['name'] ?? 'Unknown', $comparison_set );
-        // phpcs:ignore WordPress.PHP.DevelopmentFunctions.error_log_error_log
-        error_log( sprintf(
-            "[Analysis] Starting analysis for %s | Price: $%s | Bracket: %s ($%d-$%d) | Mode: %s | Comparison set (%d): %s",
-            $product['name'] ?? 'Unknown',
-            $current_price ?? 'N/A',
-            $bracket_label,
-            $bracket['min'] ?? 0,
-            $bracket['max'] ?? 0,
-            $use_bracket ? 'bracket' : 'category',
-            count( $comparison_set ),
-            implode( ', ', $product_names )
-        ) );
-
         // Define specs to analyze.
         $analysis_specs = $this->get_single_analysis_specs();
 
@@ -1298,39 +1282,19 @@ class EscooterAdvantages extends AdvantageCalculatorBase {
         $product_value = $this->get_single_spec_value( $product, $key, $geo );
 
         if ( $product_value === null || $product_value === '' || ( is_numeric( $product_value ) && $product_value <= 0 ) ) {
-            // DEBUG: Log skipped spec due to null/zero product value.
-            // phpcs:ignore WordPress.PHP.DevelopmentFunctions.error_log_error_log
-            error_log( sprintf(
-                '[Analysis] SKIP %s: product=%s has no value (got: %s)',
-                $spec_def['label'],
-                $product['name'] ?? 'Unknown',
-                var_export( $product_value, true )
-            ) );
             return null;
         }
 
-        // Collect values from comparison set (with product names for logging).
-        $values          = [];
-        $values_with_names = [];
+        // Collect values from comparison set.
+        $values = [];
         foreach ( $comparison_set as $comp_product ) {
             $val = $this->get_single_spec_value( $comp_product, $key, $geo );
             if ( $val !== null && $val !== '' && ( ! is_numeric( $val ) || $val > 0 ) ) {
-                $values[]            = (float) $val;
-                $values_with_names[] = [
-                    'name'  => $comp_product['name'] ?? 'Unknown',
-                    'value' => $val,
-                ];
+                $values[] = (float) $val;
             }
         }
 
         if ( count( $values ) < 3 ) {
-            // DEBUG: Log skipped spec due to insufficient data.
-            // phpcs:ignore WordPress.PHP.DevelopmentFunctions.error_log_error_log
-            error_log( sprintf(
-                '[Analysis] SKIP %s: only %d products have data (need 3+)',
-                $spec_def['label'],
-                count( $values )
-            ) );
             return null;
         }
 
@@ -1342,12 +1306,6 @@ class EscooterAdvantages extends AdvantageCalculatorBase {
 
         // Skip if all values are equal (no variance to compare).
         if ( $min === $max ) {
-            // phpcs:ignore WordPress.PHP.DevelopmentFunctions.error_log_error_log
-            error_log( sprintf(
-                '[Analysis] SKIP %s: all values are equal (%.3f)',
-                $spec_def['label'],
-                $min
-            ) );
             return null;
         }
 
@@ -1374,33 +1332,6 @@ class EscooterAdvantages extends AdvantageCalculatorBase {
                 $is_weakness = false;
             }
         }
-
-        // DEBUG: Log detailed analysis.
-        // phpcs:ignore WordPress.PHP.DevelopmentFunctions.error_log_error_log
-        error_log( sprintf(
-            "[Analysis] %s: product=%s (%.3f), avg=%.3f, min=%.3f, max=%.3f, percentile=%.1f, pct_vs_avg=%.1f%%, higher_better=%s, is_adv=%s, is_weak=%s",
-            $spec_def['label'],
-            $product['name'] ?? 'Unknown',
-            $product_value,
-            $avg,
-            $min,
-            $max,
-            $percentile,
-            $pct_vs_avg,
-            $higher_better ? 'Y' : 'N',
-            $is_advantage ? 'Y' : 'N',
-            $is_weakness ? 'Y' : 'N'
-        ) );
-
-        // Log all bracket values for this spec.
-        // phpcs:ignore WordPress.PHP.DevelopmentFunctions.error_log_error_log
-        error_log( sprintf(
-            "[Analysis] %s bracket values: %s",
-            $spec_def['label'],
-            implode( ', ', array_map( function( $v ) {
-                return sprintf( '%s=%.3f', $v['name'], $v['value'] );
-            }, $values_with_names ) )
-        ) );
 
         // Skip if neither.
         if ( ! $is_advantage && ! $is_weakness ) {
@@ -1469,15 +1400,6 @@ class EscooterAdvantages extends AdvantageCalculatorBase {
 
         $avg  = array_sum( $scores ) / count( $scores );
         $diff = (float) $product_score - $avg;
-
-        // phpcs:ignore WordPress.PHP.DevelopmentFunctions.error_log_error_log
-        error_log( sprintf(
-            '[Analysis] %s Score: product=%d, avg=%.1f, diff=%.1f',
-            $label,
-            $product_score,
-            $avg,
-            $diff
-        ) );
 
         // Thresholds: 20+ = Excellent, 14+ = Great, 8+ = Above-average.
         // Negative: -20 or worse = Very poor, -14 = Poor, -8 = Below-average.
@@ -1864,16 +1786,6 @@ class EscooterAdvantages extends AdvantageCalculatorBase {
         // Format the suspension display text.
         $display_text = $this->format_suspension_quality( $suspension, $score );
 
-        // phpcs:ignore WordPress.PHP.DevelopmentFunctions.error_log_error_log
-        error_log( sprintf(
-            '[Analysis] Suspension: score=%d, avg=%.1f, percentile=%.1f, rank=%d, display=%s',
-            $score,
-            $avg,
-            $percentile,
-            $rank,
-            $display_text
-        ) );
-
         // Determine if advantage or weakness based on score thresholds.
         // Score 6+ (dual with decent type) = potential strength if above average.
         // Score 0 (no suspension) = potential weakness only if others in bracket have suspension.
@@ -2018,13 +1930,6 @@ class EscooterAdvantages extends AdvantageCalculatorBase {
 
         // Get the water rating digit.
         $water_rating = $this->get_ip_water_rating( $ip_rating );
-
-        // phpcs:ignore WordPress.PHP.DevelopmentFunctions.error_log_error_log
-        error_log( sprintf(
-            '[Analysis] IP Rating (absolute): value=%s, water=%d',
-            $ip_rating ?? 'null',
-            $water_rating
-        ) );
 
         // Determine quality based on absolute water rating.
         // IP5+ = strength, IP3 or lower/none = weakness, IP4 = neutral (skip).

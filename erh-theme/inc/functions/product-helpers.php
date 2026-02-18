@@ -650,13 +650,18 @@ function erh_calculate_similarity_score( array $source_specs, array $candidate_s
  */
 function erh_format_card_specs( array $specs ): string {
     // Detect product type from specs structure.
-    if ( isset( $specs['e-bikes'] ) && is_array( $specs['e-bikes'] ) ) {
+    // All products may have all category keys (from ACF field groups on the CPT),
+    // so check for actual populated data, not just key existence.
+    if ( isset( $specs['e-bikes'] ) && is_array( $specs['e-bikes'] )
+        && ! empty( $specs['e-bikes']['motor']['power_nominal'] ?? $specs['e-bikes']['motor']['torque'] ?? null ) ) {
         return erh_format_ebike_card_specs( $specs );
     }
-    if ( isset( $specs['hoverboards'] ) && is_array( $specs['hoverboards'] ) ) {
+    if ( isset( $specs['hoverboards'] ) && is_array( $specs['hoverboards'] )
+        && ! empty( $specs['hoverboards']['motor']['power_nominal'] ?? null ) ) {
         return erh_format_hoverboard_card_specs( $specs );
     }
-    if ( isset( $specs['eucs'] ) && is_array( $specs['eucs'] ) ) {
+    if ( isset( $specs['eucs'] ) && is_array( $specs['eucs'] )
+        && ! empty( $specs['eucs']['motor']['power_nominal'] ?? null ) ) {
         return erh_format_euc_card_specs( $specs );
     }
 
@@ -696,7 +701,7 @@ function erh_format_escooter_card_specs( array $specs ): string {
     }
 
     // Battery capacity.
-    $battery = $get_value( 'battery_capacity', 'e-scooters.battery.capacity' );
+    $battery = $get_value( 'battery_capacity', 'battery.capacity', 'e-scooters.battery.capacity' );
     if ( $battery && is_numeric( $battery ) ) {
         $parts[] = round( (float) $battery ) . ' Wh';
     }
@@ -704,8 +709,10 @@ function erh_format_escooter_card_specs( array $specs ): string {
     // Motor power (peak preferred, then nominal).
     $motor = $get_value(
         'peak_motor_wattage',
+        'motor.power_peak',
         'e-scooters.motor.power_peak',
         'nominal_motor_wattage',
+        'motor.power_nominal',
         'e-scooters.motor.power_nominal'
     );
     if ( $motor && is_numeric( $motor ) ) {
@@ -713,25 +720,25 @@ function erh_format_escooter_card_specs( array $specs ): string {
     }
 
     // Weight.
-    $weight = $get_value( 'weight', 'e-scooters.dimensions.weight' );
+    $weight = $get_value( 'weight', 'dimensions.weight', 'e-scooters.dimensions.weight' );
     if ( $weight && is_numeric( $weight ) ) {
         $parts[] = round( (float) $weight ) . ' lbs';
     }
 
     // Max load (weight limit).
-    $max_load = $get_value( 'max_weight_capacity', 'e-scooters.dimensions.max_load' );
+    $max_load = $get_value( 'max_weight_capacity', 'dimensions.max_load', 'e-scooters.dimensions.max_load' );
     if ( $max_load && is_numeric( $max_load ) ) {
         $parts[] = round( (float) $max_load ) . ' lbs limit';
     }
 
     // Voltage.
-    $voltage = $get_value( 'voltage', 'e-scooters.battery.voltage' );
+    $voltage = $get_value( 'voltage', 'battery.voltage', 'e-scooters.battery.voltage' );
     if ( $voltage && is_numeric( $voltage ) ) {
         $parts[] = round( (float) $voltage ) . 'V';
     }
 
     // Tire type.
-    $tires = $get_value( 'tire_type', 'e-scooters.wheels.tire_type' );
+    $tires = $get_value( 'tire_type', 'wheels.tire_type', 'e-scooters.wheels.tire_type' );
     if ( $tires && is_string( $tires ) && ! empty( $tires ) ) {
         $parts[] = $tires;
     }

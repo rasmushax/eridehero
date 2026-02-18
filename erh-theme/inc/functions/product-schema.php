@@ -200,6 +200,85 @@ function erh_get_product_weight_for_schema( int $product_id, string $product_typ
 }
 
 /**
+ * Get key product specs as PropertyValue array for schema.org.
+ *
+ * Extracts commonly compared specs (top speed, range, battery, motor, weight)
+ * from flattened compare product specs for use in comparison schema.
+ *
+ * @param array $specs Flattened product specs from erh_get_compare_products().
+ * @return array Array of PropertyValue schema objects.
+ */
+function erh_get_key_specs_for_schema( array $specs ): array {
+	$properties = [];
+
+	// Top speed.
+	$top_speed = $specs['tested_top_speed']
+	          ?? $specs['manufacturer_top_speed']
+	          ?? erh_get_nested_spec( $specs, 'speed_and_class.top_assist_speed' )
+	          ?? null;
+	if ( $top_speed && is_numeric( $top_speed ) ) {
+		$properties[] = [
+			'@type'    => 'PropertyValue',
+			'name'     => 'Top Speed',
+			'value'    => (float) $top_speed,
+			'unitText' => 'mph',
+		];
+	}
+
+	// Range.
+	$range = $specs['tested_range']
+	      ?? $specs['manufacturer_range']
+	      ?? null;
+	if ( $range && is_numeric( $range ) ) {
+		$properties[] = [
+			'@type'    => 'PropertyValue',
+			'name'     => 'Range',
+			'value'    => (float) $range,
+			'unitText' => 'miles',
+		];
+	}
+
+	// Battery capacity.
+	$battery = erh_get_nested_spec( $specs, 'battery.capacity' )
+	        ?? erh_get_nested_spec( $specs, 'battery.battery_capacity' )
+	        ?? null;
+	if ( $battery && is_numeric( $battery ) ) {
+		$properties[] = [
+			'@type'    => 'PropertyValue',
+			'name'     => 'Battery Capacity',
+			'value'    => (float) $battery,
+			'unitText' => 'Wh',
+		];
+	}
+
+	// Motor power.
+	$motor = erh_get_nested_spec( $specs, 'motor.power_nominal' ) ?? null;
+	if ( $motor && is_numeric( $motor ) ) {
+		$properties[] = [
+			'@type'    => 'PropertyValue',
+			'name'     => 'Motor Power',
+			'value'    => (float) $motor,
+			'unitText' => 'W',
+		];
+	}
+
+	// Weight.
+	$weight = erh_get_nested_spec( $specs, 'dimensions.weight' )
+	       ?? erh_get_nested_spec( $specs, 'weight_and_capacity.weight' )
+	       ?? null;
+	if ( $weight && is_numeric( $weight ) ) {
+		$properties[] = [
+			'@type'    => 'PropertyValue',
+			'name'     => 'Weight',
+			'value'    => (float) $weight,
+			'unitText' => 'lbs',
+		];
+	}
+
+	return $properties;
+}
+
+/**
  * Add Product schema to Rank Math JSON-LD output on single product pages.
  *
  * @param array $data The Rank Math JSON-LD data.
@@ -215,7 +294,15 @@ add_filter( 'rank_math/json_ld', function( array $data ): array {
 	$product_name = get_the_title();
 	$product_type = erh_get_product_type( $product_id );
 	$permalink    = get_permalink( $product_id );
-	$excerpt      = get_the_excerpt( $product_id );
+
+	// Build description from key specs (products CPT has no WP excerpt/content).
+	$description = '';
+	if ( function_exists( 'erh_get_hero_key_specs' ) ) {
+		$key_specs = erh_get_hero_key_specs( $product_id, $product_type );
+		if ( ! empty( $key_specs ) ) {
+			$description = implode( ', ', array_filter( $key_specs ) );
+		}
+	}
 
 	// Get brand from taxonomy.
 	$brand       = '';
@@ -236,8 +323,11 @@ add_filter( 'rank_math/json_ld', function( array $data ): array {
 		'@id'         => $permalink . '#product',
 		'name'        => $product_name,
 		'url'         => $permalink,
-		'description' => $excerpt ?: wp_trim_words( get_the_content(), 50 ),
 	];
+
+	if ( $description ) {
+		$product_schema['description'] = $description;
+	}
 
 	// Add image.
 	if ( $image_url ) {
@@ -322,6 +412,64 @@ add_filter( 'rank_math/json_ld', function( array $data ): array {
 
 	// Add to Rank Math data.
 	$data['product'] = $product_schema;
+
+	// Replace RankMath's default BreadcrumbList with our 3-level version.
+	// Remove any existing BreadcrumbList entries first.
+	foreach ( $data as $key => $entity ) {
+		if ( isset( $entity['@type'] ) && $entity['@type'] === 'BreadcrumbList' ) {
+			unset( $data[ $key ] );
+		}
+	}
+
+	$finder_url     = function_exists( 'erh_get_finder_url' ) ? erh_get_finder_url( $product_id ) : '';
+	$category_label = function_exists( 'erh_get_product_type_short_name' )
+		? erh_get_product_type_short_name( $product_type ) . 's'
+		: $product_type;
+
+	$breadcrumb_items = [
+		[
+			'@type'    => 'ListItem',
+			'position' => 1,
+			'item'     => [
+				'@id'  => home_url( '/' ),
+				'name' => 'Home',
+			],
+		],
+	];
+
+	if ( $finder_url && $category_label ) {
+		$breadcrumb_items[] = [
+			'@type'    => 'ListItem',
+			'position' => 2,
+			'item'     => [
+				'@id'  => $finder_url,
+				'name' => $category_label,
+			],
+		];
+		$breadcrumb_items[] = [
+			'@type'    => 'ListItem',
+			'position' => 3,
+			'item'     => [
+				'@id'  => $permalink,
+				'name' => $product_name,
+			],
+		];
+	} else {
+		$breadcrumb_items[] = [
+			'@type'    => 'ListItem',
+			'position' => 2,
+			'item'     => [
+				'@id'  => $permalink,
+				'name' => $product_name,
+			],
+		];
+	}
+
+	$data['breadcrumb'] = [
+		'@type'           => 'BreadcrumbList',
+		'@id'             => $permalink . '#breadcrumb',
+		'itemListElement' => $breadcrumb_items,
+	];
 
 	return $data;
 }, 20 );

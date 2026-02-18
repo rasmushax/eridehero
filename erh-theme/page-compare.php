@@ -524,30 +524,62 @@ window.erhData.specConfig = <?php echo wp_json_encode( \ERH\Config\SpecConfig::e
 // Schema.org JSON-LD for curated comparisons only (indexed pages).
 // Uses US prices since Google crawls as US user.
 if ( $is_curated && ! empty( $compare_products ) ) :
-	$schema_items = array_map( function( $product, $index ) {
-		$product_id = (int) $product['id'];
-
-		$item = [
-			'@type'    => 'ListItem',
-			'position' => $index + 1,
-			'item'     => [
-				'@type' => 'Product',
-				'name'  => $product['name'] ?? '',
-				'image' => $product['thumbnail'] ?? '',
-				'url'   => $product['url'] ?? '',
-			],
+	$schema_items = array_map( function( $product, $index ) use ( $compare_products ) {
+		$product_id     = (int) $product['id'];
+		$product_schema = [
+			'@type' => 'Product',
+			'name'  => $product['name'] ?? '',
+			'image' => $product['thumbnail'] ?? '',
+			'url'   => $product['url'] ?? '',
 		];
+
+		// Add brand from taxonomy.
+		$brand_terms = get_the_terms( $product_id, 'brand' );
+		if ( $brand_terms && ! is_wp_error( $brand_terms ) ) {
+			$product_schema['brand'] = [
+				'@type' => 'Brand',
+				'name'  => $brand_terms[0]->name,
+			];
+		}
+
+		// Add category.
+		if ( ! empty( $product['product_type'] ) ) {
+			$product_schema['category'] = $product['product_type'];
+		}
+
+		// Add key specs as additionalProperty.
+		if ( ! empty( $product['specs'] ) ) {
+			$properties = erh_get_key_specs_for_schema( $product['specs'] );
+			if ( ! empty( $properties ) ) {
+				$product_schema['additionalProperty'] = $properties;
+			}
+		}
+
+		// Add isSimilarTo referencing other products in the comparison.
+		$similar = [];
+		foreach ( $compare_products as $other_idx => $other ) {
+			if ( $other_idx !== $index ) {
+				$similar[] = [
+					'@type' => 'Product',
+					'name'  => $other['name'] ?? '',
+					'url'   => $other['url'] ?? '',
+				];
+			}
+		}
+		if ( ! empty( $similar ) ) {
+			$product_schema['isSimilarTo'] = count( $similar ) === 1 ? $similar[0] : $similar;
+		}
 
 		// Get all US offers from HFT for schema.
 		$offers = erh_get_product_offers_for_schema( $product_id );
 
 		if ( ! empty( $offers ) ) {
 			if ( count( $offers ) === 1 ) {
-				$item['item']['offers'] = $offers[0];
+				$product_schema['offers'] = $offers[0];
 			} else {
 				// Multiple offers - use AggregateOffer.
 				$prices = array_column( $offers, 'price' );
-				$item['item']['offers'] = [
+				$product_schema['offers'] = [
 					'@type'         => 'AggregateOffer',
 					'lowPrice'      => min( $prices ),
 					'highPrice'     => max( $prices ),
@@ -558,7 +590,11 @@ if ( $is_curated && ! empty( $compare_products ) ) :
 			}
 		}
 
-		return $item;
+		return [
+			'@type'    => 'ListItem',
+			'position' => $index + 1,
+			'item'     => $product_schema,
+		];
 	}, $compare_products, array_keys( $compare_products ) );
 
 	// Build comparison title.

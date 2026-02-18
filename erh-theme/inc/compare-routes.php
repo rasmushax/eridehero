@@ -936,53 +936,305 @@ function erh_compare_rankmath_robots( $robots ): array {
 		return $robots;
 	}
 
-	// Allow curated comparisons to be indexed (editorial content).
+	// Curated comparisons (CPT) - explicitly index (editorial content with SEO value).
 	if ( is_singular( 'comparison' ) ) {
+		$robots['index']  = 'index';
+		$robots['follow'] = 'follow';
+		unset( $robots['noindex'], $robots['nofollow'] );
 		return $robots;
 	}
 
-	// Allow hub page to be indexed.
+	// Hub and category pages - explicitly index (useful landing pages).
 	$compare_slugs = get_query_var( 'compare_slugs', '' );
 	$products      = get_query_var( 'products', '' );
 	if ( empty( $compare_slugs ) && empty( $products ) ) {
-		// No products specified = hub or category page, allow indexing.
+		$robots['index']  = 'index';
+		$robots['follow'] = 'follow';
+		unset( $robots['noindex'], $robots['nofollow'] );
 		return $robots;
 	}
 
 	// Dynamic comparison with products - noindex to avoid thin content.
 	$robots['index']  = 'noindex';
 	$robots['follow'] = 'follow'; // Still follow internal links.
+	unset( $robots['nofollow'] );
 
 	return $robots;
 }
 add_filter( 'rank_math/frontend/robots', 'erh_compare_rankmath_robots', 20 );
 
 /**
- * Remove RankMath breadcrumbs on compare pages (we add our own with full category hierarchy).
+ * Set canonical URL for compare pages.
  *
- * @param array $data The JSON-LD data.
+ * RankMath may not detect the correct canonical for virtual pages (hub, category)
+ * or for curated comparisons loaded via custom routing.
+ *
+ * @param string $canonical The canonical URL.
+ * @return string Modified canonical URL.
+ */
+function erh_compare_rankmath_canonical( string $canonical ): string {
+	if ( ! erh_is_compare_page() ) {
+		return $canonical;
+	}
+
+	return erh_compare_get_current_url();
+}
+add_filter( 'rank_math/frontend/canonical', 'erh_compare_rankmath_canonical', 20 );
+
+/**
+ * Get the canonical URL for the current compare page.
+ *
+ * @return string Full URL for the current compare page.
+ */
+function erh_compare_get_current_url(): string {
+	// Curated comparison CPT.
+	if ( is_singular( 'comparison' ) ) {
+		return get_permalink();
+	}
+
+	// Category page.
+	$category_slug = get_query_var( 'compare_category', '' );
+	if ( ! empty( $category_slug ) ) {
+		return home_url( '/compare/' . $category_slug . '/' );
+	}
+
+	// Dynamic comparison (slug-vs-slug).
+	$compare_slugs = get_query_var( 'compare_slugs', '' );
+	if ( ! empty( $compare_slugs ) ) {
+		$slugs = explode( ',', $compare_slugs );
+		return home_url( '/compare/' . implode( '-vs-', $slugs ) . '/' );
+	}
+
+	// Hub page.
+	return home_url( '/compare/' );
+}
+
+/**
+ * Enhance RankMath schema for compare pages.
+ *
+ * - Removes RankMath's BreadcrumbList (templates add their own with category hierarchy).
+ * - Fixes empty URL and relative @id on CollectionPage/WebPage.
+ * - Changes CollectionPage → WebPage for individual comparisons.
+ * - Adds page description to schema.
+ * - Adds BreadcrumbList for hub page (only page without template-level breadcrumbs).
+ *
+ * @param array $data The JSON-LD data from RankMath.
  * @return array Modified data.
  */
-function erh_compare_remove_rankmath_breadcrumbs( array $data ): array {
+function erh_compare_enhance_schema( array $data ): array {
 	if ( ! erh_is_compare_page() ) {
 		return $data;
 	}
 
-	// RankMath calls this filter per schema type. If BreadcrumbList is a key, remove it.
-	if ( isset( $data['BreadcrumbList'] ) ) {
-		unset( $data['BreadcrumbList'] );
+	$current_url = erh_compare_get_current_url();
+	$description = erh_compare_rankmath_description( '' );
+
+	// Determine page type using URL (query vars may not be reliable in filter context).
+	$request_uri   = $_SERVER['REQUEST_URI'] ?? '';
+	$is_individual = (bool) preg_match( '#/compare/[a-z0-9].*-vs-[a-z0-9]#i', $request_uri )
+	              || ( isset( $_GET['products'] ) && ! empty( $_GET['products'] ) );
+	$is_hub        = (bool) preg_match( '#/compare/?(\?|$)#', $request_uri );
+
+	// --- Handle @graph structure (newer RankMath versions) ---
+	if ( isset( $data['@graph'] ) && is_array( $data['@graph'] ) ) {
+		foreach ( $data['@graph'] as $idx => &$item ) {
+			$type = $item['@type'] ?? '';
+
+			// Remove BreadcrumbList (templates add their own).
+			if ( $type === 'BreadcrumbList' ) {
+				unset( $data['@graph'][ $idx ] );
+				continue;
+			}
+
+			// Fix CollectionPage or WebPage.
+			if ( in_array( $type, [ 'CollectionPage', 'WebPage' ], true ) ) {
+				$item['url'] = $current_url;
+				$item['@id'] = $current_url . '#webpage';
+
+				if ( $description ) {
+					$item['description'] = $description;
+				}
+
+				// Change CollectionPage → WebPage for individual comparisons.
+				if ( $type === 'CollectionPage' && $is_individual ) {
+					$item['@type'] = 'WebPage';
+				}
+			}
+		}
+		unset( $item );
+		$data['@graph'] = array_values( $data['@graph'] );
+
+		// Add BreadcrumbList for hub page (category + curated templates add their own inline).
+		if ( $is_hub ) {
+			$data['@graph'][] = [
+				'@type'           => 'BreadcrumbList',
+				'itemListElement' => [
+					[
+						'@type'    => 'ListItem',
+						'position' => 1,
+						'name'     => 'Home',
+						'item'     => home_url( '/' ),
+					],
+					[
+						'@type'    => 'ListItem',
+						'position' => 2,
+						'name'     => 'Compare',
+					],
+				],
+			];
+		}
+
+		return $data;
 	}
 
-	// Also handle @graph structure (some RankMath versions).
-	if ( isset( $data['@graph'] ) && is_array( $data['@graph'] ) ) {
-		$data['@graph'] = array_values(
-			array_filter(
-				$data['@graph'],
-				fn( $item ) => ( $item['@type'] ?? '' ) !== 'BreadcrumbList'
-			)
-		);
+	// --- Handle flat structure (older RankMath versions) ---
+
+	// Remove BreadcrumbList.
+	unset( $data['BreadcrumbList'] );
+
+	// Fix CollectionPage.
+	if ( isset( $data['CollectionPage'] ) ) {
+		$data['CollectionPage']['url']  = $current_url;
+		$data['CollectionPage']['@id']  = $current_url . '#webpage';
+
+		if ( $description ) {
+			$data['CollectionPage']['description'] = $description;
+		}
+
+		// Change to WebPage for individual comparisons.
+		if ( $is_individual ) {
+			$data['CollectionPage']['@type'] = 'WebPage';
+			$data['WebPage'] = $data['CollectionPage'];
+			unset( $data['CollectionPage'] );
+		}
+	}
+
+	// Fix WebPage (if already present or just moved from CollectionPage).
+	if ( isset( $data['WebPage'] ) ) {
+		$data['WebPage']['url']  = $current_url;
+		$data['WebPage']['@id']  = $current_url . '#webpage';
+
+		if ( $description && empty( $data['WebPage']['description'] ) ) {
+			$data['WebPage']['description'] = $description;
+		}
+
+		// RankMath may set @type to CollectionPage inside a WebPage key.
+		// Force WebPage for individual comparisons.
+		if ( $is_individual && ( $data['WebPage']['@type'] ?? '' ) === 'CollectionPage' ) {
+			$data['WebPage']['@type'] = 'WebPage';
+		}
+	}
+
+	// Add BreadcrumbList for hub page.
+	if ( $is_hub ) {
+		$data['BreadcrumbList'] = [
+			'@type'           => 'BreadcrumbList',
+			'itemListElement' => [
+				[
+					'@type'    => 'ListItem',
+					'position' => 1,
+					'name'     => 'Home',
+					'item'     => home_url( '/' ),
+				],
+				[
+					'@type'    => 'ListItem',
+					'position' => 2,
+					'name'     => 'Compare',
+				],
+			],
+		];
 	}
 
 	return $data;
 }
-add_filter( 'rank_math/json_ld', 'erh_compare_remove_rankmath_breadcrumbs', 20 );
+add_filter( 'rank_math/json_ld', 'erh_compare_enhance_schema', 20 );
+
+/**
+ * Ensure comparison CPT is always included in RankMath sitemap.
+ *
+ * Overrides admin settings to guarantee curated comparisons appear.
+ *
+ * @param bool   $exclude Whether to exclude the post type.
+ * @param string $type    Post type name.
+ * @return bool False for comparison, unchanged for others.
+ */
+function erh_compare_sitemap_include_cpt( bool $exclude, string $type ): bool {
+	if ( 'comparison' === $type ) {
+		return false;
+	}
+	return $exclude;
+}
+add_filter( 'rank_math/sitemap/exclude_post_type', 'erh_compare_sitemap_include_cpt', 10, 2 );
+
+/**
+ * Register custom sitemap provider for virtual compare pages.
+ *
+ * Creates a 'compare-sitemap.xml' containing the hub and category landing pages
+ * which are virtual (no WP post backing them) and wouldn't otherwise appear.
+ *
+ * @param array $providers Registered sitemap providers.
+ * @return array Modified providers.
+ */
+function erh_compare_sitemap_provider( array $providers ): array {
+	if ( ! interface_exists( 'RankMath\\Sitemap\\Providers\\Provider' ) ) {
+		return $providers;
+	}
+
+	$providers['compare'] = new class implements \RankMath\Sitemap\Providers\Provider {
+
+		/**
+		 * Check if this provider handles a given sitemap type.
+		 *
+		 * @param string $type Sitemap type.
+		 * @return bool
+		 */
+		public function handles_type( $type ) {
+			return 'compare' === $type;
+		}
+
+		/**
+		 * Get sitemap index entry.
+		 *
+		 * @param int $max_entries Maximum entries per sitemap.
+		 * @return array Index entries.
+		 */
+		public function get_index_links( $max_entries ) {
+			return [
+				[
+					'loc'     => \RankMath\Sitemap\Router::get_base_url( 'compare-sitemap.xml' ),
+					'lastmod' => gmdate( 'Y-m-d\TH:i:s+00:00' ),
+				],
+			];
+		}
+
+		/**
+		 * Get URLs for the sitemap.
+		 *
+		 * @param string $type         Sitemap type.
+		 * @param int    $max_entries  Maximum entries.
+		 * @param int    $current_page Current page number.
+		 * @return array Sitemap links.
+		 */
+		public function get_sitemap_links( $type, $max_entries, $current_page ) {
+			$links = [
+				[
+					'loc' => home_url( '/compare/' ),
+					'mod' => gmdate( 'Y-m-d\TH:i:s+00:00' ),
+				],
+			];
+
+			$categories = erh_compare_category_map();
+			foreach ( $categories as $slug => $cat ) {
+				$links[] = [
+					'loc' => home_url( '/compare/' . $slug . '/' ),
+					'mod' => gmdate( 'Y-m-d\TH:i:s+00:00' ),
+				];
+			}
+
+			return $links;
+		}
+	};
+
+	return $providers;
+}
+add_filter( 'rank_math/sitemap/providers', 'erh_compare_sitemap_provider' );
