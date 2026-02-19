@@ -2254,10 +2254,7 @@
    Single-Product Compare View
    ============================================================================= */
 
-/* Header: 2-column grid when single product */
-.compare-page--single .compare-header-products {
-    grid-template-columns: 1fr 1fr;
-}
+/* Header: cards use default grid (repeat(5, 1fr)), consistent with 2+ product view */
 
 /* Placeholder product card */
 .compare-product--placeholder {
@@ -2343,16 +2340,8 @@
     gap: var(--space-2);
 }
 
-/* Mobile: hide placeholder column, show only product data */
+/* Mobile: smaller placeholder card */
 @media (max-width: 768px) {
-    .compare-page--single .compare-header-products {
-        grid-template-columns: 1fr;
-    }
-
-    .compare-product--placeholder {
-        min-height: auto;
-    }
-
     .compare-product--placeholder .compare-product-add-btn {
         min-height: 80px;
     }
