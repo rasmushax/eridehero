@@ -72,12 +72,10 @@ if ( empty( $products ) ) {
 
 			<?php if ( $is_single_product ) : ?>
 				<div class="compare-product compare-product--placeholder">
-					<div class="compare-product-placeholder-inner">
-						<button class="compare-product-add-btn" data-open-add-modal>
-							<?php erh_the_icon( 'plus', '', array( 'width' => '24', 'height' => '24' ) ); ?>
-							<span>Add a product to compare</span>
-						</button>
-					</div>
+					<button class="compare-product-add-btn" data-open-add-modal>
+						<?php erh_the_icon( 'plus', '', array( 'width' => '24', 'height' => '24' ) ); ?>
+						<span>Add</span>
+					</button>
 				</div>
 			<?php else : ?>
 				<div class="compare-product compare-product--add-wrap">

@@ -1198,12 +1198,10 @@ function renderProducts() {
     // Multi product: small "Add" button
     const addCard = isSingle ? `
         <div class="compare-product compare-product--placeholder">
-            <div class="compare-product-placeholder-inner">
-                <button class="compare-product-add-btn" data-open-add-modal>
-                    <svg class="icon" width="24" height="24"><use href="#icon-plus"></use></svg>
-                    <span>Add a product to compare</span>
-                </button>
-            </div>
+            <button class="compare-product-add-btn" data-open-add-modal>
+                <svg class="icon" width="24" height="24"><use href="#icon-plus"></use></svg>
+                <span>Add</span>
+            </button>
         </div>
     ` : `
         <div class="compare-product compare-product--add-wrap">
