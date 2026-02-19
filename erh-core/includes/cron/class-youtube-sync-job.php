@@ -217,15 +217,79 @@ class YouTubeSyncJob implements CronJobInterface {
                 ?? $thumbnails['default']['url']
                 ?? '';
 
+            // Sideload thumbnail to media library (or reuse existing).
+            $local_thumbnail = $this->sideload_thumbnail($video_id, $thumbnail_url);
+
             $videos[] = [
                 'id'        => $video_id,
                 'title'     => $snippet['title'] ?? '',
-                'thumbnail' => $thumbnail_url,
+                'thumbnail' => $local_thumbnail ?: $thumbnail_url,
                 'url'       => 'https://www.youtube.com/watch?v=' . $video_id,
             ];
         }
 
         return $videos;
+    }
+
+    /**
+     * Sideload a YouTube thumbnail into the media library.
+     *
+     * Reuses an existing attachment if one already exists for this video ID.
+     *
+     * @param string $video_id      YouTube video ID.
+     * @param string $thumbnail_url Remote thumbnail URL.
+     * @return string Local attachment URL, or empty string on failure.
+     */
+    private function sideload_thumbnail(string $video_id, string $thumbnail_url): string {
+        if (empty($thumbnail_url)) {
+            return '';
+        }
+
+        // Check if we already have this thumbnail.
+        $existing = get_posts([
+            'post_type'   => 'attachment',
+            'meta_key'    => '_erh_youtube_video_id',
+            'meta_value'  => $video_id,
+            'numberposts' => 1,
+            'fields'      => 'ids',
+        ]);
+
+        if (!empty($existing)) {
+            $url = wp_get_attachment_url($existing[0]);
+            return $url ?: '';
+        }
+
+        // Load required files for media sideloading.
+        if (!function_exists('media_handle_sideload')) {
+            require_once ABSPATH . 'wp-admin/includes/media.php';
+            require_once ABSPATH . 'wp-admin/includes/file.php';
+            require_once ABSPATH . 'wp-admin/includes/image.php';
+        }
+
+        // Download the remote image to a temp file.
+        $tmp = download_url($thumbnail_url);
+        if (is_wp_error($tmp)) {
+            error_log('[ERH YouTube] Failed to download thumbnail for ' . $video_id . ': ' . $tmp->get_error_message());
+            return '';
+        }
+
+        $file_array = [
+            'name'     => 'youtube-' . $video_id . '.jpg',
+            'tmp_name' => $tmp,
+        ];
+
+        $attachment_id = media_handle_sideload($file_array, 0, 'YouTube thumbnail: ' . $video_id);
+
+        if (is_wp_error($attachment_id)) {
+            @unlink($tmp);
+            error_log('[ERH YouTube] Failed to sideload thumbnail for ' . $video_id . ': ' . $attachment_id->get_error_message());
+            return '';
+        }
+
+        // Store the video ID so we can find this attachment next sync.
+        update_post_meta($attachment_id, '_erh_youtube_video_id', $video_id);
+
+        return wp_get_attachment_url($attachment_id) ?: '';
     }
 
     /**
