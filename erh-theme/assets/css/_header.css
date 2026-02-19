@@ -363,6 +363,10 @@
     transition: color var(--transition-fast);
 }
 
+.mega-content {
+    line-height: 1.4;
+}
+
 .mega-content span:not(.mega-item-title) {
     font-size: var(--text-tiny);
     color: var(--color-body);
