@@ -216,7 +216,7 @@ if ( $has_prices ) {
     get_template_part( 'template-parts/components/sticky-buy-bar', null, array(
         'product_id'   => $product_id,
         'product_name' => get_the_title( $product_id ),
-        'compare_url'  => home_url( '/' . $category_slug . '/compare/' ),
+        'compare_url'  => home_url( '/compare/' ),
     ) );
 }
 ?>
