@@ -321,6 +321,7 @@
 .listicle-item-price-bar .listicle-item-retailer-logo img {
     height: 100%;
     width: auto;
+    mix-blend-mode: multiply;
 }
 
 .listicle-item-price-bar .listicle-item-retailer-name-text {
@@ -944,6 +945,7 @@
     max-width: 100%;
     max-height: 100%;
     object-fit: contain;
+    mix-blend-mode: multiply;
 }
 
 .listicle-item-retailer-logo-text {

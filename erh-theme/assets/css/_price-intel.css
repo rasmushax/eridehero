@@ -488,6 +488,7 @@
     height: 24px;
     object-fit: contain;
     flex-shrink: 0;
+    mix-blend-mode: multiply;
 }
 
 .price-intel-retailer-info {

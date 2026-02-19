@@ -108,8 +108,8 @@ if ( $tax_slug ) {
 
 				<!-- Intro -->
 				<div class="coupons-intro">
-					<p>Save on your next <?php echo esc_html( strtolower( $category_name ) ); ?> with exclusive coupon codes and discounts from top retailers.
-						We verify every code and update this page regularly so you always have working promo codes.</p>
+					<p>Save money on your next <?php echo esc_html( strtolower( $category_type ) ); ?> with verified coupon codes and exclusive discounts for <?php echo esc_html( $month_year ); ?>.
+						We update this page weekly so you always have working codes from trusted retailers.</p>
 				</div>
 
 				<?php if ( count( $grouped ) > 1 ) : ?>
