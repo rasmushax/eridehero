@@ -161,23 +161,26 @@ function erh_the_breadcrumbs(): void {
     if ( $is_review ) {
         $reviews_url = erh_get_reviews_page_url( $category_config );
         $items[] = [
-            'label'  => 'Reviews',
-            'url'    => $reviews_url,
-            'schema' => erh_is_canonical_reviews_url( $category_config ),
+            'label'   => 'Reviews',
+            'url'     => $reviews_url,
+            'is_link' => true,
+            'schema'  => erh_is_canonical_reviews_url( $category_config ),
         ];
     } elseif ( $is_guide ) {
         $guides_url = erh_get_guides_page_url( $category_config );
         $items[] = [
-            'label'  => 'Buying Guides',
-            'url'    => $guides_url,
-            'schema' => false, // No dedicated canonical guide pages yet.
+            'label'   => 'Buying Guides',
+            'url'     => $guides_url,
+            'is_link' => true,
+            'schema'  => false, // No dedicated canonical guide pages yet.
         ];
     } else {
         $articles_url = erh_get_articles_page_url( $category_config );
         $items[] = [
-            'label'  => 'Articles',
-            'url'    => $articles_url,
-            'schema' => false, // Filtered view, not canonical.
+            'label'   => 'Articles',
+            'url'     => $articles_url,
+            'is_link' => true,
+            'schema'  => false, // Filtered view, not canonical.
         ];
     }
 
