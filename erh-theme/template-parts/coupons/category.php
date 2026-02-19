@@ -115,20 +115,20 @@ if ( $tax_slug ) {
 
 				<?php if ( count( $grouped ) > 1 ) : ?>
 					<!-- Retailer Quick Jump -->
-					<nav class="erh-jumplinks coupons-jumplinks" aria-label="Jump to retailer">
-						<span class="erh-jumplinks-label">Jump to:</span>
-						<ul class="erh-jumplinks-list">
+					<nav class="coupons-jumplinks" aria-label="Jump to retailer">
+						<span class="coupons-jumplinks-label">Retailers:</span>
+						<ul class="coupons-jumplinks-list">
 							<?php foreach ( $grouped as $group ) :
 								$name = $group['retailer']['name'] ?? 'Unknown';
 								$anchor = sanitize_title( $name );
 							?>
-								<li><a href="#<?php echo esc_attr( $anchor ); ?>" class="erh-jumplinks-link"><?php echo esc_html( $name ); ?></a></li>
+								<li><a href="#<?php echo esc_attr( $anchor ); ?>" class="coupons-jumplink"><?php echo esc_html( $name ); ?></a></li>
 							<?php endforeach; ?>
 						</ul>
 					</nav>
 				<?php endif; ?>
 
-				<!-- Coupon Cards -->
+				<!-- Coupon Groups -->
 				<div class="coupons-list">
 					<?php if ( empty( $grouped ) ) : ?>
 						<div class="coupons-empty">
@@ -136,11 +136,13 @@ if ( $tax_slug ) {
 						</div>
 					<?php else : ?>
 						<?php foreach ( $grouped as $group ) :
-							$retailer = $group['retailer'];
-							$retailer_name = $retailer['name'] ?? 'Unknown';
+							$retailer       = $group['retailer'];
+							$retailer_name  = $retailer['name'] ?? 'Unknown';
 							$retailer_anchor = sanitize_title( $retailer_name );
-							$logo_url = $retailer['logo_url'] ?? null;
-							$affiliate_url = $retailer['affiliate_url'] ?? '#';
+							$logo_url       = $retailer['logo_url'] ?? null;
+							$affiliate_url  = $retailer['affiliate_url'] ?? '#';
+							$domain         = $retailer['domain'] ?? '';
+							$group_count    = count( $group['coupons'] );
 						?>
 							<div class="coupon-group" id="<?php echo esc_attr( $retailer_anchor ); ?>">
 								<div class="coupon-group-header">
@@ -153,10 +155,19 @@ if ( $tax_slug ) {
 											decoding="async"
 										>
 									<?php endif; ?>
-									<h2 class="coupon-group-name"><?php echo esc_html( $retailer_name ); ?></h2>
+									<div class="coupon-group-info">
+										<h2 class="coupon-group-name"><?php echo esc_html( $retailer_name ); ?></h2>
+										<?php if ( $domain ) : ?>
+											<a href="<?php echo esc_url( $affiliate_url ); ?>" class="coupon-group-domain" target="_blank" rel="sponsored noopener">
+												<?php echo esc_html( $domain ); ?>
+												<?php erh_the_icon( 'external-link' ); ?>
+											</a>
+										<?php endif; ?>
+									</div>
+									<span class="coupon-group-count"><?php printf( esc_html( _n( '%d code', '%d codes', $group_count, 'erh-core' ) ), $group_count ); ?></span>
 								</div>
 
-								<div class="coupon-group-cards">
+								<div class="coupon-group-items">
 									<?php foreach ( $group['coupons'] as $coupon ) :
 										$expires_text = '';
 										if ( $coupon['expires'] ) {
@@ -164,14 +175,14 @@ if ( $tax_slug ) {
 										}
 										$coupon_affiliate_url = $coupon['retailer']['affiliate_url'] ?? $affiliate_url;
 									?>
-										<div class="coupon-card">
-											<div class="coupon-card-main">
-												<div class="coupon-card-info">
+										<div class="coupon-item">
+											<div class="coupon-item-main">
+												<div class="coupon-item-info">
 													<?php if ( $coupon['description'] ) : ?>
-														<p class="coupon-card-description"><?php echo esc_html( $coupon['description'] ); ?></p>
+														<p class="coupon-item-description"><?php echo esc_html( $coupon['description'] ); ?></p>
 													<?php endif; ?>
 
-													<div class="coupon-card-meta">
+													<div class="coupon-item-meta">
 														<?php if ( $coupon['type'] === 'percent' && $coupon['value'] ) : ?>
 															<span class="coupon-badge coupon-badge--percent"><?php echo esc_html( $coupon['value'] ); ?>% off</span>
 														<?php elseif ( $coupon['type'] === 'fixed' && $coupon['value'] ) : ?>
@@ -194,7 +205,7 @@ if ( $tax_slug ) {
 													</div>
 												</div>
 
-												<div class="coupon-card-action">
+												<div class="coupon-item-action">
 													<button
 														type="button"
 														class="coupon-get-code-btn"
@@ -208,7 +219,7 @@ if ( $tax_slug ) {
 											</div>
 
 											<?php if ( $coupon['terms'] ) : ?>
-												<div class="coupon-card-terms">
+												<div class="coupon-item-terms">
 													<details>
 														<summary>Terms & conditions</summary>
 														<p><?php echo esc_html( $coupon['terms'] ); ?></p>
