@@ -187,6 +187,23 @@ class Coupon {
                     'required'     => 0,
                     'rows'         => 3,
                 ],
+                [
+                    'key'           => 'field_coupon_categories',
+                    'label'         => 'Category Limit',
+                    'name'          => 'coupon_categories',
+                    'type'          => 'checkbox',
+                    'instructions'  => 'Optionally limit this coupon to specific product categories. Leave empty to auto-detect from scraper products.',
+                    'required'      => 0,
+                    'choices'       => [
+                        'escooter'    => 'Electric Scooters',
+                        'ebike'       => 'Electric Bikes',
+                        'eskateboard' => 'Electric Skateboards',
+                        'euc'         => 'Electric Unicycles',
+                        'hoverboard'  => 'Hoverboards',
+                    ],
+                    'layout'        => 'horizontal',
+                    'return_format' => 'value',
+                ],
             ],
             'location' => [
                 [
@@ -447,6 +464,16 @@ class Coupon {
                 } else {
                     echo esc_html__('Specific (none set)', 'erh-core');
                 }
+
+                // Show category limit if set.
+                $coupon_cats = get_field('coupon_categories', $post_id);
+                if (!empty($coupon_cats) && is_array($coupon_cats)) {
+                    $cat_labels = array_map(function (string $key): string {
+                        $cat = CategoryConfig::get_by_key($key);
+                        return $cat['name'] ?? $key;
+                    }, $coupon_cats);
+                    printf('<br><small style="color:#72777c;">%s only</small>', esc_html(implode(', ', $cat_labels)));
+                }
                 break;
 
             case 'expires':
@@ -535,6 +562,14 @@ class Coupon {
             // Skip expired coupons.
             if (self::is_expired($coupon->ID)) {
                 continue;
+            }
+
+            // If manual category limit is set, check it before the scraper query.
+            $coupon_categories = get_field('coupon_categories', $coupon->ID);
+            if (!empty($coupon_categories) && is_array($coupon_categories)) {
+                if (!in_array($category_key, $coupon_categories, true)) {
+                    continue;
+                }
             }
 
             $scraper_id = get_field('coupon_scraper_id', $coupon->ID);
