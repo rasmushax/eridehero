@@ -86,7 +86,7 @@ $toc_items = erh_get_toc_items( $product_id, array(
             <!-- Title Row -->
             <div class="review-title-row">
                 <div class="review-title-content">
-                    <?php erh_review_breadcrumb( $category_slug, $category_name ); ?>
+                    <?php erh_the_breadcrumbs(); ?>
                     <h1 class="review-title"><?php the_title(); ?></h1>
                 </div>
             </div>

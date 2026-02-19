@@ -27,9 +27,7 @@ $toc_items = erh_get_toc_from_content( $post_id );
             <!-- Title Row -->
             <div class="article-title-row">
                 <div class="article-title-content">
-                    <?php if ( function_exists( 'erh_the_breadcrumbs' ) ) : ?>
-                        <?php erh_the_breadcrumbs(); ?>
-                    <?php endif; ?>
+                    <?php erh_the_breadcrumbs(); ?>
                     <h1 class="article-title"><?php the_title(); ?></h1>
                 </div>
             </div>

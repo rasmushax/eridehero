@@ -265,29 +265,12 @@ if ( $tax_slug ) {
 
 <?php
 // Breadcrumb Schema.
-$breadcrumb_schema = [
-	'@context'        => 'https://schema.org',
-	'@type'           => 'BreadcrumbList',
-	'itemListElement' => [
-		[
-			'@type'    => 'ListItem',
-			'position' => 1,
-			'name'     => $category['name'],
-			'item'     => home_url( '/' . $category_slug . '/' ),
-		],
-		[
-			'@type'    => 'ListItem',
-			'position' => 2,
-			'name'     => 'Coupons',
-		],
-	],
+$breadcrumb_items = [
+	[ 'label' => $category['name'], 'url' => home_url( '/' . $category_slug . '/' ) ],
+	[ 'label' => 'Coupons' ],
 ];
-?>
-<script type="application/ld+json">
-<?php echo wp_json_encode( $breadcrumb_schema, JSON_UNESCAPED_SLASHES ); ?>
-</script>
+erh_breadcrumb_schema( $breadcrumb_items );
 
-<?php
 get_footer();
 ?>
 <script>
