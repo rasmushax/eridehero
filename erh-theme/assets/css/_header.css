@@ -34,6 +34,24 @@
     transition: transform 0.3s ease, background-color 0.3s ease, box-shadow 0.3s ease;
 }
 
+/* Mobile menu open: header must be above menu overlay so close button is clickable */
+.menu-open .header:not(.header--fixed) {
+    position: relative;
+}
+
+.menu-open .header {
+    z-index: var(--z-modal);
+}
+
+/* Search active: header must be above mobile ToC (z-mobile-menu: 1010) */
+.header:has(.search-dropdown.active):not(.header--fixed) {
+    position: relative;
+}
+
+.header:has(.search-dropdown.active) {
+    z-index: var(--z-search-dropdown);
+}
+
 .header--hidden {
     transform: translateY(-100%);
 }
