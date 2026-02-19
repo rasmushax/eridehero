@@ -122,6 +122,11 @@
     transform: translateY(0);
 }
 
+/* Add bottom offset so the fixed bar doesn't obscure the footer */
+body:has(.sticky-buy-bar.is-visible) {
+    padding-bottom: 80px;
+}
+
 .sticky-buy-bar-inner {
     display: flex;
     align-items: center;
@@ -155,21 +160,19 @@
     min-width: 0;
 }
 
-.sticky-buy-bar-product-link {
-    display: flex;
-    align-items: center;
-    gap: var(--space-3);
-    text-decoration: none;
-    min-width: 0;
+.sticky-buy-bar-thumb-link {
+    flex-shrink: 0;
 }
 
 .sticky-buy-bar-name {
     font-size: var(--text-sm);
     font-weight: var(--font-semibold);
     color: var(--color-dark);
+    text-decoration: none;
     white-space: nowrap;
     overflow: hidden;
     text-overflow: ellipsis;
+    display: block;
 }
 
 .sticky-buy-bar-actions {

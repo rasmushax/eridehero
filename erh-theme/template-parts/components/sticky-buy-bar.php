@@ -49,15 +49,15 @@ if ( empty( $thumbnail_url ) ) {
     <div class="sticky-buy-bar-inner">
         <!-- Left: Product info + action links -->
         <div class="sticky-buy-bar-left">
-            <a href="<?php echo esc_url( get_permalink( $product_id ) ); ?>" class="sticky-buy-bar-product-link">
-                <?php if ( $thumbnail_url ) : ?>
+            <?php if ( $thumbnail_url ) : ?>
+                <a href="<?php echo esc_url( get_permalink( $product_id ) ); ?>" class="sticky-buy-bar-thumb-link">
                     <img src="<?php echo esc_url( $thumbnail_url ); ?>"
                          alt=""
                          class="sticky-buy-bar-img">
-                <?php endif; ?>
-                <span class="sticky-buy-bar-name"><?php echo esc_html( $product_name ); ?></span>
-            </a>
+                </a>
+            <?php endif; ?>
             <div class="sticky-buy-bar-info">
+                <a href="<?php echo esc_url( get_permalink( $product_id ) ); ?>" class="sticky-buy-bar-name"><?php echo esc_html( $product_name ); ?></a>
                 <div class="sticky-buy-bar-actions">
                     <button type="button" class="sticky-buy-bar-link" data-modal-trigger="price-alert-modal">
                         <?php erh_the_icon( 'bell' ); ?>
