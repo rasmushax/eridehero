@@ -53,11 +53,20 @@ get_header();
 					</span>
 					<div class="archive-sort">
 						<label for="sort-select" class="sr-only"><?php esc_html_e( 'Sort by', 'erh' ); ?></label>
-						<select id="sort-select" class="custom-select-sm" data-custom-select data-archive-sort>
-							<option value="rating"><?php esc_html_e( 'Highest rated', 'erh' ); ?></option>
-							<option value="newest"><?php esc_html_e( 'Newest first', 'erh' ); ?></option>
-							<option value="oldest"><?php esc_html_e( 'Oldest first', 'erh' ); ?></option>
-						</select>
+						<?php
+						erh_custom_select( [
+							'name'     => 'sort',
+							'id'       => 'sort-select',
+							'variant'  => 'sm',
+							'selected' => 'rating',
+							'options'  => [
+								'rating' => __( 'Highest rated', 'erh' ),
+								'newest' => __( 'Newest first', 'erh' ),
+								'oldest' => __( 'Oldest first', 'erh' ),
+							],
+							'attrs'    => [ 'data-archive-sort' => true ],
+						] );
+						?>
 					</div>
 				</div>
 			</div>

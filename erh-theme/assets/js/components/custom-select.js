@@ -52,9 +52,62 @@ export class CustomSelect {
     }
 
     init() {
-        this.createCustomSelect();
+        const existingWrapper = this.select.closest('.custom-select');
+        if (existingWrapper) {
+            this.hydrate(existingWrapper);
+        } else {
+            this.createCustomSelect();
+        }
         this.bindEvents();
         this.setInitialValue();
+    }
+
+    hydrate(wrapper) {
+        this.wrapper = wrapper;
+        this.trigger = wrapper.querySelector('.custom-select-trigger');
+
+        if (this.select.disabled) {
+            this.wrapper.classList.add('is-disabled');
+        }
+
+        // Generate unique ID for listbox
+        const listboxId = `custom-select-listbox-${Math.random().toString(36).substr(2, 9)}`;
+
+        // Set ARIA attributes on existing trigger
+        this.trigger.setAttribute('aria-haspopup', 'listbox');
+        this.trigger.setAttribute('aria-expanded', 'false');
+        this.trigger.setAttribute('aria-controls', listboxId);
+        this.trigger.disabled = this.select.disabled;
+
+        // Add label association if exists
+        const label = document.querySelector(`label[for="${this.select.id}"]`);
+        if (label) {
+            const labelId = label.id || `label-${listboxId}`;
+            label.id = labelId;
+            this.trigger.setAttribute('aria-labelledby', labelId);
+        }
+
+        // Build dropdown + options list (dynamic, not SSR'd)
+        this.dropdown = document.createElement('div');
+        this.dropdown.className = 'custom-select-dropdown';
+        this.dropdown.id = listboxId;
+        this.dropdown.setAttribute('role', 'listbox');
+        this.dropdown.setAttribute('tabindex', '-1');
+
+        if (label) {
+            this.dropdown.setAttribute('aria-labelledby', label.id);
+        }
+
+        this.optionsList = document.createElement('ul');
+        this.optionsList.className = 'custom-select-options';
+        this.optionsList.setAttribute('role', 'presentation');
+
+        this.renderOptions();
+
+        this.dropdown.appendChild(this.optionsList);
+
+        // Insert dropdown after trigger
+        this.trigger.after(this.dropdown);
     }
 
     createCustomSelect() {
@@ -527,8 +580,9 @@ export function initCustomSelects(selectorOrContainer = '[data-custom-select]') 
     const instances = [];
 
     selects.forEach(select => {
-        // Skip if already initialized
-        if (select.closest('.custom-select')) return;
+        // Skip if already fully initialized (has dropdown from JS hydration)
+        const wrapper = select.closest('.custom-select');
+        if (wrapper?.querySelector('.custom-select-dropdown')) return;
 
         instances.push(new CustomSelect(select));
     });

@@ -70,9 +70,9 @@ function erh_get_hub_context( WP_Term $category ): ?array {
     if ( 'electric-scooters' === $category_slug ) {
         $reviews_url = home_url( '/electric-scooters/reviews/' );
     } else {
-        $reviews_url = home_url( '/reviews/#' . $category_slug );
+        $reviews_url = home_url( '/reviews/?category=' . $category_slug );
     }
-    $articles_url = home_url( '/articles/#' . $category_slug );
+    $articles_url = home_url( '/articles/?category=' . $category_slug );
 
     // Short name for display: prefer ACF, fall back to CategoryConfig, then generic.
     // Ensure lowercase (ACF value may be capitalized).

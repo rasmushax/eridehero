@@ -77,24 +77,40 @@ $parent_url = $parent_id ? get_permalink( $parent_id ) : home_url( '/deals/' );
                     <!-- Price filter -->
                     <div class="deals-filter">
                         <span class="deals-filter-label">Price</span>
-                        <select class="custom-select--inline" data-custom-select data-deals-price-filter>
-                            <option value="all" selected>Any price</option>
-                            <option value="0-500">Under $500</option>
-                            <option value="500-1000">$500 – $1,000</option>
-                            <option value="1000-1500">$1,000 – $1,500</option>
-                            <option value="1500-2000">$1,500 – $2,000</option>
-                            <option value="2000+">$2,000+</option>
-                        </select>
+                        <?php
+                        erh_custom_select( [
+                            'name'     => 'price_filter',
+                            'variant'  => 'inline',
+                            'selected' => 'all',
+                            'options'  => [
+                                'all'       => 'Any price',
+                                '0-500'     => 'Under $500',
+                                '500-1000'  => '$500 – $1,000',
+                                '1000-1500' => '$1,000 – $1,500',
+                                '1500-2000' => '$1,500 – $2,000',
+                                '2000+'     => '$2,000+',
+                            ],
+                            'attrs'    => [ 'data-deals-price-filter' => true ],
+                        ] );
+                        ?>
                     </div>
 
                     <!-- Period toggle with info popover -->
                     <div class="deals-period">
                         <span class="deals-period-label">Compare to</span>
-                        <select class="custom-select--inline" data-custom-select data-deals-period>
-                            <option value="3m">3-month avg</option>
-                            <option value="6m" selected>6-month avg</option>
-                            <option value="12m">12-month avg</option>
-                        </select>
+                        <?php
+                        erh_custom_select( [
+                            'name'     => 'period',
+                            'variant'  => 'inline',
+                            'selected' => '6m',
+                            'options'  => [
+                                '3m'  => '3-month avg',
+                                '6m'  => '6-month avg',
+                                '12m' => '12-month avg',
+                            ],
+                            'attrs'    => [ 'data-deals-period' => true ],
+                        ] );
+                        ?>
                         <div class="popover-wrapper">
                             <button type="button" class="deals-period-info" data-popover-trigger="compare-to-popover" aria-label="What does this mean?">
                                 <?php erh_the_icon( 'info' ); ?>
@@ -110,12 +126,21 @@ $parent_url = $parent_id ? get_permalink( $parent_id ) : home_url( '/deals/' );
                     <!-- Sort -->
                     <div class="deals-sort">
                         <span class="deals-sort-label">Sort by</span>
-                        <select class="custom-select--inline custom-select--align-right" data-custom-select data-deals-sort>
-                            <option value="discount" selected>Biggest discount</option>
-                            <option value="price-asc">Price: Low to High</option>
-                            <option value="price-desc">Price: High to Low</option>
-                            <option value="name">Name A-Z</option>
-                        </select>
+                        <?php
+                        erh_custom_select( [
+                            'name'     => 'sort',
+                            'variant'  => 'inline',
+                            'align'    => 'right',
+                            'selected' => 'discount',
+                            'options'  => [
+                                'discount'   => 'Biggest discount',
+                                'price-asc'  => 'Price: Low to High',
+                                'price-desc' => 'Price: High to Low',
+                                'name'       => 'Name A-Z',
+                            ],
+                            'attrs'    => [ 'data-deals-sort' => true ],
+                        ] );
+                        ?>
                     </div>
                 </div>
             </div>

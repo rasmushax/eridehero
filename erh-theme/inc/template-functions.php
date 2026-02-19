@@ -63,6 +63,9 @@ require_once __DIR__ . '/functions/listicle-helpers.php';
 // Product schema (Rank Math integration).
 require_once __DIR__ . '/functions/product-schema.php';
 
+// Form helpers (SSR custom selects).
+require_once __DIR__ . '/functions/form-helpers.php';
+
 // =============================================================================
 // CORE UTILITIES
 // =============================================================================

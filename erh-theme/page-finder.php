@@ -219,13 +219,26 @@ $product_count = count( $products );
                             <!-- Sort -->
                             <div class="finder-sort">
                                 <span class="finder-sort-label" id="finder-sort-label">Sort by</span>
-                                <select id="finder-sort" class="custom-select--inline custom-select--align-right" data-custom-select data-finder-sort aria-labelledby="finder-sort-label">
-                                    <option value="popularity">Most popular</option>
-                                    <option value="price-asc">Price: Low to High</option>
-                                    <option value="price-desc">Price: High to Low</option>
-                                    <option value="deals">Best deals</option>
-                                    <option value="name">Name A-Z</option>
-                                </select>
+                                <?php
+                                erh_custom_select( [
+                                    'name'     => 'sort',
+                                    'id'       => 'finder-sort',
+                                    'variant'  => 'inline',
+                                    'align'    => 'right',
+                                    'selected' => 'popularity',
+                                    'options'  => [
+                                        'popularity' => 'Most popular',
+                                        'price-asc'  => 'Price: Low to High',
+                                        'price-desc' => 'Price: High to Low',
+                                        'deals'      => 'Best deals',
+                                        'name'       => 'Name A-Z',
+                                    ],
+                                    'attrs'    => [
+                                        'data-finder-sort'    => true,
+                                        'aria-labelledby'     => 'finder-sort-label',
+                                    ],
+                                ] );
+                                ?>
                             </div>
 
                             <!-- View Toggle -->

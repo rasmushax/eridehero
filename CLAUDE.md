@@ -679,3 +679,37 @@ wp erh migrate single <id-or-slug>
 wp erh migrate social              # NSL → ERH user meta
 wp erh migrate social --dry-run
 ```
+
+---
+
+## Deployment
+
+### Staging Deploy
+
+```bash
+# Deploy theme + core (default, most common)
+bash deploy-staging.sh
+
+# Deploy specific targets
+bash deploy-staging.sh theme    # erh-theme only
+bash deploy-staging.sh core     # erh-core only
+bash deploy-staging.sh hft      # housefresh-tools only
+bash deploy-staging.sh all      # theme + core + hft
+```
+
+**What it does:** Runs `build-zips.ps1` → uploads zips via SCP → extracts on server → flushes WP cache.
+
+### SSH Details
+
+| Setting | Value |
+|---------|-------|
+| Host | `162.19.222.172` |
+| Port | `1988` |
+| User | `haxholmw` |
+| WP Path | `/home/haxholmw/staging.eridehero.com` |
+
+### Manual SSH
+
+```bash
+ssh -p 1988 haxholmw@162.19.222.172
+```

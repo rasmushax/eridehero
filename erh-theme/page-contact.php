@@ -59,16 +59,25 @@ $business_address  = get_field( 'business_address', 'option' ) ?: "Doktorens Gyd
 
                         <div class="form-group">
                             <label for="contact-topic" class="form-label"><?php esc_html_e( 'Topic', 'erh' ); ?></label>
-                            <select id="contact-topic" name="topic" class="form-select" data-custom-select data-placeholder="<?php esc_attr_e( 'Select a topic', 'erh' ); ?>" required>
-                                <option value="" disabled selected><?php esc_html_e( 'Select a topic', 'erh' ); ?></option>
-                                <option value="general"><?php esc_html_e( 'General inquiry', 'erh' ); ?></option>
-                                <option value="press"><?php esc_html_e( 'Press & media', 'erh' ); ?></option>
-                                <option value="partnerships"><?php esc_html_e( 'Advertising & partnerships', 'erh' ); ?></option>
-                                <option value="editorial"><?php esc_html_e( 'Editorial & content', 'erh' ); ?></option>
-                                <option value="product"><?php esc_html_e( 'Submit a product for review', 'erh' ); ?></option>
-                                <option value="website"><?php esc_html_e( 'Website issue or feedback', 'erh' ); ?></option>
-                                <option value="other"><?php esc_html_e( 'Other', 'erh' ); ?></option>
-                            </select>
+                            <?php
+                            erh_custom_select( [
+                                'name'           => 'topic',
+                                'id'             => 'contact-topic',
+                                'placeholder'    => __( 'Select a topic', 'erh' ),
+                                'required'       => true,
+                                'disabled_first' => true,
+                                'options'        => [
+                                    ''             => __( 'Select a topic', 'erh' ),
+                                    'general'      => __( 'General inquiry', 'erh' ),
+                                    'press'        => __( 'Press & media', 'erh' ),
+                                    'partnerships' => __( 'Advertising & partnerships', 'erh' ),
+                                    'editorial'    => __( 'Editorial & content', 'erh' ),
+                                    'product'      => __( 'Submit a product for review', 'erh' ),
+                                    'website'      => __( 'Website issue or feedback', 'erh' ),
+                                    'other'        => __( 'Other', 'erh' ),
+                                ],
+                            ] );
+                            ?>
                             <span class="form-error" data-error="topic"></span>
                         </div>
 

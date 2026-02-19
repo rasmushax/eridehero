@@ -167,19 +167,22 @@ $user = $args['user'] ?? wp_get_current_user();
 		<form class="settings-form" data-geo-form>
 			<div class="form-group">
 				<label for="geo-preference" class="form-label">Your Region</label>
-				<select
-					id="geo-preference"
-					name="geo"
-					class="form-select custom-select-sm"
-					data-custom-select
-					data-geo-select
-				>
-					<option value="US">United States (USD)</option>
-					<option value="GB">United Kingdom (GBP)</option>
-					<option value="EU">Europe (EUR)</option>
-					<option value="CA">Canada (CAD)</option>
-					<option value="AU">Australia (AUD)</option>
-				</select>
+				<?php
+				erh_custom_select( [
+					'name'     => 'geo',
+					'id'       => 'geo-preference',
+					'variant'  => 'sm',
+					'selected' => 'US',
+					'options'  => [
+						'US' => 'United States (USD)',
+						'GB' => 'United Kingdom (GBP)',
+						'EU' => 'Europe (EUR)',
+						'CA' => 'Canada (CAD)',
+						'AU' => 'Australia (AUD)',
+					],
+					'attrs'    => [ 'data-geo-select' => true ],
+				] );
+				?>
 			</div>
 
 			<div class="form-error" data-geo-error hidden></div>
@@ -277,16 +280,19 @@ $user = $args['user'] ?? wp_get_current_user();
 
 					<div class="settings-frequency">
 						<span class="form-label">Frequency</span>
-						<select
-							name="sales_roundup_frequency"
-							class="custom-select-sm"
-							data-custom-select
-							data-preference="sales_roundup_frequency"
-						>
-							<option value="weekly">Weekly</option>
-							<option value="bi-weekly">Bi-weekly</option>
-							<option value="monthly">Monthly</option>
-						</select>
+						<?php
+						erh_custom_select( [
+							'name'     => 'sales_roundup_frequency',
+							'variant'  => 'sm',
+							'selected' => 'weekly',
+							'options'  => [
+								'weekly'    => 'Weekly',
+								'bi-weekly' => 'Bi-weekly',
+								'monthly'   => 'Monthly',
+							],
+							'attrs'    => [ 'data-preference' => 'sales_roundup_frequency' ],
+						] );
+						?>
 					</div>
 				</div>
 			</div>

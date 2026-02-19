@@ -99,23 +99,37 @@ if ( ! defined( 'ABSPATH' ) ) {
                             <div class="finder-row">
                                 <div class="finder-field">
                                     <label class="form-label" for="finder-budget" id="label-finder-budget"><?php esc_html_e( 'Your budget', 'erh' ); ?></label>
-                                    <select id="finder-budget" name="budget" data-custom-select data-placeholder="<?php esc_attr_e( 'Any budget', 'erh' ); ?>">
-                                        <option value=""><?php esc_html_e( 'Any budget', 'erh' ); ?></option>
-                                        <option value="under-500"><?php esc_html_e( 'Under $500', 'erh' ); ?></option>
-                                        <option value="500-1000"><?php esc_html_e( '$500 – $1,000', 'erh' ); ?></option>
-                                        <option value="1000-2000"><?php esc_html_e( '$1,000 – $2,000', 'erh' ); ?></option>
-                                        <option value="2000-plus"><?php esc_html_e( '$2,000+', 'erh' ); ?></option>
-                                    </select>
+                                    <?php
+                                    erh_custom_select( [
+                                        'name'        => 'budget',
+                                        'id'          => 'finder-budget',
+                                        'placeholder' => __( 'Any budget', 'erh' ),
+                                        'options'     => [
+                                            ''          => __( 'Any budget', 'erh' ),
+                                            'under-500' => __( 'Under $500', 'erh' ),
+                                            '500-1000'  => __( '$500 – $1,000', 'erh' ),
+                                            '1000-2000' => __( '$1,000 – $2,000', 'erh' ),
+                                            '2000-plus' => __( '$2,000+', 'erh' ),
+                                        ],
+                                    ] );
+                                    ?>
                                 </div>
                                 <div class="finder-field">
                                     <label class="form-label" for="finder-use" id="label-finder-use"><?php esc_html_e( 'Primary use', 'erh' ); ?></label>
-                                    <select id="finder-use" name="use" data-custom-select data-placeholder="<?php esc_attr_e( 'Any use', 'erh' ); ?>">
-                                        <option value=""><?php esc_html_e( 'Any use', 'erh' ); ?></option>
-                                        <option value="commuting"><?php esc_html_e( 'Commuting', 'erh' ); ?></option>
-                                        <option value="recreation"><?php esc_html_e( 'Recreation', 'erh' ); ?></option>
-                                        <option value="off-road"><?php esc_html_e( 'Off-road', 'erh' ); ?></option>
-                                        <option value="last-mile"><?php esc_html_e( 'Last-mile', 'erh' ); ?></option>
-                                    </select>
+                                    <?php
+                                    erh_custom_select( [
+                                        'name'        => 'use',
+                                        'id'          => 'finder-use',
+                                        'placeholder' => __( 'Any use', 'erh' ),
+                                        'options'     => [
+                                            ''           => __( 'Any use', 'erh' ),
+                                            'commuting'  => __( 'Commuting', 'erh' ),
+                                            'recreation' => __( 'Recreation', 'erh' ),
+                                            'off-road'   => __( 'Off-road', 'erh' ),
+                                            'last-mile'  => __( 'Last-mile', 'erh' ),
+                                        ],
+                                    ] );
+                                    ?>
                                 </div>
                             </div>
                             <button type="submit" class="finder-submit">

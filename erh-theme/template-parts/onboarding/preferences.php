@@ -92,11 +92,18 @@ if ( ! defined( 'ABSPATH' ) ) {
 
             <div class="onboarding-frequency">
                 <span class="onboarding-options-label"><?php esc_html_e( 'Frequency', 'erh' ); ?></span>
-                <select name="sales_roundup_frequency" class="custom-select-sm" data-custom-select>
-                    <option value="weekly" selected><?php esc_html_e( 'Weekly', 'erh' ); ?></option>
-                    <option value="bi-weekly"><?php esc_html_e( 'Bi-weekly', 'erh' ); ?></option>
-                    <option value="monthly"><?php esc_html_e( 'Monthly', 'erh' ); ?></option>
-                </select>
+                <?php
+                erh_custom_select( [
+                    'name'     => 'sales_roundup_frequency',
+                    'variant'  => 'sm',
+                    'selected' => 'weekly',
+                    'options'  => [
+                        'weekly'    => __( 'Weekly', 'erh' ),
+                        'bi-weekly' => __( 'Bi-weekly', 'erh' ),
+                        'monthly'   => __( 'Monthly', 'erh' ),
+                    ],
+                ] );
+                ?>
             </div>
         </div>
     </div>

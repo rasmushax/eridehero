@@ -58,46 +58,74 @@ $json_url   = $upload_dir['baseurl'] . '/comparison_products.json';
 					<div class="hub-finder-row">
 						<div class="hub-finder-field">
 							<label class="form-label" for="finder-budget"><?php esc_html_e( 'Budget', 'erh' ); ?></label>
-							<select id="finder-budget" name="price_max" data-custom-select data-placeholder="<?php esc_attr_e( 'Any price', 'erh' ); ?>">
-								<option value=""><?php esc_html_e( 'Any price', 'erh' ); ?></option>
-								<option value="500"><?php esc_html_e( 'Under $500', 'erh' ); ?></option>
-								<option value="1000"><?php esc_html_e( 'Under $1,000', 'erh' ); ?></option>
-								<option value="1500"><?php esc_html_e( 'Under $1,500', 'erh' ); ?></option>
-								<option value="2000"><?php esc_html_e( 'Under $2,000', 'erh' ); ?></option>
-								<option value="3000"><?php esc_html_e( 'Under $3,000', 'erh' ); ?></option>
-							</select>
+							<?php
+							erh_custom_select( [
+								'name'        => 'price_max',
+								'id'          => 'finder-budget',
+								'placeholder' => __( 'Any price', 'erh' ),
+								'options'     => [
+									''     => __( 'Any price', 'erh' ),
+									'500'  => __( 'Under $500', 'erh' ),
+									'1000' => __( 'Under $1,000', 'erh' ),
+									'1500' => __( 'Under $1,500', 'erh' ),
+									'2000' => __( 'Under $2,000', 'erh' ),
+									'3000' => __( 'Under $3,000', 'erh' ),
+								],
+							] );
+							?>
 						</div>
 						<div class="hub-finder-field">
 							<label class="form-label" for="finder-usecase"><?php esc_html_e( 'Use Case', 'erh' ); ?></label>
-							<select id="finder-usecase" name="use_case" data-custom-select data-placeholder="<?php esc_attr_e( 'Any use', 'erh' ); ?>">
-								<option value=""><?php esc_html_e( 'Any use', 'erh' ); ?></option>
-								<option value="commute"><?php esc_html_e( 'Commuting', 'erh' ); ?></option>
-								<option value="offroad"><?php esc_html_e( 'Off-road', 'erh' ); ?></option>
-								<option value="performance"><?php esc_html_e( 'Performance', 'erh' ); ?></option>
-								<option value="portable"><?php esc_html_e( 'Portable', 'erh' ); ?></option>
-							</select>
+							<?php
+							erh_custom_select( [
+								'name'        => 'use_case',
+								'id'          => 'finder-usecase',
+								'placeholder' => __( 'Any use', 'erh' ),
+								'options'     => [
+									''            => __( 'Any use', 'erh' ),
+									'commute'     => __( 'Commuting', 'erh' ),
+									'offroad'     => __( 'Off-road', 'erh' ),
+									'performance' => __( 'Performance', 'erh' ),
+									'portable'    => __( 'Portable', 'erh' ),
+								],
+							] );
+							?>
 						</div>
 					</div>
 					<div class="hub-finder-row">
 						<div class="hub-finder-field">
 							<label class="form-label" for="finder-range"><?php esc_html_e( 'Range', 'erh' ); ?></label>
-							<select id="finder-range" name="range_min" data-custom-select data-placeholder="<?php esc_attr_e( 'Any range', 'erh' ); ?>">
-								<option value=""><?php esc_html_e( 'Any range', 'erh' ); ?></option>
-								<option value="15"><?php esc_html_e( '15+ miles', 'erh' ); ?></option>
-								<option value="25"><?php esc_html_e( '25+ miles', 'erh' ); ?></option>
-								<option value="40"><?php esc_html_e( '40+ miles', 'erh' ); ?></option>
-								<option value="60"><?php esc_html_e( '60+ miles', 'erh' ); ?></option>
-							</select>
+							<?php
+							erh_custom_select( [
+								'name'        => 'range_min',
+								'id'          => 'finder-range',
+								'placeholder' => __( 'Any range', 'erh' ),
+								'options'     => [
+									''   => __( 'Any range', 'erh' ),
+									'15' => __( '15+ miles', 'erh' ),
+									'25' => __( '25+ miles', 'erh' ),
+									'40' => __( '40+ miles', 'erh' ),
+									'60' => __( '60+ miles', 'erh' ),
+								],
+							] );
+							?>
 						</div>
 						<div class="hub-finder-field">
 							<label class="form-label" for="finder-speed"><?php esc_html_e( 'Top Speed', 'erh' ); ?></label>
-							<select id="finder-speed" name="speed_min" data-custom-select data-placeholder="<?php esc_attr_e( 'Any speed', 'erh' ); ?>">
-								<option value=""><?php esc_html_e( 'Any speed', 'erh' ); ?></option>
-								<option value="15"><?php esc_html_e( '15+ mph', 'erh' ); ?></option>
-								<option value="25"><?php esc_html_e( '25+ mph', 'erh' ); ?></option>
-								<option value="35"><?php esc_html_e( '35+ mph', 'erh' ); ?></option>
-								<option value="50"><?php esc_html_e( '50+ mph', 'erh' ); ?></option>
-							</select>
+							<?php
+							erh_custom_select( [
+								'name'        => 'speed_min',
+								'id'          => 'finder-speed',
+								'placeholder' => __( 'Any speed', 'erh' ),
+								'options'     => [
+									''   => __( 'Any speed', 'erh' ),
+									'15' => __( '15+ mph', 'erh' ),
+									'25' => __( '25+ mph', 'erh' ),
+									'35' => __( '35+ mph', 'erh' ),
+									'50' => __( '50+ mph', 'erh' ),
+								],
+							] );
+							?>
 						</div>
 					</div>
 					<button type="submit" class="btn btn-primary btn-lg hub-finder-submit">
