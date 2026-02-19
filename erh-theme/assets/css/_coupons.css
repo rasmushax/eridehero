@@ -58,13 +58,13 @@
 }
 
 .coupons-disclaimer a {
-    color: var(--color-primary);
+    color: var(--color-muted);
     text-decoration: underline;
     text-underline-offset: 2px;
 }
 
 .coupons-disclaimer a:hover {
-    color: var(--color-primary-hover);
+    color: var(--color-body);
 }
 
 
@@ -75,7 +75,7 @@
 }
 
 .coupons-intro p {
-    font-size: var(--text-md);
+    font-size: var(--text-lg);
     color: var(--color-body);
     margin: 0;
     max-width: 740px;
@@ -141,13 +141,14 @@
     padding-top: var(--space-10);
     display: flex;
     flex-direction: column;
-    gap: var(--space-8);
+    gap: var(--space-12);
 }
 
 .coupon-group {
     background: var(--color-white);
     border: var(--border-width) solid var(--color-border);
     border-radius: var(--radius-xl);
+    box-shadow: var(--shadow-subtle);
     overflow: hidden;
 }
 
@@ -155,7 +156,7 @@
     display: flex;
     align-items: flex-start;
     gap: var(--space-5);
-    padding: var(--space-7) var(--space-8);
+    padding: var(--space-8);
     border-bottom: var(--border-width) solid var(--color-border);
 }
 
@@ -208,9 +209,8 @@
     color: var(--color-muted);
     background: var(--color-background);
     padding: var(--space-1) var(--space-4);
-    border-radius: var(--radius-full);
+    border-radius: var(--radius-sm);
     white-space: nowrap;
-    margin-top: 4px;
 }
 
 
@@ -234,7 +234,7 @@
     align-items: center;
     justify-content: space-between;
     gap: var(--space-8);
-    padding: var(--space-6) var(--space-8);
+    padding: var(--space-8);
 }
 
 .coupon-item-info {
@@ -265,8 +265,8 @@
     align-items: center;
     font-size: var(--text-xs);
     font-weight: var(--font-semibold);
-    padding: 2px var(--space-4);
-    border-radius: var(--radius-full);
+    padding: 5px var(--space-4);
+    border-radius: var(--radius-sm);
     line-height: var(--leading-snug);
 }
 
@@ -329,12 +329,6 @@
 .coupon-get-code-btn svg {
     width: 16px;
     height: 16px;
-}
-
-/* Copied state — green flash */
-.coupon-get-code-btn.copied {
-    background: var(--color-success);
-    border-color: transparent;
 }
 
 /* Revealed state — code visible in dashed box */
@@ -457,9 +451,5 @@
 
     .coupon-group-header {
         flex-wrap: wrap;
-    }
-
-    .coupon-group-count {
-        margin-top: 0;
     }
 }

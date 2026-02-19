@@ -102,8 +102,7 @@ if ( $tax_slug ) {
 
 				<!-- Affiliate Disclaimer -->
 				<div class="coupons-disclaimer">
-					<p>These coupon codes are exclusive to ERideHero. We partner directly with retailers to bring you verified discounts.
-						ERideHero earns a commission on qualifying purchases at no extra cost to you.
+					<p>We partner with retailers to bring you verified, exclusive coupon codes. ERideHero earns a commission at no extra cost to you.
 						<a href="<?php echo esc_url( home_url( '/disclaimers/' ) ); ?>">Learn more</a></p>
 				</div>
 
@@ -291,26 +290,23 @@ $breadcrumb_schema = [
 get_footer();
 ?>
 <script>
-// Coupon "Get Code" — copy to clipboard + open retailer in new tab
+// Coupon "Get Code" — reveal code, copy to clipboard, open retailer in new tab.
 document.querySelectorAll('.coupon-get-code-btn').forEach(btn => {
 	btn.addEventListener('click', () => {
+		if (btn.classList.contains('revealed')) return;
+
 		const code = btn.dataset.code;
 		const url = btn.dataset.url;
 		const label = btn.querySelector('.coupon-get-code-label');
 
-		// Copy code to clipboard.
-		navigator.clipboard.writeText(code).then(() => {
-			// Show the code + "Copied!" feedback.
-			label.textContent = code;
-			btn.classList.add('copied');
-			setTimeout(() => {
-				label.textContent = code;
-				btn.classList.remove('copied');
-				btn.classList.add('revealed');
-			}, 2000);
-		});
+		// Reveal the code immediately.
+		label.textContent = code;
+		btn.classList.add('revealed');
 
-		// Open retailer homepage (with affiliate link) in new tab.
+		// Copy to clipboard silently.
+		navigator.clipboard.writeText(code);
+
+		// Open retailer in new tab.
 		if (url && url !== '#') {
 			window.open(url, '_blank', 'noopener');
 		}
