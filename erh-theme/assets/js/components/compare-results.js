@@ -184,8 +184,8 @@ export async function init() {
     category = config?.category || page.dataset.category || 'escooter';
     finderKey = config?.finderKey || category;
 
-    // Empty state
-    if (!config?.productIds?.length || config.productIds.length < 2) {
+    // Empty state (no products at all)
+    if (!config?.productIds?.length || config.productIds.length < 1) {
         await initEmptyState();
         return;
     }
@@ -715,7 +715,7 @@ async function initClientMode(config) {
     // Load products
     await loadProducts(config.productIds);
 
-    if (products.length < 2) {
+    if (products.length < 1) {
         showError('Could not load product data.');
         return;
     }
@@ -770,16 +770,15 @@ function attachProductCardHandlers() {
         });
     });
 
-    // Add button
-    const addBtn = productsContainer.querySelector('[data-open-add-modal]');
-    if (addBtn) {
-        addBtn.addEventListener('click', () => {
-            Modal.openById('compare-add-modal', addBtn);
+    // Add buttons (may be in header, overview CTA, mini-header, etc.)
+    document.querySelectorAll('[data-open-add-modal]').forEach(btn => {
+        btn.addEventListener('click', () => {
+            Modal.openById('compare-add-modal', btn);
             setTimeout(() => {
                 document.querySelector(SELECTORS.searchInput)?.focus();
             }, 100);
         });
-    }
+    });
 }
 
 /**
@@ -927,6 +926,9 @@ function updateLayoutMode() {
     // Update page element
     page.dataset.productCount = products.length;
     page.style.setProperty('--product-count', products.length);
+
+    // Toggle single-product class
+    page.classList.toggle('compare-page--single', products.length === 1);
 
     // Toggle page-level full-width class (matches PHP behavior)
     if (needsFullWidth) {
@@ -1124,6 +1126,8 @@ function renderProducts() {
     const verdictWinner = config?.verdictWinner;
     const isCurated = config?.isCurated;
 
+    const isSingle = products.length === 1;
+
     const cards = products.map((p, idx) => {
         try {
             const score = calculateProductScore(p);
@@ -1142,9 +1146,11 @@ function renderProducts() {
                 ${renderScoreRing(score, 'md')}
 
                 <div class="compare-product-actions">
+                    ${!isSingle ? `
                     <button class="compare-product-remove" data-remove-product="${p.id}" aria-label="Remove from comparison">
                         <svg class="icon" width="14" height="14"><use href="#icon-x"></use></svg>
                     </button>
+                    ` : ''}
                     ${p.currentPrice ? `
                         <button class="compare-product-track" data-track="${p.id}"
                                 data-name="${escapeHtml(p.name)}"
@@ -1188,7 +1194,18 @@ function renderProducts() {
         }
     }).join('');
 
-    const addCard = `
+    // Single product: placeholder card with prominent "Add" CTA
+    // Multi product: small "Add" button
+    const addCard = isSingle ? `
+        <div class="compare-product compare-product--placeholder">
+            <div class="compare-product-placeholder-inner">
+                <button class="compare-product-add-btn" data-open-add-modal>
+                    <svg class="icon" width="24" height="24"><use href="#icon-plus"></use></svg>
+                    <span>Add a product to compare</span>
+                </button>
+            </div>
+        </div>
+    ` : `
         <div class="compare-product compare-product--add-wrap">
             <button class="compare-product-add-btn" data-open-add-modal>
                 <svg class="icon" width="24" height="24"><use href="#icon-plus"></use></svg>
@@ -1219,10 +1236,12 @@ function renderProducts() {
         btn.addEventListener('click', () => removeProduct(parseInt(btn.dataset.removeProduct, 10)));
     });
 
-    // Add handler
-    container.querySelector('[data-open-add-modal]')?.addEventListener('click', () => {
-        Modal.openById('compare-add-modal');
-        setTimeout(() => document.querySelector(SELECTORS.searchInput)?.focus(), 100);
+    // Add handler(s)
+    container.querySelectorAll('[data-open-add-modal]').forEach(btn => {
+        btn.addEventListener('click', () => {
+            Modal.openById('compare-add-modal');
+            setTimeout(() => document.querySelector(SELECTORS.searchInput)?.focus(), 100);
+        });
     });
 }
 
@@ -1257,7 +1276,7 @@ function renderPriceIndicator(indicator) {
  */
 function renderOverview() {
     const container = document.querySelector(SELECTORS.overview);
-    if (!container || products.length < 2) return;
+    if (!container || products.length < 1) return;
 
     // Check if SSR content exists and we haven't hydrated yet
     const ssrRadar = container.querySelector('[data-radar-container]');
@@ -1271,30 +1290,53 @@ function renderOverview() {
         return;
     }
 
-    // Client-side mode: Render structure first (with loading state for advantages)
+    // Client-side mode: Render structure first
+    const isSingle = products.length === 1;
+    const advantagesHtml = isSingle
+        ? `<div class="compare-advantages compare-advantages--empty">
+               <div class="compare-advantage-empty-cta">
+                   <p>Add another product to compare strengths and weaknesses.</p>
+                   <button class="btn btn-secondary btn-sm" data-open-add-modal>
+                       <svg class="icon" width="16" height="16"><use href="#icon-plus"></use></svg>
+                       Add Product
+                   </button>
+               </div>
+           </div>`
+        : `<div class="compare-advantages compare-advantages--loading">
+               ${products.map(p => `
+                   <div class="compare-advantage">
+                       <div class="skeleton skeleton--text" style="width: 60%; height: 1.2em;"></div>
+                       <div class="skeleton skeleton--text" style="width: 90%; height: 0.9em; margin-top: 0.5em;"></div>
+                       <div class="skeleton skeleton--text" style="width: 85%; height: 0.9em; margin-top: 0.5em;"></div>
+                   </div>
+               `).join('')}
+           </div>`;
+
     container.innerHTML = `
         <div class="compare-overview-grid">
             <div class="compare-radar">
                 <h3 class="compare-radar-title">Category Scores</h3>
                 <div class="compare-radar-chart" data-radar-chart></div>
             </div>
-            <div class="compare-advantages compare-advantages--loading">
-                ${products.map(p => `
-                    <div class="compare-advantage">
-                        <div class="skeleton skeleton--text" style="width: 60%; height: 1.2em;"></div>
-                        <div class="skeleton skeleton--text" style="width: 90%; height: 0.9em; margin-top: 0.5em;"></div>
-                        <div class="skeleton skeleton--text" style="width: 85%; height: 0.9em; margin-top: 0.5em;"></div>
-                    </div>
-                `).join('')}
-            </div>
+            ${advantagesHtml}
         </div>
     `;
+
+    // Bind add-modal buttons in the CTA
+    container.querySelectorAll('[data-open-add-modal]').forEach(btn => {
+        btn.addEventListener('click', () => {
+            Modal.openById('compare-add-modal');
+            setTimeout(() => document.querySelector(SELECTORS.searchInput)?.focus(), 100);
+        });
+    });
 
     // Initialize radar chart
     renderRadarChart();
 
-    // Fetch and render advantages from API (single source of truth)
-    fetchAndRenderAdvantages();
+    // Fetch and render advantages from API (only for 2+ products)
+    if (!isSingle) {
+        fetchAndRenderAdvantages();
+    }
 }
 
 /**
@@ -1346,9 +1388,21 @@ async function fetchAndRenderAdvantages() {
             // 3+ products - render "best at" advantages per product
             advantagesContainer.innerHTML = renderMultiAdvantagesGrid(products, data.advantages);
         } else if (data.mode === 'single') {
-            // Single product - TODO: implement single product advantages
-            // For now, hide the section
-            advantagesContainer.innerHTML = '';
+            // Single product - show CTA to add another product
+            advantagesContainer.innerHTML = `
+                <div class="compare-advantage-empty-cta">
+                    <p>Add another product to compare strengths and weaknesses.</p>
+                    <button class="btn btn-secondary btn-sm" data-open-add-modal>
+                        <svg class="icon" width="16" height="16"><use href="#icon-plus"></use></svg>
+                        Add Product
+                    </button>
+                </div>
+            `;
+            advantagesContainer.classList.add('compare-advantages--empty');
+            advantagesContainer.querySelector('[data-open-add-modal]')?.addEventListener('click', () => {
+                Modal.openById('compare-add-modal');
+                setTimeout(() => document.querySelector(SELECTORS.searchInput)?.focus(), 100);
+            });
         }
     } catch (err) {
         console.error('Failed to fetch advantages:', err);
@@ -1409,12 +1463,15 @@ function renderRadarChart() {
 function renderMiniHeader() {
     const radius = 15;
     const circumference = 2 * Math.PI * radius;
+    const isSingle = products.length === 1;
 
     // Build colgroup for consistent column widths (matches spec tables)
+    const placeholderCol = isSingle ? '<col class="compare-spec-col-placeholder">' : '';
     const colgroup = `
         <colgroup>
             <col class="compare-spec-col-label">
             ${products.map(() => '<col>').join('')}
+            ${placeholderCol}
         </colgroup>
     `;
 
@@ -1464,6 +1521,16 @@ function renderMiniHeader() {
                             </td>
                         `;
                     }).join('')}
+                    ${isSingle ? `
+                        <td>
+                            <div class="compare-mini-product compare-mini-product--placeholder">
+                                <button class="compare-mini-add-btn" data-open-add-modal>
+                                    <svg class="icon" width="16" height="16"><use href="#icon-plus"></use></svg>
+                                    <span>Add product</span>
+                                </button>
+                            </div>
+                        </td>
+                    ` : ''}
                 </tr>
             </table>
         </div>
@@ -1517,10 +1584,12 @@ function renderSpecs() {
         const mobileCards = renderMobileSpecCards(specsWithValues);
 
         // Build colgroup for consistent column widths
+        const placeholderCol = products.length === 1 ? '<col class="compare-spec-col-placeholder">' : '';
         const colgroup = `
             <colgroup>
                 <col class="compare-spec-col-label">
                 ${products.map(() => '<col>').join('')}
+                ${placeholderCol}
             </colgroup>
         `;
 
@@ -1552,6 +1621,14 @@ function renderSpecs() {
 
     // Sync horizontal scroll between mini-header and tables (safe to call even when not in full-width mode)
     setupScrollSync();
+
+    // Bind add-modal buttons in mini-header placeholder (single-product mode)
+    container.querySelectorAll('[data-open-add-modal]').forEach(btn => {
+        btn.addEventListener('click', () => {
+            Modal.openById('compare-add-modal');
+            setTimeout(() => document.querySelector(SELECTORS.searchInput)?.focus(), 100);
+        });
+    });
 
     // Populate nav with category links
     populateNav(categoryNav);
@@ -1698,7 +1775,8 @@ function renderValueMetricRow(metric) {
         return `<td class="${cls}">${formatted}</td>`;
     }).join('');
 
-    return `<tr><td>${metric.label}</td>${cells}</tr>`;
+    const placeholderTd = products.length === 1 ? '<td class="compare-spec-placeholder">&mdash;</td>' : '';
+    return `<tr><td>${metric.label}</td>${cells}${placeholderTd}</tr>`;
 }
 
 /**
@@ -1727,6 +1805,7 @@ function renderBooleanCell(value) {
 function renderFeatureArrayRows(spec) {
     const rows = [];
     const values = products.map(p => getSpec(p, spec.key));
+    const placeholderTd = products.length === 1 ? '<td class="compare-spec-placeholder">&mdash;</td>' : '';
 
     // Collect all unique features across all products
     const allFeatures = new Set();
@@ -1757,6 +1836,7 @@ function renderFeatureArrayRows(spec) {
                     <div class="compare-spec-label">${escapeHtml(feature)}</div>
                 </td>
                 ${cells}
+                ${placeholderTd}
             </tr>
         `);
     }
@@ -1789,6 +1869,7 @@ function areValuesSame(values) {
  */
 function renderSpecRows(specs) {
     const rows = [];
+    const placeholderTd = products.length === 1 ? '<td class="compare-spec-placeholder">&mdash;</td>' : '';
 
     for (const rawSpec of specs) {
         // Handle feature arrays specially - expand into individual rows
@@ -1826,6 +1907,7 @@ function renderSpecRows(specs) {
                         <div class="compare-spec-label">${spec.label}${tooltipHtml}</div>
                     </td>
                     ${cells}
+                    ${placeholderTd}
                 </tr>
             `);
             continue;
@@ -1852,6 +1934,7 @@ function renderSpecRows(specs) {
                     <div class="compare-spec-label">${spec.label}${tooltipHtml}</div>
                 </td>
                 ${cells}
+                ${placeholderTd}
             </tr>
         `);
     }
@@ -2394,12 +2477,16 @@ function addProduct(product) {
  * Remove product from comparison.
  */
 function removeProduct(id) {
-    if (products.length <= 2) return;
-
     // Hide curated sections when products change
     hideCuratedSections();
 
     products = products.filter(p => p.id !== id);
+
+    // If no products left, redirect to hub
+    if (products.length === 0) {
+        window.location.href = (window.erhData?.siteUrl || '') + '/compare/';
+        return;
+    }
 
     // Update URL first, then render, then apply layout mode
     // (render replaces DOM, so layout mode must come after)

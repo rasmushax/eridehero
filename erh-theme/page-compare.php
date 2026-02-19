@@ -51,8 +51,9 @@ if ( is_singular( 'comparison' ) ) {
 	$product_ids = erh_get_compare_product_ids();
 }
 
-$has_products = count( $product_ids ) >= 2;
-$is_hub_page  = ! $has_products;
+$has_products      = count( $product_ids ) >= 1;
+$is_hub_page       = ! $has_products;
+$is_single_product = count( $product_ids ) === 1;
 
 // =============================================================================
 // Category Detection
@@ -85,9 +86,13 @@ if ( ! empty( $product_ids[0] ) ) {
 
 // Build page title from product names.
 $product_names = array_map( 'get_the_title', $product_ids );
-$page_title    = $has_products
-	? implode( ' vs ', array_slice( $product_names, 0, 3 ) ) . ( count( $product_names ) > 3 ? ' & more' : '' )
-	: 'Compare Products';
+if ( $is_single_product ) {
+	$page_title = $product_names[0];
+} elseif ( $has_products ) {
+	$page_title = implode( ' vs ', array_slice( $product_names, 0, 3 ) ) . ( count( $product_names ) > 3 ? ' & more' : '' );
+} else {
+	$page_title = 'Compare Products';
+}
 
 // =============================================================================
 // SSR: Fetch Products
@@ -99,8 +104,8 @@ $currency_symbol  = erh_get_currency_symbol( $geo );
 
 if ( $has_products ) {
 	$compare_products = erh_get_compare_products( $product_ids, $geo );
-	// If not enough products found in cache, fall back to hub page.
-	if ( count( $compare_products ) < 2 ) {
+	// If no products found in cache, fall back to hub page.
+	if ( count( $compare_products ) < 1 ) {
 		$has_products = false;
 		$is_hub_page  = true;
 	}
@@ -114,6 +119,7 @@ $product_count_attr = $has_products ? ' data-product-count="' . $product_count .
 $is_full_width      = $has_products && $product_count >= 5;
 $page_classes       = 'compare-page';
 $page_classes      .= $is_hub_page ? ' compare-page--hub' : '';
+$page_classes      .= $is_single_product ? ' compare-page--single' : '';
 $page_classes      .= $is_curated ? ' compare-page--curated' : '';
 $page_classes      .= $is_full_width ? ' compare-page--full-width' : '';
 
@@ -157,8 +163,9 @@ $curated_attrs = $is_curated ? ' data-comparison-id="' . esc_attr( $comparison_i
 			<!-- SSR: Product Hero Cards -->
 			<?php
 			get_template_part( 'template-parts/compare/header-products', null, [
-				'products' => $compare_products,
-				'geo'      => $geo,
+				'products'          => $compare_products,
+				'geo'               => $geo,
+				'is_single_product' => $is_single_product,
 			] );
 			?>
 
@@ -192,8 +199,9 @@ $curated_attrs = $is_curated ? ' data-comparison-id="' . esc_attr( $comparison_i
 						<div class="compare-overview" data-compare-overview>
 							<?php
 							get_template_part( 'template-parts/compare/overview', null, [
-								'products' => $compare_products,
-								'category' => $category,
+								'products'          => $compare_products,
+								'category'          => $category,
+								'is_single_product' => $is_single_product,
 							] );
 							?>
 						</div>
@@ -209,9 +217,10 @@ $curated_attrs = $is_curated ? ' data-comparison-id="' . esc_attr( $comparison_i
 						<?php
 						// Render mini-header (outside scroll wrapper for sticky positioning).
 						get_template_part( 'template-parts/compare/mini-header', null, [
-							'products'        => $compare_products,
-							'geo'             => $geo,
-							'currency_symbol' => $currency_symbol,
+							'products'          => $compare_products,
+							'geo'               => $geo,
+							'currency_symbol'   => $currency_symbol,
+							'is_single_product' => $is_single_product,
 						] );
 
 						// Check if any product has pricing in any geo (for Value Analysis).
@@ -235,11 +244,12 @@ $curated_attrs = $is_curated ? ' data-comparison-id="' . esc_attr( $comparison_i
 							// For Value Analysis, render with empty cells (JS will hydrate).
 							if ( $is_value_section ) {
 								get_template_part( 'template-parts/compare/specs-table-value', null, [
-									'group_name'      => $group_name,
-									'group_slug'      => sanitize_title( $group_name ),
-									'specs'           => $specs,
-									'products'        => $compare_products,
-									'currency_symbol' => $currency_symbol,
+									'group_name'        => $group_name,
+									'group_slug'        => sanitize_title( $group_name ),
+									'specs'             => $specs,
+									'products'          => $compare_products,
+									'currency_symbol'   => $currency_symbol,
+									'is_single_product' => $is_single_product,
 								] );
 								continue;
 							}
@@ -251,11 +261,12 @@ $curated_attrs = $is_curated ? ' data-comparison-id="' . esc_attr( $comparison_i
 							}
 
 							get_template_part( 'template-parts/compare/specs-table', null, [
-								'group_name'      => $group_name,
-								'group_slug'      => sanitize_title( $group_name ),
-								'rows'            => $rows,
-								'products'        => $compare_products,
-								'currency_symbol' => $currency_symbol,
+								'group_name'        => $group_name,
+								'group_slug'        => sanitize_title( $group_name ),
+								'rows'              => $rows,
+								'products'          => $compare_products,
+								'currency_symbol'   => $currency_symbol,
+								'is_single_product' => $is_single_product,
 							] );
 						}
 						?>
@@ -267,6 +278,9 @@ $curated_attrs = $is_curated ? ' data-comparison-id="' . esc_attr( $comparison_i
 								<?php foreach ( $compare_products as $product ) : ?>
 									<col>
 								<?php endforeach; ?>
+								<?php if ( $is_single_product ) : ?>
+									<col class="compare-spec-col-placeholder">
+								<?php endif; ?>
 							</colgroup>
 							<tbody>
 								<tr class="compare-buy-row">
@@ -281,6 +295,9 @@ $curated_attrs = $is_curated ? ' data-comparison-id="' . esc_attr( $comparison_i
 										</span>
 									</td>
 									<?php endforeach; ?>
+									<?php if ( $is_single_product ) : ?>
+									<td class="compare-spec-placeholder"></td>
+									<?php endif; ?>
 								</tr>
 							</tbody>
 						</table>
@@ -509,6 +526,7 @@ window.erhData.compareConfig = {
 	currencySymbol: <?php echo wp_json_encode( $currency_symbol, JSON_HEX_TAG | JSON_HEX_AMP ); ?>,
 	titleData: <?php echo wp_json_encode( erh_get_compare_title_data(), JSON_HEX_TAG | JSON_HEX_AMP ); ?>,
 	isCurated: <?php echo $is_curated ? 'true' : 'false'; ?>,
+	isSingleProduct: <?php echo $is_single_product ? 'true' : 'false'; ?>,
 	comparisonId: <?php echo (int) $comparison_id; ?>
 };
 // Inject spec config from PHP (single source of truth).

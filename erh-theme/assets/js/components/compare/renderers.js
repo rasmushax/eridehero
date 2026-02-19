@@ -417,7 +417,7 @@ export function renderAdvantagesForProduct(product, advantages) {
  * @returns {string} HTML output
  */
 export function renderAdvantagesGrid(products, advantages) {
-    if (!products || products.length < 2) {
+    if (!products || products.length < 1) {
         return '';
     }
 

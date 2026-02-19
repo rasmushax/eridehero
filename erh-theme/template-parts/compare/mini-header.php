@@ -11,13 +11,15 @@
  * @package ERideHero
  *
  * @var array $args {
- *     @type array[] $products Products from erh_get_compare_products().
+ *     @type array[] $products          Products from erh_get_compare_products().
+ *     @type bool    $is_single_product Whether this is a single-product compare view.
  * }
  */
 
 defined( 'ABSPATH' ) || exit;
 
-$products = $args['products'] ?? array();
+$products          = $args['products'] ?? array();
+$is_single_product = $args['is_single_product'] ?? false;
 
 if ( empty( $products ) ) {
 	return;
@@ -31,6 +33,9 @@ if ( empty( $products ) ) {
 			<?php foreach ( $products as $product ) : ?>
 				<col>
 			<?php endforeach; ?>
+			<?php if ( $is_single_product ) : ?>
+				<col class="compare-spec-col-placeholder">
+			<?php endif; ?>
 		</colgroup>
 		<tr>
 			<td class="compare-mini-label">
@@ -67,6 +72,16 @@ if ( empty( $products ) ) {
 					</div>
 				</td>
 			<?php endforeach; ?>
+			<?php if ( $is_single_product ) : ?>
+				<td>
+					<div class="compare-mini-product compare-mini-product--placeholder">
+						<button class="compare-mini-add-btn" data-open-add-modal>
+							<svg class="icon" width="16" height="16" aria-hidden="true"><use href="#icon-plus"></use></svg>
+							<span>Add product</span>
+						</button>
+					</div>
+				</td>
+			<?php endif; ?>
 		</tr>
 	</table>
 </div>

@@ -4,26 +4,29 @@
  *
  * Renders skeleton loading state for radar chart (JS renders actual chart).
  * Advantages are fully SSR using spec-based comparison (Versus.com style).
+ * Single-product mode shows radar chart + CTA to add another product.
  *
  * @package ERideHero
  *
  * @var array $args {
- *     @type array[] $products Products from erh_get_compare_products().
- *     @type string  $category Product category (escooter, ebike, etc.).
+ *     @type array[] $products          Products from erh_get_compare_products().
+ *     @type string  $category          Product category (escooter, ebike, etc.).
+ *     @type bool    $is_single_product Whether this is a single-product compare view.
  * }
  */
 
 defined( 'ABSPATH' ) || exit;
 
-$products = $args['products'] ?? array();
-$category = $args['category'] ?? 'escooter';
+$products          = $args['products'] ?? array();
+$category          = $args['category'] ?? 'escooter';
+$is_single_product = $args['is_single_product'] ?? false;
 
-if ( count( $products ) < 2 ) {
+if ( count( $products ) < 1 ) {
 	return;
 }
 
-// Calculate spec-based advantages (independent winners per spec).
-$spec_advantages = erh_calculate_spec_advantages( $products );
+// Calculate spec-based advantages only for 2+ products.
+$spec_advantages = count( $products ) >= 2 ? erh_calculate_spec_advantages( $products ) : array();
 ?>
 
 <div class="compare-overview-grid">
@@ -43,41 +46,53 @@ $spec_advantages = erh_calculate_spec_advantages( $products );
 		</div>
 	</div>
 
-	<!-- Advantages (spec-based, Versus.com style) -->
-	<div class="compare-advantages">
-		<?php foreach ( $products as $idx => $product ) :
-			$advantages = $spec_advantages[ $idx ] ?? array();
-			?>
-			<div class="compare-advantage">
-				<?php if ( empty( $advantages ) ) : ?>
-					<h4 class="compare-advantage-title">Where <?php echo esc_html( $product['name'] ); ?> wins</h4>
-					<p class="compare-advantage-empty">No clear advantages</p>
-				<?php else : ?>
-					<h4 class="compare-advantage-title">Where <?php echo esc_html( $product['name'] ); ?> wins</h4>
-					<ul class="compare-advantage-list">
-						<?php foreach ( $advantages as $adv ) : ?>
-							<li class="compare-advantage-item">
-								<span class="compare-advantage-check">
-									<?php erh_the_icon( 'check', '', array( 'width' => '16', 'height' => '16' ) ); ?>
-								</span>
-								<div class="compare-advantage-content">
-									<span class="compare-advantage-text">
-										<?php echo esc_html( $adv['text'] ); ?>
-										<?php if ( ! empty( $adv['tooltip'] ) ) : ?>
-											<span class="info-trigger" data-tooltip="<?php echo esc_attr( $adv['tooltip'] ); ?>" data-tooltip-trigger="click">
-												<?php erh_the_icon( 'info', '', array( 'width' => '14', 'height' => '14' ) ); ?>
-											</span>
-										<?php endif; ?>
-									</span>
-									<?php if ( ! empty( $adv['comparison'] ) ) : ?>
-										<span class="compare-advantage-values"><?php echo esc_html( $adv['comparison'] ); ?></span>
-									<?php endif; ?>
-								</div>
-							</li>
-						<?php endforeach; ?>
-					</ul>
-				<?php endif; ?>
+	<!-- Advantages -->
+	<?php if ( $is_single_product ) : ?>
+		<div class="compare-advantages compare-advantages--empty">
+			<div class="compare-advantage-empty-cta">
+				<p>Add another product to compare strengths and weaknesses.</p>
+				<button class="btn btn-secondary btn-sm" data-open-add-modal>
+					<?php erh_the_icon( 'plus', '', array( 'width' => '16', 'height' => '16' ) ); ?>
+					Add Product
+				</button>
 			</div>
-		<?php endforeach; ?>
-	</div>
+		</div>
+	<?php else : ?>
+		<div class="compare-advantages">
+			<?php foreach ( $products as $idx => $product ) :
+				$advantages = $spec_advantages[ $idx ] ?? array();
+				?>
+				<div class="compare-advantage">
+					<?php if ( empty( $advantages ) ) : ?>
+						<h4 class="compare-advantage-title">Where <?php echo esc_html( $product['name'] ); ?> wins</h4>
+						<p class="compare-advantage-empty">No clear advantages</p>
+					<?php else : ?>
+						<h4 class="compare-advantage-title">Where <?php echo esc_html( $product['name'] ); ?> wins</h4>
+						<ul class="compare-advantage-list">
+							<?php foreach ( $advantages as $adv ) : ?>
+								<li class="compare-advantage-item">
+									<span class="compare-advantage-check">
+										<?php erh_the_icon( 'check', '', array( 'width' => '16', 'height' => '16' ) ); ?>
+									</span>
+									<div class="compare-advantage-content">
+										<span class="compare-advantage-text">
+											<?php echo esc_html( $adv['text'] ); ?>
+											<?php if ( ! empty( $adv['tooltip'] ) ) : ?>
+												<span class="info-trigger" data-tooltip="<?php echo esc_attr( $adv['tooltip'] ); ?>" data-tooltip-trigger="click">
+													<?php erh_the_icon( 'info', '', array( 'width' => '14', 'height' => '14' ) ); ?>
+												</span>
+											<?php endif; ?>
+										</span>
+										<?php if ( ! empty( $adv['comparison'] ) ) : ?>
+											<span class="compare-advantage-values"><?php echo esc_html( $adv['comparison'] ); ?></span>
+										<?php endif; ?>
+									</div>
+								</li>
+							<?php endforeach; ?>
+						</ul>
+					<?php endif; ?>
+				</div>
+			<?php endforeach; ?>
+		</div>
+	<?php endif; ?>
 </div>

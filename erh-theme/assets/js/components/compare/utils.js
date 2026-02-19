@@ -62,6 +62,12 @@ export function findWinners(values, spec) {
  */
 export function buildCompareUrl(ids, allProducts) {
     const base = window.erhData?.siteUrl || '';
+
+    // Single product: always use query string (no slug-based URL)
+    if (ids.length === 1) {
+        return `${base}/compare/?products=${ids[0]}`;
+    }
+
     if (ids.length <= 4) {
         const slugs = ids.map(id => {
             const p = allProducts.find(x => x.id === id);

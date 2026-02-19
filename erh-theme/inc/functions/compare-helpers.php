@@ -591,11 +591,12 @@ function erh_build_compare_spec_rows( array $products, array $specs, string $geo
 /**
  * Render a single compare spec row.
  *
- * @param array   $row      Row data from erh_build_compare_spec_rows().
- * @param array[] $products Products.
- * @param string  $symbol   Currency symbol.
+ * @param array   $row         Row data from erh_build_compare_spec_rows().
+ * @param array[] $products    Products.
+ * @param string  $symbol      Currency symbol.
+ * @param string  $extra_cells Optional HTML to append before closing </tr>.
  */
-function erh_render_compare_spec_row( array $row, array $products, string $symbol = '$' ): void {
+function erh_render_compare_spec_row( array $row, array $products, string $symbol = '$', string $extra_cells = '' ): void {
     $same_attr = $row['all_same'] ? ' data-same-values' : '';
     $is_bool   = $row['is_bool'] ?? false;
     $spec      = $row['spec'];
@@ -658,6 +659,7 @@ function erh_render_compare_spec_row( array $row, array $products, string $symbo
             endif;
             ?>
         <?php endforeach; ?>
+        <?php echo $extra_cells; // phpcs:ignore WordPress.Security.EscapeOutput.OutputNotEscaped -- Pre-built HTML. ?>
     </tr>
     <?php
 }

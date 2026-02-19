@@ -2249,3 +2249,111 @@
         font-size: var(--text-xs);
     }
 }
+
+/* =============================================================================
+   Single-Product Compare View
+   ============================================================================= */
+
+/* Header: 2-column grid when single product */
+.compare-page--single .compare-header-products {
+    grid-template-columns: 1fr 1fr;
+}
+
+/* Placeholder product card */
+.compare-product--placeholder {
+    display: flex;
+    align-items: center;
+    justify-content: center;
+}
+
+.compare-product-placeholder-inner {
+    width: 100%;
+    height: 100%;
+    display: flex;
+    align-items: center;
+    justify-content: center;
+}
+
+.compare-product--placeholder .compare-product-add-btn {
+    min-height: 200px;
+}
+
+.compare-product--placeholder .compare-product-add-btn span {
+    max-width: 140px;
+    text-align: center;
+    line-height: var(--leading-snug);
+}
+
+/* Placeholder spec cells */
+.compare-spec-placeholder {
+    color: var(--color-light);
+    text-align: center;
+}
+
+/* Mini-header placeholder */
+.compare-mini-product--placeholder {
+    display: flex;
+    align-items: center;
+    justify-content: center;
+}
+
+.compare-mini-add-btn {
+    display: flex;
+    align-items: center;
+    gap: var(--space-2);
+    padding: var(--space-2) var(--space-3);
+    border: 1.5px dashed var(--color-border);
+    border-radius: var(--radius-md);
+    background: transparent;
+    cursor: pointer;
+    font-size: var(--text-xs);
+    font-weight: var(--font-medium);
+    color: var(--color-muted);
+    transition: border-color var(--transition-fast), color var(--transition-fast);
+}
+
+.compare-mini-add-btn:hover {
+    border-color: var(--color-primary);
+    color: var(--color-primary);
+}
+
+.compare-mini-add-btn .icon {
+    width: 14px;
+    height: 14px;
+}
+
+/* Overview empty CTA */
+.compare-advantages--empty {
+    display: flex;
+    align-items: center;
+    justify-content: center;
+    text-align: center;
+    padding: var(--space-8);
+}
+
+.compare-advantage-empty-cta p {
+    margin: 0 0 var(--space-4);
+    color: var(--color-muted);
+    font-size: var(--text-sm);
+}
+
+.compare-advantage-empty-cta .btn {
+    display: inline-flex;
+    align-items: center;
+    gap: var(--space-2);
+}
+
+/* Mobile: hide placeholder column, show only product data */
+@media (max-width: 768px) {
+    .compare-page--single .compare-header-products {
+        grid-template-columns: 1fr;
+    }
+
+    .compare-product--placeholder {
+        min-height: auto;
+    }
+
+    .compare-product--placeholder .compare-product-add-btn {
+        min-height: 80px;
+    }
+}

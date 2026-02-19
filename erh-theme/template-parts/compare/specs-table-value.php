@@ -8,20 +8,22 @@
  * @package ERideHero
  *
  * @var array $args {
- *     @type string  $group_name      Category name ("Value Analysis").
- *     @type string  $group_slug      Slug for ID.
- *     @type array[] $specs           Spec definitions.
- *     @type array[] $products        Products array.
- *     @type string  $currency_symbol Default currency symbol (fallback).
+ *     @type string  $group_name        Category name ("Value Analysis").
+ *     @type string  $group_slug        Slug for ID.
+ *     @type array[] $specs             Spec definitions.
+ *     @type array[] $products          Products array.
+ *     @type string  $currency_symbol   Default currency symbol (fallback).
+ *     @type bool    $is_single_product Whether this is a single-product compare view.
  * }
  */
 
 defined( 'ABSPATH' ) || exit;
 
-$group_name = $args['group_name'] ?? 'Value Analysis';
-$group_slug = $args['group_slug'] ?? 'value-analysis';
-$specs      = $args['specs'] ?? array();
-$products   = $args['products'] ?? array();
+$group_name        = $args['group_name'] ?? 'Value Analysis';
+$group_slug        = $args['group_slug'] ?? 'value-analysis';
+$specs             = $args['specs'] ?? array();
+$products          = $args['products'] ?? array();
+$is_single_product = $args['is_single_product'] ?? false;
 
 if ( empty( $specs ) || empty( $products ) ) {
 	return;
@@ -37,6 +39,9 @@ if ( empty( $specs ) || empty( $products ) ) {
 			<?php foreach ( $products as $product ) : ?>
 				<col>
 			<?php endforeach; ?>
+			<?php if ( $is_single_product ) : ?>
+				<col class="compare-spec-col-placeholder">
+			<?php endif; ?>
 		</colgroup>
 		<tbody>
 			<?php foreach ( $specs as $spec ) :
@@ -58,6 +63,9 @@ if ( empty( $specs ) || empty( $products ) ) {
 					<?php foreach ( $products as $product ) : ?>
 						<td data-product-id="<?php echo esc_attr( $product['id'] ); ?>">—</td>
 					<?php endforeach; ?>
+					<?php if ( $is_single_product ) : ?>
+						<td class="compare-spec-placeholder">—</td>
+					<?php endif; ?>
 				</tr>
 			<?php endforeach; ?>
 		</tbody>

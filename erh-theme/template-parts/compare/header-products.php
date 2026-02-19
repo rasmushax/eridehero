@@ -7,16 +7,18 @@
  * @package ERideHero
  *
  * @var array $args {
- *     @type array[] $products Products from erh_get_compare_products().
- *     @type string  $geo      Geo region.
+ *     @type array[] $products          Products from erh_get_compare_products().
+ *     @type string  $geo               Geo region.
+ *     @type bool    $is_single_product Whether this is a single-product compare view.
  * }
  */
 
 defined( 'ABSPATH' ) || exit;
 
-$products = $args['products'] ?? array();
-$geo      = $args['geo'] ?? 'US';
-$symbol   = erh_get_currency_symbol( $geo );
+$products          = $args['products'] ?? array();
+$geo               = $args['geo'] ?? 'US';
+$is_single_product = $args['is_single_product'] ?? false;
+$symbol            = erh_get_currency_symbol( $geo );
 
 if ( empty( $products ) ) {
 	return;
@@ -34,9 +36,11 @@ if ( empty( $products ) ) {
 
 					<!-- Actions: remove always visible, track button added by JS when price loads -->
 					<div class="compare-product-actions">
+						<?php if ( ! $is_single_product ) : ?>
 						<button class="compare-product-remove" data-remove="<?php echo esc_attr( $product['id'] ); ?>" aria-label="Remove from comparison">
 							<?php erh_the_icon( 'x', '', array( 'width' => '14', 'height' => '14' ) ); ?>
 						</button>
+						<?php endif; ?>
 						<!-- Price track button injected by JS -->
 					</div>
 
@@ -66,12 +70,23 @@ if ( empty( $products ) ) {
 				</article>
 			<?php endforeach; ?>
 
-			<div class="compare-product compare-product--add-wrap">
-				<button class="compare-product-add-btn" data-open-add-modal>
-					<?php erh_the_icon( 'plus', '', array( 'width' => '24', 'height' => '24' ) ); ?>
-					<span>Add</span>
-				</button>
-			</div>
+			<?php if ( $is_single_product ) : ?>
+				<div class="compare-product compare-product--placeholder">
+					<div class="compare-product-placeholder-inner">
+						<button class="compare-product-add-btn" data-open-add-modal>
+							<?php erh_the_icon( 'plus', '', array( 'width' => '24', 'height' => '24' ) ); ?>
+							<span>Add a product to compare</span>
+						</button>
+					</div>
+				</div>
+			<?php else : ?>
+				<div class="compare-product compare-product--add-wrap">
+					<button class="compare-product-add-btn" data-open-add-modal>
+						<?php erh_the_icon( 'plus', '', array( 'width' => '24', 'height' => '24' ) ); ?>
+						<span>Add</span>
+					</button>
+				</div>
+			<?php endif; ?>
 		</div>
 	</div>
 </header>
