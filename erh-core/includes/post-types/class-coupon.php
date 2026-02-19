@@ -394,6 +394,7 @@ class Coupon {
             if ($key === 'title') {
                 $new_columns['coupon_code'] = __('Code', 'erh-core');
                 $new_columns['retailer']    = __('Retailer', 'erh-core');
+                $new_columns['regions']     = __('Regions', 'erh-core');
                 $new_columns['type']        = __('Type', 'erh-core');
                 $new_columns['scope']       = __('Scope', 'erh-core');
                 $new_columns['expires']     = __('Expires', 'erh-core');
@@ -425,6 +426,43 @@ class Coupon {
                     echo esc_html($info['name']);
                 } else {
                     echo '<em>' . esc_html__('Unknown', 'erh-core') . '</em>';
+                }
+                break;
+
+            case 'regions':
+                $scraper_id = get_field('coupon_scraper_id', $post_id);
+                if ($scraper_id) {
+                    global $wpdb;
+                    $hft_table = $wpdb->prefix . 'hft_tracked_links';
+                    $geos = $wpdb->get_col($wpdb->prepare(
+                        "SELECT DISTINCT geo_target FROM {$hft_table} WHERE scraper_id = %d AND geo_target IS NOT NULL AND geo_target != ''",
+                        (int) $scraper_id
+                    ));
+
+                    if (!empty($geos)) {
+                        $flag_map = [
+                            'US' => 'united-states.svg',
+                            'GB' => 'united-kingdom.svg',
+                            'EU' => 'european-union.svg',
+                            'CA' => 'canada.svg',
+                            'AU' => 'australia.svg',
+                        ];
+                        $flag_base = get_stylesheet_directory_uri() . '/assets/images/countries/';
+                        $ordered   = ['US', 'GB', 'EU', 'CA', 'AU'];
+
+                        foreach ($ordered as $geo) {
+                            if (in_array($geo, $geos, true) && isset($flag_map[$geo])) {
+                                printf(
+                                    '<img src="%s" alt="%s" title="%s" style="width:16px;height:16px;margin-right:3px;vertical-align:middle;">',
+                                    esc_url($flag_base . $flag_map[$geo]),
+                                    esc_attr($geo),
+                                    esc_attr($geo)
+                                );
+                            }
+                        }
+                    } else {
+                        echo '<em style="color:#72777c;">—</em>';
+                    }
                 }
                 break;
 
