@@ -456,6 +456,10 @@
     margin: var(--space-3) 0 0;
 }
 
+.price-intel-disclosure a {
+    text-decoration: underline;
+}
+
 .price-intel-retailer-row {
     display: flex;
     align-items: center;
