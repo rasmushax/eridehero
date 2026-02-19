@@ -98,12 +98,6 @@ class Coupon {
             return;
         }
 
-        // Build category choices from CategoryConfig.
-        $category_choices = [];
-        foreach (CategoryConfig::get_all() as $key => $cat) {
-            $category_choices[$key] = $cat['name'];
-        }
-
         acf_add_local_field_group([
             'key'      => 'group_coupon_details',
             'title'    => 'Coupon Details',
@@ -113,7 +107,7 @@ class Coupon {
                     'label'        => 'Retailer',
                     'name'         => 'coupon_scraper_id',
                     'type'         => 'select',
-                    'instructions' => 'Select the retailer (from HFT scrapers).',
+                    'instructions' => 'Select the retailer (from HFT scrapers). Category detection is automatic based on which products this retailer carries.',
                     'required'     => 1,
                     'choices'      => [], // Populated dynamically via acf/load_field.
                     'allow_null'   => 0,
@@ -175,15 +169,23 @@ class Coupon {
                     'required'     => 0,
                 ],
                 [
-                    'key'           => 'field_coupon_category',
-                    'label'         => 'Product Category',
-                    'name'          => 'coupon_category',
-                    'type'          => 'select',
-                    'instructions'  => 'Which product category does this coupon apply to?',
+                    'key'           => 'field_coupon_expires',
+                    'label'         => 'Expiry Date',
+                    'name'          => 'coupon_expires',
+                    'type'          => 'date_picker',
+                    'instructions'  => 'Leave empty for ongoing/no expiry.',
                     'required'      => 0,
-                    'choices'       => $category_choices,
-                    'allow_null'    => 1,
-                    'ui'            => 1,
+                    'display_format' => 'F j, Y',
+                    'return_format' => 'Y-m-d',
+                ],
+                [
+                    'key'          => 'field_coupon_terms',
+                    'label'        => 'Terms & Conditions',
+                    'name'         => 'coupon_terms',
+                    'type'         => 'textarea',
+                    'instructions' => 'Fine print, e.g. "New customers only. Max 1 per order. Cannot combine with other offers."',
+                    'required'     => 0,
+                    'rows'         => 3,
                 ],
             ],
             'location' => [
@@ -377,6 +379,7 @@ class Coupon {
                 $new_columns['retailer']    = __('Retailer', 'erh-core');
                 $new_columns['type']        = __('Type', 'erh-core');
                 $new_columns['scope']       = __('Scope', 'erh-core');
+                $new_columns['expires']     = __('Expires', 'erh-core');
             }
         }
 
@@ -445,33 +448,156 @@ class Coupon {
                     echo esc_html__('Specific (none set)', 'erh-core');
                 }
                 break;
+
+            case 'expires':
+                $expires = get_field('coupon_expires', $post_id);
+                if ($expires) {
+                    $is_expired = strtotime($expires) < time();
+                    $formatted = date_i18n('M j, Y', strtotime($expires));
+                    if ($is_expired) {
+                        printf(
+                            '<span style="color: #d63638;">%s</span>',
+                            esc_html($formatted)
+                        );
+                    } else {
+                        echo esc_html($formatted);
+                    }
+                } else {
+                    echo '<em>' . esc_html__('Ongoing', 'erh-core') . '</em>';
+                }
+                break;
         }
     }
 
     /**
-     * Get all published coupons for a given product category.
+     * Check if a coupon has expired.
      *
-     * @param string $category Category key (e.g. 'escooter').
-     * @return array Array of coupon post objects with ACF fields.
+     * @param int $coupon_id The coupon post ID.
+     * @return bool True if expired.
      */
-    public static function get_by_category(string $category): array {
-        $posts = get_posts([
-            'post_type'      => self::POST_TYPE,
-            'posts_per_page' => -1,
-            'post_status'    => 'publish',
-            'meta_query'     => [
-                [
-                    'key'   => 'coupon_category',
-                    'value' => $category,
-                ],
-            ],
-        ]);
-
-        return self::enrich_coupons($posts);
+    public static function is_expired(int $coupon_id): bool {
+        $expires = get_field('coupon_expires', $coupon_id);
+        if (!$expires) {
+            return false; // No expiry = ongoing.
+        }
+        // Compare as date only (expire at end of the day).
+        return strtotime($expires . ' 23:59:59') < time();
     }
 
     /**
-     * Get all published coupons that apply to a specific product.
+     * Get active (non-expired, published) coupons relevant to a product category.
+     *
+     * Uses smart detection: checks if the coupon's retailer (scraper) has tracked links
+     * for any published products in the given category via the HFT tracked_links table.
+     * Also respects scope (all/specific) and exclusion lists.
+     *
+     * @param string $category_key Category key (e.g. 'escooter').
+     * @return array Array of enriched coupon data, grouped-ready (sorted by retailer).
+     */
+    public static function get_by_category(string $category_key): array {
+        global $wpdb;
+
+        // Resolve category key to product_type taxonomy slug.
+        $category = CategoryConfig::get_by_key($category_key);
+        if (!$category) {
+            return [];
+        }
+
+        // Map canonical key to taxonomy slug (e.g. 'escooter' → 'electric-scooter').
+        $taxonomy_slug_map = [
+            'escooter'    => 'electric-scooter',
+            'ebike'       => 'electric-bike',
+            'eskateboard' => 'electric-skateboard',
+            'euc'         => 'electric-unicycle',
+            'hoverboard'  => 'hoverboard',
+        ];
+        $taxonomy_slug = $taxonomy_slug_map[$category_key] ?? '';
+        if (!$taxonomy_slug) {
+            return [];
+        }
+
+        // Get all published, non-expired coupons.
+        $all_coupons = get_posts([
+            'post_type'      => self::POST_TYPE,
+            'posts_per_page' => -1,
+            'post_status'    => 'publish',
+        ]);
+
+        if (empty($all_coupons)) {
+            return [];
+        }
+
+        // For each coupon, check if its scraper has products in this category.
+        $matching = [];
+        $hft_table = $wpdb->prefix . 'hft_tracked_links';
+
+        foreach ($all_coupons as $coupon) {
+            // Skip expired coupons.
+            if (self::is_expired($coupon->ID)) {
+                continue;
+            }
+
+            $scraper_id = get_field('coupon_scraper_id', $coupon->ID);
+            if (!$scraper_id) {
+                continue;
+            }
+
+            // Check if this scraper has tracked links for products in this category.
+            // Query: find product IDs from tracked_links for this scraper,
+            // then check if any of those products have the target product_type taxonomy.
+            $product_ids_in_category = $wpdb->get_col($wpdb->prepare(
+                "SELECT DISTINCT tl.product_post_id
+                 FROM {$hft_table} tl
+                 INNER JOIN {$wpdb->posts} p
+                     ON p.ID = tl.product_post_id AND p.post_status = 'publish'
+                 INNER JOIN {$wpdb->term_relationships} tr
+                     ON tr.object_id = p.ID
+                 INNER JOIN {$wpdb->term_taxonomy} tt
+                     ON tt.term_taxonomy_id = tr.term_taxonomy_id AND tt.taxonomy = 'product_type'
+                 INNER JOIN {$wpdb->terms} t
+                     ON t.term_id = tt.term_id AND t.slug = %s
+                 WHERE tl.scraper_id = %d",
+                $taxonomy_slug,
+                (int) $scraper_id
+            ));
+
+            if (empty($product_ids_in_category)) {
+                continue;
+            }
+
+            // Check scope: does this coupon actually apply to any of these products?
+            $scope = get_field('coupon_scope', $coupon->ID);
+            $scope_products = get_field('coupon_products', $coupon->ID);
+            $scope_ids = is_array($scope_products) ? array_map('intval', $scope_products) : [];
+
+            $has_applicable_product = false;
+
+            if ($scope === 'specific') {
+                // Only applies to products in the inclusions list.
+                $has_applicable_product = !empty(array_intersect(
+                    array_map('intval', $product_ids_in_category),
+                    $scope_ids
+                ));
+            } else {
+                // scope=all: applies to all except exceptions.
+                foreach ($product_ids_in_category as $pid) {
+                    if (!in_array((int) $pid, $scope_ids, true)) {
+                        $has_applicable_product = true;
+                        break;
+                    }
+                }
+            }
+
+            if ($has_applicable_product) {
+                $matching[] = $coupon;
+            }
+        }
+
+        return self::enrich_coupons($matching);
+    }
+
+    /**
+     * Get all published, non-expired coupons that apply to a specific product.
      *
      * Checks both scope types:
      * - scope=all: coupon applies unless product is in the exceptions list
@@ -481,7 +607,6 @@ class Coupon {
      * @return array Array of coupon data arrays.
      */
     public static function get_for_product(int $product_id): array {
-        // Get all published coupons.
         $all_coupons = get_posts([
             'post_type'      => self::POST_TYPE,
             'posts_per_page' => -1,
@@ -491,17 +616,19 @@ class Coupon {
         $matching = [];
 
         foreach ($all_coupons as $coupon) {
+            if (self::is_expired($coupon->ID)) {
+                continue;
+            }
+
             $scope = get_field('coupon_scope', $coupon->ID);
             $products = get_field('coupon_products', $coupon->ID);
             $product_ids = is_array($products) ? array_map('intval', $products) : [];
 
             if ($scope === 'all') {
-                // Applies to all unless product is in exceptions list.
                 if (!in_array($product_id, $product_ids, true)) {
                     $matching[] = $coupon;
                 }
             } elseif ($scope === 'specific') {
-                // Applies only if product is in inclusions list.
                 if (in_array($product_id, $product_ids, true)) {
                     $matching[] = $coupon;
                 }
@@ -544,6 +671,31 @@ class Coupon {
     }
 
     /**
+     * Group enriched coupons by retailer name.
+     *
+     * @param array $coupons Enriched coupon data from get_by_category().
+     * @return array Grouped array: [ ['retailer' => [...], 'coupons' => [...]], ... ]
+     */
+    public static function group_by_retailer(array $coupons): array {
+        $groups = [];
+
+        foreach ($coupons as $coupon) {
+            $retailer_name = $coupon['retailer']['name'] ?? 'Unknown';
+
+            if (!isset($groups[$retailer_name])) {
+                $groups[$retailer_name] = [
+                    'retailer' => $coupon['retailer'],
+                    'coupons'  => [],
+                ];
+            }
+
+            $groups[$retailer_name]['coupons'][] = $coupon;
+        }
+
+        return array_values($groups);
+    }
+
+    /**
      * Enrich coupon posts with ACF field data.
      *
      * @param array $posts Array of WP_Post objects.
@@ -554,6 +706,7 @@ class Coupon {
 
         foreach ($posts as $post) {
             $retailer = self::get_retailer_info($post->ID);
+            $expires = get_field('coupon_expires', $post->ID);
 
             $coupons[] = [
                 'id'          => $post->ID,
@@ -564,9 +717,11 @@ class Coupon {
                 'description' => get_field('coupon_description', $post->ID) ?: '',
                 'min_order'   => get_field('coupon_min_order', $post->ID),
                 'url'         => get_field('coupon_url', $post->ID) ?: '',
-                'category'    => get_field('coupon_category', $post->ID) ?: '',
+                'expires'     => $expires ?: null,
+                'terms'       => get_field('coupon_terms', $post->ID) ?: '',
                 'scope'       => get_field('coupon_scope', $post->ID) ?: 'all',
                 'retailer'    => $retailer,
+                'modified'    => get_post_modified_time('U', false, $post->ID),
             ];
         }
 
