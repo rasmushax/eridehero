@@ -739,10 +739,9 @@ body.transparent-header main {
     }
 }
 
-@media (max-width: 480px) {
+@media (max-width: 620px) {
     .about-team-grid {
         grid-template-columns: 1fr;
-        gap: var(--space-8);
     }
 }
 
