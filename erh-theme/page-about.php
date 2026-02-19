@@ -142,36 +142,38 @@ $team_member_ids = get_field( 'about_team_members', 'option' );
                     $member_socials = array_filter( $socials_raw );
                 ?>
                 <div class="about-team-card">
-                    <a href="<?php echo esc_url( $author_url ); ?>" class="about-team-image">
-                        <?php if ( $photo && ! empty( $photo['url'] ) ) : ?>
-                            <img src="<?php echo esc_url( $photo['sizes']['medium'] ?? $photo['url'] ); ?>"
-                                 alt="<?php echo esc_attr( $name ); ?>"
-                                 width="<?php echo esc_attr( $photo['sizes']['medium-width'] ?? $photo['width'] ?? '' ); ?>"
-                                 height="<?php echo esc_attr( $photo['sizes']['medium-height'] ?? $photo['height'] ?? '' ); ?>"
-                                 loading="lazy">
-                        <?php endif; ?>
-                    </a>
-                    <div class="about-team-info">
-                        <?php if ( ! empty( $member_socials ) ) : ?>
-                            <div class="about-team-socials">
-                                <?php foreach ( $member_socials as $platform => $url ) : ?>
-                                    <a href="<?php echo esc_url( $url ); ?>" aria-label="<?php echo esc_attr( $name . ' on ' . ucfirst( $platform ) ); ?>" target="_blank" rel="noopener">
-                                        <?php erh_the_icon( $platform ); ?>
-                                    </a>
-                                <?php endforeach; ?>
-                            </div>
-                        <?php endif; ?>
+                    <div class="about-team-top">
+                        <a href="<?php echo esc_url( $author_url ); ?>" class="about-team-image">
+                            <?php if ( $photo && ! empty( $photo['url'] ) ) : ?>
+                                <img src="<?php echo esc_url( $photo['sizes']['medium'] ?? $photo['url'] ); ?>"
+                                     alt="<?php echo esc_attr( $name ); ?>"
+                                     width="<?php echo esc_attr( $photo['sizes']['medium-width'] ?? $photo['width'] ?? '' ); ?>"
+                                     height="<?php echo esc_attr( $photo['sizes']['medium-height'] ?? $photo['height'] ?? '' ); ?>"
+                                     loading="lazy">
+                            <?php endif; ?>
+                        </a>
+                        <div class="about-team-info">
+                            <h3><a href="<?php echo esc_url( $author_url ); ?>"><?php echo esc_html( $name ); ?></a></h3>
 
-                        <h3><a href="<?php echo esc_url( $author_url ); ?>"><?php echo esc_html( $name ); ?></a></h3>
+                            <?php if ( $role ) : ?>
+                                <span class="about-team-role"><?php echo esc_html( $role ); ?></span>
+                            <?php endif; ?>
 
-                        <?php if ( $role ) : ?>
-                            <span class="about-team-role"><?php echo esc_html( $role ); ?></span>
-                        <?php endif; ?>
-
-                        <?php if ( $bio ) : ?>
-                            <p><?php echo esc_html( $bio ); ?></p>
-                        <?php endif; ?>
+                            <?php if ( ! empty( $member_socials ) ) : ?>
+                                <div class="about-team-socials">
+                                    <?php foreach ( $member_socials as $platform => $url ) : ?>
+                                        <a href="<?php echo esc_url( $url ); ?>" aria-label="<?php echo esc_attr( $name . ' on ' . ucfirst( $platform ) ); ?>" target="_blank" rel="noopener">
+                                            <?php erh_the_icon( $platform ); ?>
+                                        </a>
+                                    <?php endforeach; ?>
+                                </div>
+                            <?php endif; ?>
+                        </div>
                     </div>
+
+                    <?php if ( $bio ) : ?>
+                        <p class="about-team-bio"><?php echo esc_html( $bio ); ?></p>
+                    <?php endif; ?>
                 </div>
                 <?php endforeach; ?>
             </div>
@@ -187,8 +189,8 @@ $team_member_ids = get_field( 'about_team_members', 'option' );
                     <h2><?php esc_html_e( 'Ready to find your ride?', 'erh' ); ?></h2>
                     <p><?php esc_html_e( 'Browse our product database or check out the latest reviews and buying guides.', 'erh' ); ?></p>
                     <div class="about-bottom-actions">
-                        <a href="<?php echo esc_url( home_url( '/e-scooters/' ) ); ?>" class="btn btn-primary">
-                            <?php esc_html_e( 'Browse products', 'erh' ); ?>
+                        <a href="<?php echo esc_url( home_url( '/deals/' ) ); ?>" class="btn btn-primary">
+                            <?php esc_html_e( 'Best deals', 'erh' ); ?>
                             <?php erh_the_icon( 'arrow-right' ); ?>
                         </a>
                         <a href="<?php echo esc_url( home_url( '/buying-guides/' ) ); ?>" class="btn btn-secondary">
