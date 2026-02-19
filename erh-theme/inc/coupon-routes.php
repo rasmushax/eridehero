@@ -264,3 +264,87 @@ function erh_coupon_rankmath_opengraph(): void {
 	}
 }
 add_action( 'rank_math/opengraph/facebook', 'erh_coupon_rankmath_opengraph', 100 );
+
+// ─── RankMath Sitemap Integration ───
+
+/**
+ * Register custom sitemap provider for virtual coupon pages.
+ *
+ * Creates a 'coupons-sitemap.xml' so Google can discover coupon category pages
+ * which are virtual (no WP post) and wouldn't otherwise appear.
+ *
+ * @param array $providers Registered sitemap providers.
+ * @return array Modified providers.
+ */
+function erh_coupon_sitemap_provider( array $providers ): array {
+	if ( ! interface_exists( 'RankMath\\Sitemap\\Providers\\Provider' ) ) {
+		return $providers;
+	}
+
+	$providers['coupons'] = new class implements \RankMath\Sitemap\Providers\Provider {
+
+		/**
+		 * Check if this provider handles a given sitemap type.
+		 *
+		 * @param string $type Sitemap type.
+		 * @return bool
+		 */
+		public function handles_type( $type ) {
+			return 'coupons' === $type;
+		}
+
+		/**
+		 * Get sitemap index links (one entry per sitemap).
+		 *
+		 * @return array Index links.
+		 */
+		public function get_index_links( $max_entries ) {
+			return [
+				[
+					'loc'     => \RankMath\Sitemap\Router::get_base_url( 'coupons-sitemap.xml' ),
+					'lastmod' => gmdate( 'Y-m-d\TH:i:s+00:00' ),
+				],
+			];
+		}
+
+		/**
+		 * Get sitemap links for coupon category pages.
+		 *
+		 * @param string $type    Sitemap type.
+		 * @param int    $max_entries Max entries per sitemap.
+		 * @param int    $current_page Current sitemap page.
+		 * @return array Sitemap links.
+		 */
+		public function get_sitemap_links( $type, $max_entries, $current_page ) {
+			// Active coupon category keys that have rewrite rules.
+			$active_categories = [ 'escooter' ];
+
+			$links = [];
+			foreach ( $active_categories as $key ) {
+				$category = \ERH\CategoryConfig::get_by_key( $key );
+				if ( ! $category ) {
+					continue;
+				}
+
+				// Get latest modified coupon for lastmod.
+				$coupons  = \ERH\PostTypes\Coupon::get_by_category( $key );
+				$latest   = 0;
+				foreach ( $coupons as $c ) {
+					if ( $c['modified'] > $latest ) {
+						$latest = $c['modified'];
+					}
+				}
+
+				$links[] = [
+					'loc' => home_url( '/coupons/' . $category['slug'] . '/' ),
+					'mod' => $latest ? gmdate( 'Y-m-d\TH:i:s+00:00', $latest ) : gmdate( 'Y-m-d\TH:i:s+00:00' ),
+				];
+			}
+
+			return $links;
+		}
+	};
+
+	return $providers;
+}
+add_filter( 'rank_math/sitemap/providers', 'erh_coupon_sitemap_provider' );
