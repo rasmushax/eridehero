@@ -164,7 +164,31 @@ if ( $tax_slug ) {
 											</a>
 										<?php endif; ?>
 									</div>
-									<span class="coupon-group-count"><?php printf( esc_html( _n( '%d code', '%d codes', $group_count, 'erh-core' ) ), $group_count ); ?></span>
+									<?php
+								$regions = $retailer['regions'] ?? [];
+								if ( ! empty( $regions ) ) :
+									$flag_map = [
+										'US' => 'united-states.svg',
+										'GB' => 'united-kingdom.svg',
+										'EU' => 'european-union.svg',
+										'CA' => 'canada.svg',
+										'AU' => 'australia.svg',
+									];
+									$flag_base = ERH_THEME_URI . '/assets/images/countries/';
+								?>
+									<div class="coupon-group-flags">
+										<?php foreach ( ['US', 'GB', 'EU', 'CA', 'AU'] as $region ) :
+											if ( in_array( $region, $regions, true ) && isset( $flag_map[ $region ] ) ) : ?>
+												<img src="<?php echo esc_url( $flag_base . $flag_map[ $region ] ); ?>"
+													 alt="<?php echo esc_attr( $region ); ?>"
+													 title="<?php echo esc_attr( $region ); ?>"
+													 class="coupon-group-flag"
+													 width="16" height="16">
+											<?php endif;
+										endforeach; ?>
+									</div>
+								<?php endif; ?>
+								<span class="coupon-group-count"><?php printf( esc_html( _n( '%d code', '%d codes', $group_count, 'erh-core' ) ), $group_count ); ?></span>
 								</div>
 
 								<div class="coupon-group-items">

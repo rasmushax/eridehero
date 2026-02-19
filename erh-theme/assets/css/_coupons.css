@@ -202,6 +202,20 @@
     height: 12px;
 }
 
+.coupon-group-flags {
+    display: flex;
+    align-items: center;
+    gap: 4px;
+    flex-shrink: 0;
+    margin-left: auto;
+}
+
+.coupon-group-flag {
+    width: 16px;
+    height: 16px;
+    border-radius: 2px;
+}
+
 .coupon-group-count {
     flex-shrink: 0;
     font-size: var(--text-xs);
