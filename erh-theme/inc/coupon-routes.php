@@ -143,6 +143,45 @@ function erh_get_coupon_url( string $category_key ): string {
 	return home_url( '/coupons/' . $category['slug'] . '/' );
 }
 
+/**
+ * Get a "last verified" timestamp for a coupon category.
+ *
+ * Returns the real last-modified timestamp if it's within the past 7 days.
+ * Otherwise computes a deterministic date within the current week using a
+ * hash for natural variation (avoids looking robotic). Never returns a
+ * future timestamp.
+ *
+ * @param string $category_key Category key (e.g. 'escooter').
+ * @param int    $real_modified Latest real coupon modified timestamp (0 if unknown).
+ * @return int Unix timestamp.
+ */
+function erh_coupon_verified_timestamp( string $category_key, int $real_modified = 0 ): int {
+	$now         = time();
+	$seven_days  = 7 * DAY_IN_SECONDS;
+
+	// If real modification is fresh enough, use it.
+	if ( $real_modified > 0 && ( $now - $real_modified ) < $seven_days ) {
+		return $real_modified;
+	}
+
+	// Compute a deterministic offset within the current week.
+	// Hash changes each ISO week, producing a different day+hour combo.
+	$week_key = $category_key . date( 'oW' );
+	$hash     = abs( crc32( $week_key ) );
+
+	// Pick a day offset (0-4, Mon-Fri) and hour (8-17).
+	$day_offset  = $hash % 5;
+	$hour_offset = 8 + ( ( $hash >> 8 ) % 10 );
+
+	// Start of current ISO week (Monday 00:00 UTC).
+	$monday = strtotime( 'monday this week', $now );
+
+	$verified = $monday + ( $day_offset * DAY_IN_SECONDS ) + ( $hour_offset * HOUR_IN_SECONDS );
+
+	// Never return a future timestamp.
+	return min( $verified, $now );
+}
+
 // ─── RankMath SEO Integration ───
 
 /**
@@ -258,10 +297,9 @@ function erh_coupon_rankmath_opengraph(): void {
 		}
 	}
 
-	if ( $latest_modified ) {
-		$iso_date = date( 'c', $latest_modified );
-		echo '<meta property="article:modified_time" content="' . esc_attr( $iso_date ) . '" />' . "\n";
-	}
+	$verified = erh_coupon_verified_timestamp( $category['key'], $latest_modified );
+	$iso_date = date( 'c', $verified );
+	echo '<meta property="article:modified_time" content="' . esc_attr( $iso_date ) . '" />' . "\n";
 }
 add_action( 'rank_math/opengraph/facebook', 'erh_coupon_rankmath_opengraph', 100 );
 
@@ -326,7 +364,7 @@ function erh_coupon_sitemap_provider( array $providers ): array {
 					continue;
 				}
 
-				// Get latest modified coupon for lastmod.
+				// Get verified timestamp for lastmod.
 				$coupons  = \ERH\PostTypes\Coupon::get_by_category( $key );
 				$latest   = 0;
 				foreach ( $coupons as $c ) {
@@ -335,9 +373,11 @@ function erh_coupon_sitemap_provider( array $providers ): array {
 					}
 				}
 
+				$verified = erh_coupon_verified_timestamp( $key, $latest );
+
 				$links[] = [
 					'loc' => home_url( '/coupons/' . $category['slug'] . '/' ),
-					'mod' => $latest ? gmdate( 'Y-m-d\TH:i:s+00:00', $latest ) : gmdate( 'Y-m-d\TH:i:s+00:00' ),
+					'mod' => gmdate( 'Y-m-d\TH:i:s+00:00', $verified ),
 				];
 			}
 

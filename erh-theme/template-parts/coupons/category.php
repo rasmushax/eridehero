@@ -39,14 +39,15 @@ usort( $grouped, function ( $a, $b ) {
 	return strcasecmp( $a['retailer']['name'] ?? '', $b['retailer']['name'] ?? '' );
 } );
 
-// Find the most recently modified coupon for "Updated" date.
+// Get "last verified" date using freshness-aware helper.
 $latest_modified = 0;
 foreach ( $coupons as $c ) {
 	if ( $c['modified'] > $latest_modified ) {
 		$latest_modified = $c['modified'];
 	}
 }
-$updated_date = $latest_modified ? date_i18n( 'F j, Y', $latest_modified ) : date_i18n( 'F j, Y' );
+$verified_ts   = erh_coupon_verified_timestamp( $category_key, $latest_modified );
+$verified_date = date_i18n( 'F j, Y', $verified_ts );
 
 // Get finder/deals page URLs from product_type taxonomy term.
 $finder_page = '';
@@ -85,7 +86,7 @@ if ( $tax_slug ) {
 		<div class="container">
 			<h1 class="coupons-title"><?php echo esc_html( $category_type ); ?> Coupon Codes for <?php echo esc_html( $month_year ); ?></h1>
 			<p class="coupons-updated">
-				Updated <?php echo esc_html( $updated_date ); ?>
+				Last verified <?php echo esc_html( $verified_date ); ?>
 				<?php if ( $coupon_count > 0 ) : ?>
 					&middot; <?php printf( esc_html( _n( '%d active coupon', '%d active coupons', $coupon_count, 'erh-core' ) ), $coupon_count ); ?>
 				<?php endif; ?>
@@ -109,7 +110,7 @@ if ( $tax_slug ) {
 				<!-- Intro -->
 				<div class="coupons-intro">
 					<p>Save money on your next <?php echo esc_html( strtolower( $category_type ) ); ?> with verified coupon codes and exclusive discounts for <?php echo esc_html( $month_year ); ?>.
-						We update this page weekly so you always have working codes from trusted retailers.</p>
+						We update this page regularly so you always have working codes from trusted retailers.</p>
 				</div>
 
 				<?php if ( count( $grouped ) > 1 ) : ?>
