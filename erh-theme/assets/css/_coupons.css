@@ -47,10 +47,6 @@
 
 /* ===== DISCLAIMER ===== */
 
-.coupons-disclaimer {
-    margin-top: var(--space-6);
-}
-
 .coupons-disclaimer p {
     font-size: var(--text-sm);
     color: var(--color-muted);
@@ -84,6 +80,14 @@
     margin: 0;
     max-width: 740px;
     line-height: var(--leading-normal);
+}
+
+
+/* ===== RETAILER JUMP LINKS ===== */
+
+.coupons-jumplinks {
+    margin: var(--space-8) 0 0;
+    padding: 0;
 }
 
 

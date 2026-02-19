@@ -34,6 +34,11 @@ $coupon_count   = count( $coupons );
 $grouped        = Coupon::group_by_retailer( $coupons );
 $month_year     = date_i18n( 'F Y' );
 
+// Sort groups alphabetically by retailer name.
+usort( $grouped, function ( $a, $b ) {
+	return strcasecmp( $a['retailer']['name'] ?? '', $b['retailer']['name'] ?? '' );
+} );
+
 // Find the most recently modified coupon for "Updated" date.
 $latest_modified = 0;
 foreach ( $coupons as $c ) {
@@ -79,14 +84,6 @@ if ( $tax_slug ) {
 	<section class="coupons-header">
 		<div class="container">
 			<h1 class="coupons-title"><?php echo esc_html( $category_type ); ?> Coupon Codes for <?php echo esc_html( $month_year ); ?></h1>
-
-			<!-- Affiliate Disclaimer -->
-			<div class="coupons-disclaimer">
-				<p>These coupon codes are exclusive to ERideHero. We partner directly with retailers to bring you verified discounts.
-					ERideHero earns a commission on qualifying purchases at no extra cost to you.
-					<a href="<?php echo esc_url( home_url( '/disclaimers/' ) ); ?>">Learn more</a></p>
-			</div>
-
 			<p class="coupons-updated">
 				Updated <?php echo esc_html( $updated_date ); ?>
 				<?php if ( $coupon_count > 0 ) : ?>
@@ -103,11 +100,33 @@ if ( $tax_slug ) {
 			<!-- Main Content -->
 			<div class="coupons-main">
 
+				<!-- Affiliate Disclaimer -->
+				<div class="coupons-disclaimer">
+					<p>These coupon codes are exclusive to ERideHero. We partner directly with retailers to bring you verified discounts.
+						ERideHero earns a commission on qualifying purchases at no extra cost to you.
+						<a href="<?php echo esc_url( home_url( '/disclaimers/' ) ); ?>">Learn more</a></p>
+				</div>
+
 				<!-- Intro -->
 				<div class="coupons-intro">
 					<p>Save on your next <?php echo esc_html( strtolower( $category_name ) ); ?> with exclusive coupon codes and discounts from top retailers.
 						We verify every code and update this page regularly so you always have working promo codes.</p>
 				</div>
+
+				<?php if ( count( $grouped ) > 1 ) : ?>
+					<!-- Retailer Quick Jump -->
+					<nav class="erh-jumplinks coupons-jumplinks" aria-label="Jump to retailer">
+						<span class="erh-jumplinks-label">Jump to:</span>
+						<ul class="erh-jumplinks-list">
+							<?php foreach ( $grouped as $group ) :
+								$name = $group['retailer']['name'] ?? 'Unknown';
+								$anchor = sanitize_title( $name );
+							?>
+								<li><a href="#<?php echo esc_attr( $anchor ); ?>" class="erh-jumplinks-link"><?php echo esc_html( $name ); ?></a></li>
+							<?php endforeach; ?>
+						</ul>
+					</nav>
+				<?php endif; ?>
 
 				<!-- Coupon Cards -->
 				<div class="coupons-list">
@@ -119,10 +138,11 @@ if ( $tax_slug ) {
 						<?php foreach ( $grouped as $group ) :
 							$retailer = $group['retailer'];
 							$retailer_name = $retailer['name'] ?? 'Unknown';
+							$retailer_anchor = sanitize_title( $retailer_name );
 							$logo_url = $retailer['logo_url'] ?? null;
 							$affiliate_url = $retailer['affiliate_url'] ?? '#';
 						?>
-							<div class="coupon-group">
+							<div class="coupon-group" id="<?php echo esc_attr( $retailer_anchor ); ?>">
 								<div class="coupon-group-header">
 									<?php if ( $logo_url ) : ?>
 										<img
