@@ -164,8 +164,8 @@ function erh_coupon_rankmath_title( string $title ): string {
 	$month_year = date_i18n( 'F Y' );
 
 	return sprintf(
-		'%s Coupon Codes &amp; Discounts — %s | ERideHero',
-		$category['name_short'],
+		'%s Coupon Codes for %s | ERideHero',
+		$category['type'],
 		$month_year
 	);
 }

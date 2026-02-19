@@ -23,7 +23,14 @@ $product_type  = $args['product_type'] ?? '';
 $category_name = $args['category_name'] ?? '';
 $finder_url    = $args['finder_page'] ?? '';
 $deals_url     = $args['deals_page'] ?? '';
-$compare_url   = home_url( '/compare/' );
+// Build category-aware compare URL.
+$compare_url = home_url( '/compare/' );
+if ( ! empty( $product_type ) ) {
+    $cat_config = \ERH\CategoryConfig::get_by_type( $product_type );
+    if ( $cat_config ) {
+        $compare_url = home_url( '/compare/' . $cat_config['slug'] . '/' );
+    }
+}
 
 // Bail if no category info
 if ( empty( $category_name ) ) {

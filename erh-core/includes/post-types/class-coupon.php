@@ -663,10 +663,22 @@ class Coupon {
             $logo_url = wp_get_attachment_image_url($scraper->logo_attachment_id, 'thumbnail') ?: null;
         }
 
+        // Build affiliate homepage URL from scraper domain + affiliate_link_format.
+        $homepage = 'https://' . $scraper->domain . '/';
+        $affiliate_url = $homepage;
+        if (!empty($scraper->affiliate_link_format)) {
+            $affiliate_url = str_replace(
+                ['{URL}', '{URLE}'],
+                [$homepage, urlencode($homepage)],
+                $scraper->affiliate_link_format
+            );
+        }
+
         return [
-            'name'     => $scraper->name ?: $scraper->domain,
-            'domain'   => $scraper->domain,
-            'logo_url' => $logo_url,
+            'name'          => $scraper->name ?: $scraper->domain,
+            'domain'        => $scraper->domain,
+            'logo_url'      => $logo_url,
+            'affiliate_url' => $affiliate_url,
         ];
     }
 
