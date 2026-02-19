@@ -164,22 +164,28 @@ function erh_coupon_verified_timestamp( string $category_key, int $real_modified
 		return $real_modified;
 	}
 
-	// Compute a deterministic offset within the current week.
-	// Hash changes each ISO week, producing a different day+hour combo.
-	$week_key = $category_key . date( 'oW' );
-	$hash     = abs( crc32( $week_key ) );
-
-	// Pick a day offset (0-4, Mon-Fri) and hour (8-17).
-	$day_offset  = $hash % 5;
-	$hour_offset = 8 + ( ( $hash >> 8 ) % 10 );
-
-	// Start of current ISO week (Monday 00:00 UTC).
+	// Compute a deterministic date within the current week using a hash.
+	// If that date is still in the future, fall back to the previous week's
+	// hash so the result is always a fixed past timestamp (never "now").
 	$monday = strtotime( 'monday this week', $now );
 
-	$verified = $monday + ( $day_offset * DAY_IN_SECONDS ) + ( $hour_offset * HOUR_IN_SECONDS );
+	$week_key    = $category_key . date( 'oW', $now );
+	$hash        = abs( crc32( $week_key ) );
+	$day_offset  = $hash % 5;              // Mon-Fri
+	$hour_offset = 8 + ( ( $hash >> 8 ) % 10 ); // 8am-5pm
+	$verified    = $monday + ( $day_offset * DAY_IN_SECONDS ) + ( $hour_offset * HOUR_IN_SECONDS );
 
-	// Never return a future timestamp.
-	return min( $verified, $now );
+	if ( $verified > $now ) {
+		// Current week's date hasn't arrived yet — use previous week's hash.
+		$prev_monday  = $monday - ( 7 * DAY_IN_SECONDS );
+		$prev_key     = $category_key . date( 'oW', $prev_monday );
+		$prev_hash    = abs( crc32( $prev_key ) );
+		$day_offset   = $prev_hash % 5;
+		$hour_offset  = 8 + ( ( $prev_hash >> 8 ) % 10 );
+		$verified     = $prev_monday + ( $day_offset * DAY_IN_SECONDS ) + ( $hour_offset * HOUR_IN_SECONDS );
+	}
+
+	return $verified;
 }
 
 // ─── RankMath SEO Integration ───
