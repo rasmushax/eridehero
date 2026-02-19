@@ -719,7 +719,13 @@ class Coupon {
         ));
         $regions = [];
         foreach ($geos as $geo) {
-            $regions[] = GeoConfig::get_region($geo);
+            // geo_target can be comma-separated (e.g., "AT,BE,DE,FR").
+            foreach (explode(',', $geo) as $code) {
+                $code = trim($code);
+                if ($code !== '') {
+                    $regions[] = GeoConfig::get_region($code);
+                }
+            }
         }
         $regions = array_values(array_unique($regions));
 

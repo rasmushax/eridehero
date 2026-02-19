@@ -202,12 +202,19 @@
     height: 12px;
 }
 
+.coupon-group-aside {
+    display: flex;
+    flex-direction: column;
+    align-items: flex-end;
+    gap: var(--space-2);
+    flex-shrink: 0;
+    margin-left: auto;
+}
+
 .coupon-group-flags {
     display: flex;
     align-items: center;
     gap: 4px;
-    flex-shrink: 0;
-    margin-left: auto;
 }
 
 .coupon-group-flag {
@@ -217,7 +224,6 @@
 }
 
 .coupon-group-count {
-    flex-shrink: 0;
     font-size: var(--text-xs);
     font-weight: var(--font-medium);
     color: var(--color-muted);
