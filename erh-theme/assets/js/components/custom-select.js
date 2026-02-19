@@ -49,6 +49,9 @@ export class CustomSelect {
         this.drawer = null;
 
         this.init();
+
+        // Store instance reference on the element for external access
+        this.select._customSelect = this;
     }
 
     init() {

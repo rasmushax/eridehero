@@ -11,7 +11,7 @@
 
 import { getUserGeo, formatPrice, getCurrencySymbol } from '../services/geo-price.js';
 import { PriceAlertModal } from './price-alert.js';
-import { initCustomSelects, CustomSelect } from './custom-select.js';
+import { initCustomSelects } from './custom-select.js';
 import { ComparisonBar } from './comparison-bar.js';
 import { getRestUrl } from '../utils/api.js';
 
@@ -174,14 +174,11 @@ export async function initDealsPage() {
             option.text = option.text.replace(/[$£€A-Z]{1,3}(?=\d)/g, symbol);
         }
 
-        // Reinitialize custom select to pick up new text
-        const wrapper = priceFilterSelect.closest('.custom-select');
-        if (wrapper) {
-            // Destroy and recreate
-            const parent = wrapper.parentNode;
-            parent.insertBefore(priceFilterSelect, wrapper);
-            wrapper.remove();
-            new CustomSelect(priceFilterSelect);
+        // Refresh existing CustomSelect instance to pick up new text
+        const instance = priceFilterSelect._customSelect;
+        if (instance) {
+            instance.renderOptions();
+            instance.syncFromNative();
         }
     }
 
