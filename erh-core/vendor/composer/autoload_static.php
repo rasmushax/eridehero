@@ -87,6 +87,7 @@ class ComposerStaticInitb5e889746c5280811e87a72c161db6db
         'ERH\\Newsletter\\NewsletterSender' => __DIR__ . '/../..' . '/includes/newsletter/class-newsletter-sender.php',
         'ERH\\Newsletter\\NewsletterTemplate' => __DIR__ . '/../..' . '/includes/newsletter/class-newsletter-template.php',
         'ERH\\PostTypes\\Comparison' => __DIR__ . '/../..' . '/includes/post-types/class-comparison.php',
+        'ERH\\PostTypes\\Coupon' => __DIR__ . '/../..' . '/includes/post-types/class-coupon.php',
         'ERH\\PostTypes\\Newsletter' => __DIR__ . '/../..' . '/includes/post-types/class-newsletter.php',
         'ERH\\PostTypes\\Product' => __DIR__ . '/../..' . '/includes/post-types/class-product.php',
         'ERH\\PostTypes\\Taxonomies' => __DIR__ . '/../..' . '/includes/post-types/class-taxonomies.php',

@@ -13,6 +13,7 @@ use ERH\PostTypes\Product;
 use ERH\PostTypes\Tool;
 use ERH\PostTypes\Comparison;
 use ERH\PostTypes\Newsletter;
+use ERH\PostTypes\Coupon;
 use ERH\PostTypes\Taxonomies;
 use ERH\Database\Schema;
 use ERH\Database\ProductCache;
@@ -100,6 +101,13 @@ class Core {
      * @var Newsletter
      */
     private Newsletter $newsletter_post_type;
+
+    /**
+     * Coupon post type handler.
+     *
+     * @var Coupon
+     */
+    private Coupon $coupon_post_type;
 
     /**
      * Taxonomies handler.
@@ -568,6 +576,9 @@ class Core {
 
         $this->newsletter_post_type = new Newsletter();
         $this->newsletter_post_type->register();
+
+        $this->coupon_post_type = new Coupon();
+        $this->coupon_post_type->register();
 
         $this->taxonomies = new Taxonomies();
         $this->taxonomies->register();

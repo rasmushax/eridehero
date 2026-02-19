@@ -86,6 +86,7 @@ return array(
     'ERH\\Newsletter\\NewsletterSender' => $baseDir . '/includes/newsletter/class-newsletter-sender.php',
     'ERH\\Newsletter\\NewsletterTemplate' => $baseDir . '/includes/newsletter/class-newsletter-template.php',
     'ERH\\PostTypes\\Comparison' => $baseDir . '/includes/post-types/class-comparison.php',
+    'ERH\\PostTypes\\Coupon' => $baseDir . '/includes/post-types/class-coupon.php',
     'ERH\\PostTypes\\Newsletter' => $baseDir . '/includes/post-types/class-newsletter.php',
     'ERH\\PostTypes\\Product' => $baseDir . '/includes/post-types/class-product.php',
     'ERH\\PostTypes\\Taxonomies' => $baseDir . '/includes/post-types/class-taxonomies.php',
