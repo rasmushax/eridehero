@@ -42,7 +42,7 @@ $product_id = get_the_ID();
             <p class="empty-state"><?php esc_html_e( 'Loading prices...', 'erh' ); ?></p>
         </div>
         <p class="price-intel-disclosure">
-            <?php esc_html_e( 'We may earn a commission from purchases made through these links.', 'erh' ); ?>
+            We may earn a commission from purchases. <a href="<?php echo esc_url( home_url( '/disclaimers/' ) ); ?>">Learn more</a>
         </p>
     </div>
 

@@ -276,7 +276,7 @@ $has_pricing = erh_product_has_pricing( $product_id );
                     <div class="skeleton" style="width: 18px; height: 18px; border-radius: 4px; flex-shrink: 0;"></div>
                 </div>
             </div>
-            <p class="price-intel-disclosure">We may earn a commission from purchases.</p>
+            <p class="price-intel-disclosure">We may earn a commission from purchases. <a href="<?php echo esc_url( home_url( '/disclaimers/' ) ); ?>">Learn more</a></p>
         </div>
 
         <!-- Price History Section -->
