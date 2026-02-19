@@ -696,7 +696,7 @@ class Coupon {
 
         $logo_url = null;
         if (!empty($scraper->logo_attachment_id)) {
-            $logo_url = wp_get_attachment_image_url($scraper->logo_attachment_id, 'thumbnail') ?: null;
+            $logo_url = wp_get_attachment_image_url($scraper->logo_attachment_id, 'erh-logo-small') ?: null;
         }
 
         // Build affiliate homepage URL from scraper domain + affiliate_link_format.
