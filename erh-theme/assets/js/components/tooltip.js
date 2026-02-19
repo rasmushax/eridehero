@@ -2,6 +2,7 @@
  * ERideHero Tooltip System
  *
  * Lightweight, accessible tooltips with smart positioning.
+ * Uses display:none when hidden to prevent overflow issues.
  *
  * Usage (declarative):
  *   <button data-tooltip="Helpful text here">Hover me</button>
@@ -21,7 +22,6 @@ const CONFIG = {
     hideDelay: 100,        // Delay before hiding (ms)
     offset: 8,             // Distance from trigger element (px)
     viewportPadding: 12,   // Min distance from viewport edge (px)
-    animationDuration: 150 // CSS transition duration (ms)
 };
 
 // Tooltip container (created once, reused)
@@ -29,6 +29,7 @@ let tooltipEl = null;
 let currentTrigger = null;
 let showTimeout = null;
 let hideTimeout = null;
+let hideTransitionHandler = null;
 let justTouched = false; // Prevent click firing after touch
 
 /**
@@ -188,6 +189,9 @@ function showTooltip(trigger) {
     const content = trigger.getAttribute('data-tooltip');
     if (!content) return;
 
+    // Cancel any pending hide transition.
+    cancelHideTransition();
+
     currentTrigger = trigger;
 
     // Set content
@@ -202,9 +206,8 @@ function showTooltip(trigger) {
     // Get preferred position
     const preferredPosition = trigger.getAttribute('data-tooltip-position') || 'top';
 
-    // Show (invisible) to measure
-    tooltipEl.style.visibility = 'hidden';
-    tooltipEl.classList.add('is-visible');
+    // Step 1: Make visible for measurement (is-active = display:block, no opacity yet).
+    tooltipEl.classList.add('is-active');
     tooltipEl.setAttribute('aria-hidden', 'false');
 
     // Calculate position
@@ -215,7 +218,7 @@ function showTooltip(trigger) {
     tooltipEl.style.top = `${position.y}px`;
     tooltipEl.setAttribute('data-position', position.placement);
 
-    // Apply arrow offset (always calculated now)
+    // Apply arrow offset
     const arrowEl = tooltipEl.querySelector('.tooltip-arrow');
     if (arrowEl) {
         if (position.arrowOffset) {
@@ -225,8 +228,10 @@ function showTooltip(trigger) {
         }
     }
 
-    // Make visible
-    tooltipEl.style.visibility = '';
+    // Step 2: Trigger transition on next frame.
+    requestAnimationFrame(() => {
+        tooltipEl.classList.add('is-visible');
+    });
 }
 
 function hideTooltip() {
@@ -235,9 +240,56 @@ function hideTooltip() {
     clearTimeout(showTimeout);
     clearTimeout(hideTimeout);
 
+    // If not even active, nothing to do.
+    if (!tooltipEl.classList.contains('is-active')) {
+        cleanupTrigger();
+        return;
+    }
+
+    // Step 1: Remove visible (triggers fade-out transition).
     tooltipEl.classList.remove('is-visible');
     tooltipEl.setAttribute('aria-hidden', 'true');
 
+    // Step 2: After transition, remove from layout entirely.
+    cancelHideTransition();
+    hideTransitionHandler = function onEnd(e) {
+        if (e.propertyName !== 'opacity') return;
+        tooltipEl.removeEventListener('transitionend', hideTransitionHandler);
+        hideTransitionHandler = null;
+
+        // Only remove if still hidden (not re-shown during transition).
+        if (!tooltipEl.classList.contains('is-visible')) {
+            tooltipEl.classList.remove('is-active');
+            tooltipEl.style.left = '';
+            tooltipEl.style.top = '';
+            tooltipEl.removeAttribute('data-position');
+        }
+    };
+    tooltipEl.addEventListener('transitionend', hideTransitionHandler);
+
+    // Fallback: if transitionend never fires (e.g., display was already none).
+    setTimeout(() => {
+        if (hideTransitionHandler) {
+            tooltipEl.removeEventListener('transitionend', hideTransitionHandler);
+            hideTransitionHandler = null;
+            tooltipEl.classList.remove('is-active');
+            tooltipEl.style.left = '';
+            tooltipEl.style.top = '';
+            tooltipEl.removeAttribute('data-position');
+        }
+    }, 200);
+
+    cleanupTrigger();
+}
+
+function cancelHideTransition() {
+    if (hideTransitionHandler) {
+        tooltipEl.removeEventListener('transitionend', hideTransitionHandler);
+        hideTransitionHandler = null;
+    }
+}
+
+function cleanupTrigger() {
     if (currentTrigger) {
         currentTrigger.removeAttribute('aria-describedby');
         currentTrigger = null;

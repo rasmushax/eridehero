@@ -713,6 +713,7 @@
 /* ===== TOOLTIPS ===== */
 
 .tooltip {
+    display: none;
     position: absolute;
     z-index: var(--z-modal);
     max-width: 320px;
@@ -728,6 +729,10 @@
     opacity: 0;
     transform: scale(0.95);
     transition: opacity 150ms ease, transform 150ms ease;
+}
+
+.tooltip.is-active {
+    display: block;
 }
 
 .tooltip.is-visible {
@@ -798,6 +803,7 @@
 /* ===== POPOVERS ===== */
 
 .popover {
+    display: none;
     position: fixed;
     z-index: var(--z-modal);
     width: max-content;
@@ -808,13 +814,15 @@
     border-radius: var(--radius-lg);
     box-shadow: var(--shadow-dropdown);
     opacity: 0;
-    visibility: hidden;
-    transition: opacity 150ms ease, visibility 150ms ease;
+    transition: opacity 150ms ease;
+}
+
+.popover.is-active {
+    display: block;
 }
 
 .popover.is-visible {
     opacity: 1;
-    visibility: visible;
 }
 
 .popover-title {

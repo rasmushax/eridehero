@@ -1,7 +1,10 @@
 /**
  * Popover Component
- * Click-triggered popovers with viewport-aware positioning
- * Uses fixed positioning for reliable viewport constraint
+ *
+ * Click-triggered popovers with viewport-aware positioning.
+ * Uses display:none when hidden to prevent overflow issues.
+ * Two-step show: is-active (display:block) → is-visible (opacity transition).
+ * Uses fixed positioning for reliable viewport constraint.
  */
 
 // Configuration
@@ -13,6 +16,7 @@ const CONFIG = {
 // State
 let activePopover = null;
 let activeTrigger = null;
+let hideTransitionHandler = null;
 
 export function initPopovers() {
     const triggers = document.querySelectorAll('[data-popover-trigger]');
@@ -63,20 +67,28 @@ export function initPopovers() {
 function openPopover(popover, trigger) {
     // Close any existing popover immediately (no animation)
     if (activePopover && activePopover !== popover) {
-        activePopover.classList.remove('is-visible');
+        cancelHideTransition(activePopover);
+        activePopover.classList.remove('is-visible', 'is-active');
         activePopover.setAttribute('aria-hidden', 'true');
+        resetPopoverStyles(activePopover);
     }
+
+    // Cancel any pending hide transition on this popover.
+    cancelHideTransition(popover);
 
     activePopover = popover;
     activeTrigger = trigger;
 
-    // Position first (while still invisible via CSS)
+    // Step 1: Make visible for measurement (is-active = display:block, no opacity yet).
+    popover.classList.add('is-active');
+    popover.setAttribute('aria-hidden', 'false');
+
+    // Position (now measurable since display:block).
     positionPopover(popover, trigger);
 
-    // Then show with transition
+    // Step 2: Trigger opacity transition on next frame.
     requestAnimationFrame(() => {
         popover.classList.add('is-visible');
-        popover.setAttribute('aria-hidden', 'false');
     });
 }
 
@@ -85,34 +97,68 @@ function closePopover() {
 
     const popover = activePopover;
 
+    // If not even active, nothing to do.
+    if (!popover.classList.contains('is-active')) {
+        activePopover = null;
+        activeTrigger = null;
+        return;
+    }
+
+    // Step 1: Remove visible (triggers fade-out transition).
     popover.classList.remove('is-visible');
     popover.setAttribute('aria-hidden', 'true');
 
-    // Reset styles after transition completes
-    popover.addEventListener('transitionend', function onEnd(e) {
+    // Step 2: After transition, remove from layout entirely.
+    cancelHideTransition(popover);
+    const handler = function onEnd(e) {
         if (e.propertyName !== 'opacity') return;
-        popover.removeEventListener('transitionend', onEnd);
+        popover.removeEventListener('transitionend', handler);
+        hideTransitionHandler = null;
 
-        // Only reset if still closed
+        // Only remove if still hidden (not re-shown during transition).
         if (!popover.classList.contains('is-visible')) {
-            popover.style.left = '';
-            popover.style.top = '';
-
-            // Reset position class to original
-            const preferred = popover.dataset.preferredPosition || 'top';
-            popover.classList.remove('popover--top', 'popover--bottom');
-            popover.classList.add(`popover--${preferred}`);
-
-            // Reset arrow offset
-            const arrowEl = popover.querySelector('.popover-arrow');
-            if (arrowEl) {
-                arrowEl.style.removeProperty('--arrow-offset');
-            }
+            popover.classList.remove('is-active');
+            resetPopoverStyles(popover);
         }
-    });
+    };
+    hideTransitionHandler = handler;
+    popover.addEventListener('transitionend', handler);
+
+    // Fallback: if transitionend never fires.
+    setTimeout(() => {
+        if (hideTransitionHandler === handler) {
+            popover.removeEventListener('transitionend', handler);
+            hideTransitionHandler = null;
+            popover.classList.remove('is-active');
+            resetPopoverStyles(popover);
+        }
+    }, 200);
 
     activePopover = null;
     activeTrigger = null;
+}
+
+function cancelHideTransition(popover) {
+    if (hideTransitionHandler) {
+        popover.removeEventListener('transitionend', hideTransitionHandler);
+        hideTransitionHandler = null;
+    }
+}
+
+function resetPopoverStyles(popover) {
+    popover.style.left = '';
+    popover.style.top = '';
+
+    // Reset position class to original
+    const preferred = popover.dataset.preferredPosition || 'top';
+    popover.classList.remove('popover--top', 'popover--bottom');
+    popover.classList.add(`popover--${preferred}`);
+
+    // Reset arrow offset
+    const arrowEl = popover.querySelector('.popover-arrow');
+    if (arrowEl) {
+        arrowEl.style.removeProperty('--arrow-offset');
+    }
 }
 
 function positionPopover(popover, trigger) {
