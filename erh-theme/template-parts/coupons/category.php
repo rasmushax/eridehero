@@ -79,6 +79,14 @@ if ( $tax_slug ) {
 	<section class="coupons-header">
 		<div class="container">
 			<h1 class="coupons-title"><?php echo esc_html( $category_type ); ?> Coupon Codes for <?php echo esc_html( $month_year ); ?></h1>
+
+			<!-- Affiliate Disclaimer -->
+			<div class="coupons-disclaimer">
+				<p>These coupon codes are exclusive to ERideHero. We partner directly with retailers to bring you verified discounts.
+					ERideHero earns a commission on qualifying purchases at no extra cost to you.
+					<a href="<?php echo esc_url( home_url( '/disclaimers/' ) ); ?>">Learn more</a></p>
+			</div>
+
 			<p class="coupons-updated">
 				Updated <?php echo esc_html( $updated_date ); ?>
 				<?php if ( $coupon_count > 0 ) : ?>
@@ -94,13 +102,6 @@ if ( $tax_slug ) {
 
 			<!-- Main Content -->
 			<div class="coupons-main">
-
-				<!-- Affiliate Disclaimer -->
-				<div class="coupons-disclaimer">
-					<p>These coupon codes are exclusive to ERideHero. We partner directly with retailers to bring you verified discounts.
-						ERideHero earns a commission on qualifying purchases at no extra cost to you.
-						<a href="<?php echo esc_url( home_url( '/disclaimers/' ) ); ?>">Learn more</a></p>
-				</div>
 
 				<!-- Intro -->
 				<div class="coupons-intro">
@@ -213,6 +214,15 @@ if ( $tax_slug ) {
 					'category_name' => $category_name,
 					'finder_page'   => $finder_page,
 					'deals_page'    => $deals_page,
+				) );
+				?>
+
+				<hr>
+
+				<?php
+				// Head-to-head comparison widget (open mode, no locked product)
+				get_template_part( 'template-parts/sidebar/comparison-open', null, array(
+					'allowed_categories' => [ $category_key ],
 				) );
 				?>
 			</aside>
