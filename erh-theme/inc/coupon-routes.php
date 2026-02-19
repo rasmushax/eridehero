@@ -214,3 +214,53 @@ function erh_coupon_rankmath_robots( array $robots ): array {
 	];
 }
 add_filter( 'rank_math/frontend/robots', 'erh_coupon_rankmath_robots', 20 );
+
+/**
+ * Set canonical URL for coupon pages.
+ *
+ * @param string $canonical The canonical URL.
+ * @return string Modified canonical.
+ */
+function erh_coupon_rankmath_canonical( string $canonical ): string {
+	if ( ! erh_is_coupon_page() ) {
+		return $canonical;
+	}
+
+	$category = erh_get_coupon_category();
+	if ( ! $category ) {
+		return $canonical;
+	}
+
+	return home_url( '/coupons/' . $category['slug'] . '/' );
+}
+add_filter( 'rank_math/frontend/canonical', 'erh_coupon_rankmath_canonical', 20 );
+
+/**
+ * Add article:modified_time OG tag for coupon pages.
+ * Google uses this to determine content freshness.
+ */
+function erh_coupon_rankmath_opengraph(): void {
+	if ( ! erh_is_coupon_page() ) {
+		return;
+	}
+
+	$category = erh_get_coupon_category();
+	if ( ! $category ) {
+		return;
+	}
+
+	$coupons = \ERH\PostTypes\Coupon::get_by_category( $category['key'] );
+
+	$latest_modified = 0;
+	foreach ( $coupons as $c ) {
+		if ( $c['modified'] > $latest_modified ) {
+			$latest_modified = $c['modified'];
+		}
+	}
+
+	if ( $latest_modified ) {
+		$iso_date = date( 'c', $latest_modified );
+		echo '<meta property="article:modified_time" content="' . esc_attr( $iso_date ) . '" />' . "\n";
+	}
+}
+add_action( 'rank_math/opengraph/facebook', 'erh_coupon_rankmath_opengraph', 100 );
