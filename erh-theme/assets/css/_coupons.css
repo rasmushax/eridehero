@@ -6,14 +6,14 @@
 /* ===== PAGE LAYOUT ===== */
 
 .coupons-page {
-    padding-bottom: var(--space-16);
+    padding: var(--space-8) 0 var(--space-16);
 }
 
 
 /* ===== HEADER ===== */
 
 .coupons-header {
-    padding: var(--space-14) 0 0;
+    padding: 0;
 }
 
 .coupons-title {
@@ -441,10 +441,6 @@
 }
 
 @media (max-width: 480px) {
-    .coupons-header {
-        padding: var(--space-11) 0 0;
-    }
-
     .coupons-title {
         font-size: var(--text-3xl);
     }
