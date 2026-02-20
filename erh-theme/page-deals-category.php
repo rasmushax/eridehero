@@ -200,9 +200,9 @@ $parent_url = $parent_id ? get_permalink( $parent_id ) : home_url( '/deals/' );
         </a>
 
         <div class="product-card-content">
-            <h3 class="product-card-name">
+            <p class="product-card-name">
                 <a href="" data-product-link></a>
-            </h3>
+            </p>
             <div class="deal-card-compare" data-deal-compare>
                 <span class="deal-card-compare-label" data-compare-label>6-mo avg</span>
                 <span class="deal-card-compare-price" data-compare-price></span>
@@ -214,7 +214,7 @@ $parent_url = $parent_id ? get_permalink( $parent_id ) : home_url( '/deals/' );
 <!-- Inline CTA Card Template -->
 <template id="deals-info-card-template">
     <div class="deals-info-card deals-info-card--cta">
-        <h2 class="deals-info-card-title"><?php erh_the_icon( 'bell' ); ?> Never miss a deal</h2>
+        <p class="deals-info-card-title"><?php erh_the_icon( 'bell' ); ?> Never miss a deal</p>
         <p class="deals-info-card-text">Not ready to buy? Click the <?php erh_the_icon( 'bell' ); ?> icon on any product to track its price.</p>
         <p class="deals-info-card-text">We'll notify you when it drops below your target so you can buy at the perfect time.</p>
     </div>

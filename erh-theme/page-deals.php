@@ -91,17 +91,17 @@ $categories = [
         <div class="container">
             <div class="deals-hub-info-grid">
                 <div class="deals-info-card deals-info-card--wide">
-                    <h3 class="deals-info-card-title">
+                    <p class="deals-info-card-title">
                         <?php erh_the_icon( 'globe-search' ); ?>
                         <?php esc_html_e( 'How we find deals', 'erh' ); ?>
-                    </h3>
+                    </p>
                     <p class="deals-info-card-text"><?php esc_html_e( 'Unlike retailer "sales" based on inflated list prices, we compare current prices against what products actually sell for. Our system tracks 1,000+ products daily across dozens of retailers in the US, UK, EU, Canada, and Australia. When a product drops below its 6-month average, it shows up here.', 'erh' ); ?></p>
                 </div>
                 <div class="deals-info-card">
-                    <h3 class="deals-info-card-title">
+                    <p class="deals-info-card-title">
                         <?php erh_the_icon( 'bell' ); ?>
                         <?php esc_html_e( 'Track prices', 'erh' ); ?>
-                    </h3>
+                    </p>
                     <p class="deals-info-card-text"><?php esc_html_e( "Not ready to buy? Tap the bell icon on any product to set a price alert. We'll email you when it drops to your target.", 'erh' ); ?></p>
                 </div>
             </div>
@@ -168,7 +168,7 @@ $categories = [
             </div>
         </div>
         <div class="deal-card-content">
-            <h3 class="deal-card-title"></h3>
+            <p class="deal-card-title"></p>
         </div>
     </a>
 </template>
