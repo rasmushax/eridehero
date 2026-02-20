@@ -473,3 +473,49 @@ add_filter( 'rank_math/json_ld', function( array $data ): array {
 
 	return $data;
 }, 20 );
+
+/**
+ * Dynamic meta description for single product pages.
+ *
+ * Template: "{Name} {type}. Currently from ${price}. Compare prices across retailers, track price history & view detailed specs."
+ * No price: "{Name} {type}. Compare prices across retailers, track price history & view detailed specs."
+ *
+ * Uses US pricing only (Google crawls as US user).
+ *
+ * @param string $description The existing description.
+ * @return string Modified description.
+ */
+add_filter( 'rank_math/frontend/description', function( string $description ): string {
+	if ( ! is_singular( 'products' ) ) {
+		return $description;
+	}
+
+	$product_id   = get_the_ID();
+	$product_name = get_the_title( $product_id );
+	$product_type = erh_get_product_type( $product_id );
+
+	// Get lowest US price.
+	$price_text = '';
+	if ( defined( 'HFT_VERSION' ) && class_exists( 'ERH\Pricing\PriceFetcher' ) ) {
+		$fetcher    = new \ERH\Pricing\PriceFetcher();
+		$best_price = $fetcher->get_best_price( $product_id, 'US' );
+		if ( $best_price && ! empty( $best_price['price'] ) ) {
+			$price_text = '$' . number_format( (float) $best_price['price'], 2 );
+		}
+	}
+
+	if ( $price_text ) {
+		return sprintf(
+			'%s %s. Currently from %s. Compare prices across retailers, track price history & view detailed specs.',
+			$product_name,
+			strtolower( $product_type ),
+			$price_text
+		);
+	}
+
+	return sprintf(
+		'%s %s. Compare prices across retailers, track price history & view detailed specs.',
+		$product_name,
+		strtolower( $product_type )
+	);
+}, 20 );
