@@ -60,7 +60,7 @@ class SpecPopulatorHandler {
     private AcfSchemaParser $schema_parser;
 
     /**
-     * Perplexity client instance.
+     * Perplexity client for spec research.
      *
      * @var PerplexityClient
      */

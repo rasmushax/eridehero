@@ -1,8 +1,7 @@
 #!/usr/bin/env bash
 # Deploy erh-theme, erh-core, and housefresh-tools to staging.
 # Usage: bash deploy-staging.sh [theme|core|hft|all]
-#   No argument = theme + core only (most common).
-#   "all" includes housefresh-tools.
+#   No argument = theme + core + hft (most common).
 
 set -euo pipefail
 
@@ -26,7 +25,7 @@ case "${1:-default}" in
     core)    DEPLOY_CORE=true ;;
     hft)     DEPLOY_HFT=true ;;
     all)     DEPLOY_THEME=true; DEPLOY_CORE=true; DEPLOY_HFT=true ;;
-    default) DEPLOY_THEME=true; DEPLOY_CORE=true ;;
+    default) DEPLOY_THEME=true; DEPLOY_CORE=true; DEPLOY_HFT=true ;;
 esac
 
 # Step 1: Build zips
