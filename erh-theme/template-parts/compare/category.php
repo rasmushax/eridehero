@@ -59,7 +59,7 @@ $featured_comparisons = new WP_Query( [
             'compare' => '=',
         ],
         [
-            'key'     => 'category',
+            'key'     => 'comparison_category',
             'value'   => $category_key,
             'compare' => '=',
         ],
