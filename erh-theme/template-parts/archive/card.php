@@ -89,7 +89,7 @@ if ( 'review' === $type ) {
 	<?php elseif ( 'review' === $type ) :
 		$tldr = get_field( 'review_tldr', $post_id );
 		if ( $tldr ) : ?>
-		<p class="archive-card-excerpt"><?php echo esc_html( $tldr ); ?></p>
+		<p class="archive-card-tldr"><?php echo esc_html( $tldr ); ?></p>
 		<?php endif; ?>
 	<?php endif; ?>
 

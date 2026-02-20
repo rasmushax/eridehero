@@ -215,6 +215,13 @@
     overflow: hidden;
 }
 
+.archive-card-tldr {
+    font-size: var(--text-sm);
+    color: var(--color-muted);
+    margin: 0;
+    line-height: var(--leading-relaxed);
+}
+
 .archive-card-meta {
     display: flex;
     align-items: center;
@@ -228,13 +235,15 @@
     color: var(--color-border-hover);
 }
 
-/* Card with Excerpt Variant
+/* Card with Excerpt/TLDR Variant
    ------------------------------------------ */
-.archive-card:has(.archive-card-excerpt) {
+.archive-card:has(.archive-card-excerpt),
+.archive-card:has(.archive-card-tldr) {
     gap: var(--space-2);
 }
 
-.archive-card:has(.archive-card-excerpt) .archive-card-title {
+.archive-card:has(.archive-card-excerpt) .archive-card-title,
+.archive-card:has(.archive-card-tldr) .archive-card-title {
     font-size: var(--text-lg);
     margin-top: var(--space-1);
 }
