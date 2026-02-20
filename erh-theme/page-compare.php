@@ -489,6 +489,7 @@ $curated_attrs = $is_curated ? ' data-comparison-id="' . esc_attr( $comparison_i
 
 </main>
 
+<?php if ( $has_products ) : ?>
 <!-- Add Product Modal -->
 <div class="modal" id="compare-add-modal" data-modal aria-hidden="true">
 	<div class="modal-content modal-content--md">
@@ -507,6 +508,7 @@ $curated_attrs = $is_curated ? ' data-comparison-id="' . esc_attr( $comparison_i
 		</div>
 	</div>
 </div>
+<?php endif; ?>
 
 <?php
 get_footer();
