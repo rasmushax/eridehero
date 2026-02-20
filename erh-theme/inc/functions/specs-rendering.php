@@ -1050,7 +1050,7 @@ function erh_render_product_specs( int $product_id, string $category ): string {
                             </button>
                             <div id="how-we-test-popover-product" class="popover popover--top" aria-hidden="true">
                                 <div class="popover-arrow"></div>
-                                <h4 class="popover-title">Data-driven testing</h4>
+                                <p class="popover-title">Data-driven testing</p>
                                 <p class="popover-text">All performance data is captured using a VBox Sport GPS logger — professional-grade equipment for precise vehicle measurements. Tests follow strict protocols with a 175 lb rider under controlled conditions.</p>
                                 <a href="/how-we-test/" class="popover-link">
                                     Full methodology

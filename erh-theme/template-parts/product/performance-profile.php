@@ -94,7 +94,7 @@ if ( ! $product_id ) {
                         ?>
                         <div id="bracket-info-popover" class="popover popover--top" aria-hidden="true">
                             <div class="popover-arrow"></div>
-                            <h4 class="popover-title">Price Bracket Comparison</h4>
+                            <p class="popover-title">Price Bracket Comparison</p>
                             <p class="popover-text">Strengths and weaknesses are determined by comparing this product against others in the same price range.</p>
                             <p class="popover-text">This ensures fair comparisons — a budget model is measured against budget competitors, not premium models.</p>
                             <p class="popover-text"><strong>Price Brackets:</strong></p>

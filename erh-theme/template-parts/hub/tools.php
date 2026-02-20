@@ -44,7 +44,7 @@ $json_url   = $upload_dir['baseurl'] . '/comparison_products.json';
 						<?php erh_the_icon( 'search' ); ?>
 					</div>
 					<div>
-						<span class="hub-tool-title"><?php esc_html_e( 'Product Finder', 'erh' ); ?></span>
+						<h2 class="hub-tool-title"><?php esc_html_e( 'Product Finder', 'erh' ); ?></h2>
 						<p class="hub-tool-subtitle">
 							<?php
 							/* translators: %1$s: product count, %2$s: product short name (e.g., "e-scooters") */
@@ -155,7 +155,7 @@ $json_url   = $upload_dir['baseurl'] . '/comparison_products.json';
 						<?php erh_the_icon( 'grid' ); ?>
 					</div>
 					<div>
-						<span class="hub-tool-title"><?php esc_html_e( 'Compare Head-to-Head', 'erh' ); ?></span>
+						<h2 class="hub-tool-title"><?php esc_html_e( 'Compare Head-to-Head', 'erh' ); ?></h2>
 						<p class="hub-tool-subtitle"><?php esc_html_e( 'Side-by-side specs comparison', 'erh' ); ?></p>
 					</div>
 				</div>
