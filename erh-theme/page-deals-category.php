@@ -200,9 +200,9 @@ $parent_url = $parent_id ? get_permalink( $parent_id ) : home_url( '/deals/' );
         </a>
 
         <div class="product-card-content">
-            <p class="product-card-name">
+            <h2 class="product-card-name">
                 <a href="" data-product-link></a>
-            </p>
+            </h2>
             <div class="deal-card-compare" data-deal-compare>
                 <span class="deal-card-compare-label" data-compare-label>6-mo avg</span>
                 <span class="deal-card-compare-price" data-compare-price></span>

@@ -1704,9 +1704,9 @@ class Finder {
             </a>
 
             <div class="product-card-content">
-                <p class="product-card-name">
+                <h2 class="product-card-name">
                     <a href="${product.url}">${product.name}</a>
-                </p>
+                </h2>
                 ${specsText ? `<p class="product-card-specs">${specsText}</p>` : ''}
             </div>
         `;

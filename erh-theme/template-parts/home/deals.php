@@ -126,7 +126,7 @@ $default_category = $fixed_category ? $fixed_category : 'all';
             </div>
         </div>
         <div class="deal-card-content">
-            <p class="deal-card-title"></p>
+            <h3 class="deal-card-title"></h3>
         </div>
     </a>
 </template>
