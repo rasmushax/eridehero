@@ -62,8 +62,9 @@ class Taxonomies {
             'show_ui'               => true,
             'show_in_rest'          => true,
             'show_admin_column'     => true,
+            'publicly_queryable'    => false, // No frontend archive pages.
             'query_var'             => true,
-            'rewrite'               => ['slug' => 'product-type'],
+            'rewrite'               => false,
             'meta_box_cb'           => false, // Use ACF or custom metabox
         ];
 
@@ -104,8 +105,9 @@ class Taxonomies {
             'show_ui'               => true,
             'show_in_rest'          => true,
             'show_admin_column'     => true,
+            'publicly_queryable'    => false, // No frontend archive pages.
             'query_var'             => true,
-            'rewrite'               => ['slug' => 'brands'],
+            'rewrite'               => false,
         ];
 
         register_taxonomy('brand', ['products'], $args);

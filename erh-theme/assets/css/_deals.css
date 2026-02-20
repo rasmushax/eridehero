@@ -261,6 +261,7 @@
     text-decoration: none;
     color: inherit;
     position: relative;
+    overflow: hidden;
 }
 
 .deal-card:hover .deal-card-title {

@@ -220,19 +220,31 @@ $product_count = count( $products );
                             <div class="finder-sort">
                                 <span class="finder-sort-label" id="finder-sort-label">Sort by</span>
                                 <?php
+                                // Type-aware sort options.
+                                $sort_options = [
+                                    'popularity' => 'Most popular',
+                                    'price-asc'  => 'Price: Low to High',
+                                    'price-desc' => 'Price: High to Low',
+                                ];
+                                if ( 'ebike' === $json_type ) {
+                                    $sort_options['torque-desc'] = 'Most powerful';
+                                }
+                                if ( 'hoverboard' !== $json_type && 'ebike' !== $json_type ) {
+                                    $sort_options['speed-desc'] = 'Fastest';
+                                }
+                                $sort_options['range-desc']  = 'Largest battery';
+                                $sort_options['weight-asc']  = 'Lightweight';
+                                $sort_options['deals']       = 'Best deals';
+                                $sort_options['name']        = 'Name A-Z';
+                                ?>
+                                <?php
                                 erh_custom_select( [
                                     'name'     => 'sort',
                                     'id'       => 'finder-sort',
                                     'variant'  => 'inline',
                                     'align'    => 'right',
                                     'selected' => 'popularity',
-                                    'options'  => [
-                                        'popularity' => 'Most popular',
-                                        'price-asc'  => 'Price: Low to High',
-                                        'price-desc' => 'Price: High to Low',
-                                        'deals'      => 'Best deals',
-                                        'name'       => 'Name A-Z',
-                                    ],
+                                    'options'  => $sort_options,
                                     'attrs'    => [
                                         'data-finder-sort'    => true,
                                         'aria-labelledby'     => 'finder-sort-label',

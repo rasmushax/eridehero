@@ -817,6 +817,7 @@
     flex-direction: column;
     text-decoration: none;
     scroll-snap-align: start;
+    overflow: hidden;
 }
 
 .similar-card:hover .similar-card-name {

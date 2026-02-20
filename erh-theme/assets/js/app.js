@@ -118,7 +118,7 @@ import { Toast } from './components/toast.js'; // For programmatic toasts
     }
 
     // Finder tabs - only on pages with quick finder
-    if (document.querySelector('.finder-tabs')) {
+    if (document.querySelector('.finder-form')) {
         import('./components/finder-tabs.js').then(module => {
             module.initFinderTabs();
         });

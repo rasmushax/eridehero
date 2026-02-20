@@ -34,7 +34,7 @@ if ( empty( $tools ) ) {
 ?>
 
 <div class="related-tools">
-    <h4 class="related-tools-title"><?php esc_html_e( 'More Tools', 'erh' ); ?></h4>
+    <h2 class="related-tools-title"><?php esc_html_e( 'More Tools', 'erh' ); ?></h2>
     <div class="related-tools-list">
         <?php foreach ( $tools as $tool ) :
             $icon = \ERH\PostTypes\Tool::get_tool_icon( $tool->ID );

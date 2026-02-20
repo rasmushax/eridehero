@@ -108,3 +108,57 @@ function erh_get_template_part( string $slug, string $name = '', array $data = a
 		include $located;
 	}
 }
+
+/**
+ * Fix RankMath SearchAction to point to our custom search page.
+ *
+ * Default outputs /?s={query} but we use /search/?q={query}.
+ */
+add_filter( 'rank_math/json_ld', function( array $data ): array {
+	if ( isset( $data['WebSite']['potentialAction'] ) ) {
+		$data['WebSite']['potentialAction'] = [
+			'@type'       => 'SearchAction',
+			'target'      => home_url( '/search/?q={search_term_string}' ),
+			'query-input' => 'required name=search_term_string',
+		];
+	}
+	return $data;
+}, 20 );
+
+/**
+ * Redirect unwanted frontend URLs.
+ *
+ * - Default WP search (?s=) → custom search page (/search/?q=)
+ * - Tag archives (/tag/*)   → homepage (tags have no dedicated pages)
+ */
+add_action( 'template_redirect', function(): void {
+	// Default WP search → custom search page.
+	if ( is_search() ) {
+		$query = get_search_query();
+		$url   = $query
+			? home_url( '/search/?q=' . rawurlencode( $query ) )
+			: home_url( '/search/' );
+		wp_safe_redirect( $url, 301 );
+		exit;
+	}
+
+	// Tag archives → homepage.
+	if ( is_tag() ) {
+		wp_safe_redirect( home_url( '/' ), 301 );
+		exit;
+	}
+} );
+
+/**
+ * Disable tag archive pages from being generated.
+ *
+ * Tags are used for internal organization but have no frontend pages.
+ * Prevents /tag/* URLs from being valid WordPress queries.
+ */
+add_filter( 'register_taxonomy_args', function( array $args, string $taxonomy ): array {
+	if ( 'post_tag' === $taxonomy ) {
+		$args['publicly_queryable'] = false;
+		$args['rewrite']            = false;
+	}
+	return $args;
+}, 10, 2 );

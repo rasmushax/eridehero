@@ -41,12 +41,15 @@ function erh_enqueue_assets(): void {
             filemtime( $dist_css )
         );
     } else {
-        // Development: Use main CSS file with imports
+        // Development: newest partial mtime for cache busting across @imports
+        $css_dir   = ERH_THEME_DIR . '/assets/css';
+        $css_mtime = max( array_map( 'filemtime', glob( $css_dir . '/*.css' ) ) );
+
         wp_enqueue_style(
             'erh-style',
             ERH_THEME_URI . '/assets/css/style.css',
             array( 'erh-fonts' ),
-            $version
+            $css_mtime
         );
     }
 
@@ -68,12 +71,12 @@ function erh_enqueue_assets(): void {
             true
         );
     } else {
-        // Development: Use ES modules
+        // Development: Use ES modules (filemtime for cache busting)
         wp_enqueue_script(
             'erh-app',
             ERH_THEME_URI . '/assets/js/app.js',
             array(),
-            $version,
+            filemtime( ERH_THEME_DIR . '/assets/js/app.js' ),
             true
         );
 

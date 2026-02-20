@@ -180,6 +180,8 @@ class Finder {
         if (sort && this.sortSelect) {
             this.sortSelect.value = sort;
             this.currentSort = sort;
+            // Sync CustomSelect UI to reflect the URL-driven sort.
+            this.sortSelect._customSelect?.syncFromNative();
         }
 
         // Search

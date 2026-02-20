@@ -1776,6 +1776,26 @@ function erh_get_js_filter_config( string $product_type = 'escooter' ): array {
             'dir'       => 'asc',
             'nullValue' => 'Infinity',
         ],
+        'speed-desc' => [
+            'key'       => 'top_speed',
+            'dir'       => 'desc',
+            'nullValue' => 0,
+        ],
+        'range-desc' => [
+            'key'       => 'battery',
+            'dir'       => 'desc',
+            'nullValue' => 0,
+        ],
+        'weight-asc' => [
+            'key'       => 'weight',
+            'dir'       => 'asc',
+            'nullValue' => 'Infinity',
+        ],
+        'torque-desc' => [
+            'key'       => 'torque',
+            'dir'       => 'desc',
+            'nullValue' => 0,
+        ],
         'name' => [
             'key'       => 'name',
             'dir'       => 'asc',

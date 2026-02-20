@@ -114,7 +114,7 @@ if ( ! is_wp_error( $tool_categories ) && ! empty( $tool_categories ) ) {
                                     </div>
                                 <?php endif; ?>
                             </div>
-                            <h3 class="archive-card-title"><?php echo esc_html( $title ); ?></h3>
+                            <h2 class="archive-card-title"><?php echo esc_html( $title ); ?></h2>
                             <?php if ( $description ) : ?>
                                 <p class="archive-card-excerpt"><?php echo esc_html( $description ); ?></p>
                             <?php endif; ?>
