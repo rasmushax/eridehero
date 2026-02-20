@@ -58,7 +58,7 @@ get_header();
 							'name'     => 'sort',
 							'id'       => 'sort-select',
 							'variant'  => 'sm',
-							'selected' => 'rating',
+							'selected' => 'newest',
 							'options'  => [
 								'rating' => __( 'Highest rated', 'erh' ),
 								'newest' => __( 'Newest first', 'erh' ),
