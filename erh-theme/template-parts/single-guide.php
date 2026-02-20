@@ -30,6 +30,11 @@ $toc_items = erh_get_toc_from_content( $post_id );
                 <div class="guide-title-content">
                     <?php erh_the_breadcrumbs(); ?>
                     <h1 class="guide-title"><?php the_title(); ?></h1>
+                    <?php
+                    $subtitle = get_field( 'buying_guide_subtitle', $post_id );
+                    if ( $subtitle ) : ?>
+                        <p class="guide-subtitle"><?php echo esc_html( $subtitle ); ?></p>
+                    <?php endif; ?>
                 </div>
             </div>
 
@@ -45,6 +50,11 @@ $toc_items = erh_get_toc_from_content( $post_id );
                         'post_id' => $post_id,
                     ) );
                     ?>
+
+                    <!-- Affiliate Disclaimer -->
+                    <div class="affiliate-disclaimer">
+                        <p>We earn commissions from links on our site, enabling us to deliver independent reviews. See our <a href="<?php echo esc_url( home_url( '/editorial/' ) ); ?>">editorial policy</a>.</p>
+                    </div>
 
                     <!-- Guide content -->
                     <div class="guide-body" id="guide-content">
