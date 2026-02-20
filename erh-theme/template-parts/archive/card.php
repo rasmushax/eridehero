@@ -86,6 +86,11 @@ if ( 'review' === $type ) {
 
 	<?php if ( 'article' === $type && $excerpt ) : ?>
 		<p class="archive-card-excerpt"><?php echo esc_html( $excerpt ); ?></p>
+	<?php elseif ( 'review' === $type ) :
+		$tldr = get_field( 'review_tldr', $post_id );
+		if ( $tldr ) : ?>
+		<p class="archive-card-excerpt"><?php echo esc_html( $tldr ); ?></p>
+		<?php endif; ?>
 	<?php endif; ?>
 
 	<?php if ( 'article' === $type ) : ?>
