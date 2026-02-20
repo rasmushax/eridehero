@@ -56,7 +56,7 @@ if ( ! defined( 'ABSPATH' ) ) {
                 </div>
                 <div class="feature-content">
                     <span class="feature-label"><?php esc_html_e( 'Price history', 'erh' ); ?></span>
-                    <h3><?php esc_html_e( 'Find the best price at the right time', 'erh' ); ?></h3>
+                    <p class="feature-title"><?php esc_html_e( 'Find the best price at the right time', 'erh' ); ?></p>
                     <p><?php esc_html_e( '50+ retailers tracked daily. Avoid fake sales, know when to buy.', 'erh' ); ?></p>
                 </div>
             </div>
@@ -93,7 +93,7 @@ if ( ! defined( 'ABSPATH' ) ) {
                 </div>
                 <div class="feature-content">
                     <span class="feature-label"><?php esc_html_e( 'Price alerts', 'erh' ); ?></span>
-                    <h3><?php esc_html_e( 'Never miss a deal', 'erh' ); ?></h3>
+                    <p class="feature-title"><?php esc_html_e( 'Never miss a deal', 'erh' ); ?></p>
                     <p><?php esc_html_e( 'Get notified when prices drop on products you\'re watching.', 'erh' ); ?></p>
                 </div>
             </div>
@@ -118,7 +118,7 @@ if ( ! defined( 'ABSPATH' ) ) {
                 </div>
                 <div class="feature-content">
                     <span class="feature-label"><?php esc_html_e( 'Product database', 'erh' ); ?></span>
-                    <h3><?php esc_html_e( 'All electric rides in one place', 'erh' ); ?></h3>
+                    <p class="feature-title"><?php esc_html_e( 'All electric rides in one place', 'erh' ); ?></p>
                     <p><?php esc_html_e( 'Browse, compare, and filter 1,000+ electric rides by specs and price.', 'erh' ); ?></p>
                 </div>
             </div>

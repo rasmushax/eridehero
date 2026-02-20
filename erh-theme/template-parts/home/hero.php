@@ -53,7 +53,7 @@ if ( ! defined( 'ABSPATH' ) ) {
                                 <?php erh_the_icon( 'search' ); ?>
                             </div>
                             <div>
-                                <h3 class="finder-title"><?php esc_html_e( 'Quick finder', 'erh' ); ?></h3>
+                                <span class="finder-title"><?php esc_html_e( 'Quick finder', 'erh' ); ?></span>
                                 <p><?php esc_html_e( 'Answer 3 questions, get matched', 'erh' ); ?></p>
                             </div>
                         </div>

@@ -253,6 +253,7 @@ body.home #main-content {
 }
 
 .finder-title {
+    display: block;
     font-size: var(--text-xl);
     font-weight: var(--font-semibold);
     color: var(--color-dark);

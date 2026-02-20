@@ -52,7 +52,7 @@
     margin-bottom: var(--space-2);
 }
 
-.feature-content h3 {
+.feature-content .feature-title {
     font-size: var(--text-lg);
     font-weight: var(--font-semibold);
     color: var(--color-dark);
