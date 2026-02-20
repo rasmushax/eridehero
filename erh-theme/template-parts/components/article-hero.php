@@ -23,8 +23,6 @@ $post_id = get_the_ID();
     <?php endif; ?>
 
     <div class="article-hero-content">
-        <h1 class="article-hero-title"><?php the_title(); ?></h1>
-
         <?php if ( has_excerpt() ) : ?>
             <p class="article-hero-excerpt"><?php echo esc_html( get_the_excerpt() ); ?></p>
         <?php endif; ?>
