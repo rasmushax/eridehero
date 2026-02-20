@@ -115,7 +115,7 @@ $business_address  = get_field( 'business_address', 'option' ) ?: "Doktorens Gyd
                 <aside class="contact-sidebar">
                     <!-- Direct Email Lines -->
                     <div class="contact-card">
-                        <h3 class="contact-card-title"><?php esc_html_e( 'Direct email lines', 'erh' ); ?></h3>
+                        <h2 class="contact-card-title"><?php esc_html_e( 'Direct email lines', 'erh' ); ?></h2>
                         <ul class="contact-email-list">
                             <li>
                                 <span class="contact-email-label"><?php esc_html_e( 'General inquiries', 'erh' ); ?></span>
@@ -142,7 +142,7 @@ $business_address  = get_field( 'business_address', 'option' ) ?: "Doktorens Gyd
 
                     <!-- Address -->
                     <div class="contact-card">
-                        <h3 class="contact-card-title"><?php esc_html_e( 'Business address', 'erh' ); ?></h3>
+                        <h2 class="contact-card-title"><?php esc_html_e( 'Business address', 'erh' ); ?></h2>
                         <address class="contact-address">
                             <?php echo nl2br( esc_html( $business_address ) ); ?>
                         </address>
@@ -150,7 +150,7 @@ $business_address  = get_field( 'business_address', 'option' ) ?: "Doktorens Gyd
 
                     <!-- Social Links -->
                     <div class="contact-card">
-                        <h3 class="contact-card-title"><?php esc_html_e( 'Follow us', 'erh' ); ?></h3>
+                        <h2 class="contact-card-title"><?php esc_html_e( 'Follow us', 'erh' ); ?></h2>
                         <div class="footer-socials">
                             <?php
                             $socials = erh_get_social_links();
