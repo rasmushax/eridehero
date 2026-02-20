@@ -128,11 +128,6 @@ get_header();
 		</div>
 	</section>
 
-	<?php
-	// CTA Section.
-	get_template_part( 'template-parts/sections/cta' );
-	?>
-
 </main>
 
 <?php get_footer(); ?>

@@ -82,7 +82,7 @@ if ( 'review' === $type ) {
 		<?php endif; ?>
 	</div>
 
-	<span class="archive-card-title"><?php echo esc_html( $title ); ?></span>
+	<h2 class="archive-card-title"><?php echo esc_html( $title ); ?></h2>
 
 	<?php if ( 'article' === $type && $excerpt ) : ?>
 		<p class="archive-card-excerpt"><?php echo esc_html( $excerpt ); ?></p>
