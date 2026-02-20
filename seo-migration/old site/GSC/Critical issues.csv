@@ -1,0 +1,12 @@
+Reason,Source,Validation,Pages
+Page with redirect,Website,Not Started,373
+Excluded by ‘noindex’ tag,Website,Not Started,272
+Alternative page with proper canonical tag,Website,Not Started,139
+Blocked by robots.txt,Website,Not Started,90
+Not found (404),Website,Not Started,26
+Blocked due to access forbidden (403),Website,Not Started,1
+Crawled - currently not indexed,Google systems,Not Started,163
+Discovered – currently not indexed,Google systems,Not Started,3
+Blocked due to other 4xx issue,Website,N/A,0
+Server error (5xx),Website,N/A,0
+Duplicate without user-selected canonical,Website,N/A,0
