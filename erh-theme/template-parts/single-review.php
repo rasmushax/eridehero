@@ -110,6 +110,11 @@ $toc_items = erh_get_toc_items( $product_id, array(
                     ) );
                     ?>
 
+                    <!-- Affiliate Disclaimer -->
+                    <div class="affiliate-disclaimer">
+                        <p>We earn commissions from links on our site, enabling us to deliver independent reviews. See our <a href="<?php echo esc_url( home_url( '/editorial/' ) ); ?>">editorial policy</a>.</p>
+                    </div>
+
                     <?php
                     // Quick take section
                     $quick_take = get_field( 'review_quick_take', $post_id );
