@@ -28,7 +28,7 @@ if ( empty( $product_type ) ) {
 
 // Get the category slug for this product type.
 $category_slug = erh_product_type_slug( $product_type );
-$category_name = strtolower( erh_get_product_type_short_name( $product_type ) );
+$category_name = erh_get_product_type_short_name( $product_type );
 
 // Query related reviews (posts with 'review' tag in this category).
 $related_args = array(
