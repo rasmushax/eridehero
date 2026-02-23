@@ -438,6 +438,8 @@ function determine_greybox_icon(string $icon_raw): string {
  * @return string Gutenberg block comment.
  */
 function build_callout_block(string $style, string $title, string $body): string {
+    $body = sanitize_block_body($body);
+
     $block_data = [
         'name' => 'acf/callout',
         'data' => [
@@ -480,6 +482,8 @@ function build_callout_block(string $style, string $title, string $body): string
  * @return string Gutenberg block comment.
  */
 function build_greybox_block(string $icon, string $heading, string $body): string {
+    $body = sanitize_block_body($body);
+
     $block_data = [
         'name' => 'acf/greybox',
         'data' => [
@@ -496,4 +500,26 @@ function build_greybox_block(string $icon, string $heading, string $body): strin
     $json = wp_json_encode($block_data, JSON_UNESCAPED_UNICODE | JSON_UNESCAPED_SLASHES);
 
     return '<!-- wp:acf/greybox ' . $json . ' /-->';
+}
+
+/**
+ * Sanitize body HTML for safe embedding in block comment JSON.
+ *
+ * Removes newlines (which cause literal "n" in stored JSON),
+ * strips embedded Gutenberg block comments, and cleans whitespace.
+ *
+ * @param string $body Raw HTML body.
+ * @return string Cleaned HTML.
+ */
+function sanitize_block_body(string $body): string {
+    // Remove embedded Gutenberg block comments (leftover from Oxygen).
+    $body = preg_replace('/<!--\s*\/?wp:\S+.*?-->/s', '', $body);
+
+    // Replace newlines with nothing (they're just whitespace between HTML tags).
+    $body = str_replace(["\r\n", "\r", "\n"], '', $body);
+
+    // Collapse multiple spaces.
+    $body = preg_replace('/\s{2,}/', ' ', $body);
+
+    return trim($body);
 }

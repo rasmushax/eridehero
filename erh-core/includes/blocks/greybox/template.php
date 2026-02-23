@@ -20,6 +20,7 @@ if (!defined('ABSPATH')) {
 
 // Get block data.
 $icon    = get_field('greybox_icon') ?: 'x';
+$color   = get_field('greybox_color') ?: 'default';
 $heading = get_field('greybox_heading');
 $body    = get_field('greybox_body');
 
@@ -35,6 +36,9 @@ if (empty($heading) && empty($body)) {
 
 // Build class list.
 $classes = ['erh-greybox'];
+if ($color !== 'default') {
+    $classes[] = 'erh-greybox--' . $color;
+}
 if (!empty($block['className'])) {
     $classes[] = $block['className'];
 }

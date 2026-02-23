@@ -59,6 +59,24 @@
     color: var(--color-primary-hover);
 }
 
+/* ===== Icon Color Variants ===== */
+
+.erh-greybox--primary .erh-greybox-icon {
+    color: var(--color-primary);
+}
+
+.erh-greybox--error .erh-greybox-icon {
+    color: var(--color-error);
+}
+
+.erh-greybox--success .erh-greybox-icon {
+    color: var(--color-success);
+}
+
+.erh-greybox--info .erh-greybox-icon {
+    color: var(--color-info);
+}
+
 /* ===== Responsive ===== */
 
 @media (max-width: 768px) {
