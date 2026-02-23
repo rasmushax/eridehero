@@ -1,0 +1,19 @@
+/* =============================================
+   ERH Pros & Cons Block
+   Minimal styles — visual styling is in _pros-cons.css
+   ============================================= */
+
+.erh-proscons {
+    margin: var(--space-6) 0;
+}
+
+/* ===== Empty State (Editor Preview) ===== */
+
+.erh-proscons-empty {
+    padding: var(--space-6);
+    background: var(--color-background);
+    border: 2px dashed var(--color-border);
+    border-radius: var(--radius-lg);
+    text-align: center;
+    color: var(--color-muted);
+}

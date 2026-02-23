@@ -92,6 +92,9 @@ class BlockManager {
 
         // Register greybox block.
         $this->register_greybox_block();
+
+        // Register pros & cons block.
+        $this->register_proscons_block();
     }
 
     /**
@@ -230,6 +233,7 @@ class BlockManager {
         $this->register_buying_guide_table_fields();
         $this->register_callout_fields();
         $this->register_greybox_fields();
+        $this->register_proscons_fields();
     }
 
     /**
@@ -1184,6 +1188,146 @@ class BlockManager {
             wp_enqueue_style(
                 'erh-block-greybox',
                 $block_url . 'greybox.css',
+                [],
+                ERH_VERSION
+            );
+        }
+    }
+
+    /**
+     * Register the pros & cons block.
+     *
+     * @return void
+     */
+    private function register_proscons_block(): void {
+        acf_register_block_type([
+            'name'            => 'proscons',
+            'title'           => __('Pros & Cons', 'erh-core'),
+            'description'     => __('Two-column pros and cons list with customizable headers.', 'erh-core'),
+            'category'        => 'formatting',
+            'icon'            => 'thumbs-up',
+            'keywords'        => ['pros', 'cons', 'advantages', 'disadvantages', 'buy', 'skip'],
+            'mode'            => 'preview',
+            'supports'        => [
+                'align'  => false,
+                'anchor' => true,
+            ],
+            'render_callback' => [$this, 'render_proscons_block'],
+            'enqueue_assets'  => [$this, 'enqueue_proscons_assets'],
+        ]);
+
+        $this->blocks['proscons'] = [
+            'name' => 'proscons',
+            'dir'  => $this->blocks_dir . 'proscons/',
+            'url'  => $this->blocks_url . 'proscons/',
+        ];
+    }
+
+    /**
+     * Register pros & cons block ACF fields.
+     *
+     * @return void
+     */
+    private function register_proscons_fields(): void {
+        acf_add_local_field_group([
+            'key'      => 'group_erh_proscons_block',
+            'title'    => 'Block - Pros & Cons',
+            'fields'   => [
+                [
+                    'key'           => 'field_erh_proscons_pro_header',
+                    'label'         => 'Pros Header',
+                    'name'          => 'proscons_pro_header',
+                    'type'          => 'text',
+                    'default_value' => 'Pros',
+                    'placeholder'   => 'e.g., Buy It If, Who Should Buy It',
+                    'wrapper'       => ['width' => '40'],
+                ],
+                [
+                    'key'          => 'field_erh_proscons_pros',
+                    'label'        => 'Pros',
+                    'name'         => 'proscons_pros',
+                    'type'         => 'textarea',
+                    'rows'         => 6,
+                    'instructions' => 'One item per line.',
+                    'wrapper'      => ['width' => '60'],
+                ],
+                [
+                    'key'           => 'field_erh_proscons_con_header',
+                    'label'         => 'Cons Header',
+                    'name'          => 'proscons_con_header',
+                    'type'          => 'text',
+                    'default_value' => 'Cons',
+                    'placeholder'   => 'e.g., Skip It If, Who Should Look Elsewhere',
+                    'wrapper'       => ['width' => '40'],
+                ],
+                [
+                    'key'          => 'field_erh_proscons_cons',
+                    'label'        => 'Cons',
+                    'name'         => 'proscons_cons',
+                    'type'         => 'textarea',
+                    'rows'         => 6,
+                    'instructions' => 'One item per line.',
+                    'wrapper'      => ['width' => '60'],
+                ],
+                [
+                    'key'           => 'field_erh_proscons_heading',
+                    'label'         => 'Heading Level',
+                    'name'          => 'proscons_heading',
+                    'type'          => 'select',
+                    'choices'       => [
+                        'h2' => 'H2',
+                        'h3' => 'H3',
+                        'h4' => 'H4',
+                        'h5' => 'H5',
+                    ],
+                    'default_value' => 'h3',
+                    'return_format' => 'value',
+                    'wrapper'       => ['width' => '20'],
+                ],
+            ],
+            'location' => [
+                [
+                    [
+                        'param'    => 'block',
+                        'operator' => '==',
+                        'value'    => 'acf/proscons',
+                    ],
+                ],
+            ],
+        ]);
+    }
+
+    /**
+     * Render the pros & cons block.
+     *
+     * @param array  $block      The block settings.
+     * @param string $content    The block content (empty for ACF blocks).
+     * @param bool   $is_preview True during AJAX preview in editor.
+     * @param int    $post_id    The post ID.
+     * @return void
+     */
+    public function render_proscons_block(array $block, string $content = '', bool $is_preview = false, int $post_id = 0): void {
+        $template = $this->blocks_dir . 'proscons/template.php';
+
+        if (file_exists($template)) {
+            include $template;
+        }
+    }
+
+    /**
+     * Enqueue pros & cons block assets.
+     *
+     * @return void
+     */
+    public function enqueue_proscons_assets(): void {
+        $block_url = $this->blocks_url . 'proscons/';
+        $block_dir = $this->blocks_dir . 'proscons/';
+
+        // Enqueue CSS.
+        if (file_exists($block_dir . 'proscons.css')) {
+            wp_enqueue_style(
+                'erh-block-proscons',
+                $block_url . 'proscons.css',
                 [],
                 ERH_VERSION
             );
