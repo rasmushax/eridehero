@@ -1240,18 +1240,38 @@ function erh_get_product_info_from_category( WP_Term $category ): ?array {
 function erh_get_product_info_for_post( ?int $post_id = null ): ?array {
     $post_id = $post_id ?? get_the_ID();
 
-    if ( get_post_type( $post_id ) !== 'products' ) {
+    // Products CPT: read product_type directly.
+    if ( get_post_type( $post_id ) === 'products' ) {
+        $product_type = erh_get_product_type( $post_id );
+
+        return array(
+            'id'           => $post_id,
+            'name'         => get_the_title( $post_id ),
+            'product_type' => $product_type,
+            'category_key' => erh_get_category_key( $product_type ),
+        );
+    }
+
+    // Regular posts: derive from category → product_type ACF relationship.
+    $categories = get_the_category( $post_id );
+    if ( empty( $categories ) ) {
         return null;
     }
 
-    $product_type = erh_get_product_type( $post_id );
+    foreach ( $categories as $cat ) {
+        $hub = erh_get_hub_context( $cat );
+        if ( $hub ) {
+            return array(
+                'product_type'  => $hub['product_type'],
+                'category_name' => erh_get_product_type_short_name( $hub['product_type'] ),
+                'category_key'  => $hub['product_type_key'],
+                'finder_page'   => $hub['finder_url'],
+                'deals_page'    => $hub['deals_url'],
+            );
+        }
+    }
 
-    return array(
-        'id'           => $post_id,
-        'name'         => get_the_title( $post_id ),
-        'product_type' => $product_type,
-        'category_key' => erh_get_category_key( $product_type ),
-    );
+    return null;
 }
 
 /**
