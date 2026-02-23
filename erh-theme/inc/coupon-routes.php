@@ -309,6 +309,68 @@ function erh_coupon_rankmath_opengraph(): void {
 }
 add_action( 'rank_math/opengraph/facebook', 'erh_coupon_rankmath_opengraph', 100 );
 
+/**
+ * Enhance RankMath JSON-LD schema for coupon pages.
+ *
+ * - Fixes URL and @id on WebPage/CollectionPage.
+ * - Adds description and dateModified.
+ *
+ * @param array $data The JSON-LD data from RankMath.
+ * @return array Modified data.
+ */
+function erh_coupon_enhance_schema( array $data ): array {
+	if ( ! erh_is_coupon_page() ) {
+		return $data;
+	}
+
+	$category = erh_get_coupon_category();
+	if ( ! $category ) {
+		return $data;
+	}
+
+	$canonical   = home_url( '/coupons/' . $category['slug'] . '/' );
+	$description = erh_coupon_rankmath_description( '' );
+
+	// Get modified date (same logic as OG tag).
+	$coupons         = \ERH\PostTypes\Coupon::get_by_category( $category['key'] );
+	$latest_modified = 0;
+	foreach ( $coupons as $c ) {
+		if ( $c['modified'] > $latest_modified ) {
+			$latest_modified = $c['modified'];
+		}
+	}
+	$verified      = erh_coupon_verified_timestamp( $category['key'], $latest_modified );
+	$date_modified = date( 'c', $verified );
+
+	// Handle @graph structure (newer RankMath versions).
+	if ( isset( $data['@graph'] ) && is_array( $data['@graph'] ) ) {
+		foreach ( $data['@graph'] as &$item ) {
+			$type = $item['@type'] ?? '';
+			if ( in_array( $type, [ 'CollectionPage', 'WebPage' ], true ) ) {
+				$item['url']          = $canonical;
+				$item['@id']          = $canonical . '#webpage';
+				$item['description']  = $description;
+				$item['dateModified'] = $date_modified;
+			}
+		}
+		unset( $item );
+		return $data;
+	}
+
+	// Handle flat structure (older RankMath versions).
+	foreach ( [ 'CollectionPage', 'WebPage' ] as $page_type ) {
+		if ( isset( $data[ $page_type ] ) ) {
+			$data[ $page_type ]['url']          = $canonical;
+			$data[ $page_type ]['@id']          = $canonical . '#webpage';
+			$data[ $page_type ]['description']  = $description;
+			$data[ $page_type ]['dateModified'] = $date_modified;
+		}
+	}
+
+	return $data;
+}
+add_filter( 'rank_math/json_ld', 'erh_coupon_enhance_schema', 20 );
+
 // ─── RankMath Sitemap Integration ───
 
 /**

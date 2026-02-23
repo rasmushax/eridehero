@@ -321,8 +321,9 @@ function erh_escooter_reviews_enhance_schema( array $data ): array {
 		return $data;
 	}
 
-	$canonical   = home_url( '/electric-scooters/reviews/' );
-	$description = erh_escooter_reviews_rankmath_description( '' );
+	$canonical    = home_url( '/electric-scooters/reviews/' );
+	$description  = erh_escooter_reviews_rankmath_description( '' );
+	$date_modified = erh_escooter_reviews_latest_modified();
 
 	$breadcrumb = [
 		'@type'           => 'BreadcrumbList',
@@ -363,6 +364,9 @@ function erh_escooter_reviews_enhance_schema( array $data ): array {
 				$item['url']         = $canonical;
 				$item['@id']         = $canonical . '#webpage';
 				$item['description'] = $description;
+				if ( $date_modified ) {
+					$item['dateModified'] = $date_modified;
+				}
 			}
 		}
 		unset( $item );
@@ -380,6 +384,9 @@ function erh_escooter_reviews_enhance_schema( array $data ): array {
 			$data[ $page_type ]['url']         = $canonical;
 			$data[ $page_type ]['@id']         = $canonical . '#webpage';
 			$data[ $page_type ]['description'] = $description;
+			if ( $date_modified ) {
+				$data[ $page_type ]['dateModified'] = $date_modified;
+			}
 		}
 	}
 
