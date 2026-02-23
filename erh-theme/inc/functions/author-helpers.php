@@ -118,6 +118,97 @@ function erh_author_has_socials( int $author_id ): bool {
 }
 
 /**
+ * Check if the current author page should be treated as a valid, indexable page.
+ *
+ * Must match the same logic as author.php template: user must have an allowed
+ * role (administrator, editor, author) AND have at least one published post.
+ *
+ * @return bool True if the author page is valid.
+ */
+function erh_is_valid_author_page(): bool {
+	if ( ! is_author() ) {
+		return false;
+	}
+
+	$author = get_queried_object();
+	if ( ! $author instanceof WP_User ) {
+		return false;
+	}
+
+	$allowed_roles   = array( 'administrator', 'editor', 'author' );
+	$has_allowed_role = ! empty( array_intersect( (array) $author->roles, $allowed_roles ) );
+
+	if ( ! $has_allowed_role ) {
+		return false;
+	}
+
+	return count_user_posts( $author->ID, 'post', true ) >= 1;
+}
+
+/**
+ * Noindex author pages that will 404 (wrong role or no published posts).
+ *
+ * RankMath generates meta before the template runs set_404(), so without
+ * this filter, invalid author pages get index/canonical tags despite being 404s.
+ *
+ * @param array $robots The robots directives.
+ * @return array Modified robots.
+ */
+function erh_author_rankmath_robots( array $robots ): array {
+	if ( ! is_author() ) {
+		return $robots;
+	}
+
+	if ( erh_is_valid_author_page() ) {
+		return $robots;
+	}
+
+	return [
+		'index'  => 'noindex',
+		'follow' => 'follow',
+	];
+}
+add_filter( 'rank_math/frontend/robots', 'erh_author_rankmath_robots', 20 );
+
+/**
+ * Remove canonical URL for author pages that will 404.
+ *
+ * @param string $canonical The canonical URL.
+ * @return string|false Modified canonical or false to remove.
+ */
+function erh_author_rankmath_canonical( string $canonical ): string {
+	if ( ! is_author() ) {
+		return $canonical;
+	}
+
+	if ( erh_is_valid_author_page() ) {
+		return $canonical;
+	}
+
+	return '';
+}
+add_filter( 'rank_math/frontend/canonical', 'erh_author_rankmath_canonical', 20 );
+
+/**
+ * Override title for author pages that will 404.
+ *
+ * @param string $title The page title.
+ * @return string Modified title.
+ */
+function erh_author_rankmath_title( string $title ): string {
+	if ( ! is_author() ) {
+		return $title;
+	}
+
+	if ( erh_is_valid_author_page() ) {
+		return $title;
+	}
+
+	return 'Page Not Found | ERideHero';
+}
+add_filter( 'rank_math/frontend/title', 'erh_author_rankmath_title', 20 );
+
+/**
  * Override Rank Math author schema to use ACF profile image.
  *
  * Rank Math uses Gravatar by default. This filter replaces it with
