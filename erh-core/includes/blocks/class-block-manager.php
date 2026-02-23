@@ -86,6 +86,12 @@ class BlockManager {
 
         // Register buying guide table block.
         $this->register_buying_guide_table_block();
+
+        // Register callout block.
+        $this->register_callout_block();
+
+        // Register greybox block.
+        $this->register_greybox_block();
     }
 
     /**
@@ -222,6 +228,8 @@ class BlockManager {
         $this->register_video_fields();
         $this->register_listicle_item_fields();
         $this->register_buying_guide_table_fields();
+        $this->register_callout_fields();
+        $this->register_greybox_fields();
     }
 
     /**
@@ -920,6 +928,248 @@ class BlockManager {
                 [],
                 ERH_VERSION,
                 true
+            );
+        }
+    }
+
+    /**
+     * Register the callout block.
+     *
+     * @return void
+     */
+    private function register_callout_block(): void {
+        acf_register_block_type([
+            'name'            => 'callout',
+            'title'           => __('Callout', 'erh-core'),
+            'description'     => __('Styled callout box for tips, notes, warnings, and summaries.', 'erh-core'),
+            'category'        => 'formatting',
+            'icon'            => 'megaphone',
+            'keywords'        => ['callout', 'tip', 'note', 'warning', 'summary', 'alert'],
+            'mode'            => 'preview',
+            'supports'        => [
+                'align'  => false,
+                'anchor' => true,
+            ],
+            'render_callback' => [$this, 'render_callout_block'],
+            'enqueue_assets'  => [$this, 'enqueue_callout_assets'],
+        ]);
+
+        $this->blocks['callout'] = [
+            'name' => 'callout',
+            'dir'  => $this->blocks_dir . 'callout/',
+            'url'  => $this->blocks_url . 'callout/',
+        ];
+    }
+
+    /**
+     * Register callout block ACF fields.
+     *
+     * @return void
+     */
+    private function register_callout_fields(): void {
+        acf_add_local_field_group([
+            'key'      => 'group_erh_callout_block',
+            'title'    => 'Block - Callout',
+            'fields'   => [
+                [
+                    'key'           => 'field_erh_callout_style',
+                    'label'         => 'Style',
+                    'name'          => 'callout_style',
+                    'type'          => 'select',
+                    'choices'       => [
+                        'tip'     => 'Tip',
+                        'note'    => 'Note',
+                        'warning' => 'Warning',
+                        'summary' => 'Summary',
+                    ],
+                    'default_value' => 'tip',
+                    'return_format' => 'value',
+                    'wrapper'       => ['width' => '50'],
+                ],
+                [
+                    'key'         => 'field_erh_callout_title',
+                    'label'       => 'Title',
+                    'name'        => 'callout_title',
+                    'type'        => 'text',
+                    'instructions' => 'Optional. Defaults to style name if empty.',
+                    'placeholder' => 'e.g., Pro Tip, Note, Warning...',
+                    'wrapper'     => ['width' => '50'],
+                ],
+                [
+                    'key'          => 'field_erh_callout_body',
+                    'label'        => 'Body',
+                    'name'         => 'callout_body',
+                    'type'         => 'wysiwyg',
+                    'tabs'         => 'all',
+                    'toolbar'      => 'full',
+                    'media_upload' => 0,
+                ],
+            ],
+            'location' => [
+                [
+                    [
+                        'param'    => 'block',
+                        'operator' => '==',
+                        'value'    => 'acf/callout',
+                    ],
+                ],
+            ],
+        ]);
+    }
+
+    /**
+     * Render the callout block.
+     *
+     * @param array  $block      The block settings.
+     * @param string $content    The block content (empty for ACF blocks).
+     * @param bool   $is_preview True during AJAX preview in editor.
+     * @param int    $post_id    The post ID.
+     * @return void
+     */
+    public function render_callout_block(array $block, string $content = '', bool $is_preview = false, int $post_id = 0): void {
+        $template = $this->blocks_dir . 'callout/template.php';
+
+        if (file_exists($template)) {
+            include $template;
+        }
+    }
+
+    /**
+     * Enqueue callout block assets.
+     *
+     * @return void
+     */
+    public function enqueue_callout_assets(): void {
+        $block_url = $this->blocks_url . 'callout/';
+        $block_dir = $this->blocks_dir . 'callout/';
+
+        // Enqueue CSS.
+        if (file_exists($block_dir . 'callout.css')) {
+            wp_enqueue_style(
+                'erh-block-callout',
+                $block_url . 'callout.css',
+                [],
+                ERH_VERSION
+            );
+        }
+    }
+
+    /**
+     * Register the greybox block.
+     *
+     * @return void
+     */
+    private function register_greybox_block(): void {
+        acf_register_block_type([
+            'name'            => 'greybox',
+            'title'           => __('Grey Box', 'erh-core'),
+            'description'     => __('Grey bordered box with icon, heading, and rich text content.', 'erh-core'),
+            'category'        => 'formatting',
+            'icon'            => 'admin-comments',
+            'keywords'        => ['greybox', 'box', 'icon', 'heading', 'content'],
+            'mode'            => 'preview',
+            'supports'        => [
+                'align'  => false,
+                'anchor' => true,
+            ],
+            'render_callback' => [$this, 'render_greybox_block'],
+            'enqueue_assets'  => [$this, 'enqueue_greybox_assets'],
+        ]);
+
+        $this->blocks['greybox'] = [
+            'name' => 'greybox',
+            'dir'  => $this->blocks_dir . 'greybox/',
+            'url'  => $this->blocks_url . 'greybox/',
+        ];
+    }
+
+    /**
+     * Register greybox block ACF fields.
+     *
+     * @return void
+     */
+    private function register_greybox_fields(): void {
+        acf_add_local_field_group([
+            'key'      => 'group_erh_greybox_block',
+            'title'    => 'Block - Grey Box',
+            'fields'   => [
+                [
+                    'key'           => 'field_erh_greybox_icon',
+                    'label'         => 'Icon',
+                    'name'          => 'greybox_icon',
+                    'type'          => 'select',
+                    'choices'       => [
+                        'x'     => 'X / Close',
+                        'info'  => 'Info',
+                        'zap'   => 'Lightning',
+                        'check' => 'Check',
+                    ],
+                    'default_value' => 'x',
+                    'return_format' => 'value',
+                    'wrapper'       => ['width' => '50'],
+                ],
+                [
+                    'key'     => 'field_erh_greybox_heading',
+                    'label'   => 'Heading',
+                    'name'    => 'greybox_heading',
+                    'type'    => 'text',
+                    'wrapper' => ['width' => '50'],
+                ],
+                [
+                    'key'          => 'field_erh_greybox_body',
+                    'label'        => 'Body',
+                    'name'         => 'greybox_body',
+                    'type'         => 'wysiwyg',
+                    'tabs'         => 'all',
+                    'toolbar'      => 'full',
+                    'media_upload' => 0,
+                ],
+            ],
+            'location' => [
+                [
+                    [
+                        'param'    => 'block',
+                        'operator' => '==',
+                        'value'    => 'acf/greybox',
+                    ],
+                ],
+            ],
+        ]);
+    }
+
+    /**
+     * Render the greybox block.
+     *
+     * @param array  $block      The block settings.
+     * @param string $content    The block content (empty for ACF blocks).
+     * @param bool   $is_preview True during AJAX preview in editor.
+     * @param int    $post_id    The post ID.
+     * @return void
+     */
+    public function render_greybox_block(array $block, string $content = '', bool $is_preview = false, int $post_id = 0): void {
+        $template = $this->blocks_dir . 'greybox/template.php';
+
+        if (file_exists($template)) {
+            include $template;
+        }
+    }
+
+    /**
+     * Enqueue greybox block assets.
+     *
+     * @return void
+     */
+    public function enqueue_greybox_assets(): void {
+        $block_url = $this->blocks_url . 'greybox/';
+        $block_dir = $this->blocks_dir . 'greybox/';
+
+        // Enqueue CSS.
+        if (file_exists($block_dir . 'greybox.css')) {
+            wp_enqueue_style(
+                'erh-block-greybox',
+                $block_url . 'greybox.css',
+                [],
+                ERH_VERSION
             );
         }
     }

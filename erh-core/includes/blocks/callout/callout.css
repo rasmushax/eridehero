@@ -1,0 +1,116 @@
+/* =============================================
+   ERH Callout Block
+   Styled callout for tips, notes, warnings, summaries
+   ============================================= */
+
+.erh-callout {
+    margin: var(--space-6) 0;
+    padding: var(--space-8);
+    border-radius: var(--radius-lg);
+    border-left: 4px solid var(--color-primary);
+    background: var(--color-primary-light);
+}
+
+/* ===== Header ===== */
+
+.erh-callout-header {
+    display: flex;
+    align-items: center;
+    gap: var(--space-3);
+    margin-bottom: var(--space-4);
+}
+
+.erh-callout-icon {
+    flex-shrink: 0;
+    width: 20px;
+    height: 20px;
+    color: var(--color-primary);
+}
+
+.erh-callout-title {
+    font-size: var(--text-base);
+    font-weight: var(--font-bold);
+    color: var(--color-dark);
+    line-height: var(--leading-tight);
+}
+
+/* ===== Body ===== */
+
+.erh-callout-body {
+    color: var(--color-body);
+    line-height: var(--leading-relaxed);
+}
+
+.erh-callout-body > *:last-child {
+    margin-bottom: 0;
+}
+
+.erh-callout-body a {
+    color: var(--color-primary);
+    text-decoration: underline;
+}
+
+.erh-callout-body a:hover {
+    color: var(--color-primary-hover);
+}
+
+/* ===== Style Variants ===== */
+
+/* Tip (default) — purple */
+.erh-callout--tip {
+    border-left-color: var(--color-primary);
+    background: var(--color-primary-light);
+}
+
+.erh-callout--tip .erh-callout-icon {
+    color: var(--color-primary);
+}
+
+/* Note — orange */
+.erh-callout--note {
+    border-left-color: var(--color-info);
+    background: rgba(253, 126, 20, 0.08);
+}
+
+.erh-callout--note .erh-callout-icon {
+    color: var(--color-info);
+}
+
+/* Warning — red */
+.erh-callout--warning {
+    border-left-color: var(--color-error);
+    background: var(--color-error-light);
+}
+
+.erh-callout--warning .erh-callout-icon {
+    color: var(--color-error);
+}
+
+/* Summary — green */
+.erh-callout--summary {
+    border-left-color: var(--color-success);
+    background: var(--color-success-light);
+}
+
+.erh-callout--summary .erh-callout-icon {
+    color: var(--color-success);
+}
+
+/* ===== Responsive ===== */
+
+@media (max-width: 768px) {
+    .erh-callout {
+        padding: var(--space-6);
+    }
+}
+
+/* ===== Empty State (Editor Preview) ===== */
+
+.erh-callout-empty {
+    padding: var(--space-6);
+    background: var(--color-background);
+    border: 2px dashed var(--color-border);
+    border-radius: var(--radius-lg);
+    text-align: center;
+    color: var(--color-muted);
+}

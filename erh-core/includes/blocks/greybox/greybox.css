@@ -1,0 +1,88 @@
+/* =============================================
+   ERH Greybox Block
+   Icon + heading + rich text in a bordered box
+   ============================================= */
+
+.erh-greybox {
+    border: 1px solid var(--color-border);
+    border-radius: var(--radius-lg);
+    padding: var(--space-10);
+    margin: var(--space-6) 0;
+}
+
+/* ===== Header ===== */
+
+.erh-greybox-header {
+    display: flex;
+    align-items: center;
+    gap: var(--space-3);
+    margin-bottom: var(--space-4);
+}
+
+.erh-greybox-icon {
+    flex-shrink: 0;
+    width: 28px;
+    height: 28px;
+    color: var(--color-dark);
+}
+
+.erh-greybox-heading {
+    margin: 0;
+    font-size: var(--text-lg);
+    font-weight: var(--font-bold);
+    color: var(--color-dark);
+    line-height: var(--leading-tight);
+}
+
+/* ===== Body ===== */
+
+.erh-greybox-body {
+    color: var(--color-body);
+    line-height: var(--leading-relaxed);
+}
+
+.erh-greybox-body > *:last-child {
+    margin-bottom: 0;
+}
+
+.erh-greybox-body ul,
+.erh-greybox-body ol {
+    margin-bottom: 0;
+}
+
+.erh-greybox-body a {
+    color: var(--color-primary);
+    text-decoration: underline;
+}
+
+.erh-greybox-body a:hover {
+    color: var(--color-primary-hover);
+}
+
+/* ===== Responsive ===== */
+
+@media (max-width: 768px) {
+    .erh-greybox {
+        padding: var(--space-8);
+    }
+
+    .erh-greybox-heading {
+        font-size: var(--text-base);
+    }
+
+    .erh-greybox-icon {
+        width: 24px;
+        height: 24px;
+    }
+}
+
+/* ===== Empty State (Editor Preview) ===== */
+
+.erh-greybox-empty {
+    padding: var(--space-6);
+    background: var(--color-background);
+    border: 2px dashed var(--color-border);
+    border-radius: var(--radius-lg);
+    text-align: center;
+    color: var(--color-muted);
+}
