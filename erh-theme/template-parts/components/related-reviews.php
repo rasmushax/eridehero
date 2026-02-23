@@ -28,7 +28,7 @@ if ( empty( $product_type ) ) {
 
 // Get the category slug for this product type.
 $category_slug = erh_product_type_slug( $product_type );
-$category_name = erh_get_product_type_short_name( $product_type );
+$category_name = strtolower( erh_get_product_type_short_name( $product_type ) );
 
 // Query related reviews (posts with 'review' tag in this category).
 $related_args = array(
@@ -49,11 +49,9 @@ $related_args = array(
 // Filter by category if we have one.
 $category = get_category_by_slug( str_replace( '-', '', $category_slug ) );
 if ( ! $category ) {
-    // Try with different slug formats.
     $category = get_category_by_slug( $category_slug );
 }
 if ( ! $category ) {
-    // Try the full name.
     $category = get_category_by_slug( sanitize_title( $product_type . 's' ) );
 }
 if ( $category ) {
@@ -67,8 +65,14 @@ if ( ! $related_query->have_posts() ) {
     return;
 }
 
-// Get the reviews archive URL.
-$reviews_url = home_url( '/' . $category_slug . '-reviews/' );
+// Build the correct reviews archive URL.
+// E-scooters has a dedicated page; others use /reviews/?category=slug.
+$wp_category_slug = $category ? $category->slug : sanitize_title( $product_type . 's' );
+if ( 'electric-scooters' === $wp_category_slug ) {
+    $reviews_url = home_url( '/electric-scooters/reviews/' );
+} else {
+    $reviews_url = home_url( '/reviews/?category=' . $wp_category_slug );
+}
 ?>
 
 <section class="related-reviews content-section">

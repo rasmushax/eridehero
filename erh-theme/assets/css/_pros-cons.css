@@ -9,16 +9,20 @@
     gap: var(--space-6);
 }
 
-.pros-title,
-.cons-title {
+/* ===== Headings ===== */
+
+.pros-cons .pros-title,
+.pros-cons .cons-title {
     font-size: var(--text-2xl);
     font-weight: var(--font-bold);
     margin: 0 0 var(--space-4);
     color: var(--color-dark);
 }
 
-.pros-list,
-.cons-list {
+/* ===== Lists ===== */
+
+.pros-cons .pros-list,
+.pros-cons .cons-list {
     list-style: none;
     padding: 0;
     margin: 0;
@@ -27,27 +31,38 @@
     gap: var(--space-3);
 }
 
-.pros-list li,
-.cons-list li {
+.pros-cons .pros-list li,
+.pros-cons .cons-list li {
     display: flex;
     align-items: flex-start;
     gap: var(--space-2);
     font-size: var(--text-base);
     color: var(--color-body);
+    margin: 0;
+    padding: 0;
 }
 
-.pros-list li .icon {
+.pros-cons .pros-list li .icon {
     flex-shrink: 0;
     width: 18px;
     height: 18px;
     color: var(--color-success);
-    margin-top: 1px;
+    margin-top: 2px;
 }
 
-.cons-list li .icon {
+.pros-cons .cons-list li .icon {
     flex-shrink: 0;
     width: 18px;
     height: 18px;
     color: var(--color-error);
-    margin-top: 1px;
+    margin-top: 2px;
+}
+
+/* ===== Mobile ===== */
+
+@media (max-width: 600px) {
+    .pros-cons {
+        grid-template-columns: 1fr;
+        gap: var(--space-8);
+    }
 }

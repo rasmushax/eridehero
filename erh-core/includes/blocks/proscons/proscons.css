@@ -4,7 +4,7 @@
    ============================================= */
 
 .erh-proscons {
-    margin: var(--space-6) 0;
+    margin: var(--space-8) 0 var(--space-10);
 }
 
 /* ===== Empty State (Editor Preview) ===== */

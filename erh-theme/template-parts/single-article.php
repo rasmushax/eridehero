@@ -58,9 +58,10 @@ $toc_items = erh_get_toc_from_content( $post_id );
 
                     // Related articles.
                     get_template_part( 'template-parts/components/related-posts', null, array(
-                        'title'     => __( 'Related Articles', 'erh' ),
-                        'post_type' => 'article',
-                        'count'     => 3,
+                        'title'        => __( 'Related Articles', 'erh' ),
+                        'post_type'    => 'article',
+                        'count'        => 3,
+                        'view_all_url' => home_url( '/articles/' ),
                     ) );
                     ?>
                 </article>

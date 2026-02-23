@@ -69,9 +69,10 @@ $toc_items = erh_get_toc_from_content( $post_id );
 
                     // Related buying guides.
                     get_template_part( 'template-parts/components/related-posts', null, array(
-                        'title'     => __( 'More Buying Guides', 'erh' ),
-                        'post_type' => 'buying-guide',
-                        'count'     => 3,
+                        'title'        => __( 'More Buying Guides', 'erh' ),
+                        'post_type'    => 'buying-guide',
+                        'count'        => 3,
+                        'view_all_url' => home_url( '/buying-guides/' ),
                     ) );
                     ?>
                 </article>

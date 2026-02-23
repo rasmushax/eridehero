@@ -3,7 +3,7 @@
  * Related Posts Component
  *
  * Displays related articles or guides based on shared categories/tags.
- * Flexible component for both articles and buying guides.
+ * Uses same card layout as related-reviews for visual consistency.
  *
  * @package ERideHero
  *
@@ -11,7 +11,7 @@
  *   'title'        => string - Section title (default: 'Related Articles')
  *   'post_type'    => string - 'article' or 'buying-guide' (default: same as current)
  *   'count'        => int    - Number of posts to show (default: 3)
- *   'exclude_tags' => array  - Tag slugs to exclude from matching (e.g., ['review'])
+ *   'view_all_url' => string - URL for "View all" button (optional)
  */
 
 // Prevent direct access.
@@ -19,15 +19,11 @@ if ( ! defined( 'ABSPATH' ) ) {
     exit;
 }
 
-$current_post_id = get_the_ID();
-$title           = $args['title'] ?? __( 'Related Articles', 'erh' );
-$count           = $args['count'] ?? 3;
-$exclude_tags    = $args['exclude_tags'] ?? array( 'review' );
+$current_post_id  = get_the_ID();
+$title            = $args['title'] ?? __( 'Related Articles', 'erh' );
+$count            = $args['count'] ?? 3;
 $post_type_filter = $args['post_type'] ?? null;
-
-// Get current post's categories and tags.
-$categories = wp_get_post_categories( $current_post_id, array( 'fields' => 'ids' ) );
-$tags       = wp_get_post_tags( $current_post_id, array( 'fields' => 'ids' ) );
+$view_all_url     = $args['view_all_url'] ?? '';
 
 // Build query args.
 $query_args = array(
@@ -38,17 +34,17 @@ $query_args = array(
     'order'          => 'DESC',
 );
 
-// If filtering by article or guide, use tag_slug__in / tag_slug__not_in.
+// Filter by article or guide tag.
 if ( $post_type_filter === 'article' ) {
-    // Articles = posts without review or buying-guide tags.
     $query_args['tag_slug__not_in'] = array( 'review', 'buying-guide' );
 } elseif ( $post_type_filter === 'buying-guide' ) {
-    // Guides = posts with buying-guide tag.
     $query_args['tag_slug__in'] = array( 'buying-guide' );
 } else {
-    // Default: exclude reviews.
     $query_args['tag_slug__not_in'] = array( 'review' );
 }
+
+// Get current post's categories for relevance.
+$categories = wp_get_post_categories( $current_post_id, array( 'fields' => 'ids' ) );
 
 // Prioritize same category.
 if ( ! empty( $categories ) ) {
@@ -69,7 +65,7 @@ if ( $related_query->post_count < $count && ! empty( $categories ) ) {
     );
 
     $fallback_query = new WP_Query( $fallback_args );
-    $related_query->posts = array_merge( $related_query->posts, $fallback_query->posts );
+    $related_query->posts      = array_merge( $related_query->posts, $fallback_query->posts );
     $related_query->post_count = count( $related_query->posts );
 }
 
@@ -79,42 +75,36 @@ if ( ! $related_query->have_posts() ) {
 }
 ?>
 
-<section class="related-posts">
-    <div class="container">
-        <h2 class="related-posts-title"><?php echo esc_html( $title ); ?></h2>
+<section class="related-posts content-section">
+    <div class="section-header">
+        <h2 class="section-title"><?php echo esc_html( $title ); ?></h2>
+        <?php if ( ! empty( $view_all_url ) ) : ?>
+            <a href="<?php echo esc_url( $view_all_url ); ?>" class="btn btn-secondary btn-sm">
+                View all
+                <?php erh_the_icon( 'arrow-right' ); ?>
+            </a>
+        <?php endif; ?>
+    </div>
 
-        <div class="related-posts-grid">
-            <?php
-            while ( $related_query->have_posts() ) :
-                $related_query->the_post();
-                ?>
-                <article class="related-post-card">
-                    <a href="<?php the_permalink(); ?>" class="related-post-card-link">
-                        <?php if ( has_post_thumbnail() ) : ?>
-                            <div class="related-post-card-image">
-                                <?php the_post_thumbnail( 'medium', array( 'class' => 'related-post-card-img' ) ); ?>
-                            </div>
-                        <?php endif; ?>
-
-                        <div class="related-post-card-content">
-                            <?php
-                            $post_categories = get_the_category();
-                            if ( ! empty( $post_categories ) ) :
-                                $category = $post_categories[0];
-                                ?>
-                                <span class="related-post-card-category"><?php echo esc_html( $category->name ); ?></span>
-                            <?php endif; ?>
-
-                            <h3 class="related-post-card-title"><?php the_title(); ?></h3>
-
-                            <time class="related-post-card-date" datetime="<?php echo esc_attr( get_the_date( 'c' ) ); ?>">
-                                <?php echo esc_html( get_the_date() ); ?>
-                            </time>
-                        </div>
-                    </a>
-                </article>
-            <?php endwhile; ?>
-        </div>
+    <div class="related-grid">
+        <?php
+        while ( $related_query->have_posts() ) :
+            $related_query->the_post();
+            ?>
+            <a href="<?php the_permalink(); ?>" class="content-card">
+                <div class="content-card-img">
+                    <?php if ( has_post_thumbnail() ) : ?>
+                        <?php the_post_thumbnail( 'medium_large' ); ?>
+                    <?php else : ?>
+                        <img src="<?php echo esc_url( ERH_THEME_URI . '/assets/images/placeholder.jpg' ); ?>" alt="">
+                    <?php endif; ?>
+                </div>
+                <div class="content-card-content">
+                    <h3 class="content-card-title"><?php the_title(); ?></h3>
+                    <span class="content-card-date"><?php echo esc_html( get_the_date( 'M j, Y' ) ); ?></span>
+                </div>
+            </a>
+        <?php endwhile; ?>
     </div>
 </section>
 

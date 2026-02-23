@@ -61,7 +61,6 @@ if (!empty($block['anchor'])) {
     <?php if (!empty($pros)) : ?>
         <div class="pros">
             <<?php echo esc_attr($heading); ?> class="pros-title">
-                <?php erh_the_icon('check'); ?>
                 <?php echo esc_html($pro_header); ?>
             </<?php echo esc_attr($heading); ?>>
             <ul class="pros-list">
@@ -78,7 +77,6 @@ if (!empty($block['anchor'])) {
     <?php if (!empty($cons)) : ?>
         <div class="cons">
             <<?php echo esc_attr($heading); ?> class="cons-title">
-                <?php erh_the_icon('x'); ?>
                 <?php echo esc_html($con_header); ?>
             </<?php echo esc_attr($heading); ?>>
             <ul class="cons-list">

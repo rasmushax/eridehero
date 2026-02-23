@@ -250,14 +250,7 @@
     margin: 0 0 var(--space-4);
 }
 
-.review-body ul {
-    margin: 0 0 var(--space-4);
-    padding-left: var(--space-6);
-}
-
-.review-body li {
-    margin-bottom: var(--space-2);
-}
+/* review-body ul/ol/li styles consolidated in _articles.css */
 
 /* ===== REVIEW TEST TABLES ===== */
 
