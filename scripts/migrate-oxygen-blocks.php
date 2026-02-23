@@ -4,7 +4,7 @@
  *
  * Converts Oxygen Builder blocks to ACF blocks and removes discount codes.
  *
- * Usage: wp eval-file scripts/migrate-oxygen-blocks.php [--dry-run]
+ * Usage: wp eval-file scripts/migrate-oxygen-blocks.php [dry-run]
  *
  * Converts:
  *   ovsb-tip            → acf/callout
@@ -22,7 +22,8 @@ if (!defined('ABSPATH')) {
     exit('This script must be run via WP-CLI: wp eval-file scripts/migrate-oxygen-blocks.php');
 }
 
-$dry_run = in_array('--dry-run', $GLOBALS['argv'] ?? [], true);
+// WP-CLI eats --flags, so use positional arg: wp eval-file script.php dry-run
+$dry_run = in_array('dry-run', $args ?? [], true);
 
 if ($dry_run) {
     WP_CLI::log('=== DRY RUN MODE — no changes will be saved ===');
@@ -89,7 +90,7 @@ foreach ($posts as $post) {
         '/<!-- wp:oxygen-vsb\/ovsb-tip\s+(\{.*?\})\s*\/-->/s',
         function ($match) use (&$replaced, &$block_report) {
             $attrs = json_decode($match[1], true);
-            $data  = $attrs['data'] ?? [];
+            $data  = $attrs ?? [];
 
             // Extract title (field key: text_block-4-85_string).
             $title = '';
@@ -136,7 +137,7 @@ foreach ($posts as $post) {
         '/<!-- wp:oxygen-vsb\/ovsb-tip-rich-text\s+(\{.*?\})\s*\/-->/s',
         function ($match) use (&$replaced, &$block_report) {
             $attrs = json_decode($match[1], true);
-            $data  = $attrs['data'] ?? [];
+            $data  = $attrs ?? [];
 
             // Extract title (field key: text_block-4-3629_string).
             $title = '';
@@ -185,7 +186,7 @@ foreach ($posts as $post) {
         '/<!-- wp:oxygen-vsb\/ovsb-icon-rich-text\s+(\{.*?\})\s*\/-->/s',
         function ($match) use (&$replaced, &$block_report) {
             $attrs = json_decode($match[1], true);
-            $data  = $attrs['data'] ?? [];
+            $data  = $attrs ?? [];
 
             // Extract title (field key: text_block-5-15371_string).
             $title = '';
@@ -234,7 +235,7 @@ foreach ($posts as $post) {
         '/<!-- wp:oxygen-vsb\/ovsb-greybox-with-icon\s+(\{.*?\})\s*\/-->/s',
         function ($match) use (&$replaced, &$block_report) {
             $attrs = json_decode($match[1], true);
-            $data  = $attrs['data'] ?? [];
+            $data  = $attrs ?? [];
 
             // Extract heading (field key: headline-9-6929_string).
             $heading = '';
@@ -347,7 +348,7 @@ WP_CLI::log(sprintf('Blocks removed:  %d', $total_removed));
 
 if ($dry_run) {
     WP_CLI::log('');
-    WP_CLI::warning('DRY RUN — no changes were saved. Run without --dry-run to apply.');
+    WP_CLI::warning('DRY RUN — no changes were saved. Run without dry-run arg to apply.');
 } else {
     WP_CLI::success('Migration complete.');
 }
