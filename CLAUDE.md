@@ -15,6 +15,7 @@ Electric mobility review platform (scooters, e-bikes, EUCs, skateboards, hoverbo
 | Static HTML/CSS reference | `eridehero-redesign/CLAUDE.md` |
 | Compare system refactoring plan | `.claude/plans/playful-whistling-thompson.md` |
 | SEO migration, redirects | `seo-migration/` (read the MD inside) |
+| Oxygen block migration | `OXYGEN_MIGRATION.md` |
 
 ---
 
