@@ -118,6 +118,30 @@ function erh_author_has_socials( int $author_id ): bool {
 }
 
 /**
+ * Check if the current request is an author archive URL.
+ *
+ * WordPress sets is_author() to false for subscribers with no posts (it becomes
+ * a 404 at the query level), but the queried object is still a WP_User. We need
+ * to detect author URLs even when WP doesn't consider them author archives.
+ *
+ * @return bool True if this is an /author/* URL with a resolved WP_User.
+ */
+function erh_is_author_url(): bool {
+	if ( is_author() ) {
+		return true;
+	}
+
+	// WordPress may mark subscriber/no-post author pages as 404.
+	// Check if the queried object is still a user (WP resolves the slug).
+	$obj = get_queried_object();
+	if ( $obj instanceof WP_User ) {
+		return true;
+	}
+
+	return false;
+}
+
+/**
  * Check if the current author page should be treated as a valid, indexable page.
  *
  * Must match the same logic as author.php template: user must have an allowed
@@ -126,7 +150,7 @@ function erh_author_has_socials( int $author_id ): bool {
  * @return bool True if the author page is valid.
  */
 function erh_is_valid_author_page(): bool {
-	if ( ! is_author() ) {
+	if ( ! erh_is_author_url() ) {
 		return false;
 	}
 
@@ -155,7 +179,7 @@ function erh_is_valid_author_page(): bool {
  * @return array Modified robots.
  */
 function erh_author_rankmath_robots( array $robots ): array {
-	if ( ! is_author() ) {
+	if ( ! erh_is_author_url() ) {
 		return $robots;
 	}
 
@@ -177,7 +201,7 @@ add_filter( 'rank_math/frontend/robots', 'erh_author_rankmath_robots', 20 );
  * @return string|false Modified canonical or false to remove.
  */
 function erh_author_rankmath_canonical( string $canonical ): string {
-	if ( ! is_author() ) {
+	if ( ! erh_is_author_url() ) {
 		return $canonical;
 	}
 
@@ -196,7 +220,7 @@ add_filter( 'rank_math/frontend/canonical', 'erh_author_rankmath_canonical', 20 
  * @return string Modified title.
  */
 function erh_author_rankmath_title( string $title ): string {
-	if ( ! is_author() ) {
+	if ( ! erh_is_author_url() ) {
 		return $title;
 	}
 
