@@ -56,7 +56,7 @@ old_path,new_path,type,priority,group,gsc_status,notes
 /zero-11x-electric-scooter-review,/electric-scooters/reviews/,301,low,Reviews -- Discontinued,redirect,Discontinued product -> reviews archive
 /zero-8-electric-scooter-review,/electric-scooters/reviews/,301,low,Reviews -- Discontinued,redirect,Discontinued product -> reviews archive
 /zero-9-electric-scooter-review,/electric-scooters/reviews/,301,low,Reviews -- Discontinued,redirect,Discontinued product -> reviews archive
-/__trashed,/login-register/,301,low,Posts -- Misc,,Trashed post artifact
+/__trashed,/login/,301,low,Posts -- Misc,,Trashed post artifact (direct to /login/ to avoid chain)
 /acton-blink-s2-electric-skateboard,/reviews/,301,low,Reviews -- Discontinued,,"Eskate, no review on new site"
 /apollo-explore-electric-scooter,/apollo-explore-electric-scooter-review/,301,low,Posts -- Product to Review,,Short slug -> review (noindex)
 /apollo-go-review-dual-motor-power-that-you-can-actually-carry,/apollo-go-review/,301,low,Posts -- Long Slug Cleanup,,Title-as-slug -> canonical
@@ -315,3 +315,22 @@ old_path,new_path,type,priority,group,gsc_status,notes
 /go/vx2extreme,/go/vmax-vx2-extreme-gt/,301,low,Affiliate -- /go/ (ThirstyAffiliates),,Old TA slug -> new product slug /go/
 /recommends/x7max,/go/turboant-x7-max/,301,low,Affiliate -- /recommends/,,ThirstyAffiliates -> new /go/ system
 /go/x7max,/go/turboant-x7-max/,301,low,Affiliate -- /go/ (ThirstyAffiliates),,Old TA slug -> new product slug /go/
+/products/apollo-city-2,/products/apollo-city/,301,medium,Products,,Discontinued variant -> current model
+/products/apollo-city-pro-2022,/products/apollo-city/,301,medium,Products,,Discontinued variant -> current model
+/products/apollo-city-pro-2023,/products/apollo-city/,301,medium,Products,,Discontinued variant -> current model
+/products/apollo-phantom-2,/products/apollo-phantom-2-0/,301,medium,Products,,Same product different slug format
+/products/apollo-phantom-2023,/products/apollo-phantom-2-0/,301,medium,Products,,Same product different slug format
+/products/emove-roadrunner,/products/emove-roadrunner-v2/,301,medium,Products,,Base model superseded by v2
+/products/kugoo-g2-master/edge,/products/kugoo-g2-master/,301,low,Products,,Browser suffix junk
+/products/kaabo-mantis-v2-24-5ah,/products/kaabo-mantis-x-plus/,301,medium,Products,,Mantis v2 -> Mantis X Plus successor
+/products/kaabo-wolf-king-gt-pro,/products/kaabo-king-gt-pro/,301,medium,Products,,Rebadged Wolf King -> King
+/products/kaabo-wolf-king-gtr,/products/kaabo-king-gtr/,301,medium,Products,,Rebadged Wolf King -> King
+/products/mukuta-0-plus,/products/mukuta-9-plus/,301,low,Products,,Typo slug (0 vs 9)
+/products/niu-kqi-3-sport,/products/niu-kqi3-sport/,301,medium,Products,,Same product slug format difference
+/products/turboant-x8,/products/turboant-x7-max/,301,medium,Products,,X8 discontinued -> X7 Max successor
+/products/urban,/products/kaabo-urban/,301,medium,Products,,Missing brand prefix
+/products/vx8,/products/vmax-vx8/,301,medium,Products,,Missing brand prefix
+/products/yume-hawk-pro-22-5ah,/products/yume-hawk-pro-27ah/,301,low,Products,,Discontinued battery variant
+/products/yume-hawk-pro-25ah,/products/yume-hawk-pro-27ah/,301,low,Products,,Discontinued battery variant
+/backfire-g2t-electric-skateboard,/products/backfire-g2t/,301,low,Products,,Old review post slug -> product page
+/backfire-ranger-x2-electric-skateboard,/products/backfire-ranger-x2/,301,low,Products,,Old review post slug -> product page

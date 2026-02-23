@@ -1,8 +1,8 @@
 path,page_type,group,sources,gsc_status,gsc_last_crawled,has_rankmath_redirect,rankmath_type,rankmath_dest,is_thirstyaffiliate,ta_name,ta_dest_url,exists_on_new_site,new_site_path,notes,redirect_status
-/go/niu-kqi-200f/niu,affiliate-redirect,Affiliate Redirects (/go/),gsc:404,404,2025-12-03,,,,,,,no,,,mapped
+/go/niu-kqi-200f/niu,affiliate-redirect,Affiliate Redirects (/go/),gsc:404,404,2025-12-03,,,,,,,no,,,ignored-fragment
 /go/punkrider,affiliate-redirect,Affiliate Redirects (/go/),gsc:404,404,2026-02-02,,,,,,,no,,,mapped
-/go/segway-gt2,affiliate-redirect,Affiliate Redirects (/go/),gsc:noindex,noindex,2025-07-15,,,,,,,no,,,mapped
-/go/vmax-vx5-pro-gt,affiliate-redirect,Affiliate Redirects (/go/),gsc:noindex,noindex,2026-02-01,,,,,,,no,,,mapped
+/go/segway-gt2,affiliate-redirect,Affiliate Redirects (/go/),gsc:noindex,noindex,2025-07-15,,,,,,,no,,,no-redirect-needed
+/go/vmax-vx5-pro-gt,affiliate-redirect,Affiliate Redirects (/go/),gsc:noindex,noindex,2026-02-01,,,,,,,no,,,no-redirect-needed
 /recommends/apollo-city,affiliate-redirect,Affiliate Redirects (/recommends/),thirstyaffiliates,,,,,,yes,Apollo City,https://apolloscooters.co/products/apollo-city-24?sca_ref=229283.5uWLRLT8Fu,no,,,mapped
 /recommends/apollo-city-2024,affiliate-redirect,Affiliate Redirects (/recommends/),thirstyaffiliates,,,,,,yes,Apollo City 2024,https://apolloscooters.co/products/apollo-city-24?sca_ref=229283.5uWLRLT8Fu,no,,,mapped
 /recommends/apollo-city-pro,affiliate-redirect,Affiliate Redirects (/recommends/),thirstyaffiliates,,,,,,yes,Apollo City Pro YouTube,https://apolloscooters.co/products/apollo-city-24?sca_ref=229283.5uWLRLT8Fu,no,,,mapped
@@ -59,14 +59,14 @@ path,page_type,group,sources,gsc_status,gsc_last_crawled,has_rankmath_redirect,r
 /recommends/vx2extreme,affiliate-redirect,Affiliate Redirects (/recommends/),thirstyaffiliates,,,,,,yes,Vmax VX2 Extreme,https://vmax-escooter.us/products/vx2-extreme?ref=eridehero,no,,,mapped
 /recommends/x7max,affiliate-redirect,Affiliate Redirects (/recommends/),thirstyaffiliates,,,,,,yes,TurboAnt X7 Max,https://shareasale.com/r.cfm?b=1414176&u=1602267&m=91403&urllink=turboant%2Ecom%2Fproducts%2Fx7%2Dmax%2Dfolding%2Delectric%2Dscooter&afftrack=YouTube,no,,,mapped
 /author/abuga-aroni,author,Author Pages,gsc:indexed,indexed,2026-01-29,,,,,,,no,,,no-redirect-needed
-/author/abuga-aroni/feed,author,Author Pages,gsc:blocked-robots,blocked-robots,2025-12-07,,,,,,,no,,,
+/author/abuga-aroni/feed,author,Author Pages,gsc:blocked-robots,blocked-robots,2025-12-07,,,,,,,no,,,no-redirect-needed
 /author/rasmus-barslund,author,Author Pages,gsc:indexed,indexed,2026-02-14,,,,,,,no,,,no-redirect-needed
 /author/ryan-smith,author,Author Pages,gsc:indexed,indexed,2026-02-06,,,,,,,no,,,no-redirect-needed
-/author/rasmus-barslund/page/1,author-pagination,Author Pages — Pagination,gsc:redirect,redirect,2026-02-14,,,,,,,no,,,
-/author/rasmus-barslund/page/2,author-pagination,Author Pages — Pagination,gsc:noindex,noindex,2025-11-09,,,,,,,no,,,
-/author/rasmus-barslund/page/3,author-pagination,Author Pages — Pagination,gsc:noindex,noindex,2025-12-19,,,,,,,no,,,
-/author/rasmus-barslund/page/4,author-pagination,Author Pages — Pagination,gsc:noindex,noindex,2026-01-07,,,,,,,no,,,
-/author/rasmus-barslund/page/5,author-pagination,Author Pages — Pagination,gsc:404,404,2025-10-10,,,,,,,no,,,
+/author/rasmus-barslund/page/1,author-pagination,Author Pages — Pagination,gsc:redirect,redirect,2026-02-14,,,,,,,no,,,no-redirect-needed
+/author/rasmus-barslund/page/2,author-pagination,Author Pages — Pagination,gsc:noindex,noindex,2025-11-09,,,,,,,no,,,no-redirect-needed
+/author/rasmus-barslund/page/3,author-pagination,Author Pages — Pagination,gsc:noindex,noindex,2025-12-19,,,,,,,no,,,no-redirect-needed
+/author/rasmus-barslund/page/4,author-pagination,Author Pages — Pagination,gsc:noindex,noindex,2026-01-07,,,,,,,no,,,no-redirect-needed
+/author/rasmus-barslund/page/5,author-pagination,Author Pages — Pagination,gsc:404,404,2025-10-10,,,,,,,no,,,no-redirect-needed
 /electric-bikes,category,Category Archives,gsc:noindex,noindex,2025-08-15,,,,,,,no,,,no-redirect-needed
 /electric-scooters,category,Category Archives,"gsc:indexed, sitemap",indexed,2026-02-12,,,,,,,yes,/electric-scooters,,no-redirect-needed
 /electric-skateboards,category,Category Archives,"gsc:indexed, sitemap",indexed,2026-01-30,,,,,,,yes,/electric-skateboards,,no-redirect-needed
@@ -143,7 +143,7 @@ path,page_type,group,sources,gsc_status,gsc_last_crawled,has_rankmath_redirect,r
 /what-scooters-do-bird-lime-use/1000,post,Guides / Listicles,gsc:redirect,redirect,2026-02-14,,,,,,,no,,Has /1000 suffix (Oxygen Builder artifact); Base path /what-scooters-do-bird-lime-use exists on new site,no-redirect-needed
 /where-electric-scooter-repair,post,Guides / Listicles,"gsc:indexed, sitemap",indexed,2026-02-08,,,,,,,yes,/where-electric-scooter-repair,,no-redirect-needed
 /where-electric-scooter-repair/1000,post,Guides / Listicles,gsc:redirect,redirect,2026-02-08,,,,,,,no,,Has /1000 suffix (Oxygen Builder artifact); Base path /where-electric-scooter-repair exists on new site,no-redirect-needed
-/,page,Homepage,"gsc:indexed, gsc:redirect, sitemap",indexed,2026-02-16,,,,,,,yes,/,,
+/,page,Homepage,"gsc:indexed, gsc:redirect, sitemap",indexed,2026-02-16,,,,,,,yes,/,,no-redirect-needed
 /about,page,Info / Legal Pages,"gsc:indexed, sitemap",indexed,2026-02-16,,,,,,,yes,/about,,no-redirect-needed
 /contact,page,Info / Legal Pages,"gsc:indexed, sitemap",indexed,2026-02-15,,,,,,,yes,/contact,,no-redirect-needed
 /disclaimers,page,Info / Legal Pages,"gsc:indexed, sitemap",indexed,2026-01-01,,,,,,,yes,/disclaimers,,no-redirect-needed
@@ -156,8 +156,8 @@ path,page_type,group,sources,gsc_status,gsc_last_crawled,has_rankmath_redirect,r
 /login,page,Login / Auth Pages,rankmath-redirect-source,,,yes,301,http://eridehero.com/login-register/,,,,no,,,no-redirect-needed
 /login-register,page,Login / Auth Pages,gsc:noindex,noindex,2024-07-29,,,,,,,no,,,mapped
 /login-register/opt,page,Login / Auth Pages,gsc:redirect,redirect,2026-01-01,,,,,,,no,,Product URL with /OPT/ suffix (likely Oxygen),mapped
-/electric-scooters/page/2,pagination,Pagination,gsc:noindex,noindex,2025-12-02,,,,,,,no,,,
-/electric-scooters/page/3,pagination,Pagination,gsc:noindex,noindex,2025-12-02,,,,,,,no,,,
+/electric-scooters/page/2,pagination,Pagination,gsc:noindex,noindex,2025-12-02,,,,,,,no,,,no-redirect-needed
+/electric-scooters/page/3,pagination,Pagination,gsc:noindex,noindex,2025-12-02,,,,,,,no,,,no-redirect-needed
 /blog/are-hoverboards-banned-in-the-uk,post,Posts (blog/ prefix — old URL),"gsc:redirect, rankmath-redirect-source",redirect,2026-02-08,yes,301,http://eridehero.com/are-hoverboards-banned-in-the-uk/,,,,no,,,mapped
 /blog/best-electric-scooter-accessories,post,Posts (blog/ prefix — old URL),"gsc:redirect, rankmath-redirect-source",redirect,2026-02-15,yes,301,http://eridehero.com/best-electric-scooter-accessories/,,,,no,,,mapped
 /blog/calibrate-reset-hoverboard,post,Posts (blog/ prefix — old URL),"gsc:redirect, rankmath-redirect-source",redirect,2026-02-11,yes,301,http://eridehero.com/calibrate-reset-hoverboard/,,,,no,,,mapped
@@ -256,8 +256,8 @@ path,page_type,group,sources,gsc_status,gsc_last_crawled,has_rankmath_redirect,r
 /apollo-explore-electric-scooter,post,Posts — Other,"gsc:noindex, rankmath-redirect-source",noindex,2025-04-25,yes,301,http://eridehero.com/apollo-explore-electric-scooter-review/,,,,no,,,mapped
 /apollo-ghost-electric-,post,Posts — Other,gsc:redirect,redirect,2026-02-06,,,,,,,no,,,ignored-fragment
 /apollo-go-review-dual-motor-power-that-you-can-actually-carry,post,Posts — Other,rankmath-redirect-source,,,yes,301,http://eridehero.com/apollo-go-review/,,,,no,,,mapped
-/backfire-g2t-electric-skateboard,post,Posts — Other,rankmath-redirect-source,,,yes,301,http://eridehero.com/backfire-g2t-electric-skateboard-review/,,,,no,,,
-/backfire-ranger-x2-electric-skateboard,post,Posts — Other,rankmath-redirect-source,,,yes,301,http://eridehero.com/backfire-ranger-x2-electric-skateboard-review/,,,,no,,,
+/backfire-g2t-electric-skateboard,post,Posts — Other,rankmath-redirect-source,,,yes,301,http://eridehero.com/backfire-g2t-electric-skateboard-review/,,,,no,,,mapped
+/backfire-ranger-x2-electric-skateboard,post,Posts — Other,rankmath-redirect-source,,,yes,301,http://eridehero.com/backfire-ranger-x2-electric-skateboard-review/,,,,no,,,mapped
 /best,post,Posts — Other,gsc:redirect,redirect,2026-02-14,,,,,,,no,,,ignored-fragment
 /blog,post,Posts — Other,"gsc:redirect, rankmath-redirect-source",redirect,2026-02-13,yes,301,http://eridehero.com,,,,no,,,mapped
 /calibrate-reset-hoverboard,post,Posts — Other,"gsc:indexed, sitemap",indexed,2026-02-11,,,,,,,yes,/calibrate-reset-hoverboard,,no-redirect-needed
@@ -341,448 +341,448 @@ path,page_type,group,sources,gsc_status,gsc_last_crawled,has_rankmath_redirect,r
 /us-electric-scooter-laws,post,Posts — Other,"gsc:indexed, sitemap",indexed,2026-02-16,,,,,,,no,,,mapped
 /xiaomi-m365-recall,post,Posts — Other,rankmath-redirect-source,,,yes,410,,,,,no,,,mapped
 /xiaomi-mi-m365-electric-scooter,post,Posts — Other,rankmath-redirect-source,,,yes,301,http://eridehero.com/xiaomi-mi-m365-electric-scooter-review/,,,,no,,,mapped
-/products/16927,product,Products,rankmath-redirect-source,,,yes,301,http://eridehero.com/products/navee-gt3-max/,,,,no,,,
-/products/apollo-air,product,Products,gsc:noindex,noindex,2025-11-27,,,,,,,no,,,
-/products/apollo-city,product,Products,gsc:discovered-not-indexed,discovered-not-indexed,1970-01-01,,,,,,,yes,/products/apollo-city,,
-/products/apollo-city-2,product,Products,rankmath-redirect-source,,,yes,301,http://eridehero.com/products/apollo-city/,,,,no,,,
-/products/apollo-city-pro-2022,product,Products,rankmath-redirect-source,,,yes,301,http://eridehero.com/products/apollo-city/,,,,no,,,
-/products/apollo-city-pro-2023,product,Products,"gsc:noindex, rankmath-redirect-source",noindex,2025-09-03,yes,301,http://eridehero.com/products/apollo-city/,,,,no,,,
-/products/apollo-explore-2,product,Products,gsc:noindex,noindex,2025-11-22,,,,,,,no,,,
-/products/apollo-go,product,Products,gsc:indexed,indexed,2026-01-01,,,,,,,yes,/products/apollo-go,,
-/products/apollo-phantom-2,product,Products,rankmath-redirect-source,,,yes,301,http://eridehero.com/products/apollo-phantom/,,,,no,,,
-/products/apollo-phantom-2-0,product,Products,gsc:noindex,noindex,2025-11-05,,,,,,,no,,,
-/products/apollo-phantom-2-0-stellar,product,Products,gsc:noindex,noindex,2025-11-20,,,,,,,no,,,
-/products/apollo-phantom-2023,product,Products,rankmath-redirect-source,,,yes,301,http://eridehero.com/products/apollo-phantom/,,,,no,,,
-/products/atomi-alpha,product,Products,gsc:noindex,noindex,2025-11-06,,,,,,,no,,,
-/products/ausom-f1-max,product,Products,gsc:noindex,noindex,2025-08-30,,,,,,,no,,,
-/products/ausom-l1,product,Products,gsc:crawled-not-indexed,crawled-not-indexed,2025-09-12,,,,,,,no,,,
-/products/ausom-l2-max,product,Products,gsc:crawled-not-indexed,crawled-not-indexed,2025-09-12,,,,,,,yes,/products/ausom-l2-max,,
-/products/ausom-sr1,product,Products,gsc:crawled-not-indexed,crawled-not-indexed,2025-09-10,,,,,,,no,,,
-/products/aventon-abound-lr,product,Products,gsc:crawled-not-indexed,crawled-not-indexed,2025-09-12,,,,,,,no,,,
-/products/aventon-abound-sr,product,Products,gsc:crawled-not-indexed,crawled-not-indexed,2025-09-15,,,,,,,no,,,
-/products/aventon-aventure-2,product,Products,gsc:crawled-not-indexed,crawled-not-indexed,2025-09-19,,,,,,,no,,,
-/products/aventon-aventure-3,product,Products,gsc:noindex,noindex,2025-11-23,,,,,,,no,,,
-/products/aventon-aventure-3-step-through,product,Products,gsc:noindex,noindex,2025-11-02,,,,,,,no,,,
-/products/aventon-aventure-m,product,Products,gsc:noindex,noindex,2026-02-02,,,,,,,no,,,
-/products/aventon-level-2,product,Products,gsc:crawled-not-indexed,crawled-not-indexed,2025-09-14,,,,,,,no,,,
-/products/aventon-level-2/feed,product,Products,gsc:blocked-robots,blocked-robots,2025-10-30,,,,,,,no,,,
-/products/aventon-level-3,product,Products,gsc:noindex,noindex,2025-09-12,,,,,,,no,,,
-/products/aventon-level-3-step-through,product,Products,gsc:noindex,noindex,2025-11-23,,,,,,,no,,,
-/products/aventon-level-3-step-through/feed,product,Products,gsc:blocked-robots,blocked-robots,2025-11-24,,,,,,,no,,,
-/products/aventon-pace-4,product,Products,gsc:crawled-not-indexed,crawled-not-indexed,2025-09-10,,,,,,,no,,,
-/products/aventon-pace-500-3,product,Products,gsc:crawled-not-indexed,crawled-not-indexed,2025-09-10,,,,,,,no,,,
-/products/aventon-ramblas,product,Products,gsc:crawled-not-indexed,crawled-not-indexed,2025-09-11,,,,,,,no,,,
-/products/aventon-sinch-2-5,product,Products,gsc:noindex,noindex,2025-09-12,,,,,,,no,,,
-/products/aventon-soltera-2-5,product,Products,gsc:noindex,noindex,2025-11-11,,,,,,,no,,,
-/products/circooter-cruiser-pro,product,Products,gsc:noindex,noindex,2025-09-02,,,,,,,no,,,
-/products/circooter-landturbo,product,Products,gsc:crawled-not-indexed,crawled-not-indexed,2025-09-12,,,,,,,no,,,
-/products/circooter-landturbo-pro,product,Products,gsc:noindex,noindex,2025-12-05,,,,,,,no,,,
-/products/circooter-landturbo-pro/feed,product,Products,gsc:blocked-robots,blocked-robots,2025-12-07,,,,,,,no,,,
-/products/circooter-landturbo/feed,product,Products,gsc:blocked-robots,blocked-robots,2025-09-19,,,,,,,no,,,
-/products/circooter-mate,product,Products,gsc:noindex,noindex,2026-01-02,,,,,,,no,,,
-/products/circooter-raptor,product,Products,gsc:crawled-not-indexed,crawled-not-indexed,2025-09-12,,,,,,,no,,,
-/products/circooter-raptor-pro,product,Products,gsc:crawled-not-indexed,crawled-not-indexed,2025-09-11,,,,,,,no,,,
-/products/circooter-raptor-pro/feed,product,Products,gsc:blocked-robots,blocked-robots,2025-11-24,,,,,,,no,,,
-/products/dualtron-aminia-long-body,product,Products,gsc:noindex,noindex,2025-09-09,,,,,,,no,,,
-/products/dualtron-dolphin,product,Products,gsc:crawled-not-indexed,crawled-not-indexed,2025-10-05,,,,,,,no,,,
-/products/dualtron-dolphin/feed,product,Products,gsc:blocked-robots,blocked-robots,2025-10-06,,,,,,,no,,,
-/products/dualtron-forever-2-0,product,Products,gsc:crawled-not-indexed,crawled-not-indexed,2025-09-14,,,,,,,no,,,
-/products/dualtron-popular-dual-25ah/firefox,product,Products,gsc:404,404,2025-10-28,,,,,,,no,,Product URL with /firefox/ suffix (bot/junk),
-/products/dualtron-popular-dual-25ah/opr,product,Products,gsc:404,404,2025-10-27,,,,,,,no,,Product URL with /opr/ suffix (bot/junk),
-/products/dualtron-popular-dual-25ah/webkit,product,Products,gsc:404,404,2025-10-16,,,,,,,no,,Product URL with /webkit/ suffix (bot/junk),
-/products/dualtron-spider-max,product,Products,gsc:noindex,noindex,2026-02-02,,,,,,,no,,,
-/products/dualtron-victor-luxury-2,product,Products,gsc:noindex,noindex,2026-02-02,,,,,,,no,,,
-/products/e-twow-booster-es,product,Products,gsc:noindex,noindex,2025-10-23,,,,,,,no,,,
-/products/e-twow-gt-se,product,Products,gsc:noindex,noindex,2025-10-30,,,,,,,no,,,
-/products/e-twow-gt-sl,product,Products,gsc:crawled-not-indexed,crawled-not-indexed,2025-10-06,,,,,,,no,,,
-/products/e-twow-gt-sl/feed,product,Products,gsc:blocked-robots,blocked-robots,2025-10-07,,,,,,,no,,,
-/products/e-twow-tanktorq-tk5,product,Products,gsc:noindex,noindex,2025-09-04,,,,,,,no,,,
-/products/emove-roadrunner,product,Products,rankmath-redirect-source,,,yes,301,http://eridehero.com/products/emove-roadrunner-v2/,,,,no,,,
-/products/emove-roadrunner-se,product,Products,gsc:noindex,noindex,2026-02-14,,,,,,,no,,,
-/products/fluid-horizon-10-4ah,product,Products,gsc:crawled-not-indexed,crawled-not-indexed,2025-10-06,,,,,,,no,,,
-/products/fluid-vista,product,Products,gsc:indexed,indexed,2026-01-01,,,,,,,yes,/products/fluid-vista,,
-/products/fluidfreeride-cityrider,product,Products,gsc:noindex,noindex,2026-01-04,,,,,,,no,,,
-/products/fluidfreeride-horizon,product,Products,gsc:noindex,noindex,2026-01-31,,,,,,,no,,,
-/products/giant-explore-e-2-gts-2022,product,Products,gsc:noindex,noindex,2025-09-11,,,,,,,no,,,
-/products/giant-reign-e-2-2023,product,Products,gsc:noindex,noindex,2026-01-05,,,,,,,no,,,
-/products/giant-reign-e-2-2024,product,Products,gsc:noindex,noindex,2025-11-11,,,,,,,no,,,
-/products/giant-reign-e-3-2023,product,Products,gsc:noindex,noindex,2025-11-18,,,,,,,no,,,
-/products/giant-stormguard-e-1-2024,product,Products,gsc:noindex,noindex,2025-11-08,,,,,,,no,,,
-/products/giant-stormguard-e-3-2024,product,Products,gsc:noindex,noindex,2025-11-06,,,,,,,no,,,
-/products/giant-talon-e-3-29er,product,Products,gsc:noindex,noindex,2025-10-16,,,,,,,no,,,
-/products/giant-trance-x-advanced-e-0-2022,product,Products,gsc:noindex,noindex,2026-01-11,,,,,,,no,,,
-/products/giant-trance-x-advanced-e-elite-0-2024,product,Products,gsc:noindex,noindex,2026-01-06,,,,,,,no,,,
-/products/giant-trance-x-advanced-e-elite-1-2024,product,Products,gsc:noindex,noindex,2026-01-04,,,,,,,no,,,
-/products/giant-trance-x-advanced-e-elite-2-2024,product,Products,gsc:noindex,noindex,2025-11-11,,,,,,,no,,,
-/products/giant-trance-x-advanced-e-elite-3-2024,product,Products,gsc:noindex,noindex,2025-11-04,,,,,,,no,,,
-/products/gotrax-apex-pro,product,Products,gsc:noindex,noindex,2025-11-13,,,,,,,no,,,
-/products/gotrax-eclipse,product,Products,gsc:noindex,noindex,2026-01-06,,,,,,,no,,,
-/products/gotrax-eclipse-ultra,product,Products,gsc:noindex,noindex,2026-01-04,,,,,,,no,,,
-/products/gotrax-flex-ultra,product,Products,gsc:noindex,noindex,2026-01-30,,,,,,,no,,,
-/products/gotrax-g3-max,product,Products,gsc:noindex,noindex,2026-01-03,,,,,,,no,,,
-/products/gotrax-g3-plus,product,Products,gsc:noindex,noindex,2026-01-03,,,,,,,no,,,
-/products/gotrax-g5,product,Products,gsc:noindex,noindex,2026-02-01,,,,,,,no,,,
-/products/gotrax-g6,product,Products,gsc:noindex,noindex,2025-12-27,,,,,,,no,,,
-/products/gotrax-gmax,product,Products,gsc:crawled-not-indexed,crawled-not-indexed,2025-09-09,,,,,,,no,,,
-/products/gotrax-gmax-ultra,product,Products,gsc:crawled-not-indexed,crawled-not-indexed,2025-10-06,,,,,,,no,,,
-/products/gotrax-gx1,product,Products,gsc:noindex,noindex,2026-01-03,,,,,,,no,,,
-/products/gotrax-gx2,product,Products,gsc:noindex,noindex,2026-01-04,,,,,,,no,,,
-/products/gotrax-gx3,product,Products,gsc:noindex,noindex,2025-11-30,,,,,,,no,,,
-/products/gotrax-gxl-v2-2,product,Products,gsc:noindex,noindex,2025-11-21,,,,,,,no,,,
-/products/gotrax-xr-elite,product,Products,gsc:noindex,noindex,2026-01-02,,,,,,,no,,,
-/products/gotrax-xr-elite-max,product,Products,gsc:noindex,noindex,2026-01-05,,,,,,,no,,,
-/products/gotrax-xr-ultra,product,Products,gsc:crawled-not-indexed,crawled-not-indexed,2025-09-04,,,,,,,no,,,
-/products/gyroor-h30max,product,Products,gsc:noindex,noindex,2025-11-09,,,,,,,no,,,
-/products/gyroor-h40,product,Products,gsc:noindex,noindex,2025-11-16,,,,,,,no,,,
-/products/heybike-alpha-so,product,Products,gsc:noindex,noindex,2025-11-17,,,,,,,no,,,
-/products/heybike-alpha-st,product,Products,gsc:noindex,noindex,2025-09-10,,,,,,,no,,,
-/products/heybike-cityrun,product,Products,gsc:noindex,noindex,2026-01-04,,,,,,,no,,,
-/products/heybike-horizon,product,Products,gsc:noindex,noindex,2025-09-10,,,,,,,no,,,
-/products/heybike-horizon/feed,product,Products,gsc:blocked-robots,blocked-robots,2025-09-22,,,,,,,no,,,
-/products/heybike-mars-2-0-1000w,product,Products,gsc:noindex,noindex,2025-09-11,,,,,,,no,,,
-/products/heybike-mars-2-0-750w,product,Products,gsc:noindex,noindex,2025-11-11,,,,,,,no,,,
-/products/heybike-mars-3-0,product,Products,gsc:noindex,noindex,2025-09-10,,,,,,,no,,,
-/products/heybike-ranger-s-1000w,product,Products,gsc:noindex,noindex,2025-09-10,,,,,,,no,,,
-/products/heybike-ranger-s-750w,product,Products,gsc:noindex,noindex,2025-11-26,,,,,,,no,,,
-/products/hiboy-max-pro,product,Products,gsc:crawled-not-indexed,crawled-not-indexed,2025-09-12,,,,,,,no,,,
-/products/hiboy-s2,product,Products,gsc:noindex,noindex,2026-01-29,,,,,,,no,,,
-/products/hiboy-s2-lite,product,Products,gsc:crawled-not-indexed,crawled-not-indexed,2025-10-08,,,,,,,no,,,
-/products/hiboy-s2-lite/opt,product,Products,gsc:redirect,redirect,2025-05-05,,,,,,,no,,Product URL with /OPT/ suffix (likely Oxygen),
-/products/hiboy-s2-pro,product,Products,gsc:noindex,noindex,2025-12-05,,,,,,,no,,,
-/products/hiboy-s2r-plus,product,Products,gsc:noindex,noindex,2025-11-06,,,,,,,no,,,
-/products/hiley-maxspeed-x9,product,Products,gsc:crawled-not-indexed,crawled-not-indexed,2025-10-07,,,,,,,no,,,
-/products/hiley-tiger-t10-pro-52v,product,Products,gsc:noindex,noindex,2025-12-08,,,,,,,no,,,
-/products/hiley-tiger-t10-pro-60v,product,Products,gsc:noindex,noindex,2026-01-04,,,,,,,no,,,
-/products/hiley-tiger-t10-pro-60v/opt,product,Products,gsc:redirect,redirect,2024-12-16,,,,,,,no,,Product URL with /OPT/ suffix (likely Oxygen),
-/products/hiley-tiger-tmax,product,Products,gsc:noindex,noindex,2025-12-05,,,,,,,no,,,
-/products/hiley-tiger-tmax/feed,product,Products,gsc:blocked-robots,blocked-robots,2025-12-05,,,,,,,no,,,
-/products/hooga-daytona,product,Products,gsc:noindex,noindex,2025-12-11,,,,,,,no,,,
-/products/hover-1-ace-r350,product,Products,gsc:noindex,noindex,2025-11-04,,,,,,,no,,,
-/products/hover-1-journey-2-0,product,Products,gsc:noindex,noindex,2026-01-02,,,,,,,no,,,
-/products/hover-1-journey-max,product,Products,gsc:noindex,noindex,2026-01-30,,,,,,,no,,,
-/products/hover-1-journey-max/feed,product,Products,gsc:blocked-robots,blocked-robots,2026-02-03,,,,,,,no,,,
-/products/inmotion-climber,product,Products,gsc:noindex,noindex,2025-12-03,,,,,,,no,,,
-/products/inmotion-rs,product,Products,gsc:noindex,noindex,2025-11-02,,,,,,,no,,,
-/products/inmotion-rs-jet,product,Products,gsc:crawled-not-indexed,crawled-not-indexed,2025-09-08,,,,,,,no,,,
-/products/inmotion-rs-jet/feed,product,Products,gsc:blocked-robots,blocked-robots,2025-10-09,,,,,,,no,,,
-/products/inmotion-rs-lite,product,Products,gsc:noindex,noindex,2025-11-20,,,,,,,no,,,
-/products/inmotion-rs-midnight-lite,product,Products,gsc:noindex,noindex,2025-11-21,,,,,,,no,,,
-/products/inmotion-s1f,product,Products,gsc:noindex,noindex,2026-01-26,,,,,,,no,,,
-/products/inokim-quick-4-super,product,Products,gsc:noindex,noindex,2026-01-04,,,,,,,no,,,
-/products/jasion-eb5-roamer,product,Products,gsc:noindex,noindex,2025-11-03,,,,,,,no,,,
-/products/jasion-eb5-roamer-st,product,Products,gsc:noindex,noindex,2025-11-16,,,,,,,no,,,
-/products/jasion-eb7-2-0,product,Products,gsc:noindex,noindex,2025-11-11,,,,,,,no,,,
-/products/jasion-hunter-pro,product,Products,gsc:noindex,noindex,2026-01-06,,,,,,,no,,,
-/products/jasion-retrovolt-pro,product,Products,gsc:noindex,noindex,2026-01-19,,,,,,,no,,,
-/products/jasion-retrovolt-yr20,product,Products,gsc:noindex,noindex,2025-12-27,,,,,,,no,,,
-/products/jasion-thunder,product,Products,gsc:noindex,noindex,2025-12-28,,,,,,,no,,,
-/products/kaabo-king-gt-pro,product,Products,gsc:crawled-not-indexed,crawled-not-indexed,2025-09-06,,,,,,,no,,,
-/products/kaabo-king-gtr,product,Products,gsc:noindex,noindex,2026-01-27,,,,,,,no,,,
-/products/kaabo-mantis-king-gt,product,Products,gsc:crawled-not-indexed,crawled-not-indexed,2025-10-10,,,,,,,no,,,
-/products/kaabo-mantis-king-gt-2,product,Products,gsc:noindex,noindex,2025-11-04,,,,,,,no,,,
-/products/kaabo-mantis-v2-24-5ah,product,Products,gsc:404,404,2025-09-03,,,,,,,no,,,
-/products/kaabo-urban,product,Products,gsc:noindex,noindex,2025-11-04,,,,,,,no,,,
-/products/kaabo-warrior-11-pro,product,Products,gsc:noindex,noindex,2025-11-05,,,,,,,no,,,
-/products/kaabo-warrior-x-max,product,Products,gsc:noindex,noindex,2025-09-05,,,,,,,no,,,
-/products/kaabo-wolf-king-gt-pro,product,Products,rankmath-redirect-source,,,yes,301,http://eridehero.com/products/kaabo-king-gt-pro/,,,,no,,,
-/products/kaabo-wolf-king-gtr,product,Products,rankmath-redirect-source,,,yes,301,http://eridehero.com/products/kaabo-king-gtr/,,,,no,,,
-/products/kugoo-g2-master/chrome,product,Products,gsc:404,404,2025-12-23,,,,,,,no,,Product URL with /chrome/ suffix (bot/junk),
-/products/kugoo-g2-master/crios,product,Products,gsc:404,404,2025-12-03,,,,,,,no,,Product URL with /crios/ suffix (bot/junk),
-/products/kugoo-g2-master/edge,product,Products,gsc:404,404,2025-12-05,,,,,,,no,,Product URL with /edge/ suffix (bot/junk),
-/products/kugoo-g2-master/feed,product,Products,gsc:blocked-robots,blocked-robots,2025-09-03,,,,,,,no,,,
-/products/kugoo-g2-master/firefox,product,Products,gsc:404,404,2025-11-28,,,,,,,no,,Product URL with /firefox/ suffix (bot/junk),
-/products/kugoo-g3,product,Products,gsc:noindex,noindex,2026-01-26,,,,,,,no,,,
-/products/kugoo-g3/opt,product,Products,gsc:redirect,redirect,2025-12-23,,,,,,,no,,Product URL with /OPT/ suffix (likely Oxygen),
-/products/lectric-one,product,Products,gsc:noindex,noindex,2026-01-09,,,,,,,no,,,
-/products/lectric-xp4-750-so,product,Products,gsc:noindex,noindex,2025-11-26,,,,,,,no,,,
-/products/lectric-xp4-750-st,product,Products,gsc:noindex,noindex,2026-01-28,,,,,,,no,,,
-/products/lectric-xp4-750-st/feed,product,Products,gsc:blocked-robots,blocked-robots,2026-02-03,,,,,,,no,,,
-/products/lectric-xp4-so,product,Products,gsc:noindex,noindex,2025-09-11,,,,,,,no,,,
-/products/lectric-xp4-st,product,Products,gsc:noindex,noindex,2025-09-11,,,,,,,no,,,
-/products/lectric-xpeak2-750-so,product,Products,gsc:crawled-not-indexed,crawled-not-indexed,2025-10-07,,,,,,,no,,,
-/products/lectric-xpeak2-750-st,product,Products,gsc:noindex,noindex,2025-09-10,,,,,,,no,,,
-/products/lectric-xpeak2-so,product,Products,gsc:noindex,noindex,2025-09-11,,,,,,,no,,,
-/products/lectric-xpeak2-st,product,Products,gsc:noindex,noindex,2025-11-17,,,,,,,no,,,
-/products/lectric-xpeak2-st/feed,product,Products,gsc:blocked-robots,blocked-robots,2025-11-24,,,,,,,no,,,
-/products/lectric-xpedition2,product,Products,gsc:noindex,noindex,2025-11-11,,,,,,,no,,,
-/products/lectric-xpedition2-dual,product,Products,gsc:noindex,noindex,2026-01-31,,,,,,,no,,,
-/products/lectric-xpedition2-dual-lr,product,Products,gsc:noindex,noindex,2025-10-18,,,,,,,no,,,
-/products/lectric-xpress-750-so,product,Products,gsc:noindex,noindex,2025-09-10,,,,,,,no,,,
-/products/lectric-xpress-750-st,product,Products,gsc:noindex,noindex,2025-09-12,,,,,,,no,,,
-/products/lectric-xpress-so,product,Products,gsc:noindex,noindex,2025-09-11,,,,,,,no,,,
-/products/lectric-xpress-st,product,Products,gsc:noindex,noindex,2025-09-19,,,,,,,no,,,
-/products/maxfind-glider-g5,product,Products,gsc:noindex,noindex,2026-01-02,,,,,,,no,,,
-/products/megawheels-a6l-eco,product,Products,gsc:noindex,noindex,2026-01-26,,,,,,,no,,,
-/products/megawheels-s10bk-7-5ah-2,product,Products,gsc:noindex,noindex,2026-01-05,,,,,,,no,,,
-/products/megawheels-s1s/opt,product,Products,gsc:redirect,redirect,2025-06-22,,,,,,,no,,Product URL with /OPT/ suffix (likely Oxygen),
-/products/mercane-jubel,product,Products,gsc:noindex,noindex,2026-01-05,,,,,,,no,,,
-/products/mercane-widewheel-pro-2020,product,Products,gsc:noindex,noindex,2025-11-13,,,,,,,no,,,
-/products/mokwheel-asphalt,product,Products,gsc:noindex,noindex,2025-11-03,,,,,,,no,,,
-/products/mokwheel-basalt,product,Products,gsc:noindex,noindex,2025-12-03,,,,,,,no,,,
-/products/mokwheel-basalt-2-0,product,Products,gsc:noindex,noindex,2025-09-11,,,,,,,no,,,
-/products/mokwheel-basalt-2-0-st,product,Products,gsc:noindex,noindex,2025-10-21,,,,,,,no,,,
-/products/mokwheel-basalt-2-0/feed,product,Products,gsc:blocked-robots,blocked-robots,2025-09-17,,,,,,,no,,,
-/products/mokwheel-basalt-st,product,Products,gsc:noindex,noindex,2025-09-11,,,,,,,no,,,
-/products/mokwheel-basalt-st/feed,product,Products,gsc:blocked-robots,blocked-robots,2025-09-11,,,,,,,no,,,
-/products/mokwheel-basalt/feed,product,Products,gsc:blocked-robots,blocked-robots,2025-12-07,,,,,,,no,,,
-/products/mokwheel-mesa-lite,product,Products,gsc:noindex,noindex,2025-09-11,,,,,,,no,,,
-/products/mokwheel-mesa-lite-st,product,Products,gsc:noindex,noindex,2025-09-11,,,,,,,no,,,
-/products/mokwheel-obsidian-2-0,product,Products,gsc:noindex,noindex,2025-09-11,,,,,,,no,,,
-/products/mokwheel-obsidian-st-2-0,product,Products,gsc:noindex,noindex,2025-09-11,,,,,,,no,,,
-/products/mokwheel-obsidian-st-2-0/feed,product,Products,gsc:blocked-robots,blocked-robots,2025-10-31,,,,,,,no,,,
-/products/mokwheel-onyx,product,Products,gsc:crawled-not-indexed,crawled-not-indexed,2025-09-13,,,,,,,no,,,
-/products/mokwheel-onyx-st,product,Products,gsc:crawled-not-indexed,crawled-not-indexed,2025-10-08,,,,,,,no,,,
-/products/mokwheel-scoria,product,Products,gsc:noindex,noindex,2025-09-11,,,,,,,no,,,
-/products/mokwheel-slate,product,Products,gsc:noindex,noindex,2025-09-11,,,,,,,no,,,
-/products/mokwheel-slate/feed,product,Products,gsc:blocked-robots,blocked-robots,2025-09-12,,,,,,,no,,,
-/products/mokwheel-tarmac,product,Products,gsc:crawled-not-indexed,crawled-not-indexed,2025-09-16,,,,,,,no,,,
-/products/mokwheel-tor-plus,product,Products,gsc:noindex,noindex,2025-09-11,,,,,,,no,,,
-/products/mokwheel-tor-plus/feed,product,Products,gsc:blocked-robots,blocked-robots,2025-11-01,,,,,,,no,,,
-/products/mukuta-0-plus,product,Products,rankmath-redirect-source,,,yes,301,http://eridehero.com/products/mukuta-9-plus/,,,,no,,,
-/products/mukuta-10-plus-20-8ah,product,Products,gsc:noindex,noindex,2026-01-04,,,,,,,no,,,
-/products/mukuta-10-plus-25-6ah,product,Products,gsc:crawled-not-indexed,crawled-not-indexed,2025-10-08,,,,,,,no,,,
-/products/murf-alpha,product,Products,gsc:noindex,noindex,2025-12-09,,,,,,,no,,,
-/products/murf-alpha-cargo,product,Products,gsc:noindex,noindex,2025-09-10,,,,,,,no,,,
-/products/murf-alpha-st,product,Products,gsc:crawled-not-indexed,crawled-not-indexed,2025-09-13,,,,,,,no,,,
-/products/murf-gigi,product,Products,gsc:noindex,noindex,2025-11-01,,,,,,,no,,,
-/products/murf-higgs,product,Products,gsc:noindex,noindex,2025-11-22,,,,,,,no,,,
-/products/murf-higgs-cargo,product,Products,gsc:noindex,noindex,2025-11-12,,,,,,,no,,,
-/products/murf-higgs-st,product,Products,gsc:noindex,noindex,2025-09-10,,,,,,,no,,,
-/products/murf-higgs/feed,product,Products,gsc:blocked-robots,blocked-robots,2025-12-03,,,,,,,no,,,
-/products/murf-otis,product,Products,gsc:noindex,noindex,2025-11-23,,,,,,,no,,,
-/products/nami-burn-e-2,product,Products,gsc:noindex,noindex,2026-01-05,,,,,,,no,,,
-/products/nami-burn-e-2-max,product,Products,gsc:indexed,indexed,2025-12-27,,,,,,,yes,/products/nami-burn-e-2-max,,
-/products/nami-klima,product,Products,gsc:crawled-not-indexed,crawled-not-indexed,2025-08-31,,,,,,,no,,,
-/products/nami-stellar,product,Products,gsc:noindex,noindex,2025-12-30,,,,,,,no,,,
-/products/nami-stellar/feed,product,Products,gsc:blocked-robots,blocked-robots,2026-01-01,,,,,,,no,,,
-/products/navee-g5,product,Products,gsc:noindex,noindex,2025-11-18,,,,,,,no,,,
-/products/navee-g5-max,product,Products,gsc:noindex,noindex,2025-11-28,,,,,,,no,,,
-/products/navee-g5-pro,product,Products,gsc:noindex,noindex,2026-01-26,,,,,,,no,,,
-/products/navee-gt3,product,Products,gsc:crawled-not-indexed,crawled-not-indexed,2025-08-24,,,,,,,yes,/products/navee-gt3,,
-/products/navee-gt3-max,product,Products,gsc:noindex,noindex,2025-11-05,,,,,,,no,,,
-/products/navee-gt3-pro,product,Products,gsc:noindex,noindex,2026-01-30,,,,,,,no,,,
-/products/navee-gt3-pro/feed,product,Products,gsc:blocked-robots,blocked-robots,2026-02-02,,,,,,,no,,,
-/products/navee-n40,product,Products,gsc:noindex,noindex,2025-11-21,,,,,,,no,,,
-/products/navee-n65,product,Products,gsc:noindex,noindex,2025-11-24,,,,,,,no,,,
-/products/navee-n65/opt,product,Products,gsc:redirect,redirect,2026-01-01,,,,,,,no,,Product URL with /OPT/ suffix (likely Oxygen),
-/products/navee-s65,product,Products,gsc:crawled-not-indexed,crawled-not-indexed,2025-10-10,,,,,,,no,,,
-/products/navee-st3-pro,product,Products,gsc:indexed,indexed,2026-01-03,,,,,,,yes,/products/navee-st3-pro,,
-/products/navee-v25,product,Products,gsc:noindex,noindex,2025-12-27,,,,,,,no,,,
-/products/navee-v25/feed,product,Products,gsc:blocked-robots,blocked-robots,2025-12-27,,,,,,,no,,,
-/products/navee-xt5-pro,product,Products,gsc:noindex,noindex,2025-12-05,,,,,,,no,,,
-/products/niu-bqi-c3-pro,product,Products,gsc:noindex,noindex,2026-01-30,,,,,,,no,,,
-/products/niu-bqi-fat-tire-300-so,product,Products,gsc:noindex,noindex,2026-01-06,,,,,,,no,,,
-/products/niu-bqi-fat-tire-300-so/feed,product,Products,gsc:blocked-robots,blocked-robots,2026-02-13,,,,,,,no,,,
-/products/niu-bqi-fat-tire-300-st,product,Products,gsc:noindex,noindex,2026-01-06,,,,,,,no,,,
-/products/niu-kqi-100f,product,Products,gsc:discovered-not-indexed,discovered-not-indexed,1970-01-01,,,,,,,yes,/products/niu-kqi-100f,,
-/products/niu-kqi-100p,product,Products,gsc:indexed,indexed,2026-01-26,,,,,,,yes,/products/niu-kqi-100p,,
-/products/niu-kqi-200p,product,Products,gsc:noindex,noindex,2025-10-30,,,,,,,no,,,
-/products/niu-kqi-3-pro,product,Products,gsc:indexed,indexed,2026-02-12,,,,,,,yes,/products/niu-kqi-3-pro,,
-/products/niu-kqi-3-sport,product,Products,rankmath-redirect-source,,,yes,301,http://eridehero.com/products/niu-kqi3-sport/,,,,no,,,
-/products/niu-kqi-300p,product,Products,gsc:noindex,noindex,2026-01-30,,,,,,,no,,,
-/products/niu-kqi-300x,product,Products,gsc:indexed,indexed,2026-02-15,,,,,,,yes,/products/niu-kqi-300x,,
-/products/niu-kqi-air,product,Products,gsc:indexed,indexed,2026-02-14,,,,,,,yes,/products/niu-kqi-air,,
-/products/niu-kqi-air-x,product,Products,gsc:noindex,noindex,2026-01-06,,,,,,,no,,,
-/products/niu-kqi-youth,product,Products,gsc:noindex,noindex,2025-10-31,,,,,,,no,,,
-/products/niu-kqi1-pro,product,Products,gsc:crawled-not-indexed,crawled-not-indexed,2025-10-07,,,,,,,no,,,
-/products/niu-kqi1-pro/opt,product,Products,gsc:redirect,redirect,2025-04-20,,,,,,,no,,Product URL with /OPT/ suffix (likely Oxygen),
-/products/niu-kqi2-pro,product,Products,gsc:indexed,indexed,2026-02-08,,,,,,,yes,/products/niu-kqi2-pro,,
-/products/niu-kqi3-max,product,Products,gsc:noindex,noindex,2026-01-28,,,,,,,no,,,
-/products/okai-neon-pro-es30,product,Products,gsc:noindex,noindex,2025-12-03,,,,,,,no,,,
-/products/okai-neon-ultra-es40,product,Products,gsc:noindex,noindex,2025-12-04,,,,,,,no,,,
-/products/okai-panther-es800/firefox,product,Products,gsc:404,404,2025-09-23,,,,,,,no,,Product URL with /firefox/ suffix (bot/junk),
-/products/okai-panther-es800/version,product,Products,gsc:404,404,2025-12-23,,,,,,,no,,Product URL with /version/ suffix (bot/junk),
-/products/philodo-falcon-so,product,Products,gsc:noindex,noindex,2025-09-10,,,,,,,no,,,
-/products/philodo-falcon-so/feed,product,Products,gsc:blocked-robots,blocked-robots,2025-10-05,,,,,,,no,,,
-/products/philodo-falcon-st,product,Products,gsc:noindex,noindex,2025-09-10,,,,,,,no,,,
-/products/philodo-forester,product,Products,gsc:noindex,noindex,2025-09-09,,,,,,,no,,,
-/products/philodo-h8-60v,product,Products,gsc:noindex,noindex,2025-09-10,,,,,,,no,,,
-/products/philodo-hunter,product,Products,gsc:noindex,noindex,2025-09-10,,,,,,,no,,,
-/products/propel-endeavor2-pro/opr,product,Products,gsc:404,404,2025-08-21,,,,,,,no,,Product URL with /opr/ suffix (bot/junk),
-/products/propel-endeavor2-pro/opt,product,Products,gsc:redirect,redirect,2025-08-12,,,,,,,no,,Product URL with /OPT/ suffix (likely Oxygen),
-/products/propel-endeavor2-pro/version,product,Products,gsc:404,404,2025-08-27,,,,,,,no,,Product URL with /version/ suffix (bot/junk),
-/products/rad-power-bikes-radexpand-5,product,Products,gsc:crawled-not-indexed,crawled-not-indexed,2025-09-11,,,,,,,no,,,
-/products/rad-power-bikes-radexpand-5-plus,product,Products,gsc:crawled-not-indexed,crawled-not-indexed,2025-09-10,,,,,,,no,,,
-/products/rad-power-bikes-radexpand-5-plus/feed,product,Products,gsc:blocked-robots,blocked-robots,2025-12-02,,,,,,,no,,,
-/products/rad-power-bikes-radkick-7-speed,product,Products,gsc:noindex,noindex,2025-11-11,,,,,,,no,,,
-/products/rad-power-bikes-radkick-7-speed/feed,product,Products,gsc:blocked-robots,blocked-robots,2025-11-12,,,,,,,no,,,
-/products/rad-power-bikes-radkick-belt,product,Products,gsc:noindex,noindex,2025-09-11,,,,,,,no,,,
-/products/rad-power-bikes-radrover-6-plus,product,Products,gsc:noindex,noindex,2025-11-25,,,,,,,no,,,
-/products/rad-power-bikes-radrunner,product,Products,gsc:noindex,noindex,2025-12-07,,,,,,,no,,,
-/products/rad-power-bikes-radrunner-max,product,Products,gsc:noindex,noindex,2025-11-09,,,,,,,no,,,
-/products/rad-power-bikes-radrunner-plus,product,Products,gsc:noindex,noindex,2025-11-29,,,,,,,no,,,
-/products/rad-power-bikes-radrunner/feed,product,Products,gsc:blocked-robots,blocked-robots,2025-12-08,,,,,,,no,,,
-/products/rad-power-bikes-radster-road,product,Products,gsc:noindex,noindex,2025-11-26,,,,,,,no,,,
-/products/rad-power-bikes-radster-trail,product,Products,gsc:crawled-not-indexed,crawled-not-indexed,2025-09-17,,,,,,,no,,,
-/products/rad-power-bikes-radwagon-4,product,Products,gsc:noindex,noindex,2026-02-02,,,,,,,no,,,
-/products/rad-power-bikes-radwagon-5,product,Products,gsc:noindex,noindex,2025-10-19,,,,,,,no,,,
-/products/ride1up-cf-racer1,product,Products,gsc:noindex,noindex,2025-09-11,,,,,,,no,,,
-/products/ride1up-portola-10-4ah,product,Products,gsc:crawled-not-indexed,crawled-not-indexed,2025-09-11,,,,,,,no,,,
-/products/ride1up-portola-10-4ah/feed,product,Products,gsc:blocked-robots,blocked-robots,2025-09-11,,,,,,,no,,,
-/products/ride1up-prodigy-v2-st-belt-cvt,product,Products,gsc:crawled-not-indexed,crawled-not-indexed,2025-10-02,,,,,,,no,,,
-/products/ride1up-prodigy-v2-st-chain,product,Products,gsc:noindex,noindex,2025-09-11,,,,,,,no,,,
-/products/ride1up-prodigy-v2-st-chain/feed,product,Products,gsc:blocked-robots,blocked-robots,2025-09-17,,,,,,,no,,,
-/products/ride1up-prodigy-v2-xr-belt-cvt,product,Products,gsc:noindex,noindex,2025-09-11,,,,,,,no,,,
-/products/ride1up-prodigy-v2-xr-belt-cvt/feed,product,Products,gsc:blocked-robots,blocked-robots,2025-09-11,,,,,,,no,,,
-/products/ride1up-prodigy-v2-xr-chain,product,Products,gsc:noindex,noindex,2025-09-11,,,,,,,no,,,
-/products/ride1up-prodigy-v2-xr-chain/feed,product,Products,gsc:blocked-robots,blocked-robots,2025-10-11,,,,,,,no,,,
-/products/ride1up-roadster-v3-belt,product,Products,gsc:noindex,noindex,2025-11-12,,,,,,,no,,,
-/products/ride1up-roadster-v3-chain,product,Products,gsc:noindex,noindex,2025-11-13,,,,,,,no,,,
-/products/ride1up-roadster-v3-low-step-belt,product,Products,gsc:noindex,noindex,2025-11-13,,,,,,,no,,,
-/products/ride1up-roadster-v3-low-step-chain,product,Products,gsc:noindex,noindex,2025-11-12,,,,,,,no,,,
-/products/ride1up-trailrush,product,Products,gsc:crawled-not-indexed,crawled-not-indexed,2025-09-11,,,,,,,no,,,
-/products/ride1up-vorsa-xr,product,Products,gsc:noindex,noindex,2025-12-12,,,,,,,no,,,
-/products/roadrunner-rs5-max,product,Products,gsc:noindex,noindex,2026-01-31,,,,,,,no,,,
-/products/roadrunner-rs5-max/feed,product,Products,gsc:blocked-robots,blocked-robots,2026-02-03,,,,,,,no,,,
-/products/roadrunner-rs6-ultra,product,Products,gsc:crawled-not-indexed,crawled-not-indexed,2025-09-06,,,,,,,no,,,
-/products/roadrunner-rs6-ultra/feed,product,Products,gsc:blocked-robots,blocked-robots,2025-10-03,,,,,,,no,,,
-/products/roadrunner-rx7,product,Products,gsc:noindex,noindex,2026-02-02,,,,,,,no,,,
-/products/roadrunner-rx7/feed,product,Products,gsc:blocked-robots,blocked-robots,2026-02-09,,,,,,,no,,,
-/products/rossignol-e-track-29-cues,product,Products,gsc:noindex,noindex,2025-12-10,,,,,,,no,,,
-/products/santa-cruz-heckler-sl-70-2026,product,Products,gsc:noindex,noindex,2025-11-11,,,,,,,no,,,
-/products/santa-cruz-heckler-sl-90-2026,product,Products,gsc:noindex,noindex,2025-11-11,,,,,,,no,,,
-/products/santa-cruz-heckler-sl-gx-axs-2026,product,Products,gsc:noindex,noindex,2026-01-12,,,,,,,no,,,
-/products/santa-cruz-heckler-sl-gx-axs-2026/feed,product,Products,gsc:blocked-robots,blocked-robots,2026-01-14,,,,,,,no,,,
-/products/santa-cruz-heckler-sl-r-2025,product,Products,gsc:noindex,noindex,2025-12-27,,,,,,,no,,,
-/products/santa-cruz-heckler-sl-s-2025,product,Products,gsc:noindex,noindex,2026-01-05,,,,,,,no,,,
-/products/santa-cruz-heckler-sl-s-2025/feed,product,Products,gsc:blocked-robots,blocked-robots,2026-01-15,,,,,,,no,,,
-/products/santa-cruz-heckler-sl-stout-2025,product,Products,gsc:noindex,noindex,2025-11-11,,,,,,,no,,,
-/products/santa-cruz-heckler-sl-stout-2026,product,Products,gsc:noindex,noindex,2025-11-09,,,,,,,no,,,
-/products/santa-cruz-heckler-sl-x0-axs-rsv-2025,product,Products,gsc:noindex,noindex,2026-01-05,,,,,,,no,,,
-/products/scott-lumen-905,product,Products,gsc:noindex,noindex,2025-11-07,,,,,,,no,,,
-/products/scott-lumen-920,product,Products,gsc:noindex,noindex,2025-11-04,,,,,,,no,,,
-/products/scott-lumen-920/feed,product,Products,gsc:blocked-robots,blocked-robots,2025-11-11,,,,,,,no,,,
-/products/scott-ransom-eride-920,product,Products,gsc:noindex,noindex,2026-01-12,,,,,,,no,,,
-/products/scott-ransom-eride-920/feed,product,Products,gsc:blocked-robots,blocked-robots,2026-01-14,,,,,,,no,,,
-/products/scott-silence-eride-20-men-speed,product,Products,gsc:noindex,noindex,2026-01-19,,,,,,,no,,,
-/products/scott-silence-eride-20-men-speed/feed,product,Products,gsc:blocked-robots,blocked-robots,2026-01-20,,,,,,,no,,,
-/products/scott-silence-eride-evo-speed,product,Products,gsc:noindex,noindex,2026-01-30,,,,,,,no,,,
-/products/scott-voltage-eride-900-tuned,product,Products,gsc:noindex,noindex,2025-12-27,,,,,,,no,,,
-/products/scott-voltage-eride-910,product,Products,gsc:noindex,noindex,2025-11-03,,,,,,,no,,,
-/products/scott-voltage-eride-910/feed,product,Products,gsc:blocked-robots,blocked-robots,2025-11-06,,,,,,,no,,,
-/products/scott-voltage-eride-920,product,Products,gsc:noindex,noindex,2025-11-14,,,,,,,no,,,
-/products/segway-gt2,product,Products,gsc:noindex,noindex,2025-11-29,,,,,,,no,,,
-/products/segway-gt3-pro,product,Products,gsc:noindex,noindex,2025-09-06,,,,,,,yes,/products/segway-gt3-pro,,
-/products/segway-ninebot-d28u,product,Products,gsc:noindex,noindex,2026-01-04,,,,,,,no,,,
-/products/segway-ninebot-e2-plus-ii,product,Products,gsc:crawled-not-indexed,crawled-not-indexed,2025-10-09,,,,,,,no,,,
-/products/segway-ninebot-e2-pro,product,Products,gsc:noindex,noindex,2026-01-04,,,,,,,no,,,
-/products/segway-ninebot-e3-pro,product,Products,gsc:noindex,noindex,2025-10-30,,,,,,,no,,,
-/products/segway-ninebot-f25,product,Products,gsc:noindex,noindex,2026-01-02,,,,,,,no,,,
-/products/segway-ninebot-f3,product,Products,gsc:discovered-not-indexed,discovered-not-indexed,1970-01-01,,,,,,,yes,/products/segway-ninebot-f3,,
-/products/segway-ninebot-f35,product,Products,gsc:noindex,noindex,2026-01-04,,,,,,,no,,,
-/products/segway-ninebot-max,product,Products,gsc:noindex,noindex,2026-01-27,,,,,,,no,,,
-/products/segway-ninebot-max-g2,product,Products,gsc:indexed,indexed,2026-02-17,,,,,,,yes,/products/segway-ninebot-max-g2,,
-/products/segway-ninebot-max-g3,product,Products,gsc:indexed,indexed,2026-02-15,,,,,,,yes,/products/segway-ninebot-max-g3,,
-/products/segway-ninebot-max-g30lp,product,Products,gsc:noindex,noindex,2025-10-29,,,,,,,no,,,
-/products/segway-ninebot-zing-c8,product,Products,gsc:noindex,noindex,2025-12-06,,,,,,,no,,,
-/products/segway-ninebot-zing-c9,product,Products,gsc:noindex,noindex,2025-12-07,,,,,,,no,,,
-/products/segway-ninebot-zing-c9/opr,product,Products,gsc:404,404,2025-09-25,,,,,,,no,,Product URL with /opr/ suffix (bot/junk),
-/products/segway-ninebot-zing-e8/opt,product,Products,gsc:redirect,redirect,2025-07-17,,,,,,,no,,Product URL with /OPT/ suffix (likely Oxygen),
-/products/segway-xafari,product,Products,gsc:noindex,noindex,2026-01-03,,,,,,,no,,,
-/products/segway-zt3,product,Products,gsc:indexed,indexed,2025-12-27,,,,,,,yes,/products/segway-zt3,,
-/products/splach-titan,product,Products,gsc:noindex,noindex,2026-01-04,,,,,,,no,,,
-/products/splach-turbo,product,Products,gsc:noindex,noindex,2025-12-27,,,,,,,no,,,
-/products/splach-twin,product,Products,gsc:noindex,noindex,2025-11-27,,,,,,,no,,,
-/products/splach-twin-plus,product,Products,gsc:crawled-not-indexed,crawled-not-indexed,2025-09-29,,,,,,,no,,,
-/products/teewing-gt4,product,Products,gsc:crawled-not-indexed,crawled-not-indexed,2025-09-10,,,,,,,no,,,
-/products/teewing-mars,product,Products,gsc:noindex,noindex,2025-12-22,,,,,,,no,,,
-/products/teewing-mars-xt,product,Products,gsc:noindex,noindex,2025-09-07,,,,,,,no,,,
-/products/teewing-mars-xtr,product,Products,gsc:crawled-not-indexed,crawled-not-indexed,2025-09-06,,,,,,,no,,,
-/products/teewing-x3,product,Products,gsc:noindex,noindex,2025-08-31,,,,,,,no,,,
-/products/teewing-x4,product,Products,gsc:noindex,noindex,2025-08-31,,,,,,,no,,,
-/products/teewing-x4/feed,product,Products,gsc:blocked-robots,blocked-robots,2025-08-31,,,,,,,no,,,
-/products/teewing-x5,product,Products,gsc:crawled-not-indexed,crawled-not-indexed,2025-08-31,,,,,,,no,,,
-/products/teewing-z4-pro,product,Products,gsc:noindex,noindex,2025-08-31,,,,,,,no,,,
-/products/tenways-ago-t,product,Products,gsc:noindex,noindex,2025-10-11,,,,,,,no,,,
-/products/tenways-ago-x,product,Products,gsc:noindex,noindex,2025-09-10,,,,,,,no,,,
-/products/tenways-cargo-one,product,Products,gsc:noindex,noindex,2025-12-08,,,,,,,no,,,
-/products/tenways-cgo600-pro,product,Products,gsc:noindex,noindex,2025-11-21,,,,,,,no,,,
-/products/tenways-cgo600-pro-c,product,Products,gsc:noindex,noindex,2025-09-10,,,,,,,no,,,
-/products/teverun-fighter-mini-pro,product,Products,gsc:crawled-not-indexed,crawled-not-indexed,2025-10-08,,,,,,,no,,,
-/products/turboant-m10-lite,product,Products,gsc:noindex,noindex,2025-11-11,,,,,,,no,,,
-/products/turboant-x7-max,product,Products,gsc:noindex,noindex,2026-01-21,,,,,,,no,,,
-/products/turboant-x8,product,Products,rankmath-redirect-source,,,yes,301,http://eridehero.com/products/turboant-v8/,,,,no,,,
-/products/unagi-model-one-e500,product,Products,gsc:noindex,noindex,2026-02-01,,,,,,,no,,,
-/products/urban,product,Products,rankmath-redirect-source,,,yes,301,http://eridehero.com/products/kaabo-urban/,,,,no,,,
-/products/varla-eagle-one-pro,product,Products,gsc:crawled-not-indexed,crawled-not-indexed,2025-09-07,,,,,,,no,,,
-/products/varla-eagle-one-v2-0,product,Products,gsc:noindex,noindex,2025-11-20,,,,,,,no,,,
-/products/varla-falcon,product,Products,gsc:noindex,noindex,2025-12-28,,,,,,,no,,,
-/products/varla-wasp,product,Products,gsc:noindex,noindex,2025-12-27,,,,,,,no,,,
-/products/velowave-brawny-xm,product,Products,gsc:noindex,noindex,2025-11-24,,,,,,,no,,,
-/products/velowave-breeze-t,product,Products,gsc:noindex,noindex,2025-09-10,,,,,,,no,,,
-/products/velowave-forest-sm,product,Products,gsc:noindex,noindex,2025-09-12,,,,,,,no,,,
-/products/velowave-forest-xm,product,Products,gsc:noindex,noindex,2025-11-24,,,,,,,no,,,
-/products/velowave-grace-2-0,product,Products,gsc:noindex,noindex,2025-09-10,,,,,,,no,,,
-/products/velowave-pony,product,Products,gsc:noindex,noindex,2025-11-26,,,,,,,no,,,
-/products/velowave-prado-s,product,Products,gsc:noindex,noindex,2025-09-11,,,,,,,no,,,
-/products/velowave-ranger,product,Products,gsc:noindex,noindex,2025-09-10,,,,,,,no,,,
-/products/velowave-ranger-2-0,product,Products,gsc:noindex,noindex,2025-11-12,,,,,,,no,,,
-/products/velowave-ranger-2-0-st,product,Products,gsc:noindex,noindex,2025-11-23,,,,,,,no,,,
-/products/velowave-ranger-2-0/feed,product,Products,gsc:blocked-robots,blocked-robots,2025-11-17,,,,,,,no,,,
-/products/velowave-ranger-3-0,product,Products,gsc:noindex,noindex,2025-09-11,,,,,,,no,,,
-/products/velowave-ranger-3-0-st,product,Products,gsc:noindex,noindex,2025-09-10,,,,,,,no,,,
-/products/velowave-ranger-3-0/feed,product,Products,gsc:blocked-robots,blocked-robots,2025-10-05,,,,,,,no,,,
-/products/velowave-rover,product,Products,gsc:crawled-not-indexed,crawled-not-indexed,2025-09-14,,,,,,,no,,,
-/products/velowave-rover/feed,product,Products,gsc:blocked-robots,blocked-robots,2025-09-18,,,,,,,no,,,
-/products/velowave-swift-m,product,Products,gsc:noindex,noindex,2025-09-10,,,,,,,no,,,
-/products/verreal-f1/opr,product,Products,gsc:404,404,2025-12-03,,,,,,,no,,Product URL with /opr/ suffix (bot/junk),
-/products/verreal-f1/opt,product,Products,gsc:redirect,redirect,2025-08-08,,,,,,,no,,Product URL with /OPT/ suffix (likely Oxygen),
-/products/verreal-f1/webkit,product,Products,gsc:404,404,2025-09-18,,,,,,,no,,Product URL with /webkit/ suffix (bot/junk),
-/products/verreal-rs-pro,product,Products,rankmath-redirect-source,,,yes,301,http://eridehero.com/products/verreal-rs-pro-2/,,,,no,,,
-/products/verreal-rs/firefox,product,Products,gsc:404,404,2025-10-05,,,,,,,no,,Product URL with /firefox/ suffix (bot/junk),
-/products/vmax-vx2-extreme-gt,product,Products,gsc:indexed,indexed,2026-01-01,,,,,,,yes,/products/vmax-vx2-extreme-gt,,
-/products/vmax-vx2-extreme-gt/feed,product,Products,gsc:blocked-robots,blocked-robots,2025-12-15,,,,,,,no,,,
-/products/vmax-vx2-extreme-lt,product,Products,gsc:noindex,noindex,2025-12-29,,,,,,,no,,,
-/products/vmax-vx2-extreme-st,product,Products,gsc:noindex,noindex,2026-02-02,,,,,,,no,,,
-/products/vmax-vx2-extreme-st/feed,product,Products,gsc:blocked-robots,blocked-robots,2026-02-13,,,,,,,no,,,
-/products/vmax-vx2-gear,product,Products,gsc:noindex,noindex,2025-10-30,,,,,,,no,,,
-/products/vmax-vx2-hub-13ah,product,Products,gsc:noindex,noindex,2025-11-19,,,,,,,no,,,
-/products/vmax-vx2-hub-18-2ah,product,Products,gsc:crawled-not-indexed,crawled-not-indexed,2025-09-08,,,,,,,yes,/products/vmax-vx2-hub-18-2ah,,
-/products/vmax-vx2-pro-gt,product,Products,gsc:noindex,noindex,2026-02-01,,,,,,,no,,,
-/products/vmax-vx3-pro-lt/opt,product,Products,gsc:redirect,redirect,2024-10-04,,,,,,,no,,Product URL with /OPT/ suffix (likely Oxygen),
-/products/vmax-vx4-lt,product,Products,gsc:noindex,noindex,2025-12-30,,,,,,,no,,,
-/products/vmax-vx4-lt/feed,product,Products,gsc:blocked-robots,blocked-robots,2026-01-01,,,,,,,no,,,
-/products/vmax-vx4-st,product,Products,gsc:noindex,noindex,2026-01-30,,,,,,,no,,,
-/products/vmax-vx5-gt/opt,product,Products,gsc:redirect,redirect,2025-05-01,,,,,,,no,,Product URL with /OPT/ suffix (likely Oxygen),
-/products/vmax-vx5-pro-lt/opt,product,Products,gsc:redirect,redirect,2024-10-04,,,,,,,no,,Product URL with /OPT/ suffix (likely Oxygen),
-/products/vmax-vx5-pro-st/opt,product,Products,gsc:redirect,redirect,2024-09-25,,,,,,,no,,Product URL with /OPT/ suffix (likely Oxygen),
-/products/vmax-vx8,product,Products,gsc:noindex,noindex,2025-12-05,,,,,,,no,,,
-/products/vmax-vx8/feed,product,Products,gsc:blocked-robots,blocked-robots,2025-12-11,,,,,,,no,,,
-/products/vvolt-centauri-ii,product,Products,gsc:noindex,noindex,2026-01-30,,,,,,,no,,,
-/products/vx8,product,Products,rankmath-redirect-source,,,yes,301,http://eridehero.com/products/vmax-vx8/,,,,no,,,
-/products/wired-freedom,product,Products,gsc:noindex,noindex,2026-01-09,,,,,,,no,,,
-/products/wired-predator,product,Products,gsc:noindex,noindex,2025-12-27,,,,,,,no,,,
-/products/wired-scout,product,Products,gsc:noindex,noindex,2026-01-30,,,,,,,no,,,
-/products/wired-scout/feed,product,Products,gsc:blocked-robots,blocked-robots,2026-02-02,,,,,,,no,,,
-/products/wired-warrior,product,Products,gsc:noindex,noindex,2026-01-20,,,,,,,no,,,
-/products/yume-hawk,product,Products,gsc:noindex,noindex,2025-12-03,,,,,,,no,,,
-/products/yume-hawk-pro-22-5ah,product,Products,rankmath-redirect-source,,,yes,301,http://eridehero.com/products/yume-hawk-pro-27ah/,,,,no,,,
-/products/yume-hawk-pro-25ah,product,Products,rankmath-redirect-source,,,yes,301,http://eridehero.com/products/yume-hawk-pro-30ah/,,,,no,,,
-/products/yume-hawk-pro-27ah,product,Products,gsc:crawled-not-indexed,crawled-not-indexed,2025-10-07,,,,,,,no,,,
-/products/yume-hawk-pro-27ah/feed,product,Products,gsc:blocked-robots,blocked-robots,2025-10-05,,,,,,,no,,,
-/products/yume-hawk-pro-30ah,product,Products,gsc:noindex,noindex,2025-11-13,,,,,,,no,,,
-/products/yume-hawk/feed,product,Products,gsc:blocked-robots,blocked-robots,2025-12-09,,,,,,,no,,,
-/products/yume-swift/crios,product,Products,gsc:404,404,2025-10-13,,,,,,,no,,Product URL with /crios/ suffix (bot/junk),
-/products/yume-swift/firefox,product,Products,gsc:404,404,2025-12-27,,,,,,,no,,Product URL with /firefox/ suffix (bot/junk),
-/products/yume-swift/version,product,Products,gsc:404,404,2025-10-17,,,,,,,no,,Product URL with /version/ suffix (bot/junk),
-/calibrate-reset-hoverboard/feed,feed,RSS Feeds,gsc:blocked-robots,blocked-robots,2025-11-13,,,,,,,no,,,
-/feed,feed,RSS Feeds,gsc:blocked-robots,blocked-robots,2025-09-01,,,,,,,no,,,
-/gotrax-hoverfly-eco-hoverboard-review/feed,feed,RSS Feeds,gsc:blocked-robots,blocked-robots,2025-09-06,,,,,,,no,,,
-/halo-board-beast-electric-skateboard-review/feed,feed,RSS Feeds,gsc:blocked-robots,blocked-robots,2025-10-30,,,,,,,no,,,
-/hover-1-horizon-hoverboard-review/feed,feed,RSS Feeds,gsc:blocked-robots,blocked-robots,2026-02-13,,,,,,,no,,,
-/hoverboard-weight-limit/feed,feed,RSS Feeds,gsc:blocked-robots,blocked-robots,2025-10-24,,,,,,,no,,,
-/how-does-a-hoverboard-work/feed,feed,RSS Feeds,gsc:blocked-robots,blocked-robots,2025-10-06,,,,,,,no,,,
-/how-to-ride-a-hoverboard/feed,feed,RSS Feeds,gsc:blocked-robots,blocked-robots,2025-11-14,,,,,,,no,,,
-/kaabo-mantis-pro-electric-scooter-review/feed,feed,RSS Feeds,gsc:blocked-robots,blocked-robots,2025-10-29,,,,,,,no,,,
-/navee-gt3-pro-review/feed,feed,RSS Feeds,gsc:blocked-robots,blocked-robots,2025-11-09,,,,,,,no,,,
-/navee-st3-pro-review/feed,feed,RSS Feeds,gsc:blocked-robots,blocked-robots,2025-09-07,,,,,,,no,,,
-/punk-rider-pro-review/feed,feed,RSS Feeds,gsc:blocked-robots,blocked-robots,2025-11-17,,,,,,,no,,,
-/solid-vs-pneumatic-tires-electric-scooters/feed,feed,RSS Feeds,gsc:blocked-robots,blocked-robots,2025-12-04,,,,,,,no,,,
-/south-australia-set-to-legalize-private-e-scooters/feed,feed,RSS Feeds,gsc:blocked-robots,blocked-robots,2025-11-06,,,,,,,no,,,
-/swagtron-t1-pro-hoverboard-review/feed,feed,RSS Feeds,gsc:blocked-robots,blocked-robots,2025-11-11,,,,,,,no,,,
-/swagtron-t5-hoverboard-review/feed,feed,RSS Feeds,gsc:blocked-robots,blocked-robots,2025-11-02,,,,,,,no,,,
-/us-electric-scooter-laws/feed,feed,RSS Feeds,gsc:blocked-robots,blocked-robots,2025-11-18,,,,,,,no,,,
-/vmax-vx2-hub-review/feed,feed,RSS Feeds,gsc:blocked-robots,blocked-robots,2025-11-03,,,,,,,no,,,
+/products/16927,product,Products,rankmath-redirect-source,,,yes,301,http://eridehero.com/products/navee-gt3-max/,,,,no,,,no-redirect-needed
+/products/apollo-air,product,Products,gsc:noindex,noindex,2025-11-27,,,,,,,no,,,no-redirect-needed
+/products/apollo-city,product,Products,gsc:discovered-not-indexed,discovered-not-indexed,1970-01-01,,,,,,,yes,/products/apollo-city,,no-redirect-needed
+/products/apollo-city-2,product,Products,rankmath-redirect-source,,,yes,301,http://eridehero.com/products/apollo-city/,,,,no,,,mapped
+/products/apollo-city-pro-2022,product,Products,rankmath-redirect-source,,,yes,301,http://eridehero.com/products/apollo-city/,,,,no,,,mapped
+/products/apollo-city-pro-2023,product,Products,"gsc:noindex, rankmath-redirect-source",noindex,2025-09-03,yes,301,http://eridehero.com/products/apollo-city/,,,,no,,,mapped
+/products/apollo-explore-2,product,Products,gsc:noindex,noindex,2025-11-22,,,,,,,no,,,no-redirect-needed
+/products/apollo-go,product,Products,gsc:indexed,indexed,2026-01-01,,,,,,,yes,/products/apollo-go,,no-redirect-needed
+/products/apollo-phantom-2,product,Products,rankmath-redirect-source,,,yes,301,http://eridehero.com/products/apollo-phantom/,,,,no,,,mapped
+/products/apollo-phantom-2-0,product,Products,gsc:noindex,noindex,2025-11-05,,,,,,,no,,,no-redirect-needed
+/products/apollo-phantom-2-0-stellar,product,Products,gsc:noindex,noindex,2025-11-20,,,,,,,no,,,no-redirect-needed
+/products/apollo-phantom-2023,product,Products,rankmath-redirect-source,,,yes,301,http://eridehero.com/products/apollo-phantom/,,,,no,,,mapped
+/products/atomi-alpha,product,Products,gsc:noindex,noindex,2025-11-06,,,,,,,no,,,no-redirect-needed
+/products/ausom-f1-max,product,Products,gsc:noindex,noindex,2025-08-30,,,,,,,no,,,no-redirect-needed
+/products/ausom-l1,product,Products,gsc:crawled-not-indexed,crawled-not-indexed,2025-09-12,,,,,,,no,,,no-redirect-needed
+/products/ausom-l2-max,product,Products,gsc:crawled-not-indexed,crawled-not-indexed,2025-09-12,,,,,,,yes,/products/ausom-l2-max,,no-redirect-needed
+/products/ausom-sr1,product,Products,gsc:crawled-not-indexed,crawled-not-indexed,2025-09-10,,,,,,,no,,,no-redirect-needed
+/products/aventon-abound-lr,product,Products,gsc:crawled-not-indexed,crawled-not-indexed,2025-09-12,,,,,,,no,,,no-redirect-needed
+/products/aventon-abound-sr,product,Products,gsc:crawled-not-indexed,crawled-not-indexed,2025-09-15,,,,,,,no,,,no-redirect-needed
+/products/aventon-aventure-2,product,Products,gsc:crawled-not-indexed,crawled-not-indexed,2025-09-19,,,,,,,no,,,no-redirect-needed
+/products/aventon-aventure-3,product,Products,gsc:noindex,noindex,2025-11-23,,,,,,,no,,,no-redirect-needed
+/products/aventon-aventure-3-step-through,product,Products,gsc:noindex,noindex,2025-11-02,,,,,,,no,,,no-redirect-needed
+/products/aventon-aventure-m,product,Products,gsc:noindex,noindex,2026-02-02,,,,,,,no,,,no-redirect-needed
+/products/aventon-level-2,product,Products,gsc:crawled-not-indexed,crawled-not-indexed,2025-09-14,,,,,,,no,,,no-redirect-needed
+/products/aventon-level-2/feed,product,Products,gsc:blocked-robots,blocked-robots,2025-10-30,,,,,,,no,,,no-redirect-needed
+/products/aventon-level-3,product,Products,gsc:noindex,noindex,2025-09-12,,,,,,,no,,,no-redirect-needed
+/products/aventon-level-3-step-through,product,Products,gsc:noindex,noindex,2025-11-23,,,,,,,no,,,no-redirect-needed
+/products/aventon-level-3-step-through/feed,product,Products,gsc:blocked-robots,blocked-robots,2025-11-24,,,,,,,no,,,no-redirect-needed
+/products/aventon-pace-4,product,Products,gsc:crawled-not-indexed,crawled-not-indexed,2025-09-10,,,,,,,no,,,no-redirect-needed
+/products/aventon-pace-500-3,product,Products,gsc:crawled-not-indexed,crawled-not-indexed,2025-09-10,,,,,,,no,,,no-redirect-needed
+/products/aventon-ramblas,product,Products,gsc:crawled-not-indexed,crawled-not-indexed,2025-09-11,,,,,,,no,,,no-redirect-needed
+/products/aventon-sinch-2-5,product,Products,gsc:noindex,noindex,2025-09-12,,,,,,,no,,,no-redirect-needed
+/products/aventon-soltera-2-5,product,Products,gsc:noindex,noindex,2025-11-11,,,,,,,no,,,no-redirect-needed
+/products/circooter-cruiser-pro,product,Products,gsc:noindex,noindex,2025-09-02,,,,,,,no,,,no-redirect-needed
+/products/circooter-landturbo,product,Products,gsc:crawled-not-indexed,crawled-not-indexed,2025-09-12,,,,,,,no,,,no-redirect-needed
+/products/circooter-landturbo-pro,product,Products,gsc:noindex,noindex,2025-12-05,,,,,,,no,,,no-redirect-needed
+/products/circooter-landturbo-pro/feed,product,Products,gsc:blocked-robots,blocked-robots,2025-12-07,,,,,,,no,,,no-redirect-needed
+/products/circooter-landturbo/feed,product,Products,gsc:blocked-robots,blocked-robots,2025-09-19,,,,,,,no,,,no-redirect-needed
+/products/circooter-mate,product,Products,gsc:noindex,noindex,2026-01-02,,,,,,,no,,,no-redirect-needed
+/products/circooter-raptor,product,Products,gsc:crawled-not-indexed,crawled-not-indexed,2025-09-12,,,,,,,no,,,no-redirect-needed
+/products/circooter-raptor-pro,product,Products,gsc:crawled-not-indexed,crawled-not-indexed,2025-09-11,,,,,,,no,,,no-redirect-needed
+/products/circooter-raptor-pro/feed,product,Products,gsc:blocked-robots,blocked-robots,2025-11-24,,,,,,,no,,,no-redirect-needed
+/products/dualtron-aminia-long-body,product,Products,gsc:noindex,noindex,2025-09-09,,,,,,,no,,,no-redirect-needed
+/products/dualtron-dolphin,product,Products,gsc:crawled-not-indexed,crawled-not-indexed,2025-10-05,,,,,,,no,,,no-redirect-needed
+/products/dualtron-dolphin/feed,product,Products,gsc:blocked-robots,blocked-robots,2025-10-06,,,,,,,no,,,no-redirect-needed
+/products/dualtron-forever-2-0,product,Products,gsc:crawled-not-indexed,crawled-not-indexed,2025-09-14,,,,,,,no,,,no-redirect-needed
+/products/dualtron-popular-dual-25ah/firefox,product,Products,gsc:404,404,2025-10-28,,,,,,,no,,Product URL with /firefox/ suffix (bot/junk),no-redirect-needed
+/products/dualtron-popular-dual-25ah/opr,product,Products,gsc:404,404,2025-10-27,,,,,,,no,,Product URL with /opr/ suffix (bot/junk),no-redirect-needed
+/products/dualtron-popular-dual-25ah/webkit,product,Products,gsc:404,404,2025-10-16,,,,,,,no,,Product URL with /webkit/ suffix (bot/junk),no-redirect-needed
+/products/dualtron-spider-max,product,Products,gsc:noindex,noindex,2026-02-02,,,,,,,no,,,no-redirect-needed
+/products/dualtron-victor-luxury-2,product,Products,gsc:noindex,noindex,2026-02-02,,,,,,,no,,,no-redirect-needed
+/products/e-twow-booster-es,product,Products,gsc:noindex,noindex,2025-10-23,,,,,,,no,,,no-redirect-needed
+/products/e-twow-gt-se,product,Products,gsc:noindex,noindex,2025-10-30,,,,,,,no,,,no-redirect-needed
+/products/e-twow-gt-sl,product,Products,gsc:crawled-not-indexed,crawled-not-indexed,2025-10-06,,,,,,,no,,,no-redirect-needed
+/products/e-twow-gt-sl/feed,product,Products,gsc:blocked-robots,blocked-robots,2025-10-07,,,,,,,no,,,no-redirect-needed
+/products/e-twow-tanktorq-tk5,product,Products,gsc:noindex,noindex,2025-09-04,,,,,,,no,,,no-redirect-needed
+/products/emove-roadrunner,product,Products,rankmath-redirect-source,,,yes,301,http://eridehero.com/products/emove-roadrunner-v2/,,,,no,,,mapped
+/products/emove-roadrunner-se,product,Products,gsc:noindex,noindex,2026-02-14,,,,,,,no,,,no-redirect-needed
+/products/fluid-horizon-10-4ah,product,Products,gsc:crawled-not-indexed,crawled-not-indexed,2025-10-06,,,,,,,no,,,no-redirect-needed
+/products/fluid-vista,product,Products,gsc:indexed,indexed,2026-01-01,,,,,,,yes,/products/fluid-vista,,no-redirect-needed
+/products/fluidfreeride-cityrider,product,Products,gsc:noindex,noindex,2026-01-04,,,,,,,no,,,no-redirect-needed
+/products/fluidfreeride-horizon,product,Products,gsc:noindex,noindex,2026-01-31,,,,,,,no,,,no-redirect-needed
+/products/giant-explore-e-2-gts-2022,product,Products,gsc:noindex,noindex,2025-09-11,,,,,,,no,,,no-redirect-needed
+/products/giant-reign-e-2-2023,product,Products,gsc:noindex,noindex,2026-01-05,,,,,,,no,,,no-redirect-needed
+/products/giant-reign-e-2-2024,product,Products,gsc:noindex,noindex,2025-11-11,,,,,,,no,,,no-redirect-needed
+/products/giant-reign-e-3-2023,product,Products,gsc:noindex,noindex,2025-11-18,,,,,,,no,,,no-redirect-needed
+/products/giant-stormguard-e-1-2024,product,Products,gsc:noindex,noindex,2025-11-08,,,,,,,no,,,no-redirect-needed
+/products/giant-stormguard-e-3-2024,product,Products,gsc:noindex,noindex,2025-11-06,,,,,,,no,,,no-redirect-needed
+/products/giant-talon-e-3-29er,product,Products,gsc:noindex,noindex,2025-10-16,,,,,,,no,,,no-redirect-needed
+/products/giant-trance-x-advanced-e-0-2022,product,Products,gsc:noindex,noindex,2026-01-11,,,,,,,no,,,no-redirect-needed
+/products/giant-trance-x-advanced-e-elite-0-2024,product,Products,gsc:noindex,noindex,2026-01-06,,,,,,,no,,,no-redirect-needed
+/products/giant-trance-x-advanced-e-elite-1-2024,product,Products,gsc:noindex,noindex,2026-01-04,,,,,,,no,,,no-redirect-needed
+/products/giant-trance-x-advanced-e-elite-2-2024,product,Products,gsc:noindex,noindex,2025-11-11,,,,,,,no,,,no-redirect-needed
+/products/giant-trance-x-advanced-e-elite-3-2024,product,Products,gsc:noindex,noindex,2025-11-04,,,,,,,no,,,no-redirect-needed
+/products/gotrax-apex-pro,product,Products,gsc:noindex,noindex,2025-11-13,,,,,,,no,,,no-redirect-needed
+/products/gotrax-eclipse,product,Products,gsc:noindex,noindex,2026-01-06,,,,,,,no,,,no-redirect-needed
+/products/gotrax-eclipse-ultra,product,Products,gsc:noindex,noindex,2026-01-04,,,,,,,no,,,no-redirect-needed
+/products/gotrax-flex-ultra,product,Products,gsc:noindex,noindex,2026-01-30,,,,,,,no,,,no-redirect-needed
+/products/gotrax-g3-max,product,Products,gsc:noindex,noindex,2026-01-03,,,,,,,no,,,no-redirect-needed
+/products/gotrax-g3-plus,product,Products,gsc:noindex,noindex,2026-01-03,,,,,,,no,,,no-redirect-needed
+/products/gotrax-g5,product,Products,gsc:noindex,noindex,2026-02-01,,,,,,,no,,,no-redirect-needed
+/products/gotrax-g6,product,Products,gsc:noindex,noindex,2025-12-27,,,,,,,no,,,no-redirect-needed
+/products/gotrax-gmax,product,Products,gsc:crawled-not-indexed,crawled-not-indexed,2025-09-09,,,,,,,no,,,no-redirect-needed
+/products/gotrax-gmax-ultra,product,Products,gsc:crawled-not-indexed,crawled-not-indexed,2025-10-06,,,,,,,no,,,no-redirect-needed
+/products/gotrax-gx1,product,Products,gsc:noindex,noindex,2026-01-03,,,,,,,no,,,no-redirect-needed
+/products/gotrax-gx2,product,Products,gsc:noindex,noindex,2026-01-04,,,,,,,no,,,no-redirect-needed
+/products/gotrax-gx3,product,Products,gsc:noindex,noindex,2025-11-30,,,,,,,no,,,no-redirect-needed
+/products/gotrax-gxl-v2-2,product,Products,gsc:noindex,noindex,2025-11-21,,,,,,,no,,,no-redirect-needed
+/products/gotrax-xr-elite,product,Products,gsc:noindex,noindex,2026-01-02,,,,,,,no,,,no-redirect-needed
+/products/gotrax-xr-elite-max,product,Products,gsc:noindex,noindex,2026-01-05,,,,,,,no,,,no-redirect-needed
+/products/gotrax-xr-ultra,product,Products,gsc:crawled-not-indexed,crawled-not-indexed,2025-09-04,,,,,,,no,,,no-redirect-needed
+/products/gyroor-h30max,product,Products,gsc:noindex,noindex,2025-11-09,,,,,,,no,,,no-redirect-needed
+/products/gyroor-h40,product,Products,gsc:noindex,noindex,2025-11-16,,,,,,,no,,,no-redirect-needed
+/products/heybike-alpha-so,product,Products,gsc:noindex,noindex,2025-11-17,,,,,,,no,,,no-redirect-needed
+/products/heybike-alpha-st,product,Products,gsc:noindex,noindex,2025-09-10,,,,,,,no,,,no-redirect-needed
+/products/heybike-cityrun,product,Products,gsc:noindex,noindex,2026-01-04,,,,,,,no,,,no-redirect-needed
+/products/heybike-horizon,product,Products,gsc:noindex,noindex,2025-09-10,,,,,,,no,,,no-redirect-needed
+/products/heybike-horizon/feed,product,Products,gsc:blocked-robots,blocked-robots,2025-09-22,,,,,,,no,,,no-redirect-needed
+/products/heybike-mars-2-0-1000w,product,Products,gsc:noindex,noindex,2025-09-11,,,,,,,no,,,no-redirect-needed
+/products/heybike-mars-2-0-750w,product,Products,gsc:noindex,noindex,2025-11-11,,,,,,,no,,,no-redirect-needed
+/products/heybike-mars-3-0,product,Products,gsc:noindex,noindex,2025-09-10,,,,,,,no,,,no-redirect-needed
+/products/heybike-ranger-s-1000w,product,Products,gsc:noindex,noindex,2025-09-10,,,,,,,no,,,no-redirect-needed
+/products/heybike-ranger-s-750w,product,Products,gsc:noindex,noindex,2025-11-26,,,,,,,no,,,no-redirect-needed
+/products/hiboy-max-pro,product,Products,gsc:crawled-not-indexed,crawled-not-indexed,2025-09-12,,,,,,,no,,,no-redirect-needed
+/products/hiboy-s2,product,Products,gsc:noindex,noindex,2026-01-29,,,,,,,no,,,no-redirect-needed
+/products/hiboy-s2-lite,product,Products,gsc:crawled-not-indexed,crawled-not-indexed,2025-10-08,,,,,,,no,,,no-redirect-needed
+/products/hiboy-s2-lite/opt,product,Products,gsc:redirect,redirect,2025-05-05,,,,,,,no,,Product URL with /OPT/ suffix (likely Oxygen),no-redirect-needed
+/products/hiboy-s2-pro,product,Products,gsc:noindex,noindex,2025-12-05,,,,,,,no,,,no-redirect-needed
+/products/hiboy-s2r-plus,product,Products,gsc:noindex,noindex,2025-11-06,,,,,,,no,,,no-redirect-needed
+/products/hiley-maxspeed-x9,product,Products,gsc:crawled-not-indexed,crawled-not-indexed,2025-10-07,,,,,,,no,,,no-redirect-needed
+/products/hiley-tiger-t10-pro-52v,product,Products,gsc:noindex,noindex,2025-12-08,,,,,,,no,,,no-redirect-needed
+/products/hiley-tiger-t10-pro-60v,product,Products,gsc:noindex,noindex,2026-01-04,,,,,,,no,,,no-redirect-needed
+/products/hiley-tiger-t10-pro-60v/opt,product,Products,gsc:redirect,redirect,2024-12-16,,,,,,,no,,Product URL with /OPT/ suffix (likely Oxygen),no-redirect-needed
+/products/hiley-tiger-tmax,product,Products,gsc:noindex,noindex,2025-12-05,,,,,,,no,,,no-redirect-needed
+/products/hiley-tiger-tmax/feed,product,Products,gsc:blocked-robots,blocked-robots,2025-12-05,,,,,,,no,,,no-redirect-needed
+/products/hooga-daytona,product,Products,gsc:noindex,noindex,2025-12-11,,,,,,,no,,,no-redirect-needed
+/products/hover-1-ace-r350,product,Products,gsc:noindex,noindex,2025-11-04,,,,,,,no,,,no-redirect-needed
+/products/hover-1-journey-2-0,product,Products,gsc:noindex,noindex,2026-01-02,,,,,,,no,,,no-redirect-needed
+/products/hover-1-journey-max,product,Products,gsc:noindex,noindex,2026-01-30,,,,,,,no,,,no-redirect-needed
+/products/hover-1-journey-max/feed,product,Products,gsc:blocked-robots,blocked-robots,2026-02-03,,,,,,,no,,,no-redirect-needed
+/products/inmotion-climber,product,Products,gsc:noindex,noindex,2025-12-03,,,,,,,no,,,no-redirect-needed
+/products/inmotion-rs,product,Products,gsc:noindex,noindex,2025-11-02,,,,,,,no,,,no-redirect-needed
+/products/inmotion-rs-jet,product,Products,gsc:crawled-not-indexed,crawled-not-indexed,2025-09-08,,,,,,,no,,,no-redirect-needed
+/products/inmotion-rs-jet/feed,product,Products,gsc:blocked-robots,blocked-robots,2025-10-09,,,,,,,no,,,no-redirect-needed
+/products/inmotion-rs-lite,product,Products,gsc:noindex,noindex,2025-11-20,,,,,,,no,,,no-redirect-needed
+/products/inmotion-rs-midnight-lite,product,Products,gsc:noindex,noindex,2025-11-21,,,,,,,no,,,no-redirect-needed
+/products/inmotion-s1f,product,Products,gsc:noindex,noindex,2026-01-26,,,,,,,no,,,no-redirect-needed
+/products/inokim-quick-4-super,product,Products,gsc:noindex,noindex,2026-01-04,,,,,,,no,,,no-redirect-needed
+/products/jasion-eb5-roamer,product,Products,gsc:noindex,noindex,2025-11-03,,,,,,,no,,,no-redirect-needed
+/products/jasion-eb5-roamer-st,product,Products,gsc:noindex,noindex,2025-11-16,,,,,,,no,,,no-redirect-needed
+/products/jasion-eb7-2-0,product,Products,gsc:noindex,noindex,2025-11-11,,,,,,,no,,,no-redirect-needed
+/products/jasion-hunter-pro,product,Products,gsc:noindex,noindex,2026-01-06,,,,,,,no,,,no-redirect-needed
+/products/jasion-retrovolt-pro,product,Products,gsc:noindex,noindex,2026-01-19,,,,,,,no,,,no-redirect-needed
+/products/jasion-retrovolt-yr20,product,Products,gsc:noindex,noindex,2025-12-27,,,,,,,no,,,no-redirect-needed
+/products/jasion-thunder,product,Products,gsc:noindex,noindex,2025-12-28,,,,,,,no,,,no-redirect-needed
+/products/kaabo-king-gt-pro,product,Products,gsc:crawled-not-indexed,crawled-not-indexed,2025-09-06,,,,,,,no,,,no-redirect-needed
+/products/kaabo-king-gtr,product,Products,gsc:noindex,noindex,2026-01-27,,,,,,,no,,,no-redirect-needed
+/products/kaabo-mantis-king-gt,product,Products,gsc:crawled-not-indexed,crawled-not-indexed,2025-10-10,,,,,,,no,,,no-redirect-needed
+/products/kaabo-mantis-king-gt-2,product,Products,gsc:noindex,noindex,2025-11-04,,,,,,,no,,,no-redirect-needed
+/products/kaabo-mantis-v2-24-5ah,product,Products,gsc:404,404,2025-09-03,,,,,,,no,,,mapped
+/products/kaabo-urban,product,Products,gsc:noindex,noindex,2025-11-04,,,,,,,no,,,no-redirect-needed
+/products/kaabo-warrior-11-pro,product,Products,gsc:noindex,noindex,2025-11-05,,,,,,,no,,,no-redirect-needed
+/products/kaabo-warrior-x-max,product,Products,gsc:noindex,noindex,2025-09-05,,,,,,,no,,,no-redirect-needed
+/products/kaabo-wolf-king-gt-pro,product,Products,rankmath-redirect-source,,,yes,301,http://eridehero.com/products/kaabo-king-gt-pro/,,,,no,,,mapped
+/products/kaabo-wolf-king-gtr,product,Products,rankmath-redirect-source,,,yes,301,http://eridehero.com/products/kaabo-king-gtr/,,,,no,,,mapped
+/products/kugoo-g2-master/chrome,product,Products,gsc:404,404,2025-12-23,,,,,,,no,,Product URL with /chrome/ suffix (bot/junk),no-redirect-needed
+/products/kugoo-g2-master/crios,product,Products,gsc:404,404,2025-12-03,,,,,,,no,,Product URL with /crios/ suffix (bot/junk),no-redirect-needed
+/products/kugoo-g2-master/edge,product,Products,gsc:404,404,2025-12-05,,,,,,,no,,Product URL with /edge/ suffix (bot/junk),mapped
+/products/kugoo-g2-master/feed,product,Products,gsc:blocked-robots,blocked-robots,2025-09-03,,,,,,,no,,,no-redirect-needed
+/products/kugoo-g2-master/firefox,product,Products,gsc:404,404,2025-11-28,,,,,,,no,,Product URL with /firefox/ suffix (bot/junk),no-redirect-needed
+/products/kugoo-g3,product,Products,gsc:noindex,noindex,2026-01-26,,,,,,,no,,,no-redirect-needed
+/products/kugoo-g3/opt,product,Products,gsc:redirect,redirect,2025-12-23,,,,,,,no,,Product URL with /OPT/ suffix (likely Oxygen),no-redirect-needed
+/products/lectric-one,product,Products,gsc:noindex,noindex,2026-01-09,,,,,,,no,,,no-redirect-needed
+/products/lectric-xp4-750-so,product,Products,gsc:noindex,noindex,2025-11-26,,,,,,,no,,,no-redirect-needed
+/products/lectric-xp4-750-st,product,Products,gsc:noindex,noindex,2026-01-28,,,,,,,no,,,no-redirect-needed
+/products/lectric-xp4-750-st/feed,product,Products,gsc:blocked-robots,blocked-robots,2026-02-03,,,,,,,no,,,no-redirect-needed
+/products/lectric-xp4-so,product,Products,gsc:noindex,noindex,2025-09-11,,,,,,,no,,,no-redirect-needed
+/products/lectric-xp4-st,product,Products,gsc:noindex,noindex,2025-09-11,,,,,,,no,,,no-redirect-needed
+/products/lectric-xpeak2-750-so,product,Products,gsc:crawled-not-indexed,crawled-not-indexed,2025-10-07,,,,,,,no,,,no-redirect-needed
+/products/lectric-xpeak2-750-st,product,Products,gsc:noindex,noindex,2025-09-10,,,,,,,no,,,no-redirect-needed
+/products/lectric-xpeak2-so,product,Products,gsc:noindex,noindex,2025-09-11,,,,,,,no,,,no-redirect-needed
+/products/lectric-xpeak2-st,product,Products,gsc:noindex,noindex,2025-11-17,,,,,,,no,,,no-redirect-needed
+/products/lectric-xpeak2-st/feed,product,Products,gsc:blocked-robots,blocked-robots,2025-11-24,,,,,,,no,,,no-redirect-needed
+/products/lectric-xpedition2,product,Products,gsc:noindex,noindex,2025-11-11,,,,,,,no,,,no-redirect-needed
+/products/lectric-xpedition2-dual,product,Products,gsc:noindex,noindex,2026-01-31,,,,,,,no,,,no-redirect-needed
+/products/lectric-xpedition2-dual-lr,product,Products,gsc:noindex,noindex,2025-10-18,,,,,,,no,,,no-redirect-needed
+/products/lectric-xpress-750-so,product,Products,gsc:noindex,noindex,2025-09-10,,,,,,,no,,,no-redirect-needed
+/products/lectric-xpress-750-st,product,Products,gsc:noindex,noindex,2025-09-12,,,,,,,no,,,no-redirect-needed
+/products/lectric-xpress-so,product,Products,gsc:noindex,noindex,2025-09-11,,,,,,,no,,,no-redirect-needed
+/products/lectric-xpress-st,product,Products,gsc:noindex,noindex,2025-09-19,,,,,,,no,,,no-redirect-needed
+/products/maxfind-glider-g5,product,Products,gsc:noindex,noindex,2026-01-02,,,,,,,no,,,no-redirect-needed
+/products/megawheels-a6l-eco,product,Products,gsc:noindex,noindex,2026-01-26,,,,,,,no,,,no-redirect-needed
+/products/megawheels-s10bk-7-5ah-2,product,Products,gsc:noindex,noindex,2026-01-05,,,,,,,no,,,no-redirect-needed
+/products/megawheels-s1s/opt,product,Products,gsc:redirect,redirect,2025-06-22,,,,,,,no,,Product URL with /OPT/ suffix (likely Oxygen),no-redirect-needed
+/products/mercane-jubel,product,Products,gsc:noindex,noindex,2026-01-05,,,,,,,no,,,no-redirect-needed
+/products/mercane-widewheel-pro-2020,product,Products,gsc:noindex,noindex,2025-11-13,,,,,,,no,,,no-redirect-needed
+/products/mokwheel-asphalt,product,Products,gsc:noindex,noindex,2025-11-03,,,,,,,no,,,no-redirect-needed
+/products/mokwheel-basalt,product,Products,gsc:noindex,noindex,2025-12-03,,,,,,,no,,,no-redirect-needed
+/products/mokwheel-basalt-2-0,product,Products,gsc:noindex,noindex,2025-09-11,,,,,,,no,,,no-redirect-needed
+/products/mokwheel-basalt-2-0-st,product,Products,gsc:noindex,noindex,2025-10-21,,,,,,,no,,,no-redirect-needed
+/products/mokwheel-basalt-2-0/feed,product,Products,gsc:blocked-robots,blocked-robots,2025-09-17,,,,,,,no,,,no-redirect-needed
+/products/mokwheel-basalt-st,product,Products,gsc:noindex,noindex,2025-09-11,,,,,,,no,,,no-redirect-needed
+/products/mokwheel-basalt-st/feed,product,Products,gsc:blocked-robots,blocked-robots,2025-09-11,,,,,,,no,,,no-redirect-needed
+/products/mokwheel-basalt/feed,product,Products,gsc:blocked-robots,blocked-robots,2025-12-07,,,,,,,no,,,no-redirect-needed
+/products/mokwheel-mesa-lite,product,Products,gsc:noindex,noindex,2025-09-11,,,,,,,no,,,no-redirect-needed
+/products/mokwheel-mesa-lite-st,product,Products,gsc:noindex,noindex,2025-09-11,,,,,,,no,,,no-redirect-needed
+/products/mokwheel-obsidian-2-0,product,Products,gsc:noindex,noindex,2025-09-11,,,,,,,no,,,no-redirect-needed
+/products/mokwheel-obsidian-st-2-0,product,Products,gsc:noindex,noindex,2025-09-11,,,,,,,no,,,no-redirect-needed
+/products/mokwheel-obsidian-st-2-0/feed,product,Products,gsc:blocked-robots,blocked-robots,2025-10-31,,,,,,,no,,,no-redirect-needed
+/products/mokwheel-onyx,product,Products,gsc:crawled-not-indexed,crawled-not-indexed,2025-09-13,,,,,,,no,,,no-redirect-needed
+/products/mokwheel-onyx-st,product,Products,gsc:crawled-not-indexed,crawled-not-indexed,2025-10-08,,,,,,,no,,,no-redirect-needed
+/products/mokwheel-scoria,product,Products,gsc:noindex,noindex,2025-09-11,,,,,,,no,,,no-redirect-needed
+/products/mokwheel-slate,product,Products,gsc:noindex,noindex,2025-09-11,,,,,,,no,,,no-redirect-needed
+/products/mokwheel-slate/feed,product,Products,gsc:blocked-robots,blocked-robots,2025-09-12,,,,,,,no,,,no-redirect-needed
+/products/mokwheel-tarmac,product,Products,gsc:crawled-not-indexed,crawled-not-indexed,2025-09-16,,,,,,,no,,,no-redirect-needed
+/products/mokwheel-tor-plus,product,Products,gsc:noindex,noindex,2025-09-11,,,,,,,no,,,no-redirect-needed
+/products/mokwheel-tor-plus/feed,product,Products,gsc:blocked-robots,blocked-robots,2025-11-01,,,,,,,no,,,no-redirect-needed
+/products/mukuta-0-plus,product,Products,rankmath-redirect-source,,,yes,301,http://eridehero.com/products/mukuta-9-plus/,,,,no,,,mapped
+/products/mukuta-10-plus-20-8ah,product,Products,gsc:noindex,noindex,2026-01-04,,,,,,,no,,,no-redirect-needed
+/products/mukuta-10-plus-25-6ah,product,Products,gsc:crawled-not-indexed,crawled-not-indexed,2025-10-08,,,,,,,no,,,no-redirect-needed
+/products/murf-alpha,product,Products,gsc:noindex,noindex,2025-12-09,,,,,,,no,,,no-redirect-needed
+/products/murf-alpha-cargo,product,Products,gsc:noindex,noindex,2025-09-10,,,,,,,no,,,no-redirect-needed
+/products/murf-alpha-st,product,Products,gsc:crawled-not-indexed,crawled-not-indexed,2025-09-13,,,,,,,no,,,no-redirect-needed
+/products/murf-gigi,product,Products,gsc:noindex,noindex,2025-11-01,,,,,,,no,,,no-redirect-needed
+/products/murf-higgs,product,Products,gsc:noindex,noindex,2025-11-22,,,,,,,no,,,no-redirect-needed
+/products/murf-higgs-cargo,product,Products,gsc:noindex,noindex,2025-11-12,,,,,,,no,,,no-redirect-needed
+/products/murf-higgs-st,product,Products,gsc:noindex,noindex,2025-09-10,,,,,,,no,,,no-redirect-needed
+/products/murf-higgs/feed,product,Products,gsc:blocked-robots,blocked-robots,2025-12-03,,,,,,,no,,,no-redirect-needed
+/products/murf-otis,product,Products,gsc:noindex,noindex,2025-11-23,,,,,,,no,,,no-redirect-needed
+/products/nami-burn-e-2,product,Products,gsc:noindex,noindex,2026-01-05,,,,,,,no,,,no-redirect-needed
+/products/nami-burn-e-2-max,product,Products,gsc:indexed,indexed,2025-12-27,,,,,,,yes,/products/nami-burn-e-2-max,,no-redirect-needed
+/products/nami-klima,product,Products,gsc:crawled-not-indexed,crawled-not-indexed,2025-08-31,,,,,,,no,,,no-redirect-needed
+/products/nami-stellar,product,Products,gsc:noindex,noindex,2025-12-30,,,,,,,no,,,no-redirect-needed
+/products/nami-stellar/feed,product,Products,gsc:blocked-robots,blocked-robots,2026-01-01,,,,,,,no,,,no-redirect-needed
+/products/navee-g5,product,Products,gsc:noindex,noindex,2025-11-18,,,,,,,no,,,no-redirect-needed
+/products/navee-g5-max,product,Products,gsc:noindex,noindex,2025-11-28,,,,,,,no,,,no-redirect-needed
+/products/navee-g5-pro,product,Products,gsc:noindex,noindex,2026-01-26,,,,,,,no,,,no-redirect-needed
+/products/navee-gt3,product,Products,gsc:crawled-not-indexed,crawled-not-indexed,2025-08-24,,,,,,,yes,/products/navee-gt3,,no-redirect-needed
+/products/navee-gt3-max,product,Products,gsc:noindex,noindex,2025-11-05,,,,,,,no,,,no-redirect-needed
+/products/navee-gt3-pro,product,Products,gsc:noindex,noindex,2026-01-30,,,,,,,no,,,no-redirect-needed
+/products/navee-gt3-pro/feed,product,Products,gsc:blocked-robots,blocked-robots,2026-02-02,,,,,,,no,,,no-redirect-needed
+/products/navee-n40,product,Products,gsc:noindex,noindex,2025-11-21,,,,,,,no,,,no-redirect-needed
+/products/navee-n65,product,Products,gsc:noindex,noindex,2025-11-24,,,,,,,no,,,no-redirect-needed
+/products/navee-n65/opt,product,Products,gsc:redirect,redirect,2026-01-01,,,,,,,no,,Product URL with /OPT/ suffix (likely Oxygen),no-redirect-needed
+/products/navee-s65,product,Products,gsc:crawled-not-indexed,crawled-not-indexed,2025-10-10,,,,,,,no,,,no-redirect-needed
+/products/navee-st3-pro,product,Products,gsc:indexed,indexed,2026-01-03,,,,,,,yes,/products/navee-st3-pro,,no-redirect-needed
+/products/navee-v25,product,Products,gsc:noindex,noindex,2025-12-27,,,,,,,no,,,no-redirect-needed
+/products/navee-v25/feed,product,Products,gsc:blocked-robots,blocked-robots,2025-12-27,,,,,,,no,,,no-redirect-needed
+/products/navee-xt5-pro,product,Products,gsc:noindex,noindex,2025-12-05,,,,,,,no,,,no-redirect-needed
+/products/niu-bqi-c3-pro,product,Products,gsc:noindex,noindex,2026-01-30,,,,,,,no,,,no-redirect-needed
+/products/niu-bqi-fat-tire-300-so,product,Products,gsc:noindex,noindex,2026-01-06,,,,,,,no,,,no-redirect-needed
+/products/niu-bqi-fat-tire-300-so/feed,product,Products,gsc:blocked-robots,blocked-robots,2026-02-13,,,,,,,no,,,no-redirect-needed
+/products/niu-bqi-fat-tire-300-st,product,Products,gsc:noindex,noindex,2026-01-06,,,,,,,no,,,no-redirect-needed
+/products/niu-kqi-100f,product,Products,gsc:discovered-not-indexed,discovered-not-indexed,1970-01-01,,,,,,,yes,/products/niu-kqi-100f,,no-redirect-needed
+/products/niu-kqi-100p,product,Products,gsc:indexed,indexed,2026-01-26,,,,,,,yes,/products/niu-kqi-100p,,no-redirect-needed
+/products/niu-kqi-200p,product,Products,gsc:noindex,noindex,2025-10-30,,,,,,,no,,,no-redirect-needed
+/products/niu-kqi-3-pro,product,Products,gsc:indexed,indexed,2026-02-12,,,,,,,yes,/products/niu-kqi-3-pro,,no-redirect-needed
+/products/niu-kqi-3-sport,product,Products,rankmath-redirect-source,,,yes,301,http://eridehero.com/products/niu-kqi3-sport/,,,,no,,,mapped
+/products/niu-kqi-300p,product,Products,gsc:noindex,noindex,2026-01-30,,,,,,,no,,,no-redirect-needed
+/products/niu-kqi-300x,product,Products,gsc:indexed,indexed,2026-02-15,,,,,,,yes,/products/niu-kqi-300x,,no-redirect-needed
+/products/niu-kqi-air,product,Products,gsc:indexed,indexed,2026-02-14,,,,,,,yes,/products/niu-kqi-air,,no-redirect-needed
+/products/niu-kqi-air-x,product,Products,gsc:noindex,noindex,2026-01-06,,,,,,,no,,,no-redirect-needed
+/products/niu-kqi-youth,product,Products,gsc:noindex,noindex,2025-10-31,,,,,,,no,,,no-redirect-needed
+/products/niu-kqi1-pro,product,Products,gsc:crawled-not-indexed,crawled-not-indexed,2025-10-07,,,,,,,no,,,no-redirect-needed
+/products/niu-kqi1-pro/opt,product,Products,gsc:redirect,redirect,2025-04-20,,,,,,,no,,Product URL with /OPT/ suffix (likely Oxygen),no-redirect-needed
+/products/niu-kqi2-pro,product,Products,gsc:indexed,indexed,2026-02-08,,,,,,,yes,/products/niu-kqi2-pro,,no-redirect-needed
+/products/niu-kqi3-max,product,Products,gsc:noindex,noindex,2026-01-28,,,,,,,no,,,no-redirect-needed
+/products/okai-neon-pro-es30,product,Products,gsc:noindex,noindex,2025-12-03,,,,,,,no,,,no-redirect-needed
+/products/okai-neon-ultra-es40,product,Products,gsc:noindex,noindex,2025-12-04,,,,,,,no,,,no-redirect-needed
+/products/okai-panther-es800/firefox,product,Products,gsc:404,404,2025-09-23,,,,,,,no,,Product URL with /firefox/ suffix (bot/junk),no-redirect-needed
+/products/okai-panther-es800/version,product,Products,gsc:404,404,2025-12-23,,,,,,,no,,Product URL with /version/ suffix (bot/junk),no-redirect-needed
+/products/philodo-falcon-so,product,Products,gsc:noindex,noindex,2025-09-10,,,,,,,no,,,no-redirect-needed
+/products/philodo-falcon-so/feed,product,Products,gsc:blocked-robots,blocked-robots,2025-10-05,,,,,,,no,,,no-redirect-needed
+/products/philodo-falcon-st,product,Products,gsc:noindex,noindex,2025-09-10,,,,,,,no,,,no-redirect-needed
+/products/philodo-forester,product,Products,gsc:noindex,noindex,2025-09-09,,,,,,,no,,,no-redirect-needed
+/products/philodo-h8-60v,product,Products,gsc:noindex,noindex,2025-09-10,,,,,,,no,,,no-redirect-needed
+/products/philodo-hunter,product,Products,gsc:noindex,noindex,2025-09-10,,,,,,,no,,,no-redirect-needed
+/products/propel-endeavor2-pro/opr,product,Products,gsc:404,404,2025-08-21,,,,,,,no,,Product URL with /opr/ suffix (bot/junk),no-redirect-needed
+/products/propel-endeavor2-pro/opt,product,Products,gsc:redirect,redirect,2025-08-12,,,,,,,no,,Product URL with /OPT/ suffix (likely Oxygen),no-redirect-needed
+/products/propel-endeavor2-pro/version,product,Products,gsc:404,404,2025-08-27,,,,,,,no,,Product URL with /version/ suffix (bot/junk),no-redirect-needed
+/products/rad-power-bikes-radexpand-5,product,Products,gsc:crawled-not-indexed,crawled-not-indexed,2025-09-11,,,,,,,no,,,no-redirect-needed
+/products/rad-power-bikes-radexpand-5-plus,product,Products,gsc:crawled-not-indexed,crawled-not-indexed,2025-09-10,,,,,,,no,,,no-redirect-needed
+/products/rad-power-bikes-radexpand-5-plus/feed,product,Products,gsc:blocked-robots,blocked-robots,2025-12-02,,,,,,,no,,,no-redirect-needed
+/products/rad-power-bikes-radkick-7-speed,product,Products,gsc:noindex,noindex,2025-11-11,,,,,,,no,,,no-redirect-needed
+/products/rad-power-bikes-radkick-7-speed/feed,product,Products,gsc:blocked-robots,blocked-robots,2025-11-12,,,,,,,no,,,no-redirect-needed
+/products/rad-power-bikes-radkick-belt,product,Products,gsc:noindex,noindex,2025-09-11,,,,,,,no,,,no-redirect-needed
+/products/rad-power-bikes-radrover-6-plus,product,Products,gsc:noindex,noindex,2025-11-25,,,,,,,no,,,no-redirect-needed
+/products/rad-power-bikes-radrunner,product,Products,gsc:noindex,noindex,2025-12-07,,,,,,,no,,,no-redirect-needed
+/products/rad-power-bikes-radrunner-max,product,Products,gsc:noindex,noindex,2025-11-09,,,,,,,no,,,no-redirect-needed
+/products/rad-power-bikes-radrunner-plus,product,Products,gsc:noindex,noindex,2025-11-29,,,,,,,no,,,no-redirect-needed
+/products/rad-power-bikes-radrunner/feed,product,Products,gsc:blocked-robots,blocked-robots,2025-12-08,,,,,,,no,,,no-redirect-needed
+/products/rad-power-bikes-radster-road,product,Products,gsc:noindex,noindex,2025-11-26,,,,,,,no,,,no-redirect-needed
+/products/rad-power-bikes-radster-trail,product,Products,gsc:crawled-not-indexed,crawled-not-indexed,2025-09-17,,,,,,,no,,,no-redirect-needed
+/products/rad-power-bikes-radwagon-4,product,Products,gsc:noindex,noindex,2026-02-02,,,,,,,no,,,no-redirect-needed
+/products/rad-power-bikes-radwagon-5,product,Products,gsc:noindex,noindex,2025-10-19,,,,,,,no,,,no-redirect-needed
+/products/ride1up-cf-racer1,product,Products,gsc:noindex,noindex,2025-09-11,,,,,,,no,,,no-redirect-needed
+/products/ride1up-portola-10-4ah,product,Products,gsc:crawled-not-indexed,crawled-not-indexed,2025-09-11,,,,,,,no,,,no-redirect-needed
+/products/ride1up-portola-10-4ah/feed,product,Products,gsc:blocked-robots,blocked-robots,2025-09-11,,,,,,,no,,,no-redirect-needed
+/products/ride1up-prodigy-v2-st-belt-cvt,product,Products,gsc:crawled-not-indexed,crawled-not-indexed,2025-10-02,,,,,,,no,,,no-redirect-needed
+/products/ride1up-prodigy-v2-st-chain,product,Products,gsc:noindex,noindex,2025-09-11,,,,,,,no,,,no-redirect-needed
+/products/ride1up-prodigy-v2-st-chain/feed,product,Products,gsc:blocked-robots,blocked-robots,2025-09-17,,,,,,,no,,,no-redirect-needed
+/products/ride1up-prodigy-v2-xr-belt-cvt,product,Products,gsc:noindex,noindex,2025-09-11,,,,,,,no,,,no-redirect-needed
+/products/ride1up-prodigy-v2-xr-belt-cvt/feed,product,Products,gsc:blocked-robots,blocked-robots,2025-09-11,,,,,,,no,,,no-redirect-needed
+/products/ride1up-prodigy-v2-xr-chain,product,Products,gsc:noindex,noindex,2025-09-11,,,,,,,no,,,no-redirect-needed
+/products/ride1up-prodigy-v2-xr-chain/feed,product,Products,gsc:blocked-robots,blocked-robots,2025-10-11,,,,,,,no,,,no-redirect-needed
+/products/ride1up-roadster-v3-belt,product,Products,gsc:noindex,noindex,2025-11-12,,,,,,,no,,,no-redirect-needed
+/products/ride1up-roadster-v3-chain,product,Products,gsc:noindex,noindex,2025-11-13,,,,,,,no,,,no-redirect-needed
+/products/ride1up-roadster-v3-low-step-belt,product,Products,gsc:noindex,noindex,2025-11-13,,,,,,,no,,,no-redirect-needed
+/products/ride1up-roadster-v3-low-step-chain,product,Products,gsc:noindex,noindex,2025-11-12,,,,,,,no,,,no-redirect-needed
+/products/ride1up-trailrush,product,Products,gsc:crawled-not-indexed,crawled-not-indexed,2025-09-11,,,,,,,no,,,no-redirect-needed
+/products/ride1up-vorsa-xr,product,Products,gsc:noindex,noindex,2025-12-12,,,,,,,no,,,no-redirect-needed
+/products/roadrunner-rs5-max,product,Products,gsc:noindex,noindex,2026-01-31,,,,,,,no,,,no-redirect-needed
+/products/roadrunner-rs5-max/feed,product,Products,gsc:blocked-robots,blocked-robots,2026-02-03,,,,,,,no,,,no-redirect-needed
+/products/roadrunner-rs6-ultra,product,Products,gsc:crawled-not-indexed,crawled-not-indexed,2025-09-06,,,,,,,no,,,no-redirect-needed
+/products/roadrunner-rs6-ultra/feed,product,Products,gsc:blocked-robots,blocked-robots,2025-10-03,,,,,,,no,,,no-redirect-needed
+/products/roadrunner-rx7,product,Products,gsc:noindex,noindex,2026-02-02,,,,,,,no,,,no-redirect-needed
+/products/roadrunner-rx7/feed,product,Products,gsc:blocked-robots,blocked-robots,2026-02-09,,,,,,,no,,,no-redirect-needed
+/products/rossignol-e-track-29-cues,product,Products,gsc:noindex,noindex,2025-12-10,,,,,,,no,,,no-redirect-needed
+/products/santa-cruz-heckler-sl-70-2026,product,Products,gsc:noindex,noindex,2025-11-11,,,,,,,no,,,no-redirect-needed
+/products/santa-cruz-heckler-sl-90-2026,product,Products,gsc:noindex,noindex,2025-11-11,,,,,,,no,,,no-redirect-needed
+/products/santa-cruz-heckler-sl-gx-axs-2026,product,Products,gsc:noindex,noindex,2026-01-12,,,,,,,no,,,no-redirect-needed
+/products/santa-cruz-heckler-sl-gx-axs-2026/feed,product,Products,gsc:blocked-robots,blocked-robots,2026-01-14,,,,,,,no,,,no-redirect-needed
+/products/santa-cruz-heckler-sl-r-2025,product,Products,gsc:noindex,noindex,2025-12-27,,,,,,,no,,,no-redirect-needed
+/products/santa-cruz-heckler-sl-s-2025,product,Products,gsc:noindex,noindex,2026-01-05,,,,,,,no,,,no-redirect-needed
+/products/santa-cruz-heckler-sl-s-2025/feed,product,Products,gsc:blocked-robots,blocked-robots,2026-01-15,,,,,,,no,,,no-redirect-needed
+/products/santa-cruz-heckler-sl-stout-2025,product,Products,gsc:noindex,noindex,2025-11-11,,,,,,,no,,,no-redirect-needed
+/products/santa-cruz-heckler-sl-stout-2026,product,Products,gsc:noindex,noindex,2025-11-09,,,,,,,no,,,no-redirect-needed
+/products/santa-cruz-heckler-sl-x0-axs-rsv-2025,product,Products,gsc:noindex,noindex,2026-01-05,,,,,,,no,,,no-redirect-needed
+/products/scott-lumen-905,product,Products,gsc:noindex,noindex,2025-11-07,,,,,,,no,,,no-redirect-needed
+/products/scott-lumen-920,product,Products,gsc:noindex,noindex,2025-11-04,,,,,,,no,,,no-redirect-needed
+/products/scott-lumen-920/feed,product,Products,gsc:blocked-robots,blocked-robots,2025-11-11,,,,,,,no,,,no-redirect-needed
+/products/scott-ransom-eride-920,product,Products,gsc:noindex,noindex,2026-01-12,,,,,,,no,,,no-redirect-needed
+/products/scott-ransom-eride-920/feed,product,Products,gsc:blocked-robots,blocked-robots,2026-01-14,,,,,,,no,,,no-redirect-needed
+/products/scott-silence-eride-20-men-speed,product,Products,gsc:noindex,noindex,2026-01-19,,,,,,,no,,,no-redirect-needed
+/products/scott-silence-eride-20-men-speed/feed,product,Products,gsc:blocked-robots,blocked-robots,2026-01-20,,,,,,,no,,,no-redirect-needed
+/products/scott-silence-eride-evo-speed,product,Products,gsc:noindex,noindex,2026-01-30,,,,,,,no,,,no-redirect-needed
+/products/scott-voltage-eride-900-tuned,product,Products,gsc:noindex,noindex,2025-12-27,,,,,,,no,,,no-redirect-needed
+/products/scott-voltage-eride-910,product,Products,gsc:noindex,noindex,2025-11-03,,,,,,,no,,,no-redirect-needed
+/products/scott-voltage-eride-910/feed,product,Products,gsc:blocked-robots,blocked-robots,2025-11-06,,,,,,,no,,,no-redirect-needed
+/products/scott-voltage-eride-920,product,Products,gsc:noindex,noindex,2025-11-14,,,,,,,no,,,no-redirect-needed
+/products/segway-gt2,product,Products,gsc:noindex,noindex,2025-11-29,,,,,,,no,,,no-redirect-needed
+/products/segway-gt3-pro,product,Products,gsc:noindex,noindex,2025-09-06,,,,,,,yes,/products/segway-gt3-pro,,no-redirect-needed
+/products/segway-ninebot-d28u,product,Products,gsc:noindex,noindex,2026-01-04,,,,,,,no,,,no-redirect-needed
+/products/segway-ninebot-e2-plus-ii,product,Products,gsc:crawled-not-indexed,crawled-not-indexed,2025-10-09,,,,,,,no,,,no-redirect-needed
+/products/segway-ninebot-e2-pro,product,Products,gsc:noindex,noindex,2026-01-04,,,,,,,no,,,no-redirect-needed
+/products/segway-ninebot-e3-pro,product,Products,gsc:noindex,noindex,2025-10-30,,,,,,,no,,,no-redirect-needed
+/products/segway-ninebot-f25,product,Products,gsc:noindex,noindex,2026-01-02,,,,,,,no,,,no-redirect-needed
+/products/segway-ninebot-f3,product,Products,gsc:discovered-not-indexed,discovered-not-indexed,1970-01-01,,,,,,,yes,/products/segway-ninebot-f3,,no-redirect-needed
+/products/segway-ninebot-f35,product,Products,gsc:noindex,noindex,2026-01-04,,,,,,,no,,,no-redirect-needed
+/products/segway-ninebot-max,product,Products,gsc:noindex,noindex,2026-01-27,,,,,,,no,,,no-redirect-needed
+/products/segway-ninebot-max-g2,product,Products,gsc:indexed,indexed,2026-02-17,,,,,,,yes,/products/segway-ninebot-max-g2,,no-redirect-needed
+/products/segway-ninebot-max-g3,product,Products,gsc:indexed,indexed,2026-02-15,,,,,,,yes,/products/segway-ninebot-max-g3,,no-redirect-needed
+/products/segway-ninebot-max-g30lp,product,Products,gsc:noindex,noindex,2025-10-29,,,,,,,no,,,no-redirect-needed
+/products/segway-ninebot-zing-c8,product,Products,gsc:noindex,noindex,2025-12-06,,,,,,,no,,,no-redirect-needed
+/products/segway-ninebot-zing-c9,product,Products,gsc:noindex,noindex,2025-12-07,,,,,,,no,,,no-redirect-needed
+/products/segway-ninebot-zing-c9/opr,product,Products,gsc:404,404,2025-09-25,,,,,,,no,,Product URL with /opr/ suffix (bot/junk),no-redirect-needed
+/products/segway-ninebot-zing-e8/opt,product,Products,gsc:redirect,redirect,2025-07-17,,,,,,,no,,Product URL with /OPT/ suffix (likely Oxygen),no-redirect-needed
+/products/segway-xafari,product,Products,gsc:noindex,noindex,2026-01-03,,,,,,,no,,,no-redirect-needed
+/products/segway-zt3,product,Products,gsc:indexed,indexed,2025-12-27,,,,,,,yes,/products/segway-zt3,,no-redirect-needed
+/products/splach-titan,product,Products,gsc:noindex,noindex,2026-01-04,,,,,,,no,,,no-redirect-needed
+/products/splach-turbo,product,Products,gsc:noindex,noindex,2025-12-27,,,,,,,no,,,no-redirect-needed
+/products/splach-twin,product,Products,gsc:noindex,noindex,2025-11-27,,,,,,,no,,,no-redirect-needed
+/products/splach-twin-plus,product,Products,gsc:crawled-not-indexed,crawled-not-indexed,2025-09-29,,,,,,,no,,,no-redirect-needed
+/products/teewing-gt4,product,Products,gsc:crawled-not-indexed,crawled-not-indexed,2025-09-10,,,,,,,no,,,no-redirect-needed
+/products/teewing-mars,product,Products,gsc:noindex,noindex,2025-12-22,,,,,,,no,,,no-redirect-needed
+/products/teewing-mars-xt,product,Products,gsc:noindex,noindex,2025-09-07,,,,,,,no,,,no-redirect-needed
+/products/teewing-mars-xtr,product,Products,gsc:crawled-not-indexed,crawled-not-indexed,2025-09-06,,,,,,,no,,,no-redirect-needed
+/products/teewing-x3,product,Products,gsc:noindex,noindex,2025-08-31,,,,,,,no,,,no-redirect-needed
+/products/teewing-x4,product,Products,gsc:noindex,noindex,2025-08-31,,,,,,,no,,,no-redirect-needed
+/products/teewing-x4/feed,product,Products,gsc:blocked-robots,blocked-robots,2025-08-31,,,,,,,no,,,no-redirect-needed
+/products/teewing-x5,product,Products,gsc:crawled-not-indexed,crawled-not-indexed,2025-08-31,,,,,,,no,,,no-redirect-needed
+/products/teewing-z4-pro,product,Products,gsc:noindex,noindex,2025-08-31,,,,,,,no,,,no-redirect-needed
+/products/tenways-ago-t,product,Products,gsc:noindex,noindex,2025-10-11,,,,,,,no,,,no-redirect-needed
+/products/tenways-ago-x,product,Products,gsc:noindex,noindex,2025-09-10,,,,,,,no,,,no-redirect-needed
+/products/tenways-cargo-one,product,Products,gsc:noindex,noindex,2025-12-08,,,,,,,no,,,no-redirect-needed
+/products/tenways-cgo600-pro,product,Products,gsc:noindex,noindex,2025-11-21,,,,,,,no,,,no-redirect-needed
+/products/tenways-cgo600-pro-c,product,Products,gsc:noindex,noindex,2025-09-10,,,,,,,no,,,no-redirect-needed
+/products/teverun-fighter-mini-pro,product,Products,gsc:crawled-not-indexed,crawled-not-indexed,2025-10-08,,,,,,,no,,,no-redirect-needed
+/products/turboant-m10-lite,product,Products,gsc:noindex,noindex,2025-11-11,,,,,,,no,,,no-redirect-needed
+/products/turboant-x7-max,product,Products,gsc:noindex,noindex,2026-01-21,,,,,,,no,,,no-redirect-needed
+/products/turboant-x8,product,Products,rankmath-redirect-source,,,yes,301,http://eridehero.com/products/turboant-v8/,,,,no,,,mapped
+/products/unagi-model-one-e500,product,Products,gsc:noindex,noindex,2026-02-01,,,,,,,no,,,no-redirect-needed
+/products/urban,product,Products,rankmath-redirect-source,,,yes,301,http://eridehero.com/products/kaabo-urban/,,,,no,,,mapped
+/products/varla-eagle-one-pro,product,Products,gsc:crawled-not-indexed,crawled-not-indexed,2025-09-07,,,,,,,no,,,no-redirect-needed
+/products/varla-eagle-one-v2-0,product,Products,gsc:noindex,noindex,2025-11-20,,,,,,,no,,,no-redirect-needed
+/products/varla-falcon,product,Products,gsc:noindex,noindex,2025-12-28,,,,,,,no,,,no-redirect-needed
+/products/varla-wasp,product,Products,gsc:noindex,noindex,2025-12-27,,,,,,,no,,,no-redirect-needed
+/products/velowave-brawny-xm,product,Products,gsc:noindex,noindex,2025-11-24,,,,,,,no,,,no-redirect-needed
+/products/velowave-breeze-t,product,Products,gsc:noindex,noindex,2025-09-10,,,,,,,no,,,no-redirect-needed
+/products/velowave-forest-sm,product,Products,gsc:noindex,noindex,2025-09-12,,,,,,,no,,,no-redirect-needed
+/products/velowave-forest-xm,product,Products,gsc:noindex,noindex,2025-11-24,,,,,,,no,,,no-redirect-needed
+/products/velowave-grace-2-0,product,Products,gsc:noindex,noindex,2025-09-10,,,,,,,no,,,no-redirect-needed
+/products/velowave-pony,product,Products,gsc:noindex,noindex,2025-11-26,,,,,,,no,,,no-redirect-needed
+/products/velowave-prado-s,product,Products,gsc:noindex,noindex,2025-09-11,,,,,,,no,,,no-redirect-needed
+/products/velowave-ranger,product,Products,gsc:noindex,noindex,2025-09-10,,,,,,,no,,,no-redirect-needed
+/products/velowave-ranger-2-0,product,Products,gsc:noindex,noindex,2025-11-12,,,,,,,no,,,no-redirect-needed
+/products/velowave-ranger-2-0-st,product,Products,gsc:noindex,noindex,2025-11-23,,,,,,,no,,,no-redirect-needed
+/products/velowave-ranger-2-0/feed,product,Products,gsc:blocked-robots,blocked-robots,2025-11-17,,,,,,,no,,,no-redirect-needed
+/products/velowave-ranger-3-0,product,Products,gsc:noindex,noindex,2025-09-11,,,,,,,no,,,no-redirect-needed
+/products/velowave-ranger-3-0-st,product,Products,gsc:noindex,noindex,2025-09-10,,,,,,,no,,,no-redirect-needed
+/products/velowave-ranger-3-0/feed,product,Products,gsc:blocked-robots,blocked-robots,2025-10-05,,,,,,,no,,,no-redirect-needed
+/products/velowave-rover,product,Products,gsc:crawled-not-indexed,crawled-not-indexed,2025-09-14,,,,,,,no,,,no-redirect-needed
+/products/velowave-rover/feed,product,Products,gsc:blocked-robots,blocked-robots,2025-09-18,,,,,,,no,,,no-redirect-needed
+/products/velowave-swift-m,product,Products,gsc:noindex,noindex,2025-09-10,,,,,,,no,,,no-redirect-needed
+/products/verreal-f1/opr,product,Products,gsc:404,404,2025-12-03,,,,,,,no,,Product URL with /opr/ suffix (bot/junk),no-redirect-needed
+/products/verreal-f1/opt,product,Products,gsc:redirect,redirect,2025-08-08,,,,,,,no,,Product URL with /OPT/ suffix (likely Oxygen),no-redirect-needed
+/products/verreal-f1/webkit,product,Products,gsc:404,404,2025-09-18,,,,,,,no,,Product URL with /webkit/ suffix (bot/junk),no-redirect-needed
+/products/verreal-rs-pro,product,Products,rankmath-redirect-source,,,yes,301,http://eridehero.com/products/verreal-rs-pro-2/,,,,no,,,no-redirect-needed
+/products/verreal-rs/firefox,product,Products,gsc:404,404,2025-10-05,,,,,,,no,,Product URL with /firefox/ suffix (bot/junk),no-redirect-needed
+/products/vmax-vx2-extreme-gt,product,Products,gsc:indexed,indexed,2026-01-01,,,,,,,yes,/products/vmax-vx2-extreme-gt,,no-redirect-needed
+/products/vmax-vx2-extreme-gt/feed,product,Products,gsc:blocked-robots,blocked-robots,2025-12-15,,,,,,,no,,,no-redirect-needed
+/products/vmax-vx2-extreme-lt,product,Products,gsc:noindex,noindex,2025-12-29,,,,,,,no,,,no-redirect-needed
+/products/vmax-vx2-extreme-st,product,Products,gsc:noindex,noindex,2026-02-02,,,,,,,no,,,no-redirect-needed
+/products/vmax-vx2-extreme-st/feed,product,Products,gsc:blocked-robots,blocked-robots,2026-02-13,,,,,,,no,,,no-redirect-needed
+/products/vmax-vx2-gear,product,Products,gsc:noindex,noindex,2025-10-30,,,,,,,no,,,no-redirect-needed
+/products/vmax-vx2-hub-13ah,product,Products,gsc:noindex,noindex,2025-11-19,,,,,,,no,,,no-redirect-needed
+/products/vmax-vx2-hub-18-2ah,product,Products,gsc:crawled-not-indexed,crawled-not-indexed,2025-09-08,,,,,,,yes,/products/vmax-vx2-hub-18-2ah,,no-redirect-needed
+/products/vmax-vx2-pro-gt,product,Products,gsc:noindex,noindex,2026-02-01,,,,,,,no,,,no-redirect-needed
+/products/vmax-vx3-pro-lt/opt,product,Products,gsc:redirect,redirect,2024-10-04,,,,,,,no,,Product URL with /OPT/ suffix (likely Oxygen),no-redirect-needed
+/products/vmax-vx4-lt,product,Products,gsc:noindex,noindex,2025-12-30,,,,,,,no,,,no-redirect-needed
+/products/vmax-vx4-lt/feed,product,Products,gsc:blocked-robots,blocked-robots,2026-01-01,,,,,,,no,,,no-redirect-needed
+/products/vmax-vx4-st,product,Products,gsc:noindex,noindex,2026-01-30,,,,,,,no,,,no-redirect-needed
+/products/vmax-vx5-gt/opt,product,Products,gsc:redirect,redirect,2025-05-01,,,,,,,no,,Product URL with /OPT/ suffix (likely Oxygen),no-redirect-needed
+/products/vmax-vx5-pro-lt/opt,product,Products,gsc:redirect,redirect,2024-10-04,,,,,,,no,,Product URL with /OPT/ suffix (likely Oxygen),no-redirect-needed
+/products/vmax-vx5-pro-st/opt,product,Products,gsc:redirect,redirect,2024-09-25,,,,,,,no,,Product URL with /OPT/ suffix (likely Oxygen),no-redirect-needed
+/products/vmax-vx8,product,Products,gsc:noindex,noindex,2025-12-05,,,,,,,no,,,no-redirect-needed
+/products/vmax-vx8/feed,product,Products,gsc:blocked-robots,blocked-robots,2025-12-11,,,,,,,no,,,no-redirect-needed
+/products/vvolt-centauri-ii,product,Products,gsc:noindex,noindex,2026-01-30,,,,,,,no,,,no-redirect-needed
+/products/vx8,product,Products,rankmath-redirect-source,,,yes,301,http://eridehero.com/products/vmax-vx8/,,,,no,,,mapped
+/products/wired-freedom,product,Products,gsc:noindex,noindex,2026-01-09,,,,,,,no,,,no-redirect-needed
+/products/wired-predator,product,Products,gsc:noindex,noindex,2025-12-27,,,,,,,no,,,no-redirect-needed
+/products/wired-scout,product,Products,gsc:noindex,noindex,2026-01-30,,,,,,,no,,,no-redirect-needed
+/products/wired-scout/feed,product,Products,gsc:blocked-robots,blocked-robots,2026-02-02,,,,,,,no,,,no-redirect-needed
+/products/wired-warrior,product,Products,gsc:noindex,noindex,2026-01-20,,,,,,,no,,,no-redirect-needed
+/products/yume-hawk,product,Products,gsc:noindex,noindex,2025-12-03,,,,,,,no,,,no-redirect-needed
+/products/yume-hawk-pro-22-5ah,product,Products,rankmath-redirect-source,,,yes,301,http://eridehero.com/products/yume-hawk-pro-27ah/,,,,no,,,mapped
+/products/yume-hawk-pro-25ah,product,Products,rankmath-redirect-source,,,yes,301,http://eridehero.com/products/yume-hawk-pro-30ah/,,,,no,,,mapped
+/products/yume-hawk-pro-27ah,product,Products,gsc:crawled-not-indexed,crawled-not-indexed,2025-10-07,,,,,,,no,,,no-redirect-needed
+/products/yume-hawk-pro-27ah/feed,product,Products,gsc:blocked-robots,blocked-robots,2025-10-05,,,,,,,no,,,no-redirect-needed
+/products/yume-hawk-pro-30ah,product,Products,gsc:noindex,noindex,2025-11-13,,,,,,,no,,,no-redirect-needed
+/products/yume-hawk/feed,product,Products,gsc:blocked-robots,blocked-robots,2025-12-09,,,,,,,no,,,no-redirect-needed
+/products/yume-swift/crios,product,Products,gsc:404,404,2025-10-13,,,,,,,no,,Product URL with /crios/ suffix (bot/junk),no-redirect-needed
+/products/yume-swift/firefox,product,Products,gsc:404,404,2025-12-27,,,,,,,no,,Product URL with /firefox/ suffix (bot/junk),no-redirect-needed
+/products/yume-swift/version,product,Products,gsc:404,404,2025-10-17,,,,,,,no,,Product URL with /version/ suffix (bot/junk),no-redirect-needed
+/calibrate-reset-hoverboard/feed,feed,RSS Feeds,gsc:blocked-robots,blocked-robots,2025-11-13,,,,,,,no,,,no-redirect-needed
+/feed,feed,RSS Feeds,gsc:blocked-robots,blocked-robots,2025-09-01,,,,,,,no,,,no-redirect-needed
+/gotrax-hoverfly-eco-hoverboard-review/feed,feed,RSS Feeds,gsc:blocked-robots,blocked-robots,2025-09-06,,,,,,,no,,,no-redirect-needed
+/halo-board-beast-electric-skateboard-review/feed,feed,RSS Feeds,gsc:blocked-robots,blocked-robots,2025-10-30,,,,,,,no,,,no-redirect-needed
+/hover-1-horizon-hoverboard-review/feed,feed,RSS Feeds,gsc:blocked-robots,blocked-robots,2026-02-13,,,,,,,no,,,no-redirect-needed
+/hoverboard-weight-limit/feed,feed,RSS Feeds,gsc:blocked-robots,blocked-robots,2025-10-24,,,,,,,no,,,no-redirect-needed
+/how-does-a-hoverboard-work/feed,feed,RSS Feeds,gsc:blocked-robots,blocked-robots,2025-10-06,,,,,,,no,,,no-redirect-needed
+/how-to-ride-a-hoverboard/feed,feed,RSS Feeds,gsc:blocked-robots,blocked-robots,2025-11-14,,,,,,,no,,,no-redirect-needed
+/kaabo-mantis-pro-electric-scooter-review/feed,feed,RSS Feeds,gsc:blocked-robots,blocked-robots,2025-10-29,,,,,,,no,,,no-redirect-needed
+/navee-gt3-pro-review/feed,feed,RSS Feeds,gsc:blocked-robots,blocked-robots,2025-11-09,,,,,,,no,,,no-redirect-needed
+/navee-st3-pro-review/feed,feed,RSS Feeds,gsc:blocked-robots,blocked-robots,2025-09-07,,,,,,,no,,,no-redirect-needed
+/punk-rider-pro-review/feed,feed,RSS Feeds,gsc:blocked-robots,blocked-robots,2025-11-17,,,,,,,no,,,no-redirect-needed
+/solid-vs-pneumatic-tires-electric-scooters/feed,feed,RSS Feeds,gsc:blocked-robots,blocked-robots,2025-12-04,,,,,,,no,,,no-redirect-needed
+/south-australia-set-to-legalize-private-e-scooters/feed,feed,RSS Feeds,gsc:blocked-robots,blocked-robots,2025-11-06,,,,,,,no,,,no-redirect-needed
+/swagtron-t1-pro-hoverboard-review/feed,feed,RSS Feeds,gsc:blocked-robots,blocked-robots,2025-11-11,,,,,,,no,,,no-redirect-needed
+/swagtron-t5-hoverboard-review/feed,feed,RSS Feeds,gsc:blocked-robots,blocked-robots,2025-11-02,,,,,,,no,,,no-redirect-needed
+/us-electric-scooter-laws/feed,feed,RSS Feeds,gsc:blocked-robots,blocked-robots,2025-11-18,,,,,,,no,,,no-redirect-needed
+/vmax-vx2-hub-review/feed,feed,RSS Feeds,gsc:blocked-robots,blocked-robots,2025-11-03,,,,,,,no,,,no-redirect-needed
 /apollo-city-pro-2022-electric-scooter-review,post,Reviews,"gsc:redirect, rankmath-redirect-source",redirect,2026-02-16,yes,301,http://eridehero.com/apollo-city-pro-electric-scooter-review/,,,,no,,,mapped
 /apollo-city-pro-electric-scooter-review,post,Reviews,"gsc:indexed, sitemap",indexed,2026-02-08,,,,,,,yes,/apollo-city-pro-electric-scooter-review,,no-redirect-needed
 /apollo-explore-electric-scooter-review,post,Reviews,gsc:noindex,noindex,2025-09-26,,,,,,,no,,,no-redirect-needed
