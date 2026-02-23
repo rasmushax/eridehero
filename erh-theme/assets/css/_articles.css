@@ -419,6 +419,60 @@ figure.product table tr > td:first-child {
     font-weight: var(--font-semibold);
 }
 
+/* Contrast table — neutral header, clean borders, zebra striping */
+figure.contrast {
+    margin: var(--space-4) 0;
+    border-radius: var(--radius-lg);
+    overflow: hidden;
+    border: 1px solid var(--color-border-hover);
+}
+
+figure.contrast table {
+    width: 100%;
+    border-collapse: collapse;
+}
+
+figure.contrast thead {
+    background-color: var(--color-background);
+    color: var(--color-dark);
+    border-bottom: 1px solid var(--color-border-hover);
+}
+
+figure.contrast th,
+figure.contrast td {
+    padding: var(--space-3) var(--space-4);
+    border: none;
+    font-size: var(--text-base);
+    text-align: left;
+    color: var(--color-dark);
+}
+
+figure.contrast tbody tr:nth-child(even) {
+    background-color: var(--color-background);
+}
+
+figure.contrast figcaption {
+    font-size: var(--text-sm);
+    text-align: center;
+    margin: 0;
+    background-color: var(--color-background);
+    padding: var(--space-3) var(--space-4);
+    color: var(--color-muted);
+    border-top: 1px solid var(--color-border-hover);
+}
+
+@media (max-width: 600px) {
+    figure.contrast th,
+    figure.contrast td {
+        padding: var(--space-2) var(--space-3);
+        font-size: var(--text-sm);
+    }
+
+    figure.contrast figcaption {
+        font-size: var(--text-xs);
+    }
+}
+
 /* ===== DEFAULT PAGE ===== */
 
 .page-default {

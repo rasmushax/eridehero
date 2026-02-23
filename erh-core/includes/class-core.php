@@ -66,6 +66,7 @@ use ERH\Api\RestComparisonViews;
 use ERH\Api\RestSpecEditor;
 use ERH\Api\ContactHandler;
 use ERH\Blocks\BlockManager;
+use ERH\Shortcodes\ShortcodeManager;
 use ERH\Tracking\ClickRedirector;
 use ERH\CacheKeys;
 
@@ -306,6 +307,13 @@ class Core {
     private BlockManager $block_manager;
 
     /**
+     * Shortcode manager instance.
+     *
+     * @var ShortcodeManager
+     */
+    private ShortcodeManager $shortcode_manager;
+
+    /**
      * Click redirector instance.
      *
      * @var ClickRedirector
@@ -326,6 +334,9 @@ class Core {
 
         // Initialize ACF blocks.
         $this->init_blocks();
+
+        // Initialize shortcodes (not gated by is_admin — renders in block editor previews too).
+        $this->init_shortcodes();
 
         // Initialize post types.
         $this->init_post_types();
@@ -440,6 +451,16 @@ class Core {
     private function init_blocks(): void {
         $this->block_manager = new BlockManager();
         $this->block_manager->register();
+    }
+
+    /**
+     * Initialize review post shortcodes.
+     *
+     * @return void
+     */
+    private function init_shortcodes(): void {
+        $this->shortcode_manager = new ShortcodeManager();
+        $this->shortcode_manager->register();
     }
 
     /**

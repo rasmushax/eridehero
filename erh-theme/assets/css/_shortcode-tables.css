@@ -1,0 +1,25 @@
+/* =============================================
+   Shortcode Tables
+   Additions for review post shortcode tables.
+   Base styles from figure.minimalistic in _articles.css.
+   ============================================= */
+
+.erh-shortcode-table td:first-child {
+    font-weight: var(--font-semibold);
+}
+
+.erh-shortcode-table figcaption {
+    padding: var(--space-3) var(--space-4);
+    font-size: var(--text-sm);
+    color: var(--color-muted);
+    font-style: italic;
+    border-top: 1px solid var(--color-border);
+}
+
+/* Mobile horizontal scroll for wide tables */
+@media (max-width: 600px) {
+    .erh-shortcode-table {
+        overflow-x: auto;
+        -webkit-overflow-scrolling: touch;
+    }
+}
