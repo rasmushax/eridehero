@@ -1,0 +1,120 @@
+name: Deploy to Staging
+
+on:
+  push:
+    branches: [main]
+    paths:
+      - 'erh-theme/**'
+      - 'erh-core/**'
+  workflow_dispatch:
+    inputs:
+      target:
+        description: 'What to deploy'
+        required: true
+        default: 'both'
+        type: choice
+        options:
+          - both
+          - theme
+          - core
+
+jobs:
+  deploy:
+    runs-on: ubuntu-latest
+    steps:
+      - uses: actions/checkout@v4
+
+      # Build erh-theme (dist files are gitignored, need npm build)
+      - uses: actions/setup-node@v4
+        with:
+          node-version: '20'
+          cache: 'npm'
+          cache-dependency-path: erh-theme/package-lock.json
+
+      - name: Build theme assets
+        run: cd erh-theme && npm ci && npm run build
+
+      # Determine what to deploy
+      - name: Set deploy targets
+        id: targets
+        run: |
+          if [ "${{ github.event_name }}" = "workflow_dispatch" ]; then
+            TARGET="${{ inputs.target }}"
+          else
+            THEME_CHANGED=false
+            CORE_CHANGED=false
+            # Check which paths changed in the push
+            CHANGED=$(git diff --name-only ${{ github.event.before }} ${{ github.sha }} 2>/dev/null || echo "")
+            echo "$CHANGED" | grep -q '^erh-theme/' && THEME_CHANGED=true || true
+            echo "$CHANGED" | grep -q '^erh-core/' && CORE_CHANGED=true || true
+            if [ "$THEME_CHANGED" = true ] && [ "$CORE_CHANGED" = true ]; then
+              TARGET="both"
+            elif [ "$THEME_CHANGED" = true ]; then
+              TARGET="theme"
+            elif [ "$CORE_CHANGED" = true ]; then
+              TARGET="core"
+            else
+              TARGET="both"
+            fi
+          fi
+          echo "target=$TARGET" >> "$GITHUB_OUTPUT"
+          echo "Deploying: $TARGET"
+
+      # Create zips (zip from repo root to keep folder prefix)
+      - name: Create zip archives
+        run: |
+          TARGET="${{ steps.targets.outputs.target }}"
+          if [ "$TARGET" = "both" ] || [ "$TARGET" = "theme" ]; then
+            zip -r erh-theme.zip erh-theme/ -x 'erh-theme/node_modules/*'
+            echo "Created erh-theme.zip ($(du -h erh-theme.zip | cut -f1))"
+          fi
+          if [ "$TARGET" = "both" ] || [ "$TARGET" = "core" ]; then
+            zip -r erh-core.zip erh-core/
+            echo "Created erh-core.zip ($(du -h erh-core.zip | cut -f1))"
+          fi
+
+      # Deploy to staging server
+      - name: Deploy via SSH
+        env:
+          SSH_KEY: ${{ secrets.STAGING_SSH_KEY }}
+        run: |
+          TARGET="${{ steps.targets.outputs.target }}"
+          WP_PATH="/home/haxholmw/staging.eridehero.com"
+
+          # Set up SSH
+          mkdir -p ~/.ssh
+          echo "$SSH_KEY" > ~/.ssh/deploy-key
+          chmod 600 ~/.ssh/deploy-key
+          ssh-keyscan -p 1988 162.19.222.172 >> ~/.ssh/known_hosts 2>/dev/null
+          SSH="ssh -p 1988 -i ~/.ssh/deploy-key haxholmw@162.19.222.172"
+          SCP="scp -P 1988 -i ~/.ssh/deploy-key"
+
+          # Upload zips
+          ZIPS=""
+          if [ "$TARGET" = "both" ] || [ "$TARGET" = "theme" ]; then
+            ZIPS="$ZIPS erh-theme.zip"
+          fi
+          if [ "$TARGET" = "both" ] || [ "$TARGET" = "core" ]; then
+            ZIPS="$ZIPS erh-core.zip"
+          fi
+          $SCP $ZIPS haxholmw@162.19.222.172:/tmp/
+
+          # Extract on server
+          $SSH bash -s <<DEPLOY
+            set -e
+            if [ "$TARGET" = "both" ] || [ "$TARGET" = "theme" ]; then
+              echo "Deploying erh-theme..."
+              rm -rf $WP_PATH/wp-content/themes/erh-theme
+              unzip -qo /tmp/erh-theme.zip -d $WP_PATH/wp-content/themes/
+              rm -f /tmp/erh-theme.zip
+            fi
+            if [ "$TARGET" = "both" ] || [ "$TARGET" = "core" ]; then
+              echo "Deploying erh-core..."
+              rm -rf $WP_PATH/wp-content/plugins/erh-core
+              unzip -qo /tmp/erh-core.zip -d $WP_PATH/wp-content/plugins/
+              rm -f /tmp/erh-core.zip
+            fi
+            echo "Flushing caches..."
+            cd $WP_PATH && wp cache flush --quiet 2>/dev/null || true
+            echo "Done!"
+          DEPLOY
