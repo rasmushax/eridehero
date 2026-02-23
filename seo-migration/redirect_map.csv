@@ -1,0 +1,317 @@
+old_path,new_path,type,priority,group,gsc_status,notes
+/tool/electric-scooter-finder/,/electric-scooter-finder/,301,high,Tools — Finders,indexed,
+/tool/electric-bike-finder/,/electric-bike-finder/,301,high,Tools — Finders,indexed,
+/tool/electric-scooter-deals/,/deals/electric-scooters/,301,high,Tools — Deals,indexed,
+/tool/electric-bike-deals/,/deals/electric-bikes/,301,high,Tools — Deals,indexed,
+/tool/electric-scooter-comparison/,/compare/electric-scooters/,301,high,Tools — Comparison,indexed,
+/tool/electric-bike-comparison/,/compare/electric-bikes/,301,high,Tools — Comparison,indexed,
+/tool/battery-capacity-calculator/,/tools/battery-capacity-calculator/,301,high,Tools — Calculators,indexed,
+/tool/battery-charge-time-calculator/,/tools/battery-charging-time-calculator/,301,high,Tools — Calculators,indexed,Slug changed: charge-time → charging-time
+/tool/battery-degradation-calculator/,/tools/battery-degradation-calculator/,301,high,Tools — Calculators,indexed,
+/tool/electric-scooter-coupons/,/coupons/electric-scooters/,301,high,Tools — Coupons,indexed,
+/electric-scooter-range-calculator/,/tools/electric-scooter-range-calculator/,301,high,Tools — Calculators,indexed,Was root-level post on old site
+/tool/electric-scooter-comparison/opt/,/compare/electric-scooters/,301,low,Tools — Comparison,redirect,Oxygen Builder artifact
+/tool/electric-scooter/,/electric-scooter-finder/,301,low,Tools — Other,redirect,Incomplete URL — catch redirect
+/editorial-policy/,/editorial/,301,high,Info / Legal Pages,indexed,Shorter slug
+/privacy-policy/,/privacy/,301,high,Info / Legal Pages,indexed,Shorter slug
+/terms-conditions/,/terms/,301,high,Info / Legal Pages,indexed,Shorter slug
+/opt-out-preferences/,/cookies/,301,high,Info / Legal Pages,indexed,Was cookie policy with weird slug
+/electric-scooters/articles/,/articles/,301,high,Sub-category Archives,indexed,Top-level page has same content
+/electric-scooters/buying-guides/,/buying-guides/,301,high,Sub-category Archives,indexed,Top-level page has same content
+/apollo-city-pro-2022-electric-scooter-review,/apollo-city-pro-electric-scooter-review/,301,medium,Reviews -- Slug Renames,redirect,Old slug -> canonical review slug
+/e-twow-gt-se-review,/e-twow-gt-se-electric-scooter-review/,301,medium,Reviews -- Slug Renames,redirect,Old slug -> canonical review slug
+/fluidfreeride-cityrider-electric-scooter-review,/fluid-cityrider-electric-scooter-review/,301,medium,Reviews -- Slug Renames,redirect,Old slug -> canonical review slug
+/fluidfreeride-horizon-electric-scooter-review,/fluid-horizon-review/,301,medium,Reviews -- Slug Renames,redirect,Old slug -> canonical review slug
+/niu-kqi3-max-relectric-scooter-review,/niu-kqi3-max-electric-scooter-review/,301,medium,Reviews -- Slug Renames,redirect,Old slug -> canonical review slug
+/halo-board-2-electric-skateboard-review,/halo-board-beast-electric-skateboard-review/,301,medium,Reviews -- Product Remap,redirect,Old review -> successor/related review
+/segway-ninebot-max-review,/segway-ninebot-max-electric-scooter-review/,301,medium,Reviews -- Product Remap,redirect,Old review -> successor/related review
+/turboant-x7-electric-scooter-review,/turboant-x7-max-electric-scooter-review/,301,medium,Reviews -- Product Remap,redirect,Old review -> successor/related review
+/dualtron-thunder-electric-scooter-review,/electric-scooters/reviews/,301,low,Reviews -- Discontinued,redirect,Discontinued product -> reviews archive
+/elka-model-t-electric-scooter-review,/electric-scooters/reviews/,301,low,Reviews -- Discontinued,redirect,Discontinued product -> reviews archive
+/emove-cruiser-electric-scooter-review,/electric-scooters/reviews/,301,low,Reviews -- Discontinued,redirect,Discontinued product -> reviews archive
+/emove-touring-electric-scooter-review,/electric-scooters/reviews/,301,low,Reviews -- Discontinued,redirect,Discontinued product -> reviews archive
+/evolv-city-electric-scooter-review,/electric-scooters/reviews/,301,low,Reviews -- Discontinued,redirect,Discontinued product -> reviews archive
+/glion-dolly-electric-scooter-review,/electric-scooters/reviews/,301,low,Reviews -- Discontinued,redirect,Discontinued product -> reviews archive
+/gotrax-gxl-v2-electric-scooter-review,/electric-scooters/reviews/,301,low,Reviews -- Discontinued,redirect,Discontinued product -> reviews archive
+/inokim-light-2-electric-scooter-review,/electric-scooters/reviews/,301,low,Reviews -- Discontinued,redirect,Discontinued product -> reviews archive
+/inokim-mini-2-electric-scooter-review,/electric-scooters/reviews/,301,low,Reviews -- Discontinued,redirect,Discontinued product -> reviews archive
+/inokim-ox-electric-scooter-review,/electric-scooters/reviews/,301,low,Reviews -- Discontinued,redirect,Discontinued product -> reviews archive
+/inokim-oxo-electric-scooter-review,/electric-scooters/reviews/,301,low,Reviews -- Discontinued,redirect,Discontinued product -> reviews archive
+/inokim-quick-3-electric-scooter-review,/electric-scooters/reviews/,301,low,Reviews -- Discontinued,redirect,Discontinued product -> reviews archive
+/levy-plus-electric-scooter-review,/electric-scooters/reviews/,301,low,Reviews -- Discontinued,redirect,Discontinued product -> reviews archive
+/macwheel-mx1-electric-scooter-review,/electric-scooters/reviews/,301,low,Reviews -- Discontinued,redirect,Discontinued product -> reviews archive
+/mercane-widewheel-pro-2020-electric-scooter-review,/electric-scooters/reviews/,301,low,Reviews -- Discontinued,redirect,Discontinued product -> reviews archive
+/nanrobot-d4-electric-scooter-review,/electric-scooters/reviews/,301,low,Reviews -- Discontinued,redirect,Discontinued product -> reviews archive
+/qiewa-q1-hummer-electric-scooter-review,/electric-scooters/reviews/,301,low,Reviews -- Discontinued,redirect,Discontinued product -> reviews archive
+/razor-e-prime-air-electric-scooter-review,/electric-scooters/reviews/,301,low,Reviews -- Discontinued,redirect,Discontinued product -> reviews archive
+/razor-e-prime-iii-electric-scooter-review,/electric-scooters/reviews/,301,low,Reviews -- Discontinued,redirect,Discontinued product -> reviews archive
+/razor-e300-electric-scooter-review,/electric-scooters/reviews/,301,low,Reviews -- Discontinued,redirect,Discontinued product -> reviews archive
+/segway-ninebot-es2-electric-scooter-review,/electric-scooters/reviews/,301,low,Reviews -- Discontinued,redirect,Discontinued product -> reviews archive
+/segway-ninebot-kickscooter-es4-review,/electric-scooters/reviews/,301,low,Reviews -- Discontinued,redirect,Discontinued product -> reviews archive
+/segway-ninebot-zing-e8-electric-scooter-review,/electric-scooters/reviews/,301,low,Reviews -- Discontinued,redirect,Discontinued product -> reviews archive
+/speedway-leger-electric-scooter-review,/electric-scooters/reviews/,301,low,Reviews -- Discontinued,redirect,Discontinued product -> reviews archive
+/speedway-mini-4-pro-electric-scooter-review,/electric-scooters/reviews/,301,low,Reviews -- Discontinued,redirect,Discontinued product -> reviews archive
+/xiaomi-mi-m365-electric-scooter-review,/electric-scooters/reviews/,301,low,Reviews -- Discontinued,redirect,Discontinued product -> reviews archive
+/zero-10x-electric-scooter-review,/electric-scooters/reviews/,301,low,Reviews -- Discontinued,redirect,Discontinued product -> reviews archive
+/zero-11x-electric-scooter-review,/electric-scooters/reviews/,301,low,Reviews -- Discontinued,redirect,Discontinued product -> reviews archive
+/zero-8-electric-scooter-review,/electric-scooters/reviews/,301,low,Reviews -- Discontinued,redirect,Discontinued product -> reviews archive
+/zero-9-electric-scooter-review,/electric-scooters/reviews/,301,low,Reviews -- Discontinued,redirect,Discontinued product -> reviews archive
+/__trashed,/login-register/,301,low,Posts -- Misc,,Trashed post artifact
+/acton-blink-s2-electric-skateboard,/reviews/,301,low,Reviews -- Discontinued,,"Eskate, no review on new site"
+/apollo-explore-electric-scooter,/apollo-explore-electric-scooter-review/,301,low,Posts -- Product to Review,,Short slug -> review (noindex)
+/apollo-go-review-dual-motor-power-that-you-can-actually-carry,/apollo-go-review/,301,low,Posts -- Long Slug Cleanup,,Title-as-slug -> canonical
+/blog,/,301,low,Posts -- Section Aliases,,Old blog index -> homepage
+/disclaimer,/disclaimers/,301,low,Posts -- Legal Aliases,,Old slug -> new (Complianz)
+/electric-bicycles,/electric-bikes/,301,low,Posts -- Section Aliases,,Old category name -> new
+/electric-scooter-giveaway-x7,/,301,low,Posts -- Misc,,Old giveaway -> homepage
+/electric-scooter-pricing-comparison,/electric-scooter-finder/,301,low,Posts -- Price Pages,,Old price page -> finder
+/electric-scooter-quiz,/,301,low,Posts -- Retired Content,,Quiz retired -> homepage
+/electric-scooters-prices,/electric-scooter-finder/,301,low,Posts -- Price Pages,,Old price page -> finder
+/electric-skateboard-prices,/electric-skateboard-finder/,301,low,Posts -- Price Pages,,Old price page -> eskate finder
+/electric-skateboarding,/electric-skateboards/,301,low,Posts -- Section Aliases,,Old category name -> new
+/escooter-finder,/electric-scooter-finder/,301,low,Posts -- Finder Aliases,,Old alias -> finder
+/giveaway,/,301,low,Posts -- Misc,,Old giveaway -> homepage
+/gotrax-hoverfly-e3-hoverboard,/gotrax-hoverfly-e3-hoverboard-review/,301,low,Posts -- Product to Review,,Short slug -> review
+/gotrax-hoverfly-eco-hoverboard,/gotrax-hoverfly-eco-hoverboard-review/,301,low,Posts -- Product to Review,,Short slug -> review
+/gotway-msx-pro-electric-unicycle,/reviews/,301,low,Reviews -- Discontinued,,"EUC, no review on new site"
+/halo-board-2-electric-skateboard,/halo-board-beast-electric-skateboard-review/,301,low,Posts -- Product to Review,,Old model -> successor review
+/halo-board-beast-electric-skateboard,/halo-board-beast-electric-skateboard-review/,301,low,Posts -- Product to Review,,Short slug -> review
+/halo-rover-x-hoverboard,/halo-rover-x-hoverboard-review/,301,low,Posts -- Product to Review,,Short slug -> review
+/kaabo-mantis-electric-scooter,/kaabo-mantis-pro-electric-scooter-review/,301,low,Posts -- Product to Review,,Short slug -> pro review
+/kaabo-mantis-pro-electric-scooter,/kaabo-mantis-pro-electric-scooter-review/,301,low,Posts -- Product to Review,,Short slug -> review
+/king-song-16x-electric-unicycle,/king-song-16x-electric-unicycle-review/,301,low,Posts -- Product to Review,,Short slug -> review
+/maxfind-max2-pro-electric-skateboard,/maxfind-max2-pro-electric-skateboard-review/,301,low,Posts -- Product to Review,,Short slug -> review
+/navee-st3-pro-review-the-most-complete-commuter-scooter,/navee-st3-pro-review/,301,low,Posts -- Long Slug Cleanup,,Title-as-slug -> canonical
+/niu-kqi-200f-review-a-reliable-mixed-mode-commuter,/niu-kqi-200f-review/,301,low,Posts -- Long Slug Cleanup,,Title-as-slug -> canonical
+/niu-kqi3-max-relectric-scooter-eview,/niu-kqi3-max-electric-scooter-review/,301,low,Posts -- Misc,,Typo URL -> correct review
+/niu-kqi3-pro-electric-scooter,/niu-kqi3-pro-electric-scooter-review/,301,low,Posts -- Product to Review,,Short slug -> review
+/prices,/electric-scooter-finder/,301,low,Posts -- Price Pages,,Old price page -> finder
+/privacy-statement,/privacy/,301,low,Posts -- Legal Aliases,,Old slug -> new
+/privacy-statement-us,/privacy/,301,low,Posts -- Legal Aliases,,Old US variant -> new
+/razor-hovertrax-2-0-hoverboard,/razor-hovertrax-2-0-hoverboard-review/,301,low,Posts -- Product to Review,,Short slug -> review
+/scooter-finder,/electric-scooter-finder/,301,low,Posts -- Finder Aliases,,Old alias -> finder
+/scooter-tool,/electric-scooter-finder/,301,low,Posts -- Finder Aliases,,Old alias -> finder
+/scooterfinder,/electric-scooter-finder/,301,low,Posts -- Finder Aliases,,Old alias -> finder
+/scooters,/electric-scooter-finder/,301,low,Posts -- Finder Aliases,,Old alias -> finder
+/scootertool,/electric-scooter-finder/,301,low,Posts -- Finder Aliases,,Old alias -> finder
+/segway-ninebot-max-electric-scooter-review-2,/segway-ninebot-max-electric-scooter-review/,301,low,Posts -- Product to Review,,Duplicate slug -> canonical
+/swagtron-t1-pro-hoverboard,/swagtron-t1-pro-hoverboard-review/,301,low,Posts -- Product to Review,,Short slug -> review
+/swagtron-t5-hoverboard,/swagtron-t5-hoverboard-review/,301,low,Posts -- Product to Review,,Short slug -> review
+/swagtron-t580-hoverboard,/swagtron-t580-hoverboard-review/,301,low,Posts -- Product to Review,,Short slug -> review
+/swagtron-t6-hoverboard,/swagtron-t6-hoverboard-review/,301,low,Posts -- Product to Review,,Short slug -> review
+/terms-and-conditions,/terms/,301,low,Posts -- Legal Aliases,,Old slug -> new
+/turboant-x7-electric-scooter,/turboant-x7-max-electric-scooter-review/,301,low,Posts -- Product to Review,,Old model -> max review
+/us-electric-scooter-laws,/tools/electric-scooter-laws-by-state/,301,low,Posts -- Content Moved,,Old laws post -> new tool
+/xiaomi-m365-recall,/,301,low,Posts -- Misc,,Old recall post -> homepage
+/xiaomi-mi-m365-electric-scooter,/electric-scooters/reviews/,301,low,Reviews -- Discontinued,,"Escooter, no review on new site"
+/best-cheap-electric-scooters,/best-electric-scooters-under-500/,301,low,Guides -- Consolidated Listicles,redirect,Renamed listicle
+/best-cheap-electric-skateboards,/best-electric-skateboards/,301,low,Guides -- Consolidated Listicles,redirect,Consolidated into parent
+/best-electric-scooters-with-seats,/best-electric-scooters/,301,low,Guides -- Consolidated Listicles,redirect,Consolidated into parent
+/best-electric-scooters/fastest,/fastest-electric-scooters/,301,low,Guides -- Sub-URL Consolidation,redirect,Old sub-URL -> standalone listicle
+/best-electric-scooters/kids,/best-electric-scooters-for-kids/,301,low,Guides -- Sub-URL Consolidation,redirect,Old sub-URL -> standalone listicle
+/best-electric-skateboard-conversion-kits,/best-electric-skateboards/,301,low,Guides -- Consolidated Listicles,redirect,Consolidated into parent
+/best-electric-skateboards/cheap,/best-electric-skateboards/,301,low,Guides -- Sub-URL Consolidation,redirect,Cheap page consolidated into parent
+/best-hoverboard-chargers,/hoverboard-replacement-charger-safety/,301,low,Guides -- Consolidated Listicles,redirect,Charger listicle -> safety guide
+/best-hoverboards-for-kids,/best-hoverboards/,301,low,Guides -- Consolidated Listicles,redirect,Consolidated into parent
+/best-hoverboards/chargers,/hoverboard-replacement-charger-safety/,301,low,Guides -- Sub-URL Consolidation,redirect,Old sub-URL -> charger guide
+/best-hoverboards/cheap,/best-cheap-hoverboards/,301,low,Guides -- Sub-URL Consolidation,redirect,Old sub-URL -> standalone listicle
+/best-hoverboards/fastest,/fastest-hoverboards/,301,low,Guides -- Sub-URL Consolidation,redirect,Old sub-URL -> standalone listicle
+/best-hoverboards/for-kids,/best-hoverboards/,301,low,Guides -- Sub-URL Consolidation,redirect,Kids page consolidated into parent
+/best-hoverboards/go-kart,/best-hoverboards/,301,low,Guides -- Sub-URL Consolidation,redirect,"Hoverkart page gone, consolidated"
+/best-hoverboards/off-road,/best-hoverboards/,301,low,Guides -- Sub-URL Consolidation,redirect,Off-road page consolidated into parent
+/best-hoverkart-attachments,/best-hoverboards/,301,low,Guides -- Consolidated Listicles,redirect,"Hoverkarts gone, consolidated"
+/best-off-road-electric-skateboards,/best-electric-skateboards/,301,low,Guides -- Consolidated Listicles,redirect,Consolidated into parent
+/best-off-road-hoverboards,/best-hoverboards/,301,low,Guides -- Consolidated Listicles,redirect,Consolidated into parent
+/how-we-test-electric-rides,/how-we-test/,301,low,Guides -- Content Moved,redirect,Slug shortened
+/review/acton-blink-s2-electric-skateboard,/reviews/,301,low,review/ prefix -- Discontinued Other,,Legacy /review/ prefix URL structure
+/review/apollo-city-electric-scooter-review,/electric-scooters/reviews/,301,low,review/ prefix -- Discontinued Escooter,,Legacy /review/ prefix URL structure
+/review/apollo-explore-electric-scooter,/apollo-explore-electric-scooter-review/,301,low,review/ prefix -- Direct Match,,Legacy /review/ prefix URL structure
+/review/apollo-ghost-electric-scooter-review,/apollo-ghost-electric-scooter-review/,301,low,review/ prefix -- Direct Match,,Legacy /review/ prefix URL structure
+/review/apollo-light-electric-scooter-review,/apollo-light-electric-scooter-review/,301,low,review/ prefix -- Direct Match,,Legacy /review/ prefix URL structure
+/review/backfire-g2t-electric-skateboard,/reviews/,301,low,review/ prefix -- Discontinued Other,,Legacy /review/ prefix URL structure
+/review/backfire-ranger-x2-electric-skateboard,/reviews/,301,low,review/ prefix -- Discontinued Other,,Legacy /review/ prefix URL structure
+/review/dualtron-thunder-electric-scooter,/electric-scooters/reviews/,301,low,review/ prefix -- Discontinued Escooter,,Legacy /review/ prefix URL structure
+/review/e-twow-gt-se-review,/e-twow-gt-se-electric-scooter-review/,301,low,review/ prefix -- Direct Match,,Legacy /review/ prefix URL structure
+/review/elka-model-t-electric-scooter,/electric-scooters/reviews/,301,low,review/ prefix -- Discontinued Escooter,,Legacy /review/ prefix URL structure
+/review/elka-model-t-electric-scooter-review,/electric-scooters/reviews/,301,low,review/ prefix -- Discontinued Escooter,,Legacy /review/ prefix URL structure
+/review/evolv-city-electric-scooter-review,/electric-scooters/reviews/,301,low,review/ prefix -- Discontinued Escooter,,Legacy /review/ prefix URL structure
+/review/evolv-tour-xl-r-electric-scooter-review,/evolv-tour-xl-r-electric-scooter-review/,301,low,review/ prefix -- Direct Match,,Legacy /review/ prefix URL structure
+/review/fluidfreeride-cityrider-review,/fluid-cityrider-electric-scooter-review/,301,low,review/ prefix -- Chain Avoided,,Legacy /review/ prefix URL structure
+/review/gotrax-gxl-electric-scooter,/electric-scooters/reviews/,301,low,review/ prefix -- Discontinued Escooter,,Legacy /review/ prefix URL structure
+/review/gotrax-hoverfly-e3-hoverboard,/gotrax-hoverfly-e3-hoverboard-review/,301,low,review/ prefix -- Direct Match,,Legacy /review/ prefix URL structure
+/review/gotrax-hoverfly-eco-hoverboard,/gotrax-hoverfly-eco-hoverboard-review/,301,low,review/ prefix -- Direct Match,,Legacy /review/ prefix URL structure
+/review/gotway-msx-pro-electric-unicycle,/reviews/,301,low,review/ prefix -- Discontinued Other,,Legacy /review/ prefix URL structure
+/review/halo-board-2-electric-skateboard,/halo-board-beast-electric-skateboard-review/,301,low,review/ prefix -- Chain Avoided,,Legacy /review/ prefix URL structure
+/review/halo-board-beast-electric-skateboard,/halo-board-beast-electric-skateboard-review/,301,low,review/ prefix -- Direct Match,,Legacy /review/ prefix URL structure
+/review/halo-rover-x-hoverboard,/halo-rover-x-hoverboard-review/,301,low,review/ prefix -- Direct Match,,Legacy /review/ prefix URL structure
+/review/hover-1-horizon-hoverboard-review,/hover-1-horizon-hoverboard-review/,301,low,review/ prefix -- Direct Match,,Legacy /review/ prefix URL structure
+/review/hover-1-titan-hoverboard-review,/hover-1-titan-hoverboard-review/,301,low,review/ prefix -- Direct Match,,Legacy /review/ prefix URL structure
+/review/hover-1-ultra-hoverboard-review,/hover-1-ultra-hoverboard-review/,301,low,review/ prefix -- Direct Match,,Legacy /review/ prefix URL structure
+/review/inmotion-v10-electric-unicycle-review,/inmotion-v10-electric-unicycle-review/,301,low,review/ prefix -- Direct Match,,Legacy /review/ prefix URL structure
+/review/inokim-light-2-electric-scooter-review,/electric-scooters/reviews/,301,low,review/ prefix -- Discontinued Escooter,,Legacy /review/ prefix URL structure
+/review/inokim-mini-2-electric-scooter-review,/electric-scooters/reviews/,301,low,review/ prefix -- Discontinued Escooter,,Legacy /review/ prefix URL structure
+/review/inokim-oxo-electric-scooter-review,/electric-scooters/reviews/,301,low,review/ prefix -- Discontinued Escooter,,Legacy /review/ prefix URL structure
+/review/inokim-quick-3-electric-scooter-review,/electric-scooters/reviews/,301,low,review/ prefix -- Discontinued Escooter,,Legacy /review/ prefix URL structure
+/review/kaabo-mantis-electric-scooter,/kaabo-mantis-pro-electric-scooter-review/,301,low,review/ prefix -- Direct Match,,Legacy /review/ prefix URL structure
+/review/kaabo-mantis-electric-scooter-pro,/kaabo-mantis-pro-electric-scooter-review/,301,low,review/ prefix -- Direct Match,,Legacy /review/ prefix URL structure
+/review/kaabo-wolf-warrior-11-electric-scooter,/electric-scooters/reviews/,301,low,review/ prefix -- Discontinued Escooter,,Legacy /review/ prefix URL structure
+/review/king-song-16x-electric-unicycle,/king-song-16x-electric-unicycle-review/,301,low,review/ prefix -- Direct Match,,Legacy /review/ prefix URL structure
+/review/macwheel-mx1-electric-scooter,/electric-scooters/reviews/,301,low,review/ prefix -- Discontinued Escooter,,Legacy /review/ prefix URL structure
+/review/maxfind-ff-plus-electric-skateboard-review,/maxfind-ff-plus-electric-skateboard-review/,301,low,review/ prefix -- Direct Match,,Legacy /review/ prefix URL structure
+/review/maxfind-max2-pro-electric-skateboard,/maxfind-max2-pro-electric-skateboard-review/,301,low,review/ prefix -- Direct Match,,Legacy /review/ prefix URL structure
+/review/possway-t2-electric-skateboard-review,/possway-t2-electric-skateboard-review/,301,low,review/ prefix -- Direct Match,,Legacy /review/ prefix URL structure
+/review/razor-e-prime-iii-electric-scooter-review,/electric-scooters/reviews/,301,low,review/ prefix -- Discontinued Escooter,,Legacy /review/ prefix URL structure
+/review/razor-hovertrax-2-0-hoverboard,/razor-hovertrax-2-0-hoverboard-review/,301,low,review/ prefix -- Direct Match,,Legacy /review/ prefix URL structure
+/review/segway-ninebot-zing-e10-electric-scooter-review,/electric-scooters/reviews/,301,low,review/ prefix -- Discontinued Escooter,,Legacy /review/ prefix URL structure
+/review/segway-ninebot-zing-e8-electric-scooter-review,/electric-scooters/reviews/,301,low,review/ prefix -- Discontinued Escooter,,Legacy /review/ prefix URL structure
+/review/skatebolt-tornado-ii-electric-skateboard-review,/skatebolt-tornado-ii-electric-skateboard-review/,301,low,review/ prefix -- Direct Match,,Legacy /review/ prefix URL structure
+/review/swagtron-t1-pro-hoverboard,/swagtron-t1-pro-hoverboard-review/,301,low,review/ prefix -- Direct Match,,Legacy /review/ prefix URL structure
+/review/swagtron-t5-hoverboard,/swagtron-t5-hoverboard-review/,301,low,review/ prefix -- Direct Match,,Legacy /review/ prefix URL structure
+/review/swagtron-t580-hoverboard,/swagtron-t580-hoverboard-review/,301,low,review/ prefix -- Direct Match,,Legacy /review/ prefix URL structure
+/review/swagtron-t6-hoverboard,/swagtron-t6-hoverboard-review/,301,low,review/ prefix -- Direct Match,,Legacy /review/ prefix URL structure
+/review/turboant-x7-electric-scooter,/turboant-x7-max-electric-scooter-review/,301,low,review/ prefix -- Chain Avoided,,Legacy /review/ prefix URL structure
+/review/turboant-x7-pro-electric-scooter-review,/turboant-x7-pro-electric-scooter-review/,301,low,review/ prefix -- Direct Match,,Legacy /review/ prefix URL structure
+/review/unagi-model-one-electric-scooter,/unagi-model-one-electric-scooter-review/,301,low,review/ prefix -- Direct Match,,Legacy /review/ prefix URL structure
+/review/xiaomi-mi-electric-scooter,/electric-scooters/reviews/,301,low,review/ prefix -- Discontinued Escooter,,Legacy /review/ prefix URL structure
+/review/xiaomi-mi-m365-electric-scooter,/electric-scooters/reviews/,301,low,review/ prefix -- Discontinued Escooter,,Legacy /review/ prefix URL structure
+/review/zero-10-electric-scooter-review,/electric-scooters/reviews/,301,low,review/ prefix -- Discontinued Escooter,,Legacy /review/ prefix URL structure
+/review/zero-11x-electric-scooter-review,/electric-scooters/reviews/,301,low,review/ prefix -- Discontinued Escooter,,Legacy /review/ prefix URL structure
+/review/zero-8-electric-scooter-review,/electric-scooters/reviews/,301,low,review/ prefix -- Discontinued Escooter,,Legacy /review/ prefix URL structure
+/review/zero-8x-electric-scooter-review,/electric-scooters/reviews/,301,low,review/ prefix -- Discontinued Escooter,,Legacy /review/ prefix URL structure
+/review/zero-9-electric-scooter-review,/electric-scooters/reviews/,301,low,review/ prefix -- Discontinued Escooter,,Legacy /review/ prefix URL structure
+/blog/are-hoverboards-banned-in-the-uk,/are-hoverboards-banned-in-the-uk/,301,low,blog/ prefix -- Direct Match,redirect,Legacy /blog/ prefix URL structure
+/blog/best-electric-scooter-accessories,/best-electric-scooter-accessories/,301,low,blog/ prefix -- Direct Match,redirect,Legacy /blog/ prefix URL structure
+/blog/calibrate-reset-hoverboard,/calibrate-reset-hoverboard/,301,low,blog/ prefix -- Direct Match,redirect,Legacy /blog/ prefix URL structure
+/blog/can-you-take-a-hoverboard-on-an-airplane,/,301,low,blog/ prefix -- Retired Content,,Retired niche content -> homepage
+/blog/electric-scooter-battery-guide,/electric-scooter-battery-guide/,301,low,blog/ prefix -- Direct Match,redirect,Legacy /blog/ prefix URL structure
+/blog/electric-scooter-black-friday,/electric-scooter-black-friday/,301,low,blog/ prefix -- Direct Match,redirect,Legacy /blog/ prefix URL structure
+/blog/electric-scooter-e-bike-laws-canada,/,301,low,blog/ prefix -- Retired Content,,Retired Canada laws article -> homepage
+/blog/electric-scooter-giveaway-x7,/,301,low,blog/ prefix -- Chain Avoided,redirect,Chain: /electric-scooter-giveaway-x7/ -> / (homepage)
+/blog/electric-scooter-helmet-selection-guide,/electric-scooter-helmet-selection-guide/,301,low,blog/ prefix -- Direct Match,redirect,Legacy /blog/ prefix URL structure
+/blog/electric-scooter-money-saving,/electric-scooter-money-saving/,301,low,blog/ prefix -- Direct Match,redirect,Legacy /blog/ prefix URL structure
+/blog/electric-scooter-motors,/electric-scooter-motors/,301,low,blog/ prefix -- Direct Match,redirect,Legacy /blog/ prefix URL structure
+/blog/electric-scooter-safety-tips,/electric-scooter-safety-tips/,301,low,blog/ prefix -- Direct Match,redirect,Legacy /blog/ prefix URL structure
+/blog/electric-scooter-tires,/electric-scooter-tires/,301,low,blog/ prefix -- Direct Match,redirect,Legacy /blog/ prefix URL structure
+/blog/electric-scooter-weight-limit,/electric-scooter-weight-limit/,301,low,blog/ prefix -- Direct Match,redirect,Legacy /blog/ prefix URL structure
+/blog/electric-scooters-street-legal-uk-law,/electric-scooters-street-legal-uk-law/,301,low,blog/ prefix -- Direct Match,redirect,Legacy /blog/ prefix URL structure
+/blog/fastest-electric-scooters,/fastest-electric-scooters/,301,low,blog/ prefix -- Direct Match,redirect,No RM redirect but dest exists on new site
+/blog/hoverboard-recalls,/hoverboard-recalls/,301,low,blog/ prefix -- Direct Match,redirect,Legacy /blog/ prefix URL structure
+/blog/hoverboard-weight-limit,/hoverboard-weight-limit/,301,low,blog/ prefix -- Direct Match,redirect,Legacy /blog/ prefix URL structure
+/blog/hoverboard-wont-turn-on,/hoverboard-wont-turn-on/,301,low,blog/ prefix -- Direct Match,redirect,Legacy /blog/ prefix URL structure
+/blog/hoverboardrecalls,/hoverboard-recalls/,301,low,blog/ prefix -- Typo Fix,404,Typo URL -> correct slug
+/blog/how-coronavirus-is-affecting-e-scooter-market,/,301,low,blog/ prefix -- Retired Content,,Outdated COVID news -> homepage
+/blog/how-does-a-hoverboard-work,/how-does-a-hoverboard-work/,301,low,blog/ prefix -- Direct Match,redirect,Legacy /blog/ prefix URL structure
+/blog/how-far-can-hoverboards-go,/how-far-can-hoverboards-go/,301,low,blog/ prefix -- Direct Match,redirect,Legacy /blog/ prefix URL structure
+/blog/how-much-do-hoverboards-weigh,/how-much-do-hoverboards-weigh/,301,low,blog/ prefix -- Direct Match,redirect,Legacy /blog/ prefix URL structure
+/blog/how-to-customize-a-hoverboard,/how-to-customize-a-hoverboard/,301,low,blog/ prefix -- Direct Match,redirect,Legacy /blog/ prefix URL structure
+/blog/how-to-get-better-at-skateboarding,/how-to-get-better-at-skateboarding/,301,low,blog/ prefix -- Direct Match,redirect,Legacy /blog/ prefix URL structure
+/blog/how-to-lock-an-electric-scooter,/how-to-lock-an-electric-scooter/,301,low,blog/ prefix -- Direct Match,redirect,Legacy /blog/ prefix URL structure
+/blog/how-to-ride-a-hoverboard,/how-to-ride-a-hoverboard/,301,low,blog/ prefix -- Direct Match,redirect,Legacy /blog/ prefix URL structure
+/blog/how-to-ride-an-electric-scooter,/how-to-ride-an-electric-scooter/,301,low,blog/ prefix -- Direct Match,redirect,Legacy /blog/ prefix URL structure
+/blog/how-to-ride-an-electric-skateboard,/how-to-ride-an-electric-skateboard/,301,low,blog/ prefix -- Direct Match,redirect,Legacy /blog/ prefix URL structure
+/blog/new-york-legalizes-e-bikes-e-scooters,/,301,low,blog/ prefix -- Retired Content,,Outdated news -> homepage
+/blog/solar-powered-electric-scooters,/,301,low,blog/ prefix -- Retired Content,404,Retired content -> homepage
+/blog/what-scooters-do-bird-lime-use,/what-scooters-do-bird-lime-use/,301,low,blog/ prefix -- Direct Match,redirect,Legacy /blog/ prefix URL structure
+/blog/where-electric-scooter-repair,/where-electric-scooter-repair/,301,low,blog/ prefix -- Direct Match,redirect,Legacy /blog/ prefix URL structure
+/blog/xiaomi-m365-recall,/,301,low,blog/ prefix -- Chain Avoided,,Chain: /xiaomi-m365-recall/ -> / (homepage)
+/category/blog,/,301,low,Uncategorised -- Category Prefix,redirect,Old WP category -> homepage
+/category/electric-scooters,/electric-scooters/,301,low,Uncategorised -- Category Prefix,redirect,Old WP category -> new category
+/category/hoverboards,/hoverboards/,301,low,Uncategorised -- Category Prefix,redirect,Old WP category -> new category
+/category/skating,/skating/,301,low,Uncategorised -- Category Prefix,redirect,Old WP category -> new category
+/eridehero/fastest-electric-scooters,/fastest-electric-scooters/,301,low,Uncategorised -- Subfolder Artifact,redirect,Subfolder install artifact
+/log-in,/login/,301,low,Login / Auth Pages,,Alias -> new login page
+/login-register,/login/,301,low,Login / Auth Pages,noindex,Old login page -> new
+/login-register/opt,/login/,301,low,Login / Auth Pages,redirect,Oxygen artifact -> new login page
+/recommends/apollo-city,/go/apollo-city/,301,low,Affiliate -- /recommends/,,ThirstyAffiliates -> new /go/ system
+/recommends/apollo-city-2024,/go/apollo-city/,301,low,Affiliate -- /recommends/,,ThirstyAffiliates -> new /go/ system
+/go/apollo-city-2024,/go/apollo-city/,301,low,Affiliate -- /go/ (ThirstyAffiliates),,Old TA slug -> new product slug /go/
+/recommends/apollo-city-pro,/go/apollo-city/,301,low,Affiliate -- /recommends/,,ThirstyAffiliates -> new /go/ system
+/go/apollo-city-pro,/go/apollo-city/,301,low,Affiliate -- /go/ (ThirstyAffiliates),,Old TA slug -> new product slug /go/
+/recommends/apollo-city-pro-2023,/go/apollo-city/,301,low,Affiliate -- /recommends/,,ThirstyAffiliates -> new /go/ system
+/go/apollo-city-pro-2023,/go/apollo-city/,301,low,Affiliate -- /go/ (ThirstyAffiliates),,Old TA slug -> new product slug /go/
+/recommends/apollo-ghost,/go/apollo-ghost/,301,low,Affiliate -- /recommends/,,ThirstyAffiliates -> new /go/ system
+/recommends/apollo-go,/go/apollo-go/,301,low,Affiliate -- /recommends/,,ThirstyAffiliates -> new /go/ system
+/recommends/apolloair,/go/apollo-air/,301,low,Affiliate -- /recommends/,,ThirstyAffiliates -> new /go/ system
+/go/apolloair,/go/apollo-air/,301,low,Affiliate -- /go/ (ThirstyAffiliates),,Old TA slug -> new product slug /go/
+/recommends/burne2max,/go/nami-burn-e-2-max/,301,low,Affiliate -- /recommends/,,ThirstyAffiliates -> new /go/ system
+/go/burne2max,/go/nami-burn-e-2-max/,301,low,Affiliate -- /go/ (ThirstyAffiliates),,Old TA slug -> new product slug /go/
+/recommends/cityrider,/go/fluidfreeride-cityrider/,301,low,Affiliate -- /recommends/,,ThirstyAffiliates -> new /go/ system
+/go/cityrider,/go/fluidfreeride-cityrider/,301,low,Affiliate -- /go/ (ThirstyAffiliates),,Old TA slug -> new product slug /go/
+/recommends/cruiser-s,/go/emove-cruiser-s/,301,low,Affiliate -- /recommends/,,ThirstyAffiliates -> new /go/ system
+/go/cruiser-s,/go/emove-cruiser-s/,301,low,Affiliate -- /go/ (ThirstyAffiliates),,Old TA slug -> new product slug /go/
+/recommends/fluidhorizon,/go/fluidfreeride-horizon/,301,low,Affiliate -- /recommends/,,ThirstyAffiliates -> new /go/ system
+/go/fluidhorizon,/go/fluidfreeride-horizon/,301,low,Affiliate -- /go/ (ThirstyAffiliates),,Old TA slug -> new product slug /go/
+/recommends/fluidmosquito,/go/fluid-mosquito/,301,low,Affiliate -- /recommends/,,ThirstyAffiliates -> new /go/ system
+/go/fluidmosquito,/go/fluid-mosquito/,301,low,Affiliate -- /go/ (ThirstyAffiliates),,Old TA slug -> new product slug /go/
+/recommends/g2,/go/backfire-g2/,301,low,Affiliate -- /recommends/,,ThirstyAffiliates -> new /go/ system
+/go/g2,/go/backfire-g2/,301,low,Affiliate -- /go/ (ThirstyAffiliates),,Old TA slug -> new product slug /go/
+/recommends/hiboys2,/go/hiboy-s2/,301,low,Affiliate -- /recommends/,,ThirstyAffiliates -> new /go/ system
+/go/hiboys2,/go/hiboy-s2/,301,low,Affiliate -- /go/ (ThirstyAffiliates),,Old TA slug -> new product slug /go/
+/recommends/hiley-tiger-t8-pro,/go/hiley-tiger-t8-pro/,301,low,Affiliate -- /recommends/,,ThirstyAffiliates -> new /go/ system
+/recommends/kaabo-king-gtr,/go/kaabo-king-gtr/,301,low,Affiliate -- /recommends/,,ThirstyAffiliates -> new /go/ system
+/recommends/kaabo-mantis-v2,/go/kaabo-mantis-king-gt-2/,301,low,Affiliate -- /recommends/,,ThirstyAffiliates -> new /go/ system
+/go/kaabo-mantis-v2,/go/kaabo-mantis-king-gt-2/,301,low,Affiliate -- /go/ (ThirstyAffiliates),,Old TA slug -> new product slug /go/
+/recommends/kingsong-n14,/go/king-song-n14/,301,low,Affiliate -- /recommends/,,ThirstyAffiliates -> new /go/ system
+/go/kingsong-n14,/go/king-song-n14/,301,low,Affiliate -- /go/ (ThirstyAffiliates),,Old TA slug -> new product slug /go/
+/recommends/kqi2pro,/go/niu-kqi2-pro/,301,low,Affiliate -- /recommends/,,ThirstyAffiliates -> new /go/ system
+/go/kqi2pro,/go/niu-kqi2-pro/,301,low,Affiliate -- /go/ (ThirstyAffiliates),,Old TA slug -> new product slug /go/
+/recommends/kqi300x,/go/niu-kqi-300x/,301,low,Affiliate -- /recommends/,,ThirstyAffiliates -> new /go/ system
+/go/kqi300x,/go/niu-kqi-300x/,301,low,Affiliate -- /go/ (ThirstyAffiliates),,Old TA slug -> new product slug /go/
+/recommends/kqi3max,/go/niu-kqi3-max/,301,low,Affiliate -- /recommends/,,ThirstyAffiliates -> new /go/ system
+/go/kqi3max,/go/niu-kqi3-max/,301,low,Affiliate -- /go/ (ThirstyAffiliates),,Old TA slug -> new product slug /go/
+/recommends/kqi3max-2,/go/niu-kqi3-max/,301,low,Affiliate -- /recommends/,,ThirstyAffiliates -> new /go/ system
+/go/kqi3max-2,/go/niu-kqi3-max/,301,low,Affiliate -- /go/ (ThirstyAffiliates),,Old TA slug -> new product slug /go/
+/recommends/kqi3pro,/go/niu-kqi-3-pro/,301,low,Affiliate -- /recommends/,,ThirstyAffiliates -> new /go/ system
+/go/kqi3pro,/go/niu-kqi-3-pro/,301,low,Affiliate -- /go/ (ThirstyAffiliates),,Old TA slug -> new product slug /go/
+/recommends/kqiair,/go/niu-kqi-air/,301,low,Affiliate -- /recommends/,,ThirstyAffiliates -> new /go/ system
+/go/kqiair,/go/niu-kqi-air/,301,low,Affiliate -- /go/ (ThirstyAffiliates),,Old TA slug -> new product slug /go/
+/recommends/kukirin-g4,/go/kugoo-g4/,301,low,Affiliate -- /recommends/,,ThirstyAffiliates -> new /go/ system
+/go/kukirin-g4,/go/kugoo-g4/,301,low,Affiliate -- /go/ (ThirstyAffiliates),,Old TA slug -> new product slug /go/
+/recommends/lycaon-gr-2021,/go/lycaon-gr-2021/,301,low,Affiliate -- /recommends/,,ThirstyAffiliates -> new /go/ system
+/recommends/max4pro,/go/maxfind-max4-pro/,301,low,Affiliate -- /recommends/,,ThirstyAffiliates -> new /go/ system
+/go/max4pro,/go/maxfind-max4-pro/,301,low,Affiliate -- /go/ (ThirstyAffiliates),,Old TA slug -> new product slug /go/
+/recommends/maxg2,/go/segway-ninebot-max-g2/,301,low,Affiliate -- /recommends/,,ThirstyAffiliates -> new /go/ system
+/go/maxg2,/go/segway-ninebot-max-g2/,301,low,Affiliate -- /go/ (ThirstyAffiliates),,Old TA slug -> new product slug /go/
+/recommends/maxg30,/go/segway-ninebot-max/,301,low,Affiliate -- /recommends/,,ThirstyAffiliates -> new /go/ system
+/go/maxg30,/go/segway-ninebot-max/,301,low,Affiliate -- /go/ (ThirstyAffiliates),,Old TA slug -> new product slug /go/
+/recommends/navee-gt3,/go/navee-gt3/,301,low,Affiliate -- /recommends/,,ThirstyAffiliates -> new /go/ system
+/recommends/navee-gt3-max,/go/navee-gt3-max/,301,low,Affiliate -- /recommends/,,ThirstyAffiliates -> new /go/ system
+/recommends/navee-gt3-pro,/go/navee-gt3-pro/,301,low,Affiliate -- /recommends/,,ThirstyAffiliates -> new /go/ system
+/recommends/navee-st3-pro,/go/navee-st3-pro/,301,low,Affiliate -- /recommends/,,ThirstyAffiliates -> new /go/ system
+/recommends/ninebot-max-g3,/go/segway-ninebot-max-g3/,301,low,Affiliate -- /recommends/,,ThirstyAffiliates -> new /go/ system
+/go/ninebot-max-g3,/go/segway-ninebot-max-g3/,301,low,Affiliate -- /go/ (ThirstyAffiliates),,Old TA slug -> new product slug /go/
+/recommends/niu-kqi-100f,/go/niu-kqi-100f/,301,low,Affiliate -- /recommends/,,ThirstyAffiliates -> new /go/ system
+/recommends/niu-kqi-200f,/go/niu-kqi-200f/,301,low,Affiliate -- /recommends/,,ThirstyAffiliates -> new /go/ system
+/recommends/niu-kqi3-pro,/go/niu-kqi-3-pro/,301,low,Affiliate -- /recommends/,,ThirstyAffiliates -> new /go/ system
+/go/niu-kqi3-pro,/go/niu-kqi-3-pro/,301,low,Affiliate -- /go/ (ThirstyAffiliates),,Old TA slug -> new product slug /go/
+/recommends/phantom,/go/apollo-phantom/,301,low,Affiliate -- /recommends/,,ThirstyAffiliates -> new /go/ system
+/go/phantom,/go/apollo-phantom/,301,low,Affiliate -- /go/ (ThirstyAffiliates),,Old TA slug -> new product slug /go/
+/recommends/punkrider,/go/punk-rider-pro/,301,low,Affiliate -- /recommends/,,ThirstyAffiliates -> new /go/ system
+/go/punkrider,/go/punk-rider-pro/,301,low,Affiliate -- /go/ (ThirstyAffiliates),,Old TA slug -> new product slug /go/
+/recommends/segway-e3-pro,/go/segway-ninebot-e3-pro/,301,low,Affiliate -- /recommends/,,ThirstyAffiliates -> new /go/ system
+/go/segway-e3-pro,/go/segway-ninebot-e3-pro/,301,low,Affiliate -- /go/ (ThirstyAffiliates),,Old TA slug -> new product slug /go/
+/recommends/segway-gt2,/go/segway-gt2/,301,low,Affiliate -- /recommends/,,ThirstyAffiliates -> new /go/ system
+/recommends/segway-ninebot-max-g2,/go/segway-ninebot-max-g2/,301,low,Affiliate -- /recommends/,,ThirstyAffiliates -> new /go/ system
+/recommends/segwayg30p,/go/segway-ninebot-max/,301,low,Affiliate -- /recommends/,,ThirstyAffiliates -> new /go/ system
+/go/segwayg30p,/go/segway-ninebot-max/,301,low,Affiliate -- /go/ (ThirstyAffiliates),,Old TA slug -> new product slug /go/
+/recommends/segwaymaxg2,/go/segway-ninebot-max-g2/,301,low,Affiliate -- /recommends/,,ThirstyAffiliates -> new /go/ system
+/go/segwaymaxg2,/go/segway-ninebot-max-g2/,301,low,Affiliate -- /go/ (ThirstyAffiliates),,Old TA slug -> new product slug /go/
+/recommends/splach-twin,/go/splach-twin/,301,low,Affiliate -- /recommends/,,ThirstyAffiliates -> new /go/ system
+/recommends/turboantv8,/go/turboant-v8/,301,low,Affiliate -- /recommends/,,ThirstyAffiliates -> new /go/ system
+/go/turboantv8,/go/turboant-v8/,301,low,Affiliate -- /go/ (ThirstyAffiliates),,Old TA slug -> new product slug /go/
+/recommends/varla-eagleone,/go/varla-eagle-one-v3-0/,301,low,Affiliate -- /recommends/,,ThirstyAffiliates -> new /go/ system
+/go/varla-eagleone,/go/varla-eagle-one-v3-0/,301,low,Affiliate -- /go/ (ThirstyAffiliates),,Old TA slug -> new product slug /go/
+/recommends/varla-pegasus-2,/go/varla-pegasus/,301,low,Affiliate -- /recommends/,,ThirstyAffiliates -> new /go/ system
+/go/varla-pegasus-2,/go/varla-pegasus/,301,low,Affiliate -- /go/ (ThirstyAffiliates),,Old TA slug -> new product slug /go/
+/recommends/vmax-vx2-hub,/go/vmax-vx2-hub-18-2ah/,301,low,Affiliate -- /recommends/,,ThirstyAffiliates -> new /go/ system
+/go/vmax-vx2-hub,/go/vmax-vx2-hub-18-2ah/,301,low,Affiliate -- /go/ (ThirstyAffiliates),,Old TA slug -> new product slug /go/
+/recommends/vmax-vx2-pro,/go/vmax-vx2-pro-gt/,301,low,Affiliate -- /recommends/,,ThirstyAffiliates -> new /go/ system
+/go/vmax-vx2-pro,/go/vmax-vx2-pro-gt/,301,low,Affiliate -- /go/ (ThirstyAffiliates),,Old TA slug -> new product slug /go/
+/recommends/vmax-vx4-gt,/go/vmax-vx4-gt/,301,low,Affiliate -- /recommends/,,ThirstyAffiliates -> new /go/ system
+/recommends/vmax-vx5,/go/vmax-vx5-pro-gt/,301,low,Affiliate -- /recommends/,,ThirstyAffiliates -> new /go/ system
+/go/vmax-vx5,/go/vmax-vx5-pro-gt/,301,low,Affiliate -- /go/ (ThirstyAffiliates),,Old TA slug -> new product slug /go/
+/recommends/vmax-vx5-pro-gt,/go/vmax-vx5-pro-gt/,301,low,Affiliate -- /recommends/,,ThirstyAffiliates -> new /go/ system
+/recommends/vx2extreme,/go/vmax-vx2-extreme-gt/,301,low,Affiliate -- /recommends/,,ThirstyAffiliates -> new /go/ system
+/go/vx2extreme,/go/vmax-vx2-extreme-gt/,301,low,Affiliate -- /go/ (ThirstyAffiliates),,Old TA slug -> new product slug /go/
+/recommends/x7max,/go/turboant-x7-max/,301,low,Affiliate -- /recommends/,,ThirstyAffiliates -> new /go/ system
+/go/x7max,/go/turboant-x7-max/,301,low,Affiliate -- /go/ (ThirstyAffiliates),,Old TA slug -> new product slug /go/

@@ -9,8 +9,19 @@ REMOTE_USER="haxholmw"
 REMOTE_HOST="162.19.222.172"
 REMOTE_PORT="1988"
 REMOTE_WP="/home/haxholmw/staging.eridehero.com"
-SSH_CMD="ssh -p $REMOTE_PORT $REMOTE_USER@$REMOTE_HOST"
-SCP_CMD="scp -P $REMOTE_PORT"
+
+# Detect environment: WSL uses /mnt/c/, Git Bash uses /c/
+if [ -d "/mnt/c" ]; then
+    WIN_HOME="/mnt/c/Users/rasmu"
+else
+    WIN_HOME="/c/Users/rasmu"
+fi
+# Copy key to WSL-native path with correct permissions (Windows NTFS can't do 600)
+SSH_KEY="/tmp/.deploy-staging-key"
+cp "$WIN_HOME/.ssh/deploy-staging" "$SSH_KEY" 2>/dev/null
+chmod 600 "$SSH_KEY"
+SSH_CMD="ssh -p $REMOTE_PORT -i $SSH_KEY $REMOTE_USER@$REMOTE_HOST"
+SCP_CMD="scp -P $REMOTE_PORT -i $SSH_KEY"
 
 SCRIPT_DIR="$(cd "$(dirname "$0")" && pwd)"
 ZIP_DIR="$SCRIPT_DIR"
@@ -30,7 +41,9 @@ esac
 
 # Step 1: Build zips
 echo "==> Building zips..."
-powershell.exe -ExecutionPolicy Bypass -File "$SCRIPT_DIR/build-zips.ps1"
+# Convert WSL/Git Bash path to Windows path for PowerShell
+WIN_SCRIPT_DIR="$(echo "$SCRIPT_DIR" | sed -e 's|^/mnt/c/|C:\\|' -e 's|^/c/|C:\\|' -e 's|/|\\|g')"
+powershell.exe -ExecutionPolicy Bypass -File "$WIN_SCRIPT_DIR\\build-zips.ps1"
 echo ""
 
 # Step 2: Upload selected zips

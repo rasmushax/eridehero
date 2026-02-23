@@ -149,6 +149,13 @@ class ClickRedirector {
         }
 
         if (!$link) {
+            // Fallback: redirect to product page instead of 404.
+            $product_url = get_permalink($product_id);
+            if ($product_url) {
+                header('X-Robots-Tag: noindex, nofollow', true);
+                wp_redirect($product_url, 302);
+                exit;
+            }
             $this->show_not_found('No retailer available for this product.');
             return;
         }
