@@ -1,0 +1,11 @@
+.erh-icon-heading {
+    display: flex;
+    align-items: center;
+    gap: var(--space-3);
+}
+
+.erh-icon-heading-icon {
+    flex-shrink: 0;
+    width: 24px;
+    height: 24px;
+}

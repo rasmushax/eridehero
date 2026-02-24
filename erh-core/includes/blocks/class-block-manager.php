@@ -95,6 +95,9 @@ class BlockManager {
 
         // Register pros & cons block.
         $this->register_proscons_block();
+
+        // Register icon heading block.
+        $this->register_icon_heading_block();
     }
 
     /**
@@ -234,6 +237,7 @@ class BlockManager {
         $this->register_callout_fields();
         $this->register_greybox_fields();
         $this->register_proscons_fields();
+        $this->register_icon_heading_fields();
     }
 
     /**
@@ -1328,6 +1332,139 @@ class BlockManager {
             wp_enqueue_style(
                 'erh-block-proscons',
                 $block_url . 'proscons.css',
+                [],
+                ERH_VERSION
+            );
+        }
+    }
+
+    /**
+     * Register the icon heading block.
+     *
+     * @return void
+     */
+    private function register_icon_heading_block(): void {
+        acf_register_block_type([
+            'name'            => 'icon-heading',
+            'title'           => __('Icon Heading', 'erh-core'),
+            'description'     => __('Heading with an icon prefix (e.g., checkmark + "Pros").', 'erh-core'),
+            'category'        => 'formatting',
+            'icon'            => 'heading',
+            'keywords'        => ['icon', 'heading', 'pros', 'cons', 'h3'],
+            'mode'            => 'preview',
+            'supports'        => [
+                'align'  => false,
+                'anchor' => true,
+            ],
+            'render_callback' => [$this, 'render_icon_heading_block'],
+            'enqueue_assets'  => [$this, 'enqueue_icon_heading_assets'],
+        ]);
+
+        $this->blocks['icon-heading'] = [
+            'name' => 'icon-heading',
+            'dir'  => $this->blocks_dir . 'icon-heading/',
+            'url'  => $this->blocks_url . 'icon-heading/',
+        ];
+    }
+
+    /**
+     * Register icon heading block ACF fields.
+     *
+     * @return void
+     */
+    private function register_icon_heading_fields(): void {
+        acf_add_local_field_group([
+            'key'      => 'group_erh_icon_heading_block',
+            'title'    => 'Block - Icon Heading',
+            'fields'   => [
+                [
+                    'key'           => 'field_erh_icon_heading_icon',
+                    'label'         => 'Icon',
+                    'name'          => 'icon_heading_icon',
+                    'type'          => 'select',
+                    'choices'       => [
+                        'check'          => 'Check',
+                        'x'              => 'X / Cross',
+                        'info'           => 'Info',
+                        'zap'            => 'Lightning',
+                        'lightbulb'      => 'Lightbulb',
+                        'alert-triangle' => 'Warning',
+                        'star'           => 'Star',
+                        'thumbs-up'      => 'Thumbs Up',
+                        'thumbs-down'    => 'Thumbs Down',
+                    ],
+                    'default_value' => 'check',
+                    'return_format' => 'value',
+                    'wrapper'       => ['width' => '33'],
+                ],
+                [
+                    'key'           => 'field_erh_icon_heading_level',
+                    'label'         => 'Heading Level',
+                    'name'          => 'icon_heading_level',
+                    'type'          => 'select',
+                    'choices'       => [
+                        'h2' => 'H2',
+                        'h3' => 'H3',
+                        'h4' => 'H4',
+                        'h5' => 'H5',
+                    ],
+                    'default_value' => 'h3',
+                    'return_format' => 'value',
+                    'wrapper'       => ['width' => '33'],
+                ],
+                [
+                    'key'         => 'field_erh_icon_heading_title',
+                    'label'       => 'Title',
+                    'name'        => 'icon_heading_title',
+                    'type'        => 'text',
+                    'required'    => 1,
+                    'placeholder' => 'e.g., Pros, Cons, Key Features...',
+                    'wrapper'     => ['width' => '34'],
+                ],
+            ],
+            'location' => [
+                [
+                    [
+                        'param'    => 'block',
+                        'operator' => '==',
+                        'value'    => 'acf/icon-heading',
+                    ],
+                ],
+            ],
+        ]);
+    }
+
+    /**
+     * Render the icon heading block.
+     *
+     * @param array  $block      The block settings.
+     * @param string $content    The block content (empty for ACF blocks).
+     * @param bool   $is_preview True during AJAX preview in editor.
+     * @param int    $post_id    The post ID.
+     * @return void
+     */
+    public function render_icon_heading_block(array $block, string $content = '', bool $is_preview = false, int $post_id = 0): void {
+        $template = $this->blocks_dir . 'icon-heading/template.php';
+
+        if (file_exists($template)) {
+            include $template;
+        }
+    }
+
+    /**
+     * Enqueue icon heading block assets.
+     *
+     * @return void
+     */
+    public function enqueue_icon_heading_assets(): void {
+        $block_url = $this->blocks_url . 'icon-heading/';
+        $block_dir = $this->blocks_dir . 'icon-heading/';
+
+        // Enqueue CSS.
+        if (file_exists($block_dir . 'icon-heading.css')) {
+            wp_enqueue_style(
+                'erh-block-icon-heading',
+                $block_url . 'icon-heading.css',
                 [],
                 ERH_VERSION
             );

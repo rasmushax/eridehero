@@ -51,7 +51,7 @@ No content value — these served Oxygen-specific layout purposes or are superse
 | Block Type | Instances | Posts | Why | Status |
 |---|---|---|---|---|
 | `ovsb-cta-button` | 61 | 20 | HFT/price-intel handles affiliate links | **DONE** |
-| `ovsb-icon-h3` | 8 | 1 | Decorative heading, no content | TODO |
+| `ovsb-icon-h3` | 8 | 1 | `acf/icon-heading` | **DONE** |
 | `ovsb-two-image-row` | 5 | 5 | Use WP gallery/columns blocks | TODO |
 | `ovsb-wp-forms-icon-row` | 1 | 1 | Embed WPForms directly if needed | TODO |
 
@@ -110,13 +110,25 @@ Reuses existing `.pros-cons` CSS classes from `_pros-cons.css`. Supports custom 
 
 Files: `erh-core/includes/blocks/proscons/template.php`, `proscons.css`
 
-All three blocks registered in `erh-core/includes/blocks/class-block-manager.php`.
+**`acf/icon-heading`** — Heading with icon prefix (e.g., checkmark + "Pros").
+
+| Field | Key | Type | Options |
+|---|---|---|---|
+| Icon | `icon_heading_icon` | Select | check, x, info, zap, lightbulb, alert-triangle, star, thumbs-up, thumbs-down |
+| Heading Level | `icon_heading_level` | Select | h2, h3, h4, h5 |
+| Title | `icon_heading_title` | Text | Required |
+
+Files: `erh-core/includes/blocks/icon-heading/template.php`, `icon-heading.css`
+
+All four blocks registered in `erh-core/includes/blocks/class-block-manager.php`.
 
 ### SVG Icons Added
 
 Added to `erh-theme/template-parts/components/svg-sprite.php`:
 - `icon-lightbulb` (Feather lightbulb)
 - `icon-alert-triangle` (Feather alert-triangle)
+- `icon-thumbs-up` (Feather thumbs-up)
+- `icon-thumbs-down` (Feather thumbs-down)
 
 ### Migration Script
 
@@ -234,6 +246,7 @@ Phase 2 can be done in one script that strips all `<!-- wp:oxygen-vsb/ovsb-* ...
 | `scripts/fix-block-newlines.php` | Fix literal "n" between HTML tags | Done (ran on staging) |
 | `scripts/fix-broken-json.php` | Fix broken JSON from unescaped quotes | Done (ran on staging) |
 | `scripts/migrate-proscons.php` | Convert pros-cons blocks to `acf/proscons` | Done (ran on staging) |
+| `scripts/migrate-icon-heading.php` | Convert icon-h3 blocks to `acf/icon-heading` | Ready to run |
 
 ---
 
@@ -251,3 +264,4 @@ Phase 2 can be done in one script that strips all `<!-- wp:oxygen-vsb/ovsb-* ...
 | Pros-cons (standard) | `/electric-scooter-buying-guide/` | 7 blocks with "Pros"/"Cons" headers |
 | Pros-cons (custom) | `/segway-ninebot-max-g2-review/` | "Buy It If" / "Skip It If" headers |
 | Pros-cons (custom) | `/apollo-go-review/` | "Who Should Buy It" / "Who Should Look Elsewhere" |
+| Icon heading | `/electric-scooter-throttles/` | 4 "Pros" with check, 4 "Cons" with x icon |

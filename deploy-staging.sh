@@ -16,9 +16,16 @@ if [ -d "/mnt/c" ]; then
 else
     WIN_HOME="/c/Users/rasmu"
 fi
-# Copy key to WSL-native path with correct permissions (Windows NTFS can't do 600)
+# Find SSH key (deploy-staging on one machine, id_ed25519 on another)
 SSH_KEY="/tmp/.deploy-staging-key"
-cp "$WIN_HOME/.ssh/deploy-staging" "$SSH_KEY" 2>/dev/null
+if [ -f "$WIN_HOME/.ssh/deploy-staging" ]; then
+    cp "$WIN_HOME/.ssh/deploy-staging" "$SSH_KEY" 2>/dev/null
+elif [ -f "$WIN_HOME/.ssh/id_ed25519" ]; then
+    cp "$WIN_HOME/.ssh/id_ed25519" "$SSH_KEY" 2>/dev/null
+else
+    echo "ERROR: No SSH key found at ~/.ssh/deploy-staging or ~/.ssh/id_ed25519"
+    exit 1
+fi
 chmod 600 "$SSH_KEY"
 SSH_CMD="ssh -p $REMOTE_PORT -i $SSH_KEY $REMOTE_USER@$REMOTE_HOST"
 SCP_CMD="scp -P $REMOTE_PORT -i $SSH_KEY"
