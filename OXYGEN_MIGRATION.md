@@ -1,7 +1,7 @@
 # Oxygen Block Migration
 
 > **Status:** In progress — Phase 3 content blocks partially done
-> **Last updated:** 2026-02-23
+> **Last updated:** 2026-02-24
 > **Inventory:** `oxygen-blocks-inventory.md` (full block-by-block details)
 
 ---
@@ -40,7 +40,7 @@ These blocks have native ACF equivalents or dedicated pages already — just str
 | `ovsb-electric-scooter-quiz-block` | 11 | 11 | Removed (quiz page exists at `/tools/quiz/`) | **DONE** |
 | `ovsb-electric-scooter-comparison-tool` | 8 | 8 | Removed (compare system exists at `/compare/`) | **DONE** |
 | `ovsb-watt-calculator` | 1 | 1 | Removed (new `/tools/watt-calculator/` built) | **DONE** |
-| `ovsb-e-scooter-savings-calculator` | 1 | 1 | Removed (savings tool planned as future `/tools/` page) | **DONE** |
+| `ovsb-e-scooter-savings-calculator` | 1 | 1 | Removed (new `/tools/electric-scooter-cost-calculator/` built) | **DONE** |
 
 **Action:** Simple regex removal. Optionally add inline links to the replacement pages.
 
