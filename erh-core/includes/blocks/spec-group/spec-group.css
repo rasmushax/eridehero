@@ -1,0 +1,70 @@
+/* =============================================
+   ERH Spec Group Block
+   Grey bordered box with spec label/value pairs
+   ============================================= */
+
+.erh-spec-group {
+    border: 1px solid var(--color-border);
+    border-radius: var(--radius-lg);
+    padding: var(--space-10);
+    margin: var(--space-6) 0;
+    background: var(--color-background);
+}
+
+/* ===== Spec List ===== */
+
+.erh-spec-group-list {
+    display: grid;
+    gap: var(--space-4);
+    margin: 0;
+    padding: 0;
+}
+
+.erh-spec-group--2col .erh-spec-group-list {
+    grid-template-columns: 1fr 1fr;
+}
+
+/* ===== Spec Item ===== */
+
+.erh-spec-group-item {
+    display: flex;
+    gap: var(--space-2);
+}
+
+.erh-spec-group-label {
+    font-weight: var(--font-bold);
+    color: var(--color-dark);
+    white-space: nowrap;
+}
+
+.erh-spec-group-label::after {
+    content: ':';
+}
+
+.erh-spec-group-value {
+    margin: 0;
+    color: var(--color-body);
+}
+
+/* ===== Responsive ===== */
+
+@media (max-width: 768px) {
+    .erh-spec-group {
+        padding: var(--space-8);
+    }
+
+    .erh-spec-group--2col .erh-spec-group-list {
+        grid-template-columns: 1fr;
+    }
+}
+
+/* ===== Empty State (Editor Preview) ===== */
+
+.erh-spec-group-empty {
+    padding: var(--space-6);
+    background: var(--color-background);
+    border: 2px dashed var(--color-border);
+    border-radius: var(--radius-lg);
+    text-align: center;
+    color: var(--color-muted);
+}

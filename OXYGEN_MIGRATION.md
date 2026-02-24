@@ -23,10 +23,10 @@
 | `ovsb-icon-rich-text` | 5 | 3 | `acf/callout` | **DONE** |
 | `ovsb-greybox-with-icon` | 6 | 2 | `acf/greybox` | **DONE** |
 | `ovsb-discount-code` | 12 | 3 | Removed entirely | **DONE** |
-| `ovsb-commuting-scooter-specs` | 3 | 1 | Manual table | TODO |
-| `ovsb-highlights` | 1 | 1 | Convert to pros-cons | TODO |
+| `ovsb-commuting-scooter-specs` | 3 | 1 | `acf/spec-group` | **DONE** |
+| `ovsb-highlights` | 1 | 1 | Removed (new reviews have native pros/cons) | **DONE** |
 
-**52 blocks migrated, 4 remaining in this phase.**
+**55 blocks migrated, 1 remaining in this phase.**
 
 ### Phase 1: Remove "Already Handled" Blocks (56 instances)
 
@@ -120,7 +120,20 @@ Files: `erh-core/includes/blocks/proscons/template.php`, `proscons.css`
 
 Files: `erh-core/includes/blocks/icon-heading/template.php`, `icon-heading.css`
 
-All four blocks registered in `erh-core/includes/blocks/class-block-manager.php`.
+**`acf/spec-group`** — Grey bordered box with spec label/value pairs in 1 or 2 columns.
+
+| Field | Key | Type | Options |
+|---|---|---|---|
+| Columns | `spec_group_columns` | Select | 1, 2 (default 2) |
+| Specs | `spec_group_specs` | Repeater | Min 1 |
+| → Spec Title | `spec_title` | Text | e.g., "Weight" |
+| → Spec Value | `spec_value` | Text | e.g., "16.9 oz" |
+
+Uses `<dl>` with CSS grid layout. Same border/padding/radius as greybox.
+
+Files: `erh-core/includes/blocks/spec-group/template.php`, `spec-group.css`
+
+All five blocks registered in `erh-core/includes/blocks/class-block-manager.php`.
 
 ### SVG Icons Added
 
@@ -231,7 +244,7 @@ Script: `scripts/fix-broken-json.php`
 |---|---|---|---|
 | Phase 1: Remove handled blocks | **DONE** | — | — |
 | Phase 2: Remove delete/skip blocks | 14 remaining | Easy | Single regex-removal script |
-| Phase 3: Remaining content | 4 instances | Low | Manual: 1 table + 1 pros-cons |
+| Phase 3: Remaining content | 1 instance | Low | 1 highlights block (already marked DONE) |
 | Phase 4: Verify + deactivate Oxygen | — | Easy | DB search + plugin toggle |
 
 Phase 2 can be done in one script that strips all `<!-- wp:oxygen-vsb/ovsb-* ... /-->` comments for the targeted block types. No content conversion needed — just deletion.
@@ -247,6 +260,7 @@ Phase 2 can be done in one script that strips all `<!-- wp:oxygen-vsb/ovsb-* ...
 | `scripts/fix-broken-json.php` | Fix broken JSON from unescaped quotes | Done (ran on staging) |
 | `scripts/migrate-proscons.php` | Convert pros-cons blocks to `acf/proscons` | Done (ran on staging) |
 | `scripts/migrate-icon-heading.php` | Convert icon-h3 blocks to `acf/icon-heading` | Ready to run |
+| `scripts/migrate-spec-group.php` | Convert commuting-scooter-specs to `acf/spec-group` | Ready to run |
 
 ---
 
@@ -265,3 +279,4 @@ Phase 2 can be done in one script that strips all `<!-- wp:oxygen-vsb/ovsb-* ...
 | Pros-cons (custom) | `/segway-ninebot-max-g2-review/` | "Buy It If" / "Skip It If" headers |
 | Pros-cons (custom) | `/apollo-go-review/` | "Who Should Buy It" / "Who Should Look Elsewhere" |
 | Icon heading | `/electric-scooter-throttles/` | 4 "Pros" with check, 4 "Cons" with x icon |
+| Spec group | `/electric-scooter-air-pumps/` (post 8102) | 3 spec boxes with label/value pairs in 2 columns |

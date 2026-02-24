@@ -98,6 +98,9 @@ class BlockManager {
 
         // Register icon heading block.
         $this->register_icon_heading_block();
+
+        // Register spec group block.
+        $this->register_spec_group_block();
     }
 
     /**
@@ -238,6 +241,7 @@ class BlockManager {
         $this->register_greybox_fields();
         $this->register_proscons_fields();
         $this->register_icon_heading_fields();
+        $this->register_spec_group_fields();
     }
 
     /**
@@ -1465,6 +1469,136 @@ class BlockManager {
             wp_enqueue_style(
                 'erh-block-icon-heading',
                 $block_url . 'icon-heading.css',
+                [],
+                ERH_VERSION
+            );
+        }
+    }
+
+    /**
+     * Register the spec group block.
+     *
+     * @return void
+     */
+    private function register_spec_group_block(): void {
+        acf_register_block_type([
+            'name'            => 'spec-group',
+            'title'           => __('Spec Group', 'erh-core'),
+            'description'     => __('Grey bordered box with spec label/value pairs in 1 or 2 columns.', 'erh-core'),
+            'category'        => 'formatting',
+            'icon'            => 'editor-table',
+            'keywords'        => ['spec', 'specs', 'specifications', 'table', 'details'],
+            'mode'            => 'preview',
+            'supports'        => [
+                'align'  => false,
+                'anchor' => true,
+            ],
+            'render_callback' => [$this, 'render_spec_group_block'],
+            'enqueue_assets'  => [$this, 'enqueue_spec_group_assets'],
+        ]);
+
+        $this->blocks['spec-group'] = [
+            'name' => 'spec-group',
+            'dir'  => $this->blocks_dir . 'spec-group/',
+            'url'  => $this->blocks_url . 'spec-group/',
+        ];
+    }
+
+    /**
+     * Register spec group block ACF fields.
+     *
+     * @return void
+     */
+    private function register_spec_group_fields(): void {
+        acf_add_local_field_group([
+            'key'      => 'group_erh_spec_group_block',
+            'title'    => 'Block - Spec Group',
+            'fields'   => [
+                [
+                    'key'           => 'field_erh_spec_group_columns',
+                    'label'         => 'Columns',
+                    'name'          => 'spec_group_columns',
+                    'type'          => 'select',
+                    'choices'       => [
+                        '1' => '1 Column',
+                        '2' => '2 Columns',
+                    ],
+                    'default_value' => '2',
+                    'return_format' => 'value',
+                    'wrapper'       => ['width' => '30'],
+                ],
+                [
+                    'key'          => 'field_erh_spec_group_specs',
+                    'label'        => 'Specs',
+                    'name'         => 'spec_group_specs',
+                    'type'         => 'repeater',
+                    'layout'       => 'table',
+                    'button_label' => 'Add Spec',
+                    'min'          => 1,
+                    'max'          => 0,
+                    'sub_fields'   => [
+                        [
+                            'key'         => 'field_erh_spec_group_title',
+                            'label'       => 'Spec Title',
+                            'name'        => 'spec_title',
+                            'type'        => 'text',
+                            'placeholder' => 'e.g., Weight',
+                            'wrapper'     => ['width' => '40'],
+                        ],
+                        [
+                            'key'         => 'field_erh_spec_group_value',
+                            'label'       => 'Spec Value',
+                            'name'        => 'spec_value',
+                            'type'        => 'text',
+                            'placeholder' => 'e.g., 16.9 oz',
+                            'wrapper'     => ['width' => '60'],
+                        ],
+                    ],
+                ],
+            ],
+            'location' => [
+                [
+                    [
+                        'param'    => 'block',
+                        'operator' => '==',
+                        'value'    => 'acf/spec-group',
+                    ],
+                ],
+            ],
+        ]);
+    }
+
+    /**
+     * Render the spec group block.
+     *
+     * @param array  $block      The block settings.
+     * @param string $content    The block content (empty for ACF blocks).
+     * @param bool   $is_preview True during AJAX preview in editor.
+     * @param int    $post_id    The post ID.
+     * @return void
+     */
+    public function render_spec_group_block(array $block, string $content = '', bool $is_preview = false, int $post_id = 0): void {
+        $template = $this->blocks_dir . 'spec-group/template.php';
+
+        if (file_exists($template)) {
+            include $template;
+        }
+    }
+
+    /**
+     * Enqueue spec group block assets.
+     *
+     * @return void
+     */
+    public function enqueue_spec_group_assets(): void {
+        $block_url = $this->blocks_url . 'spec-group/';
+        $block_dir = $this->blocks_dir . 'spec-group/';
+
+        // Enqueue CSS.
+        if (file_exists($block_dir . 'spec-group.css')) {
+            wp_enqueue_style(
+                'erh-block-spec-group',
+                $block_url . 'spec-group.css',
                 [],
                 ERH_VERSION
             );
