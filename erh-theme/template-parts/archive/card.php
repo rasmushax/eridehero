@@ -52,8 +52,8 @@ if ( 'guide' === $type && $custom_title ) {
 	$title = $custom_title;
 }
 
-// Date for sorting (reviews).
-$date_raw = get_the_date( 'Y-m-d', $post_id );
+// Date for sorting (reviews) — use modified date so recently updated content sorts first.
+$date_raw = get_the_modified_date( 'Y-m-d', $post_id );
 
 // Build data attributes.
 $data_attrs = 'data-category="' . esc_attr( $category_slugs ) . '"';
@@ -95,7 +95,7 @@ if ( 'review' === $type ) {
 
 	<?php if ( 'article' === $type ) : ?>
 		<div class="archive-card-meta">
-			<span><?php echo esc_html( get_the_date( 'M j, Y', $post_id ) ); ?></span>
+			<span><?php echo esc_html( get_the_modified_date( 'M j, Y', $post_id ) ); ?></span>
 			<?php if ( $reading_time ) : ?>
 				<span class="archive-card-meta-sep">&middot;</span>
 				<span><?php printf( esc_html__( '%d min read', 'erh' ), $reading_time ); ?></span>
@@ -103,7 +103,7 @@ if ( 'review' === $type ) {
 		</div>
 	<?php elseif ( 'review' === $type ) : ?>
 		<div class="archive-card-meta">
-			<span><?php echo esc_html( get_the_date( 'M j, Y', $post_id ) ); ?></span>
+			<span><?php echo esc_html( get_the_modified_date( 'M j, Y', $post_id ) ); ?></span>
 		</div>
 	<?php endif; ?>
 </a>

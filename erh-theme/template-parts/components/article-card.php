@@ -26,7 +26,7 @@ $cat_name  = ! empty( $category ) ? $category[0]->name : '';
         </div>
         <div class="content-card-body">
             <h3 class="content-card-title"><?php the_title(); ?></h3>
-            <span class="content-card-meta"><?php echo esc_html( get_the_date() ); ?></span>
+            <span class="content-card-meta"><?php echo esc_html( get_the_modified_date() ); ?></span>
         </div>
     </a>
 </article>

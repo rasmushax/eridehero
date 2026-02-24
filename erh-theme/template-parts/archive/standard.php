@@ -66,7 +66,7 @@ $category = $args['category'] ?? null;
 						</div>
 						<div class="archive-card-content">
 							<h3 class="archive-card-title"><?php the_title(); ?></h3>
-							<span class="archive-card-meta"><?php echo esc_html( get_the_date( 'M j, Y' ) ); ?></span>
+							<span class="archive-card-meta"><?php echo esc_html( get_the_modified_date( 'M j, Y' ) ); ?></span>
 						</div>
 					</a>
 				<?php endwhile; ?>

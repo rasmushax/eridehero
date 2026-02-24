@@ -29,7 +29,7 @@ $query_args = array(
     'post_type'      => 'post',
     'posts_per_page' => $limit,
     'post_status'    => 'publish',
-    'orderby'        => 'date',
+    'orderby'        => 'modified',
     'order'          => 'DESC',
     'tag__not_in'    => array_filter( array(
         get_term_by( 'slug', 'review', 'post_tag' ) ? get_term_by( 'slug', 'review', 'post_tag' )->term_id : 0,
@@ -77,7 +77,7 @@ $articles_query = new WP_Query( $query_args );
                             </div>
                             <div class="content-card-content">
                                 <h3 class="content-card-title"><?php the_title(); ?></h3>
-                                <span class="content-card-date"><?php echo esc_html( get_the_date( 'M j, Y' ) ); ?></span>
+                                <span class="content-card-date"><?php echo esc_html( get_the_modified_date( 'M j, Y' ) ); ?></span>
                             </div>
                         </a>
                     <?php endwhile; ?>

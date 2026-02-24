@@ -38,7 +38,7 @@ if ( ! empty( $selected_posts ) && is_array( $selected_posts ) ) {
         'tag'            => 'buying-guide',
         'posts_per_page' => 4,
         'post_status'    => 'publish',
-        'orderby'        => 'date',
+        'orderby'        => 'modified',
         'order'          => 'DESC',
     );
 }

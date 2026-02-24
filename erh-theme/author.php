@@ -58,7 +58,7 @@ $author_query = new WP_Query( array(
 	'post_status'    => 'publish',
 	'posts_per_page' => $posts_per_page,
 	'paged'          => $paged,
-	'orderby'        => 'date',
+	'orderby'        => 'modified',
 	'order'          => 'DESC',
 ) );
 

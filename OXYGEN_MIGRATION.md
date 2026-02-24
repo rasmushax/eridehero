@@ -26,7 +26,7 @@
 | `ovsb-commuting-scooter-specs` | 3 | 1 | `acf/spec-group` | **DONE** |
 | `ovsb-highlights` | 1 | 1 | Removed (new reviews have native pros/cons) | **DONE** |
 
-**55 blocks migrated, 1 remaining in this phase.**
+**All 56 blocks migrated.**
 
 ### Phase 1: Remove "Already Handled" Blocks (56 instances)
 

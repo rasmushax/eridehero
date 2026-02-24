@@ -36,7 +36,7 @@ $related_args = array(
     'posts_per_page' => $count,
     'post__not_in'   => array( $post_id ),
     'tag'            => 'review',
-    'orderby'        => 'date',
+    'orderby'        => 'modified',
     'order'          => 'DESC',
     'meta_query'     => array(
         array(
@@ -116,7 +116,7 @@ if ( 'electric-scooters' === $wp_category_slug ) {
                 </div>
                 <div class="content-card-content">
                     <h3 class="content-card-title"><?php the_title(); ?></h3>
-                    <span class="content-card-date"><?php echo esc_html( get_the_date( 'M j, Y' ) ); ?></span>
+                    <span class="content-card-date"><?php echo esc_html( get_the_modified_date( 'M j, Y' ) ); ?></span>
                 </div>
             </a>
             <?php

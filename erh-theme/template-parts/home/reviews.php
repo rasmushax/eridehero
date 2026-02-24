@@ -31,7 +31,7 @@ $query_args = array(
     'tag'            => 'review',
     'posts_per_page' => $limit,
     'post_status'    => 'publish',
-    'orderby'        => 'date',
+    'orderby'        => 'modified',
     'order'          => 'DESC',
 );
 
@@ -94,7 +94,7 @@ $reviews_query = new WP_Query( $query_args );
                             </div>
                             <div class="content-card-content">
                                 <h3 class="content-card-title"><?php the_title(); ?></h3>
-                                <span class="content-card-date"><?php echo esc_html( get_the_date( 'M j, Y' ) ); ?></span>
+                                <span class="content-card-date"><?php echo esc_html( get_the_modified_date( 'M j, Y' ) ); ?></span>
                             </div>
                         </a>
                     <?php endwhile; ?>

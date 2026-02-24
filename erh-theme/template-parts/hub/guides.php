@@ -39,7 +39,7 @@ $all_guides_args = array(
 	'post_status'    => 'publish',
 	'category_name'  => $category_slug,
 	'tag_id'         => $buying_guide_tag->term_id,
-	'orderby'        => 'date',
+	'orderby'        => 'modified',
 	'order'          => 'DESC',
 );
 
@@ -70,7 +70,7 @@ $sort_by_order = function ( $a, $b ) {
 		return $order_a - $order_b;
 	}
 
-	return strtotime( $b->post_date ) - strtotime( $a->post_date );
+	return strtotime( $b->post_modified ) - strtotime( $a->post_modified );
 };
 
 usort( $featured_guides, $sort_by_order );

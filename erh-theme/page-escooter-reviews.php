@@ -24,7 +24,7 @@ $query_args = array(
 	'category_name'  => 'electric-scooters',
 	'posts_per_page' => 12,
 	'paged'          => $paged,
-	'orderby'        => 'date',
+	'orderby'        => 'modified',
 	'order'          => 'DESC',
 );
 
@@ -95,7 +95,7 @@ get_header();
 						}
 
 						// Format date for data attribute (used by JS sort).
-						$date_raw = get_the_date( 'Y-m-d' );
+						$date_raw = get_the_modified_date( 'Y-m-d' );
 
 						get_template_part( 'template-parts/archive/card', null, array(
 							'type'           => 'review',

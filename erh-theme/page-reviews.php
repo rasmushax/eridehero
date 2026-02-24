@@ -23,7 +23,7 @@ $reviews_query = new WP_Query( array(
 	'tag'            => 'review',
 	'posts_per_page' => -1,
 	'post_status'    => 'publish',
-	'orderby'        => 'date',
+	'orderby'        => 'modified',
 	'order'          => 'DESC',
 ) );
 

@@ -30,7 +30,7 @@ $query_args = array(
     'post_type'      => 'post',
     'posts_per_page' => $count,
     'post__not_in'   => array( $current_post_id ),
-    'orderby'        => 'date',
+    'orderby'        => 'modified',
     'order'          => 'DESC',
 );
 
@@ -101,7 +101,7 @@ if ( ! $related_query->have_posts() ) {
                 </div>
                 <div class="content-card-content">
                     <h3 class="content-card-title"><?php the_title(); ?></h3>
-                    <span class="content-card-date"><?php echo esc_html( get_the_date( 'M j, Y' ) ); ?></span>
+                    <span class="content-card-date"><?php echo esc_html( get_the_modified_date( 'M j, Y' ) ); ?></span>
                 </div>
             </a>
         <?php endwhile; ?>
