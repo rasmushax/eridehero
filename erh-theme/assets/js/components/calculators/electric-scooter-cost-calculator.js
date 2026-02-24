@@ -38,8 +38,6 @@ const DEFAULTS = {
     ridesharePerMile: 2.50,
 };
 
-const ANNUAL_MAINTENANCE = 50; // Hardcoded estimate for tires, brakes, etc.
-
 // ── Formatters ─────────────────────────────────────────────────────────
 
 function formatMoney(num) {
@@ -186,9 +184,9 @@ export function init(container) {
         const costPerMileElec = costPerCharge / rangeMi;
         const annualElectricity = costPerMileElec * annualMiles;
         const annualOwnership = lifespan > 0 ? price / lifespan : 0;
-        const scooterAnnual = annualElectricity + annualOwnership + ANNUAL_MAINTENANCE;
+        const scooterAnnual = annualElectricity + annualOwnership;
         const scooterMonthly = scooterAnnual / 12;
-        const scooterRunningMonthly = (annualElectricity + ANNUAL_MAINTENANCE) / 12;
+        const scooterRunningMonthly = annualElectricity / 12;
 
         // Display with correct distance unit
         const displayPerDist = isMetric ? costPerMileElec * MI_TO_KM : costPerMileElec;
