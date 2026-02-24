@@ -114,10 +114,10 @@ export function init(container) {
         if (!element) return;
         element.classList.remove('result-value--success', 'result-value--warning');
         if (savings > 1) {
-            element.textContent = formatMoney(savings) + '/yr';
+            element.textContent = 'E-scooter saves ' + formatMoney(savings) + '/yr';
             element.classList.add('result-value--success');
         } else if (savings < -1) {
-            element.textContent = formatMoney(Math.abs(savings)) + ' more/yr';
+            element.textContent = 'E-scooter costs ' + formatMoney(Math.abs(savings)) + ' more/yr';
             element.classList.add('result-value--warning');
         } else {
             element.textContent = 'About the same';
@@ -192,9 +192,10 @@ export function init(container) {
         const displayPerDist = isMetric ? costPerMileElec * MI_TO_KM : costPerMileElec;
 
         setResult(res('scooter-per-distance'), formatPerDistance(displayPerDist, distUnit));
-        setResult(res('scooter-monthly'), formatMoney(scooterMonthly));
-        setResult(res('scooter-annual'), formatMoney(scooterAnnual));
+        setResult(res('scooter-monthly'), formatMoney(annualElectricity / 12));
+        setResult(res('scooter-annual'), formatMoney(annualElectricity));
         setResult(res('scooter-per-charge'), formatMoney(costPerCharge));
+        setResult(res('scooter-depreciation'), formatMoney(annualOwnership) + '/yr');
 
         // ── Comparisons ────────────────────────────────────────────
 
