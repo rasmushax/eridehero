@@ -9,6 +9,7 @@
 
 import { escapeHtml } from '../utils/dom.js';
 import { getUserGeo } from '../services/geo-price.js';
+import { formatBracketRange } from '../utils/pricing-ui.js';
 import { initPopovers } from './popover.js';
 
 // =============================================================================
@@ -231,11 +232,7 @@ function formatBracketContextText(priceContext, category) {
     }
 
     const bracketLabel = bracket?.label || 'this price range';
-    const bracketRange = bracket
-        ? (!bracket.max
-            ? `$${bracket.min.toLocaleString('en-US')}+`
-            : `$${bracket.min.toLocaleString('en-US')}–$${bracket.max.toLocaleString('en-US')}`)
-        : '';
+    const bracketRange = formatBracketRange(bracket);
 
     return `Compared to ${products_in_bracket} ${labels.plural} in the ${bracketLabel} bracket${bracketRange ? ` (${bracketRange})` : ''}`;
 }

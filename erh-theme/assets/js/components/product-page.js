@@ -16,6 +16,7 @@ import { RadarChart } from './radar-chart.js';
 import { ProductAnalysis } from './product-analysis.js';
 import { initCarousel } from '../utils/carousel.js';
 import { getUserGeo } from '../services/geo-price.js';
+import { formatBracketRange } from '../utils/pricing-ui.js';
 
 // =============================================================================
 // Configuration
@@ -278,8 +279,9 @@ class ProductPage {
         if (bracket_scores && Object.keys(bracket_scores).length > 0) {
             const bracket = price_context?.bracket;
             const labels = getProductLabels(this.category);
+            const range = formatBracketRange(bracket);
             const bracketLabel = bracket
-                ? `${bracket.label} ${labels.plural} ($${bracket.min.toLocaleString()}–$${bracket.max >= 2147483647 ? '+' : bracket.max.toLocaleString()})`
+                ? `${bracket.label} ${labels.plural}${range ? ` (${range})` : ''}`
                 : 'Bracket average';
 
             productData.push({

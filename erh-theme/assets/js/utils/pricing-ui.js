@@ -204,11 +204,35 @@ export function calculateDiscountIndicator(discountPercent) {
     };
 }
 
+/**
+ * Format a price bracket range for display.
+ *
+ * Handles unbounded top brackets (max === null) and ensures
+ * consistent en-US formatting to avoid locale-dependent separators.
+ *
+ * @param {Object} bracket - Bracket object with min, max, label
+ * @param {string} [currencySymbol='$'] - Currency symbol prefix
+ * @returns {string} Formatted range (e.g., "$500–$1,000" or "$2,500+")
+ */
+export function formatBracketRange(bracket, currencySymbol = '$') {
+    if (!bracket) return '';
+
+    const min = bracket.min.toLocaleString('en-US');
+
+    if (!bracket.max) {
+        return `${currencySymbol}${min}+`;
+    }
+
+    const max = bracket.max.toLocaleString('en-US');
+    return `${currencySymbol}${min}–${currencySymbol}${max}`;
+}
+
 export default {
     calculatePriceVerdict,
     renderRetailerRow,
     renderVerdictBadge,
     renderStockStatus,
     renderRetailerLogo,
-    calculateDiscountIndicator
+    calculateDiscountIndicator,
+    formatBracketRange
 };

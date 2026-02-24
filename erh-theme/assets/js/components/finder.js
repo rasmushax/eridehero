@@ -1965,7 +1965,7 @@ class Finder {
         // Use dynamic currency symbol for price filter
         if (prefix === '$' || cfg.field === 'current_price') {
             const symbol = this.currencySymbol;
-            return `${symbol}${min.toLocaleString()} – ${symbol}${max.toLocaleString()}`;
+            return `${symbol}${min.toLocaleString('en-US')} – ${symbol}${max.toLocaleString('en-US')}`;
         }
 
         return `${min}–${max}${suffix}`;

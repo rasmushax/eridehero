@@ -23,7 +23,7 @@ export function splitPrice(price) {
     const whole = Math.floor(price);
     const decimal = Math.round((price - whole) * 100);
     return {
-        whole: whole.toLocaleString(),
+        whole: whole.toLocaleString('en-US'),
         decimal: decimal.toString().padStart(2, '0'),
     };
 }
