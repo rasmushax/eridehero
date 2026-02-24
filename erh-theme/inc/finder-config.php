@@ -1365,12 +1365,13 @@ function erh_calc_distribution( array $products, string $field, float $max_val, 
 /**
  * Process products to extract filter data.
  *
- * @param array $products Raw products from JSON.
- * @param string $user_geo User's geo for pricing.
+ * @param array  $products     Raw products from JSON.
+ * @param string $user_geo     User's geo for pricing.
+ * @param string $product_type Product type key for type-specific config (e.g., price presets).
  * @return array Processed data with products, filter_max, filter_dist, and checkbox_options.
  */
-function erh_process_finder_products( array $products, string $user_geo = 'US' ): array {
-    $range_config    = erh_get_range_filter_config();
+function erh_process_finder_products( array $products, string $user_geo = 'US', string $product_type = 'escooter' ): array {
+    $range_config    = erh_get_range_filter_config( $product_type );
     $checkbox_config = erh_get_checkbox_filter_config();
     $tristate_config = erh_get_tristate_filter_config();
 

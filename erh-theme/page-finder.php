@@ -48,7 +48,7 @@ if ( file_exists( $json_file ) ) {
 $user_geo = 'US';
 
 // Process products and extract filter data.
-$processed = erh_process_finder_products( $products, $user_geo );
+$processed = erh_process_finder_products( $products, $user_geo, $json_type );
 $products         = $processed['products'];
 $filter_max       = $processed['filter_max'];
 $filter_min       = $processed['filter_min'];
