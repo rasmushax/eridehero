@@ -225,12 +225,17 @@ class CacheRebuildJob implements CronJobInterface {
             error_log('[ERH Cache Rebuild] === Starting cache rebuild with debug logging ===');
         }
 
+        // Collect all published product IDs so we can clean up stale rows after.
+        $all_published_ids = [];
+
         foreach (array_column(CategoryConfig::get_all(), 'type') as $product_type) {
             $products = $this->get_products_by_type($product_type);
 
             if (empty($products)) {
                 continue;
             }
+
+            $all_published_ids = array_merge($all_published_ids, $products);
 
             // Fetch all data in bulk for this product type.
             $bulk_start = microtime(true);
@@ -264,11 +269,15 @@ class CacheRebuildJob implements CronJobInterface {
             }
         }
 
+        // Remove stale rows for products that are no longer published.
+        $removed = $this->cleanup_stale_products($all_published_ids);
+
         $elapsed = round(microtime(true) - $start_time, 2);
 
         error_log(sprintf(
-            '[ERH Cron] Cache rebuild completed. Processed: %d products in %ss (HFT queries: %d, History queries: %d)',
+            '[ERH Cron] Cache rebuild completed. Processed: %d products, removed: %d stale rows, in %ss (HFT queries: %d, History queries: %d)',
             $processed_count,
+            $removed,
             $elapsed,
             $query_stats['hft_queries'],
             $query_stats['history_queries']
@@ -285,6 +294,33 @@ class CacheRebuildJob implements CronJobInterface {
 
         // Update post modified dates for specific finder pages (for cache invalidation).
         $this->touch_finder_pages();
+    }
+
+    /**
+     * Remove rows from wp_product_data for products that are no longer published.
+     *
+     * @param array<int> $published_ids All currently published product IDs.
+     * @return int Number of stale rows removed.
+     */
+    private function cleanup_stale_products(array $published_ids): int {
+        global $wpdb;
+        $table_name = $wpdb->prefix . ERH_TABLE_PRODUCT_DATA;
+
+        if (empty($published_ids)) {
+            // No published products at all — clear the entire cache table.
+            // phpcs:ignore WordPress.DB.PreparedSQL.InterpolatedNotPrepared
+            return (int) $wpdb->query("DELETE FROM {$table_name}");
+        }
+
+        $placeholders = implode(',', array_fill(0, count($published_ids), '%d'));
+
+        // phpcs:ignore WordPress.DB.PreparedSQL.NotPrepared
+        return (int) $wpdb->query(
+            $wpdb->prepare(
+                "DELETE FROM {$table_name} WHERE product_id NOT IN ({$placeholders})",
+                ...$published_ids
+            )
+        );
     }
 
     /**
