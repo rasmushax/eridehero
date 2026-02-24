@@ -172,6 +172,7 @@ class Tool {
                         'battery-charging'         => 'Battery Charging',
                         'dashboard'                => 'Gauge / Speedometer',
                         'weight'                   => 'Weight',
+                        'tool-calculator-money'    => 'Calculator Money',
                     ],
                     'default_value' => 'calculator',
                     'return_format' => 'value',
