@@ -533,6 +533,15 @@
     margin-top: var(--space-4);
 }
 
+.tool-main code {
+    background: var(--color-primary-subtle);
+    display: inline-block;
+    width: fit-content;
+    padding: var(--space-0) var(--space-4);
+    border-radius: var(--radius-sm);
+    font-weight: var(--font-bold);
+}
+
 
 /* ===== CALCULATOR ACTIONS ===== */
 
