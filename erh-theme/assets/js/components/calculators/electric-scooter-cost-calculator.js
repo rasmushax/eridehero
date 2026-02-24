@@ -29,7 +29,7 @@ const DEFAULTS = {
     battery: 620,
     range: 22,
     price: 800,
-    lifespan: 3,
+    lifespan: 4,
     electricity: 0.16,
     gasMpg: 25,
     gasPrice: 3.50,
@@ -206,7 +206,7 @@ export function init(container) {
         if (enabled.has('gas') && gasMpg > 0 && gasPriceGal > 0) {
             const gasPerMile = gasPriceGal / gasMpg;
             const gasAnnual = gasPerMile * annualMiles;
-            const gasSavings = gasAnnual - scooterAnnual;
+            const gasSavings = gasAnnual - annualElectricity;
             const displayGasPerDist = isMetric ? gasPerMile * MI_TO_KM : gasPerMile;
 
             setResult(res('gas-per-distance'), formatPerDistance(displayGasPerDist, distUnit));
@@ -224,7 +224,7 @@ export function init(container) {
         if (enabled.has('ev') && evMiKwh > 0 && elecCost > 0) {
             const evPerMile = elecCost / evMiKwh;
             const evAnnual = evPerMile * annualMiles;
-            const evSavings = evAnnual - scooterAnnual;
+            const evSavings = evAnnual - annualElectricity;
             const displayEvPerDist = isMetric ? evPerMile * MI_TO_KM : evPerMile;
 
             setResult(res('ev-per-distance'), formatPerDistance(displayEvPerDist, distUnit));
@@ -241,7 +241,7 @@ export function init(container) {
         // Public transit
         if (enabled.has('transit') && transitMonthly > 0) {
             const transitAnnual = transitMonthly * 12;
-            const transitSavings = transitAnnual - scooterAnnual;
+            const transitSavings = transitAnnual - annualElectricity;
 
             setResult(res('transit-annual'), formatMoney(transitAnnual));
             displaySavings(res('transit-savings'), transitSavings);
@@ -256,7 +256,7 @@ export function init(container) {
         // Rideshare
         if (enabled.has('rideshare') && ridesharePerMi > 0) {
             const rideshareAnnual = ridesharePerMi * annualMiles;
-            const rideshareSavings = rideshareAnnual - scooterAnnual;
+            const rideshareSavings = rideshareAnnual - annualElectricity;
             const displayRsPerDist = isMetric ? ridesharePerMi * MI_TO_KM : ridesharePerMi;
 
             setResult(res('rideshare-per-distance'), formatPerDistance(displayRsPerDist, distUnit));
