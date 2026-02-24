@@ -366,7 +366,7 @@ export function init(container) {
             commute:         isMetric ? 'km' : 'mi',
             range:           isMetric ? 'km' : 'mi',
             'gas-mpg':       isMetric ? 'L/100km' : 'MPG',
-            'gas-price':     isMetric ? '/L' : '/gal',
+            'gas-price':     isMetric ? '$/L' : '$/gal',
             'ev-efficiency': isMetric ? 'km/kWh' : 'mi/kWh',
             'rideshare-rate': isMetric ? '/km' : '/mi',
         };
