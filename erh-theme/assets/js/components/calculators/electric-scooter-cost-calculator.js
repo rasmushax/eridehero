@@ -103,7 +103,9 @@ export function init(container) {
     // ── Helpers ─────────────────────────────────────────────────────
 
     function getVal(input) {
-        return parseFloat(input?.value) || 0;
+        const val = parseFloat(input?.value);
+        if (isNaN(val) || val < 0) return 0;
+        return val;
     }
 
     function setResult(element, value) {
