@@ -27,7 +27,7 @@ const DEFAULTS = {
     commute: 5,
     days: 5,
     battery: 620,
-    range: 22,
+    range: 23.5,
     price: 800,
     lifespan: 4,
     electricity: 0.16,
