@@ -10,6 +10,7 @@ old_path,new_path,type,priority,group,gsc_status,notes
 /tool/battery-degradation-calculator/,/tools/battery-degradation-calculator/,301,high,Tools — Calculators,indexed,
 /tool/electric-scooter-coupons/,/coupons/electric-scooters/,301,high,Tools — Coupons,indexed,
 /electric-scooter-range-calculator/,/tools/electric-scooter-range-calculator/,301,high,Tools — Calculators,indexed,Was root-level post on old site
+/electric-scooter-money-saving/,/tools/electric-scooter-cost-calculator/,301,medium,Tools — Calculators,,Article replaced by calculator tool
 /tool/electric-scooter-comparison/opt/,/compare/electric-scooters/,301,low,Tools — Comparison,redirect,Oxygen Builder artifact
 /tool/electric-scooter/,/electric-scooter-finder/,301,low,Tools — Other,redirect,Incomplete URL — catch redirect
 /editorial-policy/,/editorial/,301,high,Info / Legal Pages,indexed,Shorter slug
@@ -188,7 +189,7 @@ old_path,new_path,type,priority,group,gsc_status,notes
 /blog/electric-scooter-e-bike-laws-canada,/,301,low,blog/ prefix -- Retired Content,,Retired Canada laws article -> homepage
 /blog/electric-scooter-giveaway-x7,/,301,low,blog/ prefix -- Chain Avoided,redirect,Chain: /electric-scooter-giveaway-x7/ -> / (homepage)
 /blog/electric-scooter-helmet-selection-guide,/electric-scooter-helmet-selection-guide/,301,low,blog/ prefix -- Direct Match,redirect,Legacy /blog/ prefix URL structure
-/blog/electric-scooter-money-saving,/electric-scooter-money-saving/,301,low,blog/ prefix -- Direct Match,redirect,Legacy /blog/ prefix URL structure
+/blog/electric-scooter-money-saving,/tools/electric-scooter-cost-calculator/,301,low,blog/ prefix -- Content Replaced,,Legacy /blog/ prefix -> new calculator tool
 /blog/electric-scooter-motors,/electric-scooter-motors/,301,low,blog/ prefix -- Direct Match,redirect,Legacy /blog/ prefix URL structure
 /blog/electric-scooter-safety-tips,/electric-scooter-safety-tips/,301,low,blog/ prefix -- Direct Match,redirect,Legacy /blog/ prefix URL structure
 /blog/electric-scooter-tires,/electric-scooter-tires/,301,low,blog/ prefix -- Direct Match,redirect,Legacy /blog/ prefix URL structure
