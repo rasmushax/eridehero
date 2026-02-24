@@ -39,8 +39,8 @@ These blocks have native ACF equivalents or dedicated pages already — just str
 | `ovsb-how-i-test` | 5 | 5 | Removed (no content, buying guides don't need it) | **DONE** |
 | `ovsb-electric-scooter-quiz-block` | 11 | 11 | Removed (quiz page exists at `/tools/quiz/`) | **DONE** |
 | `ovsb-electric-scooter-comparison-tool` | 8 | 8 | Removed (compare system exists at `/compare/`) | **DONE** |
-| `ovsb-watt-calculator` | 1 | 1 | `/tools/` page exists | TODO |
-| `ovsb-e-scooter-savings-calculator` | 1 | 1 | `/tools/` page exists | TODO |
+| `ovsb-watt-calculator` | 1 | 1 | Removed (new `/tools/watt-calculator/` built) | **DONE** |
+| `ovsb-e-scooter-savings-calculator` | 1 | 1 | Removed (savings tool planned as future `/tools/` page) | **DONE** |
 
 **Action:** Simple regex removal. Optionally add inline links to the replacement pages.
 
@@ -217,12 +217,12 @@ Script: `scripts/fix-broken-json.php`
 
 | Phase | Remaining | Complexity | Approach |
 |---|---|---|---|
-| Phase 1: Remove handled blocks | 2 instances (2 calculators) | Easy | Regex removal |
+| Phase 1: Remove handled blocks | **DONE** | — | — |
 | Phase 2: Remove delete/skip blocks | 75 instances | Easy | Single regex-removal script |
 | Phase 3: Remaining content | 4 instances | Low | Manual: 1 table + 1 pros-cons |
 | Phase 4: Verify + deactivate Oxygen | — | Easy | DB search + plugin toggle |
 
-Phases 1 (remaining) + 2 can be done in one script that strips all `<!-- wp:oxygen-vsb/ovsb-* ... /-->` comments for the targeted block types. No content conversion needed — just deletion.
+Phase 2 can be done in one script that strips all `<!-- wp:oxygen-vsb/ovsb-* ... /-->` comments for the targeted block types. No content conversion needed — just deletion.
 
 ---
 
