@@ -50,7 +50,7 @@ No content value — these served Oxygen-specific layout purposes or are superse
 
 | Block Type | Instances | Posts | Why | Status |
 |---|---|---|---|---|
-| `ovsb-cta-button` | 61 | 20 | HFT/price-intel handles affiliate links | TODO |
+| `ovsb-cta-button` | 61 | 20 | HFT/price-intel handles affiliate links | **DONE** |
 | `ovsb-icon-h3` | 8 | 1 | Decorative heading, no content | TODO |
 | `ovsb-two-image-row` | 5 | 5 | Use WP gallery/columns blocks | TODO |
 | `ovsb-wp-forms-icon-row` | 1 | 1 | Embed WPForms directly if needed | TODO |
@@ -218,7 +218,7 @@ Script: `scripts/fix-broken-json.php`
 | Phase | Remaining | Complexity | Approach |
 |---|---|---|---|
 | Phase 1: Remove handled blocks | **DONE** | — | — |
-| Phase 2: Remove delete/skip blocks | 75 instances | Easy | Single regex-removal script |
+| Phase 2: Remove delete/skip blocks | 14 remaining | Easy | Single regex-removal script |
 | Phase 3: Remaining content | 4 instances | Low | Manual: 1 table + 1 pros-cons |
 | Phase 4: Verify + deactivate Oxygen | — | Easy | DB search + plugin toggle |
 
