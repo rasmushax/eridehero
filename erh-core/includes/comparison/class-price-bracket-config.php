@@ -182,6 +182,28 @@ class PriceBracketConfig {
 	}
 
 	/**
+	 * Get bracket data safe for JSON API responses.
+	 *
+	 * Replaces PHP_INT_MAX with null so JSON doesn't contain
+	 * a huge integer that loses precision in JavaScript.
+	 *
+	 * @param array|null $bracket Bracket from get_bracket().
+	 * @return array|null Sanitized bracket or null.
+	 */
+	public static function to_api_format( ?array $bracket ): ?array {
+		if ( $bracket === null ) {
+			return null;
+		}
+
+		return [
+			'key'   => $bracket['key'],
+			'min'   => $bracket['min'],
+			'max'   => $bracket['max'] === PHP_INT_MAX ? null : $bracket['max'],
+			'label' => $bracket['label'],
+		];
+	}
+
+	/**
 	 * Get bracket label for display.
 	 *
 	 * @param string $bracket_key  Bracket key.

@@ -14,6 +14,7 @@ namespace ERH\Api;
 use ERH\CacheKeys;
 use ERH\CategoryConfig;
 use ERH\Comparison\AdvantageCalculatorFactory;
+use ERH\Comparison\PriceBracketConfig;
 use ERH\Database\ProductCache;
 use ERH\Database\ViewTracker;
 use ERH\User\RateLimiter;
@@ -351,7 +352,7 @@ class RestProducts extends WP_REST_Controller {
                 'geo'                 => $geo,
                 'currency'            => $this->get_currency_for_geo($geo),
                 'current_price'       => $product['price_history'][$geo]['current_price'] ?? null,
-                'bracket'             => $raw_analysis['bracket'],
+                'bracket'             => PriceBracketConfig::to_api_format($raw_analysis['bracket']),
                 'products_in_bracket' => $raw_analysis['products_in_set'],
                 'comparison_mode'     => $raw_analysis['comparison_mode'],
             ],

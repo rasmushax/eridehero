@@ -232,7 +232,9 @@ function formatBracketContextText(priceContext, category) {
 
     const bracketLabel = bracket?.label || 'this price range';
     const bracketRange = bracket
-        ? `$${bracket.min.toLocaleString()}–${bracket.max === 2147483647 ? '+' : '$' + bracket.max.toLocaleString()}`
+        ? (!bracket.max
+            ? `$${bracket.min.toLocaleString('en-US')}+`
+            : `$${bracket.min.toLocaleString('en-US')}–$${bracket.max.toLocaleString('en-US')}`)
         : '';
 
     return `Compared to ${products_in_bracket} ${labels.plural} in the ${bracketLabel} bracket${bracketRange ? ` (${bracketRange})` : ''}`;

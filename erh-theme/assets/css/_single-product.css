@@ -534,6 +534,8 @@
 /* ===== COMPARISON WIDGET ===== */
 
 .product-comparison-section {
+    position: relative;
+    z-index: 2;
     margin-bottom: var(--space-12);
 }
 
