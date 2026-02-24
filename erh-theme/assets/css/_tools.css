@@ -535,11 +535,26 @@
 
 .tool-main code {
     background: var(--color-primary-subtle);
-    display: inline-block;
-    width: fit-content;
-    padding: var(--space-0) var(--space-4);
     border-radius: var(--radius-sm);
+    display: inline-block;
     font-weight: var(--font-bold);
+    padding: var(--space-1) var(--space-3);
+    width: -moz-fit-content;
+    width: fit-content;
+}
+
+.tool-main ul {
+    list-style-type: unset;
+    padding-left: var(--space-12);
+    margin-bottom: var(--space-6);
+}
+
+.tool-main ul li {
+    margin-bottom: var(--space-6);
+}
+
+.tool-main ul li:last-child {
+    margin-bottom: 0;
 }
 
 
