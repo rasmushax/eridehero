@@ -278,6 +278,28 @@
     transform: translateY(-50%);
 }
 
+/* Comparison mode toggles */
+.calculator-mode-toggles {
+    display: flex;
+    flex-wrap: wrap;
+    gap: var(--space-2);
+    margin-bottom: var(--space-6);
+}
+
+.calculator-comparison-inputs {
+    padding-top: var(--space-4);
+    animation: fadeIn var(--transition-base);
+}
+
+/* Result section headings within calculator */
+.calculator-results-heading {
+    font-size: var(--text-lg);
+    font-weight: var(--font-bold);
+    color: var(--color-dark);
+    margin-top: var(--space-8);
+    margin-bottom: var(--space-4);
+}
+
 /* Unit system toggle (top of calculator) */
 .calculator-unit-system {
     display: flex;
