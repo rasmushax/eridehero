@@ -52,8 +52,8 @@ No content value — these served Oxygen-specific layout purposes or are superse
 |---|---|---|---|---|
 | `ovsb-cta-button` | 61 | 20 | HFT/price-intel handles affiliate links | **DONE** |
 | `ovsb-icon-h3` | 8 | 1 | `acf/icon-heading` | **DONE** |
-| `ovsb-two-image-row` | 5 | 5 | Use WP gallery/columns blocks | TODO |
-| `ovsb-wp-forms-icon-row` | 1 | 1 | Embed WPForms directly if needed | TODO |
+| `ovsb-two-image-row` | 5 | 5 | Removed (decorative, already invisible) | **DONE** |
+| `ovsb-wp-forms-icon-row` | 1 | 1 | Removed (WPForms deprecated) | **DONE** |
 
 **Action:** Simple regex removal. Low risk since these blocks are already invisible.
 
