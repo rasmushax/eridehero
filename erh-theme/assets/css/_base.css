@@ -28,6 +28,11 @@ body {
     overflow-x: hidden;
 }
 
+strong,
+b {
+    font-weight: var(--font-bold);
+}
+
 img,
 picture,
 video,
