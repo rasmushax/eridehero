@@ -241,6 +241,10 @@ ol.spacing li {
     margin-top: var(--space-2);
 }
 
+div.primaryborder figure img {
+    border: 3px solid var(--color-primary);
+}
+
 /* ===== FOOTER / TAGS ===== */
 
 .article-footer,
