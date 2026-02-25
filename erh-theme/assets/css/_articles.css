@@ -326,6 +326,90 @@ ol.spacing li {
     }
 }
 
+/* ===== HIGHLIGHTS LIST ===== */
+
+ul.highlights {
+    display: flex;
+    flex-direction: column;
+    gap: var(--space-6);
+    list-style: none;
+    padding: 0;
+    margin: var(--space-6) 0;
+}
+
+ul.highlights > li {
+    position: relative;
+    padding: var(--space-3) 0 var(--space-3) var(--space-7);
+}
+
+ul.highlights > li::before {
+    content: "";
+    position: absolute;
+    left: 0;
+    top: 0;
+    bottom: 0;
+    width: 4px;
+    background: var(--color-primary);
+    border-radius: var(--radius-full);
+}
+
+ul.highlights ul {
+    display: flex;
+    flex-direction: column;
+    list-style: none;
+    padding: 0;
+    margin: var(--space-4) 0 0;
+}
+
+ul.highlights ul li {
+    position: relative;
+    padding: var(--space-2) 0 var(--space-2) var(--space-7);
+}
+
+ul.highlights ul li::before {
+    content: "";
+    position: absolute;
+    left: calc(var(--space-7) * -1);
+    top: 50%;
+    width: var(--space-7);
+    height: 4px;
+    background: var(--color-primary);
+    border-radius: var(--radius-full);
+}
+
+/* ===== PRETTY ORDERED LIST ===== */
+
+ol.prettyol {
+    list-style: none;
+    padding: 0;
+    margin: var(--space-6) 0;
+    counter-reset: pretty;
+}
+
+ol.prettyol > li {
+    position: relative;
+    counter-increment: pretty;
+    padding: var(--space-5) 0 var(--space-5) var(--space-13);
+    border-bottom: 1px solid var(--color-border);
+}
+
+ol.prettyol > li:last-child {
+    border-bottom: none;
+}
+
+ol.prettyol > li::before {
+    content: counters(pretty, '.');
+    position: absolute;
+    left: 0;
+    top: var(--space-5);
+    width: var(--space-10);
+    font-size: var(--text-4xl);
+    font-weight: var(--font-normal);
+    line-height: 1;
+    color: rgba(94, 44, 237, 0.45);
+    text-align: center;
+}
+
 /* RankMath FAQ answer images */
 div.rank-math-answer img.alignright {
     float: right;
