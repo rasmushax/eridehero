@@ -139,6 +139,11 @@
     margin: var(--space-6) 0 var(--space-3);
 }
 
+.article-body a,
+.guide-body a {
+    text-decoration: underline;
+}
+
 .article-body p,
 .guide-body p {
     margin: 0 0 var(--space-4);
