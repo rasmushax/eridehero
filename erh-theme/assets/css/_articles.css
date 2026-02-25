@@ -326,6 +326,11 @@ ol.spacing li {
     }
 }
 
+/* RankMath FAQ answer images */
+div.rank-math-answer img.alignright {
+    float: right;
+}
+
 /* First element in article body should have no top margin */
 .article-body > *:first-child,
 .guide-body > *:first-child {
