@@ -101,6 +101,9 @@ class BlockManager {
 
         // Register spec group block.
         $this->register_spec_group_block();
+
+        // Register Black Friday deal block.
+        $this->register_bfdeal_block();
     }
 
     /**
@@ -242,6 +245,7 @@ class BlockManager {
         $this->register_proscons_fields();
         $this->register_icon_heading_fields();
         $this->register_spec_group_fields();
+        $this->register_bfdeal_fields();
     }
 
     /**
@@ -1724,6 +1728,169 @@ class BlockManager {
             wp_enqueue_style(
                 'erh-block-spec-group',
                 $block_url . 'spec-group.css',
+                [],
+                ERH_VERSION
+            );
+        }
+    }
+
+    /**
+     * Register the Black Friday deal block.
+     *
+     * @return void
+     */
+    private function register_bfdeal_block(): void {
+        acf_register_block_type([
+            'name'            => 'bfdeal',
+            'title'           => __('Black Friday Deal', 'erh-core'),
+            'description'     => __('Seasonal deal card with product image, pricing, and CTA.', 'erh-core'),
+            'category'        => 'formatting',
+            'icon'            => 'tag',
+            'keywords'        => ['black', 'friday', 'deal', 'sale', 'discount'],
+            'mode'            => 'edit',
+            'supports'        => [
+                'align'  => false,
+                'anchor' => true,
+            ],
+            'render_callback' => [$this, 'render_bfdeal_block'],
+            'enqueue_assets'  => [$this, 'enqueue_bfdeal_assets'],
+        ]);
+
+        $this->blocks['bfdeal'] = [
+            'name' => 'bfdeal',
+            'dir'  => $this->blocks_dir . 'bfdeal/',
+            'url'  => $this->blocks_url . 'bfdeal/',
+        ];
+    }
+
+    /**
+     * Register Black Friday deal block ACF fields.
+     *
+     * @return void
+     */
+    private function register_bfdeal_fields(): void {
+        acf_add_local_field_group([
+            'key'      => 'group_erh_bfdeal_block',
+            'title'    => 'Block - Black Friday Deal',
+            'fields'   => [
+                [
+                    'key'           => 'field_erh_bfdeal_product',
+                    'label'         => 'Product',
+                    'name'          => 'bfdeal_product',
+                    'type'          => 'post_object',
+                    'post_type'     => ['products'],
+                    'post_status'   => ['publish'],
+                    'return_format' => 'id',
+                    'ui'            => 1,
+                    'instructions'  => 'Select product for name, image, and review link.',
+                    'wrapper'       => ['width' => '50'],
+                ],
+                [
+                    'key'           => 'field_erh_bfdeal_layout',
+                    'label'         => 'Layout',
+                    'name'          => 'bfdeal_layout',
+                    'type'          => 'select',
+                    'choices'       => [
+                        'full'    => 'Full',
+                        'compact' => 'Compact',
+                    ],
+                    'default_value' => 'full',
+                    'wrapper'       => ['width' => '50'],
+                ],
+                [
+                    'key'          => 'field_erh_bfdeal_link',
+                    'label'        => 'Deal Link',
+                    'name'         => 'bfdeal_link',
+                    'type'         => 'url',
+                    'instructions' => 'Affiliate or retailer URL for this deal.',
+                ],
+                [
+                    'key'          => 'field_erh_bfdeal_price_now',
+                    'label'        => 'Sale Price',
+                    'name'         => 'bfdeal_price_now',
+                    'type'         => 'number',
+                    'prepend'      => '$',
+                    'wrapper'      => ['width' => '33'],
+                ],
+                [
+                    'key'          => 'field_erh_bfdeal_price_was',
+                    'label'        => 'Original Price',
+                    'name'         => 'bfdeal_price_was',
+                    'type'         => 'number',
+                    'prepend'      => '$',
+                    'wrapper'      => ['width' => '33'],
+                ],
+                [
+                    'key'          => 'field_erh_bfdeal_description',
+                    'label'        => 'Description',
+                    'name'         => 'bfdeal_description',
+                    'type'         => 'textarea',
+                    'rows'         => 2,
+                    'instructions' => 'Short deal description.',
+                    'wrapper'      => ['width' => '34'],
+                ],
+                [
+                    'key'          => 'field_erh_bfdeal_name',
+                    'label'        => 'Name Override',
+                    'name'         => 'bfdeal_name',
+                    'type'         => 'text',
+                    'instructions' => 'Leave empty to use product name.',
+                    'wrapper'      => ['width' => '50'],
+                ],
+                [
+                    'key'           => 'field_erh_bfdeal_image',
+                    'label'         => 'Image Override',
+                    'name'          => 'bfdeal_image',
+                    'type'          => 'image',
+                    'instructions'  => 'Leave empty to use product image.',
+                    'return_format' => 'array',
+                    'preview_size'  => 'thumbnail',
+                    'wrapper'       => ['width' => '50'],
+                ],
+            ],
+            'location' => [
+                [
+                    [
+                        'param'    => 'block',
+                        'operator' => '==',
+                        'value'    => 'acf/bfdeal',
+                    ],
+                ],
+            ],
+        ]);
+    }
+
+    /**
+     * Render the Black Friday deal block.
+     *
+     * @param array  $block      The block settings.
+     * @param string $content    The block content (empty for ACF blocks).
+     * @param bool   $is_preview True during AJAX preview in editor.
+     * @param int    $post_id    The post ID.
+     * @return void
+     */
+    public function render_bfdeal_block(array $block, string $content = '', bool $is_preview = false, int $post_id = 0): void {
+        $template = $this->blocks_dir . 'bfdeal/template.php';
+
+        if (file_exists($template)) {
+            include $template;
+        }
+    }
+
+    /**
+     * Enqueue Black Friday deal block assets.
+     *
+     * @return void
+     */
+    public function enqueue_bfdeal_assets(): void {
+        $block_url = $this->blocks_url . 'bfdeal/';
+        $block_dir = $this->blocks_dir . 'bfdeal/';
+
+        // Enqueue CSS.
+        if (file_exists($block_dir . 'bfdeal.css')) {
+            wp_enqueue_style(
+                'erh-block-bfdeal',
+                $block_url . 'bfdeal.css',
                 [],
                 ERH_VERSION
             );

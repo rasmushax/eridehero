@@ -1,0 +1,175 @@
+/* =============================================
+   Black Friday Deal Block
+   ============================================= */
+
+.erh-bfdeal {
+    display: grid;
+    grid-template-columns: auto 1fr auto;
+    gap: var(--space-4);
+    align-items: center;
+    padding: var(--space-5) 0;
+    border-bottom: 1px solid var(--color-border);
+}
+
+/* Image */
+.erh-bfdeal__image {
+    display: block;
+    flex-shrink: 0;
+}
+
+.erh-bfdeal__img {
+    width: 100px;
+    height: 100px;
+    object-fit: contain;
+    border-radius: var(--radius-md);
+}
+
+/* Content */
+.erh-bfdeal__content {
+    min-width: 0;
+}
+
+.erh-bfdeal__name {
+    font-size: var(--text-lg);
+    font-weight: var(--font-bold);
+    color: var(--color-dark);
+    margin-bottom: var(--space-1);
+}
+
+.erh-bfdeal__pricing {
+    display: flex;
+    align-items: center;
+    gap: var(--space-2);
+    font-size: var(--text-lg);
+    font-weight: var(--font-medium);
+    text-decoration: none;
+    margin-bottom: var(--space-1);
+}
+
+.erh-bfdeal__price-now {
+    color: var(--color-dark);
+}
+
+.erh-bfdeal__price-was {
+    color: var(--color-muted);
+    text-decoration: line-through;
+    font-size: var(--text-base);
+}
+
+.erh-bfdeal__savings {
+    display: inline-block;
+    background: var(--color-success-bg, #dcfce7);
+    color: var(--color-success, #166534);
+    font-size: var(--text-xs);
+    font-weight: var(--font-bold);
+    padding: 2px var(--space-2);
+    border-radius: var(--radius-sm);
+}
+
+.erh-bfdeal__desc {
+    font-size: var(--text-sm);
+    color: var(--color-body);
+    line-height: var(--leading-normal);
+}
+
+/* Actions */
+.erh-bfdeal__actions {
+    display: flex;
+    flex-direction: column;
+    align-items: center;
+    gap: var(--space-2);
+    flex-shrink: 0;
+}
+
+.erh-bfdeal__cta {
+    white-space: nowrap;
+    display: inline-flex;
+    align-items: center;
+    gap: var(--space-1);
+}
+
+.erh-bfdeal__cta .icon {
+    width: 14px;
+    height: 14px;
+}
+
+.erh-bfdeal__review-link {
+    font-size: var(--text-sm);
+    font-weight: var(--font-medium);
+    color: var(--color-body);
+    text-decoration: none;
+}
+
+.erh-bfdeal__review-link:hover {
+    color: var(--color-primary);
+    text-decoration: underline;
+}
+
+/* ===== COMPACT VARIANT ===== */
+
+.erh-bfdeal--compact .erh-bfdeal__img {
+    width: 72px;
+    height: 72px;
+}
+
+.erh-bfdeal--compact .erh-bfdeal__name {
+    font-size: var(--text-base);
+}
+
+.erh-bfdeal--compact .erh-bfdeal__pricing {
+    font-size: var(--text-base);
+}
+
+/* ===== RESPONSIVE ===== */
+
+@media (max-width: 640px) {
+    .erh-bfdeal {
+        grid-template-columns: auto 1fr;
+        gap: var(--space-3);
+    }
+
+    .erh-bfdeal__image {
+        grid-row: 1 / span 2;
+    }
+
+    .erh-bfdeal__img {
+        width: 80px;
+        height: 80px;
+    }
+
+    .erh-bfdeal__actions {
+        grid-column: 1 / -1;
+        flex-direction: row;
+        justify-content: flex-start;
+    }
+
+    .erh-bfdeal__pricing {
+        flex-wrap: wrap;
+    }
+}
+
+@media (max-width: 480px) {
+    .erh-bfdeal--compact .erh-bfdeal__img {
+        width: 60px;
+        height: 60px;
+    }
+
+    .erh-bfdeal--compact .erh-bfdeal__actions {
+        flex-direction: column;
+        align-items: stretch;
+    }
+
+    .erh-bfdeal--compact .erh-bfdeal__cta {
+        justify-content: center;
+    }
+}
+
+/* ===== EDITOR PREVIEW ===== */
+
+.erh-bfdeal-empty {
+    padding: var(--space-6);
+    text-align: center;
+    color: var(--color-muted);
+    border: 2px dashed var(--color-border);
+    border-radius: var(--radius-lg);
+}
