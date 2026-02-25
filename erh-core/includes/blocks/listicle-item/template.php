@@ -69,7 +69,13 @@ $score = get_field('editor_rating', $product_id);
 $image_id = $item_image ? $item_image['ID'] : get_post_thumbnail_id($product_id);
 
 // Get key specs for summary (6 important specs).
-$key_specs = erh_get_listicle_key_specs($product_id, $category_key);
+// Check for block-level overrides first, fall back to category defaults.
+$key_specs_override = get_field('key_specs_override');
+if (!empty($key_specs_override) && is_array($key_specs_override)) {
+    $key_specs = erh_build_key_specs_from_overrides($key_specs_override, $product_id, $category_key);
+} else {
+    $key_specs = erh_get_listicle_key_specs($product_id, $category_key);
+}
 
 // Check if product has pricing data.
 $has_pricing = erh_product_has_pricing($product_id);

@@ -13,6 +13,274 @@ if ( ! defined( 'ABSPATH' ) ) {
 }
 
 /**
+ * Get the spec registry for listicle key spec presets.
+ *
+ * Each entry maps a preset key to its label, value suffix, icon,
+ * and data paths per product category (with 'default' fallback).
+ *
+ * @return array Spec registry keyed by preset slug.
+ */
+function erh_get_spec_registry(): array {
+	return [
+		'tested_speed'     => [
+			'label'  => 'Tested Speed',
+			'suffix' => ' MPH',
+			'icon'   => 'dashboard',
+			'paths'  => [
+				'default' => [ 'tested_top_speed' ],
+			],
+		],
+		'tested_range'     => [
+			'label'  => 'Tested Range',
+			'suffix' => ' miles',
+			'icon'   => 'range',
+			'paths'  => [
+				'default' => [ 'tested_range_regular' ],
+			],
+		],
+		'weight'           => [
+			'label'  => 'Weight',
+			'suffix' => ' lbs',
+			'icon'   => 'weight',
+			'paths'  => [
+				'default'  => [ 'weight' ],
+				'escooter' => [ 'weight', 'e-scooters.dimensions.weight' ],
+				'ebike'    => [ 'weight', 'ebike_data.weight_and_capacity.weight' ],
+			],
+		],
+		'max_load'         => [
+			'label'  => 'Max Load',
+			'suffix' => ' lbs',
+			'icon'   => 'weight-scale',
+			'paths'  => [
+				'default'  => [ 'max_load' ],
+				'escooter' => [ 'max_load', 'e-scooters.dimensions.max_load' ],
+				'ebike'    => [ 'max_load', 'ebike_data.weight_and_capacity.weight_limit' ],
+			],
+		],
+		'battery_capacity' => [
+			'label'  => 'Battery',
+			'suffix' => ' Wh',
+			'icon'   => 'battery-charging',
+			'paths'  => [
+				'default'  => [ 'battery_capacity' ],
+				'escooter' => [ 'battery_capacity', 'e-scooters.battery.capacity' ],
+				'ebike'    => [ 'battery_capacity', 'ebike_data.battery.capacity' ],
+			],
+		],
+		'nominal_power'    => [
+			'label'  => 'Nominal Power',
+			'suffix' => 'W',
+			'icon'   => 'motor',
+			'paths'  => [
+				'default'  => [ 'nominal_motor_wattage' ],
+				'escooter' => [ 'nominal_motor_wattage', 'e-scooters.motor.power_nominal' ],
+				'ebike'    => [ 'nominal_motor_wattage', 'ebike_data.motor.power_nominal' ],
+			],
+		],
+		'charging_time'    => [
+			'label'  => 'Charge Time',
+			'suffix' => ' hrs',
+			'icon'   => 'battery-charging',
+			'paths'  => [
+				'default' => [ 'battery.charging_time' ],
+				'ebike'   => [ 'battery.charge_time', 'ebike_data.battery.charge_time' ],
+			],
+		],
+		'peak_power'       => [
+			'label'  => 'Peak Power',
+			'suffix' => 'W',
+			'icon'   => 'motor',
+			'paths'  => [
+				'default' => [ 'motor.power_peak' ],
+			],
+		],
+		'accel_0_15'       => [
+			'label'  => '0-15 MPH',
+			'suffix' => 's',
+			'icon'   => 'stopwatch',
+			'paths'  => [
+				'default' => [ 'acceleration_0_15_mph' ],
+			],
+		],
+		'accel_0_20'       => [
+			'label'  => '0-20 MPH',
+			'suffix' => 's',
+			'icon'   => 'stopwatch',
+			'paths'  => [
+				'default' => [ 'acceleration_0_20_mph' ],
+			],
+		],
+		'accel_0_25'       => [
+			'label'  => '0-25 MPH',
+			'suffix' => 's',
+			'icon'   => 'stopwatch',
+			'paths'  => [
+				'default' => [ 'acceleration_0_25_mph' ],
+			],
+		],
+		'accel_0_30'       => [
+			'label'  => '0-30 MPH',
+			'suffix' => 's',
+			'icon'   => 'stopwatch',
+			'paths'  => [
+				'default' => [ 'acceleration_0_30_mph' ],
+			],
+		],
+		'brake_distance'   => [
+			'label'  => 'Brake Distance',
+			'suffix' => ' ft',
+			'icon'   => 'brake',
+			'paths'  => [
+				'default' => [ 'brake_distance' ],
+			],
+		],
+		'hill_climb'       => [
+			'label'  => 'Hill Climb',
+			'suffix' => "\u{00B0}",
+			'icon'   => 'mountain',
+			'paths'  => [
+				'default'     => [ 'hill_climbing' ],
+				'eskateboard' => [ 'hill_climb_angle' ],
+			],
+		],
+		'ip_rating'        => [
+			'label'  => 'IP Rating',
+			'suffix' => '',
+			'icon'   => 'cloud-rain',
+			'paths'  => [
+				'default'    => [ 'other.ip_rating' ],
+				'ebike'      => [ 'safety_and_compliance.ip_rating' ],
+				'euc'        => [ 'safety.ip_rating' ],
+				'hoverboard' => [ 'safety.ip_rating' ],
+			],
+		],
+		'tire_size'        => [
+			'label'  => 'Tire Size',
+			'suffix' => '"',
+			'icon'   => 'tire',
+			'paths'  => [
+				'default' => [ 'wheels.tire_size_front' ],
+				'euc'     => [ 'wheel.tire_size' ],
+			],
+		],
+		'claimed_speed'    => [
+			'label'  => 'Claimed Speed',
+			'suffix' => ' MPH',
+			'icon'   => 'dashboard',
+			'paths'  => [
+				'default' => [ 'manufacturer_top_speed' ],
+			],
+		],
+		'claimed_range'    => [
+			'label'  => 'Claimed Range',
+			'suffix' => ' miles',
+			'icon'   => 'range',
+			'paths'  => [
+				'default' => [ 'manufacturer_range' ],
+			],
+		],
+	];
+}
+
+/**
+ * Resolve a single preset spec from the registry for a product.
+ *
+ * @param string $preset_key   Key from the spec registry.
+ * @param int    $product_id   Product ID.
+ * @param string $category_key Category key (escooter, ebike, etc.).
+ * @return array|null ['label', 'value', 'icon'] or null if no data found.
+ */
+function erh_resolve_preset_spec( string $preset_key, int $product_id, string $category_key ): ?array {
+	$registry = erh_get_spec_registry();
+
+	if ( ! isset( $registry[ $preset_key ] ) ) {
+		return null;
+	}
+
+	$spec = $registry[ $preset_key ];
+
+	// Get product data from cache.
+	$product_data = erh_get_product_cache_data( $product_id );
+	$specs        = [];
+
+	if ( $product_data && ! empty( $product_data['specs'] ) ) {
+		$specs = is_array( $product_data['specs'] )
+			? $product_data['specs']
+			: maybe_unserialize( $product_data['specs'] );
+	}
+
+	if ( empty( $specs ) || ! is_array( $specs ) ) {
+		return null;
+	}
+
+	$nested_wrapper = erh_get_specs_wrapper_key( $category_key );
+
+	// Get paths for this category, falling back to default.
+	$paths = $spec['paths'][ $category_key ] ?? $spec['paths']['default'] ?? [];
+
+	// Try each path until we find a value.
+	$value = null;
+	foreach ( $paths as $path ) {
+		$value = erh_get_spec_from_cache( $specs, $path, $nested_wrapper );
+		if ( $value ) {
+			break;
+		}
+	}
+
+	if ( ! $value ) {
+		return null;
+	}
+
+	return [
+		'label' => $spec['label'],
+		'value' => $value . $spec['suffix'],
+		'icon'  => $spec['icon'],
+	];
+}
+
+/**
+ * Build key specs array from block-level overrides.
+ *
+ * @param array  $overrides    ACF repeater rows from key_specs_override field.
+ * @param int    $product_id   Product ID.
+ * @param string $category_key Category key.
+ * @return array Array of ['label', 'value', 'icon'] items.
+ */
+function erh_build_key_specs_from_overrides( array $overrides, int $product_id, string $category_key ): array {
+	$result = [];
+
+	foreach ( $overrides as $row ) {
+		$mode = $row['spec_mode'] ?? 'preset';
+
+		if ( 'manual' === $mode ) {
+			$label = trim( $row['manual_label'] ?? '' );
+			$value = trim( $row['manual_value'] ?? '' );
+			$icon  = $row['manual_icon'] ?? '';
+
+			if ( $label && $value ) {
+				$result[] = [
+					'label' => $label,
+					'value' => $value,
+					'icon'  => $icon,
+				];
+			}
+		} else {
+			$preset_key = $row['spec_preset'] ?? '';
+
+			if ( $preset_key ) {
+				$spec = erh_resolve_preset_spec( $preset_key, $product_id, $category_key );
+				if ( $spec ) {
+					$result[] = $spec;
+				}
+			}
+		}
+	}
+
+	return array_slice( $result, 0, 6 );
+}
+
+/**
  * Get key specs for listicle item card display.
  *
  * Returns an array of label/value pairs for display in a grid format.

@@ -144,6 +144,12 @@
     margin: 0 0 var(--space-4);
 }
 
+p.firstparagraph {
+    font-size: var(--text-xl);
+    font-weight: var(--font-bold);
+    color: var(--color-dark);
+}
+
 .article-body ul,
 .article-body ol,
 .guide-body ul,
