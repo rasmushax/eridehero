@@ -5,6 +5,8 @@
  * Seasonal deal card with product image, pricing, savings badge, and CTA.
  * Supports dynamic data from product + manual overrides.
  *
+ * Field names match legacy block for backward compatibility with existing content.
+ *
  * @package ERH\Blocks
  *
  * @var array  $block      The block settings and attributes.
@@ -18,15 +20,20 @@ if ( ! defined( 'ABSPATH' ) ) {
     exit;
 }
 
-// Get block data.
-$product_id  = get_field( 'bfdeal_product' );
-$description = get_field( 'bfdeal_description' );
-$layout      = get_field( 'bfdeal_layout' ) ?: 'full';
-$deal_link   = get_field( 'bfdeal_link' );
-$price_now   = get_field( 'bfdeal_price_now' );
-$price_was   = get_field( 'bfdeal_price_was' );
-$override_name  = get_field( 'bfdeal_name' );
-$override_image = get_field( 'bfdeal_image' );
+// Get block data (field names match legacy block).
+$product_id     = get_field( 'product' );
+$description    = get_field( 'description' );
+$deal_link      = get_field( 'manual_link' );
+$price_now      = get_field( 'manual_price_now' );
+$price_was      = get_field( 'manual_price_was' );
+$override_name  = get_field( 'manual_name' );
+$override_image = get_field( 'manual_image' );
+
+// Layout: new field 'bfdeal_layout', fallback to legacy 'small' boolean.
+$layout = get_field( 'bfdeal_layout' );
+if ( ! $layout ) {
+    $layout = get_field( 'small' ) ? 'compact' : 'full';
+}
 
 // Early return if no product and no manual name.
 if ( empty( $product_id ) && empty( $override_name ) ) {
@@ -60,7 +67,7 @@ if ( $product_id ) {
 // Apply manual overrides.
 $name = ! empty( $override_name ) ? $override_name : $product_name;
 if ( ! empty( $override_image ) ) {
-    $image_id = $override_image['ID'];
+    $image_id = is_array( $override_image ) ? $override_image['ID'] : $override_image;
 }
 
 // Calculate savings.
@@ -70,7 +77,7 @@ if ( $price_was && $price_now && (float) $price_was > (float) $price_now ) {
 }
 
 // Format prices.
-$price_now_fmt = $price_now ? '$' . number_format( (float) $price_now ) : '';
+$price_now_fmt = $price_now ? '$' . number_format( (float) $price_now, 2 ) : '';
 $price_was_fmt = $price_was ? '$' . number_format( (float) $price_was ) : '';
 
 // Build class list.
@@ -89,7 +96,7 @@ if ( ! empty( $block['anchor'] ) ) {
 }
 
 // Determine link attributes.
-$link_href = $deal_link ?: '#';
+$link_href  = $deal_link ?: '#';
 $link_attrs = 'target="_blank" rel="sponsored noopener"';
 ?>
 <div id="<?php echo esc_attr( $block_id ); ?>" class="<?php echo esc_attr( implode( ' ', $classes ) ); ?>">
@@ -119,11 +126,7 @@ $link_attrs = 'target="_blank" rel="sponsored noopener"';
             </a>
         <?php endif; ?>
 
-        <?php if ( $description && 'full' === $layout ) : ?>
-            <div class="erh-bfdeal__desc"><?php echo esc_html( $description ); ?></div>
-        <?php endif; ?>
-
-        <?php if ( $description && 'compact' === $layout ) : ?>
+        <?php if ( $description ) : ?>
             <div class="erh-bfdeal__desc"><?php echo esc_html( $description ); ?></div>
         <?php endif; ?>
     </div>
