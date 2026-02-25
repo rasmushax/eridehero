@@ -140,7 +140,8 @@
 }
 
 .article-body a,
-.guide-body a {
+.guide-body a,
+.review-body a {
     text-decoration: underline;
 }
 
