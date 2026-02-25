@@ -31,7 +31,7 @@
 }
 
 /* Link pills */
-.erh-jumplinks-link {
+a.erh-jumplinks-link {
     display: flex;
     align-items: center;
     padding: var(--space-2) var(--space-5);
