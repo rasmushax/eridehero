@@ -304,6 +304,13 @@ import { Toast } from './components/toast.js'; // For programmatic toasts
         });
     }
 
+    // Black Friday Deal blocks - geo-aware affiliate links
+    if (document.querySelector('[data-bfdeal-item]')) {
+        import('./components/bfdeal.js').then(module => {
+            module.initBfdeals();
+        });
+    }
+
     // Buying Guide Table blocks - comparison tables with geo pricing
     if (document.querySelector('[data-buying-guide-table]')) {
         import('./components/buying-guide-table.js').then(module => {

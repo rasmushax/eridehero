@@ -93,6 +93,11 @@
     height: 14px;
 }
 
+.erh-bfdeal__cta .spinner {
+    width: 18px;
+    height: 18px;
+}
+
 .erh-bfdeal__review-link {
     font-size: var(--text-sm);
     font-weight: var(--font-medium);
