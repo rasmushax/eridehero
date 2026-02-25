@@ -224,7 +224,7 @@ function erh_add_heading_ids( string $content ): string {
 
     return $content;
 }
-add_filter( 'the_content', 'erh_add_heading_ids', 5 ); // Early priority so IDs exist for other filters
+add_filter( 'the_content', 'erh_add_heading_ids', 12 ); // After do_blocks (priority 9) so ACF block headings get IDs too
 
 /**
  * Estimate reading time for a post
