@@ -232,6 +232,11 @@ function erh_resolve_preset_spec( string $preset_key, int $product_id, string $c
 		return null;
 	}
 
+	// Format large numbers with commas (e.g. 33600 → 33,600).
+	if ( is_numeric( $value ) && abs( (float) $value ) >= 1000 ) {
+		$value = number_format( (float) $value );
+	}
+
 	return [
 		'label' => $spec['label'],
 		'value' => $value . $spec['suffix'],
@@ -309,9 +314,13 @@ function erh_get_listicle_key_specs( int $product_id, string $category_key ): ar
 
 	$nested_wrapper = erh_get_specs_wrapper_key( $category_key );
 
-	// Helper to get spec.
+	// Helper to get spec (formats large numbers with commas).
 	$get = function( $key ) use ( $specs, $nested_wrapper ) {
-		return erh_get_spec_from_cache( $specs, $key, $nested_wrapper );
+		$val = erh_get_spec_from_cache( $specs, $key, $nested_wrapper );
+		if ( $val && is_numeric( $val ) && abs( (float) $val ) >= 1000 ) {
+			$val = number_format( (float) $val );
+		}
+		return $val;
 	};
 
 	// Define key specs per product type (6 specs max).
