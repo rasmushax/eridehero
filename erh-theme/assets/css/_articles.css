@@ -142,6 +142,7 @@
 .article-body a,
 .guide-body a,
 .review-body a {
+    color: var(--color-dark);
     text-decoration: underline;
 }
 
