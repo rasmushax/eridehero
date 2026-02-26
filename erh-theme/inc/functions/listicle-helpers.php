@@ -170,8 +170,9 @@ function erh_get_spec_registry(): array {
 			'suffix' => '"',
 			'icon'   => 'tire',
 			'paths'  => [
-				'default' => [ 'wheels.tire_size_front' ],
-				'euc'     => [ 'wheel.tire_size' ],
+				'default'    => [ 'wheels.tire_size_front' ],
+				'euc'        => [ 'wheel.tire_size' ],
+				'hoverboard' => [ 'wheels.wheel_size' ],
 			],
 		],
 		'claimed_speed'    => [
@@ -249,23 +250,33 @@ function erh_resolve_preset_spec( string $preset_key, int $product_id, string $c
 
 	$formatted = $value . $spec['suffix'];
 
-	// Tire size: append width if available (e.g. 16" x 3").
+	$label = $spec['label'];
+
+	// Tire size: append extra info per category.
 	if ( 'tire_size' === $preset_key ) {
-		$width_paths = [
-			'euc' => [ 'wheel.tire_width' ],
-		];
-		$w_paths = $width_paths[ $category_key ] ?? [];
-		foreach ( $w_paths as $w_path ) {
-			$width = erh_get_spec_from_cache( $specs, $w_path, $nested_wrapper );
+		if ( 'euc' === $category_key ) {
+			// EUC: append width (e.g. 16" x 3").
+			$width = erh_get_spec_from_cache( $specs, 'wheel.tire_width', $nested_wrapper );
 			if ( $width ) {
 				$formatted = $value . '" x ' . $width . '"';
-				break;
 			}
+		} elseif ( 'hoverboard' === $category_key ) {
+			// Hoverboard: append type (e.g. 8.5" Solid).
+			$wheel_type = erh_get_spec_from_cache( $specs, 'wheels.wheel_type', $nested_wrapper );
+			if ( $wheel_type ) {
+				$formatted = $value . '" ' . $wheel_type;
+			}
+			$label = 'Tires';
 		}
 	}
 
+	// Hoverboard: rename motor label.
+	if ( 'nominal_power' === $preset_key && 'hoverboard' === $category_key ) {
+		$label = 'Motors';
+	}
+
 	return [
-		'label' => $spec['label'],
+		'label' => $label,
 		'value' => $formatted,
 		'icon'  => $spec['icon'],
 	];
