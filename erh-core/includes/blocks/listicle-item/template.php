@@ -65,8 +65,9 @@ $video_id    = $youtube_url ? erh_extract_youtube_id($youtube_url) : '';
 // Get editor rating/score.
 $score = get_field('editor_rating', $product_id);
 
-// Get image - use item_image if set, otherwise product featured image.
-$image_id = $item_image ? $item_image['ID'] : get_post_thumbnail_id($product_id);
+// Get image (featured image preferred, item_image as fallback).
+$featured_image_id = get_post_thumbnail_id($product_id);
+$image_id = $featured_image_id ?: ($item_image ? $item_image['ID'] : null);
 
 // Get key specs for summary (6 important specs).
 // Check for block-level overrides first, fall back to category defaults.

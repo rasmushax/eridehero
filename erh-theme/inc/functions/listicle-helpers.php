@@ -46,6 +46,7 @@ function erh_get_spec_registry(): array {
 				'default'  => [ 'weight' ],
 				'escooter' => [ 'weight', 'e-scooters.dimensions.weight' ],
 				'ebike'    => [ 'weight', 'ebike_data.weight_and_capacity.weight' ],
+				'euc'      => [ 'weight', 'dimensions.weight' ],
 			],
 		],
 		'max_load'         => [
@@ -56,6 +57,7 @@ function erh_get_spec_registry(): array {
 				'default'  => [ 'max_load' ],
 				'escooter' => [ 'max_load', 'e-scooters.dimensions.max_load' ],
 				'ebike'    => [ 'max_load', 'ebike_data.weight_and_capacity.weight_limit' ],
+				'euc'      => [ 'max_load', 'dimensions.max_load' ],
 			],
 		],
 		'battery_capacity' => [
@@ -66,6 +68,7 @@ function erh_get_spec_registry(): array {
 				'default'  => [ 'battery_capacity' ],
 				'escooter' => [ 'battery_capacity', 'e-scooters.battery.capacity' ],
 				'ebike'    => [ 'battery_capacity', 'ebike_data.battery.capacity' ],
+				'euc'      => [ 'battery_capacity', 'battery.capacity' ],
 			],
 		],
 		'nominal_power'    => [
@@ -76,6 +79,7 @@ function erh_get_spec_registry(): array {
 				'default'  => [ 'nominal_motor_wattage' ],
 				'escooter' => [ 'nominal_motor_wattage', 'e-scooters.motor.power_nominal' ],
 				'ebike'    => [ 'nominal_motor_wattage', 'ebike_data.motor.power_nominal' ],
+				'euc'      => [ 'nominal_motor_wattage', 'motor.power_nominal' ],
 			],
 		],
 		'charging_time'    => [
@@ -85,6 +89,7 @@ function erh_get_spec_registry(): array {
 			'paths'  => [
 				'default' => [ 'battery.charging_time' ],
 				'ebike'   => [ 'battery.charge_time', 'ebike_data.battery.charge_time' ],
+				'euc'     => [ 'battery.charging_time' ],
 			],
 		],
 		'peak_power'       => [
@@ -93,6 +98,7 @@ function erh_get_spec_registry(): array {
 			'icon'   => 'motor',
 			'paths'  => [
 				'default' => [ 'motor.power_peak' ],
+				'euc'     => [ 'motor.power_peak' ],
 			],
 		],
 		'accel_0_15'       => [
@@ -237,9 +243,26 @@ function erh_resolve_preset_spec( string $preset_key, int $product_id, string $c
 		$value = number_format( (float) $value );
 	}
 
+	$formatted = $value . $spec['suffix'];
+
+	// Tire size: append width if available (e.g. 16" x 3").
+	if ( 'tire_size' === $preset_key ) {
+		$width_paths = [
+			'euc' => [ 'wheel.tire_width' ],
+		];
+		$w_paths = $width_paths[ $category_key ] ?? [];
+		foreach ( $w_paths as $w_path ) {
+			$width = erh_get_spec_from_cache( $specs, $w_path, $nested_wrapper );
+			if ( $width ) {
+				$formatted = $value . '" x ' . $width . '"';
+				break;
+			}
+		}
+	}
+
 	return [
 		'label' => $spec['label'],
-		'value' => $value . $spec['suffix'],
+		'value' => $formatted,
 		'icon'  => $spec['icon'],
 	];
 }
@@ -400,6 +423,46 @@ function erh_get_listicle_key_specs( int $product_id, string $category_key ): ar
 			$motor = $get( 'nominal_motor_wattage' ) ?: $get( 'ebike_data.motor.power_nominal' );
 			if ( $motor ) {
 				$result[] = array( 'label' => 'Nominal Power', 'value' => $motor . 'W', 'icon' => 'motor' );
+			}
+			break;
+
+		case 'euc':
+			// Tested Speed (root level field).
+			$speed = $get( 'tested_top_speed' );
+			if ( $speed ) {
+				$result[] = array( 'label' => 'Tested Speed', 'value' => $speed . ' MPH', 'icon' => 'dashboard' );
+			}
+
+			// Tested Range (root level field).
+			$range = $get( 'tested_range_regular' );
+			if ( $range ) {
+				$result[] = array( 'label' => 'Tested Range', 'value' => $range . ' miles', 'icon' => 'range' );
+			}
+
+			// Weight.
+			$weight = $get( 'weight' ) ?: $get( 'dimensions.weight' );
+			if ( $weight ) {
+				$result[] = array( 'label' => 'Weight', 'value' => $weight . ' lbs', 'icon' => 'weight' );
+			}
+
+			// Battery Capacity.
+			$battery = $get( 'battery_capacity' ) ?: $get( 'battery.capacity' );
+			if ( $battery ) {
+				$result[] = array( 'label' => 'Battery', 'value' => $battery . ' Wh', 'icon' => 'battery-charging' );
+			}
+
+			// Nominal Power.
+			$motor = $get( 'nominal_motor_wattage' ) ?: $get( 'motor.power_nominal' );
+			if ( $motor ) {
+				$result[] = array( 'label' => 'Nominal Power', 'value' => $motor . 'W', 'icon' => 'motor' );
+			}
+
+			// Tire Size (with width if available).
+			$tire_size = $get( 'wheel.tire_size' );
+			if ( $tire_size ) {
+				$tire_width = $get( 'wheel.tire_width' );
+				$tire_value = $tire_width ? $tire_size . '" x ' . $tire_width . '"' : $tire_size . '"';
+				$result[]   = array( 'label' => 'Tire Size', 'value' => $tire_value, 'icon' => 'tire' );
 			}
 			break;
 
