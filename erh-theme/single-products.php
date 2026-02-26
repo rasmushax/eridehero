@@ -33,10 +33,10 @@ while ( have_posts() ) :
     // Get brand from title (e.g., "Segway Ninebot Max G2" → "Segway").
     $brand = erh_extract_brand_from_title( $product_name );
 
-    // Get product images.
-    $big_thumbnail   = get_field( 'big_thumbnail', $product_id );
+    // Get product image (featured image preferred, big_thumbnail as fallback).
     $featured_image  = get_post_thumbnail_id( $product_id );
-    $product_image   = $big_thumbnail ?: $featured_image;
+    $big_thumbnail   = get_field( 'big_thumbnail', $product_id );
+    $product_image   = $featured_image ?: $big_thumbnail;
 
     // Get linked review (if exists).
     // ACF fields are nested under 'review' group: review.review_post, review.youtube_video

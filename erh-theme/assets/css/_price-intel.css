@@ -73,7 +73,7 @@
 }
 
 .price-intel-price-link .price-intel-retailer-logo {
-    height: 14px;
+    height: 20px;
     width: auto;
 }
 
@@ -488,8 +488,8 @@
 }
 
 .price-intel-retailer-logo {
-    width: 64px;
-    height: 24px;
+    width: 74px;
+    height: auto;
     object-fit: contain;
     flex-shrink: 0;
     mix-blend-mode: multiply;

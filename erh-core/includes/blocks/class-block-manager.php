@@ -972,7 +972,7 @@ class BlockManager {
                     'layout'       => 'block',
                     'button_label' => 'Add Product',
                     'min'          => 2,
-                    'max'          => 10,
+                    'max'          => 0,
                     'sub_fields'   => [
                         [
                             'key'           => 'field_bgt_product',
