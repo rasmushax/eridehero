@@ -43,10 +43,11 @@ function erh_get_spec_registry(): array {
 			'suffix' => ' lbs',
 			'icon'   => 'weight',
 			'paths'  => [
-				'default'  => [ 'weight' ],
-				'escooter' => [ 'weight', 'e-scooters.dimensions.weight' ],
-				'ebike'    => [ 'weight', 'ebike_data.weight_and_capacity.weight' ],
-				'euc'      => [ 'weight', 'dimensions.weight' ],
+				'default'    => [ 'weight' ],
+				'escooter'   => [ 'weight', 'e-scooters.dimensions.weight' ],
+				'ebike'      => [ 'weight', 'ebike_data.weight_and_capacity.weight' ],
+				'euc'        => [ 'weight', 'dimensions.weight' ],
+				'hoverboard' => [ 'weight', 'dimensions.weight' ],
 			],
 		],
 		'max_load'         => [
@@ -54,10 +55,11 @@ function erh_get_spec_registry(): array {
 			'suffix' => ' lbs',
 			'icon'   => 'weight-scale',
 			'paths'  => [
-				'default'  => [ 'max_load' ],
-				'escooter' => [ 'max_load', 'e-scooters.dimensions.max_load' ],
-				'ebike'    => [ 'max_load', 'ebike_data.weight_and_capacity.weight_limit' ],
-				'euc'      => [ 'max_load', 'dimensions.max_load' ],
+				'default'    => [ 'max_load' ],
+				'escooter'   => [ 'max_load', 'e-scooters.dimensions.max_load' ],
+				'ebike'      => [ 'max_load', 'ebike_data.weight_and_capacity.weight_limit' ],
+				'euc'        => [ 'max_load', 'dimensions.max_load' ],
+				'hoverboard' => [ 'max_load', 'dimensions.max_load' ],
 			],
 		],
 		'battery_capacity' => [
@@ -65,10 +67,11 @@ function erh_get_spec_registry(): array {
 			'suffix' => ' Wh',
 			'icon'   => 'battery-charging',
 			'paths'  => [
-				'default'  => [ 'battery_capacity' ],
-				'escooter' => [ 'battery_capacity', 'e-scooters.battery.capacity' ],
-				'ebike'    => [ 'battery_capacity', 'ebike_data.battery.capacity' ],
-				'euc'      => [ 'battery_capacity', 'battery.capacity' ],
+				'default'    => [ 'battery_capacity' ],
+				'escooter'   => [ 'battery_capacity', 'e-scooters.battery.capacity' ],
+				'ebike'      => [ 'battery_capacity', 'ebike_data.battery.capacity' ],
+				'euc'        => [ 'battery_capacity', 'battery.capacity' ],
+				'hoverboard' => [ 'battery_capacity', 'battery.capacity' ],
 			],
 		],
 		'nominal_power'    => [
@@ -76,10 +79,11 @@ function erh_get_spec_registry(): array {
 			'suffix' => 'W',
 			'icon'   => 'motor',
 			'paths'  => [
-				'default'  => [ 'nominal_motor_wattage' ],
-				'escooter' => [ 'nominal_motor_wattage', 'e-scooters.motor.power_nominal' ],
-				'ebike'    => [ 'nominal_motor_wattage', 'ebike_data.motor.power_nominal' ],
-				'euc'      => [ 'nominal_motor_wattage', 'motor.power_nominal' ],
+				'default'    => [ 'nominal_motor_wattage' ],
+				'escooter'   => [ 'nominal_motor_wattage', 'e-scooters.motor.power_nominal' ],
+				'ebike'      => [ 'nominal_motor_wattage', 'ebike_data.motor.power_nominal' ],
+				'euc'        => [ 'nominal_motor_wattage', 'motor.power_nominal' ],
+				'hoverboard' => [ 'nominal_motor_wattage', 'motor.power_nominal' ],
 			],
 		],
 		'charging_time'    => [
@@ -423,6 +427,44 @@ function erh_get_listicle_key_specs( int $product_id, string $category_key ): ar
 			$motor = $get( 'nominal_motor_wattage' ) ?: $get( 'ebike_data.motor.power_nominal' );
 			if ( $motor ) {
 				$result[] = array( 'label' => 'Nominal Power', 'value' => $motor . 'W', 'icon' => 'motor' );
+			}
+			break;
+
+		case 'hoverboard':
+			// Tested Speed (root level field).
+			$speed = $get( 'tested_top_speed' );
+			if ( $speed ) {
+				$result[] = array( 'label' => 'Tested Speed', 'value' => $speed . ' MPH', 'icon' => 'dashboard' );
+			}
+
+			// Tested Range (root level field).
+			$range = $get( 'tested_range_regular' );
+			if ( $range ) {
+				$result[] = array( 'label' => 'Tested Range', 'value' => $range . ' miles', 'icon' => 'range' );
+			}
+
+			// Weight.
+			$weight = $get( 'weight' ) ?: $get( 'dimensions.weight' );
+			if ( $weight ) {
+				$result[] = array( 'label' => 'Weight', 'value' => $weight . ' lbs', 'icon' => 'weight' );
+			}
+
+			// Max Load.
+			$max_load = $get( 'max_load' ) ?: $get( 'dimensions.max_load' );
+			if ( $max_load ) {
+				$result[] = array( 'label' => 'Max Load', 'value' => $max_load . ' lbs', 'icon' => 'weight-scale' );
+			}
+
+			// Battery Capacity.
+			$battery = $get( 'battery_capacity' ) ?: $get( 'battery.capacity' );
+			if ( $battery ) {
+				$result[] = array( 'label' => 'Battery', 'value' => $battery . ' Wh', 'icon' => 'battery-charging' );
+			}
+
+			// Motor Power.
+			$motor = $get( 'nominal_motor_wattage' ) ?: $get( 'motor.power_nominal' );
+			if ( $motor ) {
+				$result[] = array( 'label' => 'Motor Power', 'value' => $motor . 'W', 'icon' => 'motor' );
 			}
 			break;
 
