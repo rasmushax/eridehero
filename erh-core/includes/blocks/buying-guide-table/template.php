@@ -85,11 +85,8 @@ foreach ( $products as $row ) {
             : maybe_unserialize( $cache_data['specs'] );
     }
 
-    // Get image.
-    $image_id = get_field( 'big_thumbnail', $pid );
-    if ( ! $image_id ) {
-        $image_id = get_post_thumbnail_id( $pid );
-    }
+    // Get image (featured image preferred, big_thumbnail as fallback).
+    $image_id = get_post_thumbnail_id( $pid ) ?: get_field( 'big_thumbnail', $pid );
 
     // Check if product has pricing.
     $has_pricing = erh_product_has_pricing( $pid );
