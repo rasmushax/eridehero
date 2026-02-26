@@ -31,7 +31,8 @@ class EucSpecs {
                 'showScore' => true,
                 'scoreKey'  => 'motor_performance',
                 'specs'     => [
-                    [ 'key' => 'manufacturer_top_speed', 'label' => 'Top Speed', 'unit' => 'mph', 'higherBetter' => true ],
+                    [ 'key' => 'tested_top_speed', 'label' => 'Top Speed (Tested)', 'unit' => 'mph', 'higherBetter' => true ],
+                    [ 'key' => 'manufacturer_top_speed', 'label' => 'Top Speed (Claimed)', 'unit' => 'mph', 'higherBetter' => true ],
                     [ 'key' => 'motor.power_nominal', 'label' => 'Motor Power', 'unit' => 'W', 'higherBetter' => true ],
                     [ 'key' => 'motor.power_peak', 'label' => 'Peak Power', 'unit' => 'W', 'higherBetter' => true ],
                     [ 'key' => 'motor.torque', 'label' => 'Torque', 'unit' => 'Nm', 'higherBetter' => true ],
@@ -44,9 +45,10 @@ class EucSpecs {
                 'showScore' => true,
                 'scoreKey'  => 'battery_range',
                 'specs'     => [
+                    [ 'key' => 'tested_range_regular', 'label' => 'Range (Tested)', 'unit' => 'mi', 'higherBetter' => true ],
+                    [ 'key' => 'manufacturer_range', 'label' => 'Range (Claimed)', 'unit' => 'mi', 'higherBetter' => true ],
                     [ 'key' => 'battery.capacity', 'label' => 'Battery', 'unit' => 'Wh', 'higherBetter' => true ],
                     [ 'key' => 'battery.voltage', 'label' => 'Voltage', 'unit' => 'V', 'higherBetter' => true ],
-                    [ 'key' => 'manufacturer_range', 'label' => 'Claimed Range', 'unit' => 'mi', 'higherBetter' => true ],
                     [ 'key' => 'battery.charging_time', 'label' => 'Charge Time', 'unit' => 'h', 'higherBetter' => false ],
                     [ 'key' => 'battery.dual_charging', 'label' => 'Dual Charging', 'format' => 'boolean', 'higherBetter' => true ],
                     [ 'key' => 'battery.fast_charger', 'label' => 'Fast Charger', 'format' => 'boolean', 'higherBetter' => true ],
