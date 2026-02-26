@@ -139,9 +139,9 @@
     margin: var(--space-6) 0 var(--space-3);
 }
 
-.article-body a,
-.guide-body a,
-.review-body a {
+.article-body :is(p, li, ol) a,
+.guide-body :is(p, li, ol) a,
+.review-body :is(p, li, ol) a {
     color: var(--color-dark);
     text-decoration: underline;
 }
