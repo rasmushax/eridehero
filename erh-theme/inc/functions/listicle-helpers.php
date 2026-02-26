@@ -455,16 +455,18 @@ function erh_get_listicle_key_specs( int $product_id, string $category_key ): ar
 				$result[] = array( 'label' => 'Max Load', 'value' => $max_load . ' lbs', 'icon' => 'weight-scale' );
 			}
 
-			// Battery Capacity.
-			$battery = $get( 'battery_capacity' ) ?: $get( 'battery.capacity' );
-			if ( $battery ) {
-				$result[] = array( 'label' => 'Battery', 'value' => $battery . ' Wh', 'icon' => 'battery-charging' );
+			// Tires (size + type, e.g. 8.5" Solid).
+			$wheel_size = $get( 'wheels.wheel_size' );
+			if ( $wheel_size ) {
+				$wheel_type = $get( 'wheels.wheel_type' );
+				$tire_value = $wheel_size . '"' . ( $wheel_type ? ' ' . $wheel_type : '' );
+				$result[]   = array( 'label' => 'Tires', 'value' => $tire_value, 'icon' => 'tire' );
 			}
 
 			// Motor Power.
 			$motor = $get( 'nominal_motor_wattage' ) ?: $get( 'motor.power_nominal' );
 			if ( $motor ) {
-				$result[] = array( 'label' => 'Motor Power', 'value' => $motor . 'W', 'icon' => 'motor' );
+				$result[] = array( 'label' => 'Motors', 'value' => $motor . 'W', 'icon' => 'motor' );
 			}
 			break;
 
