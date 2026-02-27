@@ -29,6 +29,7 @@ class UserRepository {
     public const META_LAST_DEALS_EMAIL_SENT = 'last_deals_email_sent';
     public const META_PASSWORD_RESET_KEY_AGE = 'password_reset_key_age';
     public const META_GEO_PREFERENCE = 'erh_geo_preference';
+    public const META_USER_SET_PASSWORD = 'erh_user_set_password';
 
     // Social login meta keys.
     public const META_GOOGLE_ID = 'erh_google_id';
@@ -463,6 +464,30 @@ class UserRepository {
     public function has_geo_preference(int $user_id): bool {
         $geo = get_user_meta($user_id, self::META_GEO_PREFERENCE, true);
         return !empty($geo) && \ERH\GeoConfig::is_valid_region($geo);
+    }
+
+    /**
+     * Check if the user has explicitly set their own password.
+     *
+     * Social-only users get a random password via wp_generate_password(),
+     * so user_pass is always populated. This meta tracks whether the user
+     * has consciously set a password they know.
+     *
+     * @param int $user_id The user ID.
+     * @return bool True if the user has set their own password.
+     */
+    public function has_user_set_password(int $user_id): bool {
+        return $this->get_meta_bool($user_id, self::META_USER_SET_PASSWORD);
+    }
+
+    /**
+     * Mark that a user has explicitly set their own password.
+     *
+     * @param int $user_id The user ID.
+     * @return void
+     */
+    public function mark_password_set(int $user_id): void {
+        $this->set_meta_value($user_id, self::META_USER_SET_PASSWORD, '1');
     }
 
     /**

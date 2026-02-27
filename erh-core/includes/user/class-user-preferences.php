@@ -324,6 +324,9 @@ class UserPreferences {
         // Set new password.
         wp_set_password($new_password, $user->ID);
 
+        // Mark that user has a known password (important for social-only users setting one).
+        $this->user_repo->mark_password_set($user->ID);
+
         // Log out all sessions.
         wp_logout();
 
@@ -402,8 +405,8 @@ class UserPreferences {
             );
         }
 
-        // Check if user has a password set (has_password returns false for empty string hash).
-        $has_password = !empty($user->user_pass) && $user->user_pass !== '';
+        // Check if user has explicitly set their own password.
+        $has_password = $this->user_repo->has_user_set_password($user_id);
 
         // If this is the only linked provider and user has no password, prevent unlinking.
         if ($linked_count === 1 && !$has_password) {

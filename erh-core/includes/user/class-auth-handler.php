@@ -233,7 +233,7 @@ class AuthHandler {
 
         $ip = RateLimiter::get_client_ip();
 
-        // Check rate limit.
+        // Check IP-based rate limit.
         $rate_check = $this->rate_limiter->check_and_record('login', $ip);
         if (!$rate_check['allowed']) {
             return new \WP_Error(
@@ -255,6 +255,17 @@ class AuthHandler {
                 'missing_credentials',
                 'Please enter your email or username.',
                 ['status' => 400]
+            );
+        }
+
+        // Per-account rate limit (prevents credential stuffing from distributed IPs).
+        $account_key = strtolower($login);
+        $account_rate_check = $this->rate_limiter->check_and_record('login_account', $account_key);
+        if (!$account_rate_check['allowed']) {
+            return new \WP_Error(
+                'rate_limited',
+                $account_rate_check['message'],
+                ['status' => 429]
             );
         }
 
@@ -281,8 +292,9 @@ class AuthHandler {
             );
         }
 
-        // Reset rate limit on successful login.
+        // Reset rate limits on successful login.
         $this->rate_limiter->reset('login', $ip);
+        $this->rate_limiter->reset('login_account', $account_key);
 
         // Set cookies.
         wp_set_current_user($user->ID);
@@ -417,6 +429,9 @@ class AuthHandler {
 
         // Store registration IP.
         $this->user_repo->set_registration_ip($user_id, $ip);
+
+        // Mark that user set their own password (vs social-only random password).
+        $this->user_repo->mark_password_set($user_id);
 
         // Auto-set geo preference from cookie (set by IPInfo detection).
         $this->user_repo->ensure_geo_preference($user_id);
@@ -585,6 +600,9 @@ class AuthHandler {
         // Reset password.
         reset_password($user, $password);
 
+        // Mark that user now has a known password.
+        $this->user_repo->mark_password_set($user->ID);
+
         // Clear reset key meta.
         delete_user_meta($user->ID, UserRepository::META_PASSWORD_RESET_KEY_AGE);
 
@@ -643,12 +661,25 @@ class AuthHandler {
     /**
      * Check if an email address exists.
      *
-     * Used by social auth flow to determine if password is needed for linking.
+     * Used by social auth flow (complete-profile page) to determine
+     * if password is needed for linking. Rate-limited to prevent enumeration.
      *
      * @param \WP_REST_Request $request The request object.
-     * @return \WP_REST_Response Response.
+     * @return \WP_REST_Response|\WP_Error Response or error.
      */
-    public function check_email_exists(\WP_REST_Request $request): \WP_REST_Response {
+    public function check_email_exists(\WP_REST_Request $request) {
+        $ip = RateLimiter::get_client_ip();
+
+        // Rate limit to prevent email enumeration.
+        $rate_check = $this->rate_limiter->check_and_record('check_email', $ip);
+        if (!$rate_check['allowed']) {
+            return new \WP_Error(
+                'rate_limited',
+                $rate_check['message'],
+                ['status' => 429]
+            );
+        }
+
         $email = $request->get_param('email');
 
         if (!is_email($email)) {
@@ -865,12 +896,6 @@ class AuthHandler {
     public function maybe_redirect_login(): void {
         // Allow admins through.
         if (current_user_can('manage_options')) {
-            return;
-        }
-
-        // Allow emergency access with secret param.
-        // phpcs:ignore WordPress.Security.NonceVerification.Recommended
-        if (isset($_GET['wpadmin']) && $_GET['wpadmin'] === 'true') {
             return;
         }
 
