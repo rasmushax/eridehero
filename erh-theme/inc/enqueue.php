@@ -182,7 +182,7 @@ function erh_add_module_type( string $tag, string $handle, string $src ): string
 function erh_preload_fonts(): void {
     $font_path = ERH_THEME_URI . '/assets/fonts/';
     ?>
-    <link rel="preload" href="<?php echo esc_url( $font_path . 'Figtree-VariableFont_wght.woff2' ); ?>" as="font" type="font/woff2" crossorigin>
+    <link rel="preload" href="<?php echo esc_url( $font_path . 'Figtree-VariableFont_wght.ttf' ); ?>" as="font" type="font/ttf" crossorigin>
     <?php
 }
 add_action( 'wp_head', 'erh_preload_fonts', 1 );
