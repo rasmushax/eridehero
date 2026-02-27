@@ -46,6 +46,53 @@ class ClickRedirector {
     private const VALID_GEOS = ['US', 'GB', 'EU', 'CA', 'AU'];
 
     /**
+     * Legacy ThirstyAffiliates /go/ slugs mapped to current product slugs.
+     *
+     * Old site used ThirstyAffiliates which created /go/{shortname} links.
+     * These are referenced in YouTube descriptions, comments, etc.
+     */
+    private const LEGACY_GO_SLUGS = [
+        'apollo-city-2024'    => 'apollo-city',
+        'apollo-city-pro'     => 'apollo-city',
+        'apollo-city-pro-2023' => 'apollo-city',
+        'apolloair'           => 'apollo-air',
+        'burne2max'           => 'nami-burn-e-2-max',
+        'cityrider'           => 'fluidfreeride-cityrider',
+        'cruiser-s'           => 'emove-cruiser-s',
+        'fluidhorizon'        => 'fluidfreeride-horizon',
+        'fluidmosquito'       => 'fluid-mosquito',
+        'g2'                  => 'backfire-g2',
+        'hiboys2'             => 'hiboy-s2',
+        'kaabo-mantis-v2'     => 'kaabo-mantis-king-gt-2',
+        'kingsong-n14'        => 'king-song-n14',
+        'kqi2pro'             => 'niu-kqi2-pro',
+        'kqi300x'             => 'niu-kqi-300x',
+        'kqi3max'             => 'niu-kqi3-max',
+        'kqi3max-2'           => 'niu-kqi3-max',
+        'kqi3pro'             => 'niu-kqi-3-pro',
+        'kqiair'              => 'niu-kqi-air',
+        'kukirin-g4'          => 'kugoo-g4',
+        'max4pro'             => 'maxfind-max4-pro',
+        'maxg2'               => 'segway-ninebot-max-g2',
+        'maxg30'              => 'segway-ninebot-max',
+        'ninebot-max-g3'      => 'segway-ninebot-max-g3',
+        'niu-kqi3-pro'        => 'niu-kqi-3-pro',
+        'phantom'             => 'apollo-phantom',
+        'punkrider'           => 'punk-rider-pro',
+        'segway-e3-pro'       => 'segway-ninebot-e3-pro',
+        'segwayg30p'          => 'segway-ninebot-max',
+        'segwaymaxg2'         => 'segway-ninebot-max-g2',
+        'turboantv8'          => 'turboant-v8',
+        'varla-eagleone'      => 'varla-eagle-one-v3-0',
+        'varla-pegasus-2'     => 'varla-pegasus',
+        'vmax-vx2-hub'        => 'vmax-vx2-hub-18-2ah',
+        'vmax-vx2-pro'        => 'vmax-vx2-pro-gt',
+        'vmax-vx5'            => 'vmax-vx5-pro-gt',
+        'vx2extreme'          => 'vmax-vx2-extreme-gt',
+        'x7max'               => 'turboant-x7-max',
+    ];
+
+    /**
      * Click data to record after redirect (async tracking).
      *
      * @var array|null
@@ -137,6 +184,13 @@ class ClickRedirector {
         $product_id = $this->get_product_id_by_slug($product_slug);
 
         if (!$product_id) {
+            // Check if this is a legacy ThirstyAffiliates slug.
+            $new_slug = self::LEGACY_GO_SLUGS[$product_slug] ?? null;
+            if ($new_slug) {
+                header('X-Robots-Tag: noindex, nofollow', true);
+                wp_redirect(home_url('/go/' . $new_slug . '/'), 301);
+                exit;
+            }
             $this->show_not_found('Product not found.');
             return;
         }
