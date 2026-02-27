@@ -311,6 +311,13 @@ import { Toast } from './components/toast.js'; // For programmatic toasts
         });
     }
 
+    // Shortlist blocks - top picks with geo pricing
+    if (document.querySelector('[data-shortlist]')) {
+        import('./components/shortlist.js').then(module => {
+            module.initShortlist();
+        });
+    }
+
     // Buying Guide Table blocks - comparison tables with geo pricing
     if (document.querySelector('[data-buying-guide-table]')) {
         import('./components/buying-guide-table.js').then(module => {

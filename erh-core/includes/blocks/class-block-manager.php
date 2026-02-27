@@ -104,6 +104,9 @@ class BlockManager {
 
         // Register Black Friday deal block.
         $this->register_bfdeal_block();
+
+        // Register shortlist block.
+        $this->register_shortlist_block();
     }
 
     /**
@@ -246,6 +249,7 @@ class BlockManager {
         $this->register_icon_heading_fields();
         $this->register_spec_group_fields();
         $this->register_bfdeal_fields();
+        $this->register_shortlist_fields();
     }
 
     /**
@@ -1891,6 +1895,338 @@ class BlockManager {
             wp_enqueue_style(
                 'erh-block-bfdeal',
                 $block_url . 'bfdeal.css',
+                [],
+                ERH_VERSION
+            );
+        }
+    }
+
+    /**
+     * Register the shortlist block.
+     *
+     * @return void
+     */
+    private function register_shortlist_block(): void {
+        acf_register_block_type([
+            'name'            => 'shortlist',
+            'title'           => __('Shortlist', 'erh-core'),
+            'description'     => __('Top picks shortlist with horizontal product cards and geo pricing.', 'erh-core'),
+            'category'        => 'formatting',
+            'icon'            => 'awards',
+            'keywords'        => ['shortlist', 'top picks', 'buying guide', 'recommendations'],
+            'mode'            => 'preview',
+            'supports'        => [
+                'align'  => ['wide', 'full'],
+                'anchor' => true,
+            ],
+            'render_callback' => [$this, 'render_shortlist_block'],
+            'enqueue_assets'  => [$this, 'enqueue_shortlist_assets'],
+        ]);
+
+        $this->blocks['shortlist'] = [
+            'name' => 'shortlist',
+            'dir'  => $this->blocks_dir . 'shortlist/',
+            'url'  => $this->blocks_url . 'shortlist/',
+        ];
+    }
+
+    /**
+     * Register shortlist block ACF fields.
+     *
+     * @return void
+     */
+    private function register_shortlist_fields(): void {
+        // Spec preset choices (reuse from listicle-item).
+        $spec_presets = [
+            'tested_speed'     => 'Tested Speed (MPH)',
+            'tested_range'     => 'Tested Range (miles)',
+            'weight'           => 'Weight (lbs)',
+            'max_load'         => 'Max Load (lbs)',
+            'battery_capacity' => 'Battery Capacity (Wh)',
+            'nominal_power'    => 'Nominal Power (W)',
+            'charging_time'    => 'Charge Time (hrs)',
+            'peak_power'       => 'Peak Power (W)',
+            'accel_0_15'       => '0-15 MPH Accel (s)',
+            'accel_0_20'       => '0-20 MPH Accel (s)',
+            'accel_0_25'       => '0-25 MPH Accel (s)',
+            'accel_0_30'       => '0-30 MPH Accel (s)',
+            'brake_distance'   => 'Brake Distance (ft)',
+            'hill_climb'       => 'Hill Climb Angle',
+            'ip_rating'        => 'IP Rating',
+            'tire_size'        => 'Tire Size',
+            'claimed_speed'    => 'Claimed Speed (MPH)',
+            'claimed_range'    => 'Claimed Range (miles)',
+        ];
+
+        // Shared item sub_fields (used by both ungrouped and grouped repeaters).
+        // Ungrouped items use field_sl_* prefix, grouped items use field_slg_*.
+        $item_sub_fields_ungrouped = $this->get_shortlist_item_sub_fields('field_sl_', $spec_presets);
+        $item_sub_fields_grouped   = $this->get_shortlist_item_sub_fields('field_slg_', $spec_presets);
+
+        acf_add_local_field_group([
+            'key'      => 'group_erh_shortlist_block',
+            'title'    => 'Block - Shortlist',
+            'fields'   => [
+                [
+                    'key'           => 'field_sl_title',
+                    'label'         => 'Title',
+                    'name'          => 'shortlist_title',
+                    'type'          => 'text',
+                    'default_value' => 'Our Top Picks',
+                    'wrapper'       => ['width' => '50'],
+                ],
+                [
+                    'key'           => 'field_sl_numbering',
+                    'label'         => 'Show Numbering',
+                    'name'          => 'shortlist_numbering',
+                    'type'          => 'true_false',
+                    'default_value' => 1,
+                    'ui'            => 1,
+                    'ui_on_text'    => '#1, #2...',
+                    'ui_off_text'   => 'No',
+                    'wrapper'       => ['width' => '25'],
+                ],
+                [
+                    'key'           => 'field_sl_use_groups',
+                    'label'         => 'Use Groups',
+                    'name'          => 'shortlist_use_groups',
+                    'type'          => 'true_false',
+                    'default_value' => 0,
+                    'ui'            => 1,
+                    'ui_on_text'    => 'Grouped',
+                    'ui_off_text'   => 'Flat',
+                    'instructions'  => 'Group items under headings (e.g., "265-300 lbs").',
+                    'wrapper'       => ['width' => '25'],
+                ],
+                // Ungrouped items (shown when use_groups is false).
+                [
+                    'key'               => 'field_sl_items',
+                    'label'             => 'Items',
+                    'name'              => 'shortlist_items',
+                    'type'              => 'repeater',
+                    'layout'            => 'block',
+                    'button_label'      => 'Add Item',
+                    'min'               => 0,
+                    'max'               => 0,
+                    'sub_fields'        => $item_sub_fields_ungrouped,
+                    'conditional_logic' => [
+                        [
+                            [
+                                'field'    => 'field_sl_use_groups',
+                                'operator' => '!=',
+                                'value'    => '1',
+                            ],
+                        ],
+                    ],
+                ],
+                // Grouped items (shown when use_groups is true).
+                [
+                    'key'               => 'field_sl_groups',
+                    'label'             => 'Groups',
+                    'name'              => 'shortlist_groups',
+                    'type'              => 'repeater',
+                    'layout'            => 'block',
+                    'button_label'      => 'Add Group',
+                    'min'               => 0,
+                    'max'               => 0,
+                    'sub_fields'        => [
+                        [
+                            'key'         => 'field_slg_heading',
+                            'label'       => 'Group Heading',
+                            'name'        => 'group_heading',
+                            'type'        => 'text',
+                            'placeholder' => 'e.g., 265-300 lbs',
+                        ],
+                        [
+                            'key'          => 'field_slg_items',
+                            'label'        => 'Items',
+                            'name'         => 'group_items',
+                            'type'         => 'repeater',
+                            'layout'       => 'block',
+                            'button_label' => 'Add Item',
+                            'min'          => 0,
+                            'max'          => 0,
+                            'sub_fields'   => $item_sub_fields_grouped,
+                        ],
+                    ],
+                    'conditional_logic' => [
+                        [
+                            [
+                                'field'    => 'field_sl_use_groups',
+                                'operator' => '==',
+                                'value'    => '1',
+                            ],
+                        ],
+                    ],
+                ],
+            ],
+            'location' => [
+                [
+                    [
+                        'param'    => 'block',
+                        'operator' => '==',
+                        'value'    => 'acf/shortlist',
+                    ],
+                ],
+            ],
+        ]);
+    }
+
+    /**
+     * Build the shared item sub_fields array for shortlist items.
+     *
+     * @param string $prefix       Field key prefix (e.g., 'field_sl_' or 'field_slg_').
+     * @param array  $spec_presets Preset choices for spec select.
+     * @return array ACF sub_fields array.
+     */
+    private function get_shortlist_item_sub_fields(string $prefix, array $spec_presets): array {
+        return [
+            [
+                'key'         => $prefix . 'label',
+                'label'       => 'Label',
+                'name'        => 'item_label',
+                'type'        => 'text',
+                'placeholder' => 'e.g., Best Overall, Budget Pick',
+                'wrapper'     => ['width' => '50'],
+            ],
+            [
+                'key'           => $prefix . 'product',
+                'label'         => 'Product',
+                'name'          => 'item_product',
+                'type'          => 'post_object',
+                'post_type'     => ['products'],
+                'post_status'   => ['publish'],
+                'return_format' => 'id',
+                'ui'            => 1,
+                'wrapper'       => ['width' => '50'],
+            ],
+            [
+                'key'           => $prefix . 'image',
+                'label'         => 'Image Override',
+                'name'          => 'item_image_override',
+                'type'          => 'image',
+                'instructions'  => 'Leave empty to use product featured image.',
+                'return_format' => 'array',
+                'preview_size'  => 'thumbnail',
+            ],
+            [
+                'key'          => $prefix . 'specs',
+                'label'        => 'Key Specs',
+                'name'         => 'item_specs',
+                'type'         => 'repeater',
+                'instructions' => 'Up to 4 specs shown inline (e.g., "34 MPH · 40 mi · 65 lbs").',
+                'max'          => 4,
+                'layout'       => 'table',
+                'button_label' => 'Add Spec',
+                'sub_fields'   => [
+                    [
+                        'key'           => $prefix . 'spec_mode',
+                        'label'         => 'Mode',
+                        'name'          => 'spec_mode',
+                        'type'          => 'select',
+                        'choices'       => [
+                            'preset' => 'Preset',
+                            'manual' => 'Manual',
+                        ],
+                        'default_value' => 'preset',
+                        'wrapper'       => ['width' => '20'],
+                    ],
+                    [
+                        'key'               => $prefix . 'spec_preset',
+                        'label'             => 'Spec',
+                        'name'              => 'spec_preset',
+                        'type'              => 'select',
+                        'choices'           => $spec_presets,
+                        'wrapper'           => ['width' => '40'],
+                        'conditional_logic' => [
+                            [
+                                [
+                                    'field'    => $prefix . 'spec_mode',
+                                    'operator' => '==',
+                                    'value'    => 'preset',
+                                ],
+                            ],
+                        ],
+                    ],
+                    [
+                        'key'               => $prefix . 'manual_label',
+                        'label'             => 'Label',
+                        'name'              => 'manual_label',
+                        'type'              => 'text',
+                        'placeholder'       => 'e.g., Max Load',
+                        'wrapper'           => ['width' => '20'],
+                        'conditional_logic' => [
+                            [
+                                [
+                                    'field'    => $prefix . 'spec_mode',
+                                    'operator' => '==',
+                                    'value'    => 'manual',
+                                ],
+                            ],
+                        ],
+                    ],
+                    [
+                        'key'               => $prefix . 'manual_value',
+                        'label'             => 'Value',
+                        'name'              => 'manual_value',
+                        'type'              => 'text',
+                        'placeholder'       => 'e.g., 287 lbs',
+                        'wrapper'           => ['width' => '20'],
+                        'conditional_logic' => [
+                            [
+                                [
+                                    'field'    => $prefix . 'spec_mode',
+                                    'operator' => '==',
+                                    'value'    => 'manual',
+                                ],
+                            ],
+                        ],
+                    ],
+                ],
+            ],
+            [
+                'key'          => $prefix . 'description',
+                'label'        => 'Description',
+                'name'         => 'item_description',
+                'type'         => 'wysiwyg',
+                'tabs'         => 'visual',
+                'toolbar'      => 'basic',
+                'media_upload' => 0,
+            ],
+        ];
+    }
+
+    /**
+     * Render the shortlist block.
+     *
+     * @param array  $block      The block settings.
+     * @param string $content    The block content (empty for ACF blocks).
+     * @param bool   $is_preview True during AJAX preview in editor.
+     * @param int    $post_id    The post ID.
+     * @return void
+     */
+    public function render_shortlist_block(array $block, string $content = '', bool $is_preview = false, int $post_id = 0): void {
+        $template = $this->blocks_dir . 'shortlist/template.php';
+
+        if (file_exists($template)) {
+            include $template;
+        }
+    }
+
+    /**
+     * Enqueue shortlist block assets.
+     *
+     * @return void
+     */
+    public function enqueue_shortlist_assets(): void {
+        $block_url = $this->blocks_url . 'shortlist/';
+        $block_dir = $this->blocks_dir . 'shortlist/';
+
+        // Enqueue CSS.
+        if (file_exists($block_dir . 'shortlist.css')) {
+            wp_enqueue_style(
+                'erh-block-shortlist',
+                $block_url . 'shortlist.css',
                 [],
                 ERH_VERSION
             );

@@ -1,0 +1,232 @@
+/* =============================================
+   Shortlist Block - "Our Top Picks" cards
+   ============================================= */
+
+.erh-shortlist {
+    margin: var(--space-8) 0;
+}
+
+/* Title */
+.erh-shortlist__title {
+    font-size: var(--text-2xl);
+    font-weight: var(--font-bold);
+    color: var(--color-dark);
+    margin: 0 0 var(--space-4);
+    padding-bottom: var(--space-3);
+    border-bottom: 2px solid var(--color-dark);
+}
+
+/* Group Headings */
+.erh-shortlist__group-heading {
+    font-size: var(--text-sm);
+    font-weight: var(--font-bold);
+    text-transform: uppercase;
+    letter-spacing: 0.05em;
+    color: var(--color-muted);
+    background: var(--color-bg-subtle, var(--color-bg-alt));
+    padding: var(--space-2) var(--space-4);
+    margin-top: var(--space-4);
+    border-radius: var(--radius-md);
+}
+
+/* Items */
+.erh-shortlist__item {
+    padding: var(--space-5) 0;
+    border-bottom: 1px solid var(--color-border);
+}
+
+.erh-shortlist__item:last-child {
+    border-bottom: none;
+}
+
+/* Item Meta: Number + Label */
+.erh-shortlist__item-meta {
+    display: flex;
+    align-items: center;
+    gap: var(--space-2);
+    margin-bottom: var(--space-3);
+}
+
+.erh-shortlist__number {
+    font-size: var(--text-sm);
+    font-weight: var(--font-bold);
+    color: var(--color-muted);
+}
+
+.erh-shortlist__label {
+    display: inline-block;
+    font-size: var(--text-xs);
+    font-weight: var(--font-bold);
+    text-transform: uppercase;
+    letter-spacing: 0.03em;
+    color: var(--color-primary);
+    background: var(--color-primary-bg, rgba(124, 58, 237, 0.08));
+    padding: 2px var(--space-2);
+    border-radius: var(--radius-sm);
+}
+
+/* Item Body: horizontal layout */
+.erh-shortlist__item-body {
+    display: flex;
+    gap: var(--space-5);
+    align-items: flex-start;
+}
+
+/* Image */
+.erh-shortlist__image {
+    flex-shrink: 0;
+    width: 120px;
+}
+
+.erh-shortlist__img {
+    width: 120px;
+    height: 120px;
+    object-fit: contain;
+    border-radius: var(--radius-md);
+    background: var(--color-bg-alt);
+}
+
+/* Info */
+.erh-shortlist__info {
+    flex: 1;
+    min-width: 0;
+}
+
+.erh-shortlist__name {
+    font-size: var(--text-lg);
+    font-weight: var(--font-bold);
+    margin: 0 0 var(--space-2);
+    line-height: var(--leading-tight);
+}
+
+.erh-shortlist__name a {
+    color: var(--color-dark);
+    text-decoration: none;
+}
+
+.erh-shortlist__name a:hover {
+    color: var(--color-primary);
+}
+
+/* Specs row */
+.erh-shortlist__specs {
+    display: flex;
+    flex-wrap: wrap;
+    align-items: center;
+    gap: var(--space-1);
+    font-size: var(--text-sm);
+    color: var(--color-body);
+    margin-bottom: var(--space-2);
+}
+
+.erh-shortlist__spec {
+    white-space: nowrap;
+}
+
+.erh-shortlist__specs-sep {
+    color: var(--color-muted);
+    margin: 0 var(--space-1);
+}
+
+/* Description (WYSIWYG) */
+.erh-shortlist__desc {
+    font-size: var(--text-sm);
+    color: var(--color-body);
+    line-height: var(--leading-relaxed);
+    margin-bottom: var(--space-3);
+}
+
+.erh-shortlist__desc p {
+    margin: 0;
+}
+
+.erh-shortlist__desc p + p {
+    margin-top: var(--space-2);
+}
+
+/* Actions */
+.erh-shortlist__actions {
+    display: flex;
+    align-items: center;
+    gap: var(--space-3);
+    flex-wrap: wrap;
+}
+
+/* Buy Button */
+.erh-shortlist__buy {
+    display: inline-flex;
+    align-items: center;
+    justify-content: center;
+    gap: var(--space-1);
+    min-width: 130px;
+    height: 36px;
+}
+
+.erh-shortlist__buy .icon {
+    width: 14px;
+    height: 14px;
+}
+
+.erh-shortlist__buy .spinner {
+    width: 18px;
+    height: 18px;
+}
+
+/* Review Link */
+.erh-shortlist__review-link {
+    display: inline-flex;
+    align-items: center;
+    gap: var(--space-1);
+    font-size: var(--text-sm);
+    font-weight: var(--font-medium);
+    color: var(--color-body);
+    text-decoration: none;
+}
+
+.erh-shortlist__review-link:hover {
+    color: var(--color-primary);
+}
+
+.erh-shortlist__review-link .icon {
+    width: 14px;
+    height: 14px;
+}
+
+/* ===== RESPONSIVE ===== */
+
+@media (max-width: 600px) {
+    .erh-shortlist__item-body {
+        flex-direction: column;
+        gap: var(--space-3);
+    }
+
+    .erh-shortlist__image {
+        width: 100%;
+        text-align: center;
+    }
+
+    .erh-shortlist__img {
+        width: 160px;
+        height: 160px;
+    }
+}
+
+/* ===== SKELETON ANIMATION ===== */
+
+.erh-shortlist__buy .spinner {
+    animation: erh-spin 0.8s linear infinite;
+}
+
+@keyframes erh-spin {
+    to { transform: rotate(360deg); }
+}
+
+/* ===== EDITOR PREVIEW ===== */
+
+.erh-shortlist-empty {
+    padding: var(--space-6);
+    text-align: center;
+    color: var(--color-muted);
+    border: 2px dashed var(--color-border);
+    border-radius: var(--radius-lg);
+}
