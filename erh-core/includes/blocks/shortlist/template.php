@@ -139,8 +139,9 @@ $item_number = 0;
                         $manual_value = trim( $spec_row['manual_value'] ?? '' );
                         if ( $manual_label && $manual_value ) {
                             $specs[] = [
-                                'label' => $manual_label,
-                                'value' => $manual_value,
+                                'label'  => $manual_label,
+                                'value'  => $manual_value,
+                                'tested' => false,
                             ];
                         }
                     } else {
@@ -148,9 +149,11 @@ $item_number = 0;
                         if ( $preset_key ) {
                             $resolved = erh_resolve_preset_spec( $preset_key, $product_id, $category_key );
                             if ( $resolved ) {
+                                $is_tested = in_array( $preset_key, [ 'tested_speed', 'tested_range' ], true );
                                 $specs[] = [
-                                    'label' => $resolved['label'],
-                                    'value' => $resolved['value'],
+                                    'label'  => $resolved['label'],
+                                    'value'  => $resolved['value'],
+                                    'tested' => $is_tested,
                                 ];
                             }
                         }
@@ -172,17 +175,6 @@ $item_number = 0;
                 class="erh-shortlist__item"
                 <?php if ( $js_data ) : ?>data-shortlist-product='<?php echo esc_attr( $js_data ); ?>'<?php endif; ?>
             >
-                <?php if ( $numbering || $label ) : ?>
-                    <div class="erh-shortlist__item-meta">
-                        <?php if ( $numbering ) : ?>
-                            <span class="erh-shortlist__number">#<?php echo esc_html( $item_number ); ?></span>
-                        <?php endif; ?>
-                        <?php if ( $label ) : ?>
-                            <span class="erh-shortlist__label"><?php echo esc_html( $label ); ?></span>
-                        <?php endif; ?>
-                    </div>
-                <?php endif; ?>
-
                 <div class="erh-shortlist__item-body">
                     <?php if ( $image_id ) : ?>
                         <div class="erh-shortlist__image">
@@ -194,9 +186,17 @@ $item_number = 0;
                     <?php endif; ?>
 
                     <div class="erh-shortlist__info">
-                        <h3 class="erh-shortlist__name">
-                            <a href="<?php echo esc_url( $product_url ); ?>"><?php echo esc_html( $product_name ); ?></a>
-                        </h3>
+                        <div class="erh-shortlist__header">
+                            <?php if ( $numbering ) : ?>
+                                <span class="erh-shortlist__number">#<?php echo esc_html( $item_number ); ?></span>
+                            <?php endif; ?>
+                            <h3 class="erh-shortlist__name">
+                                <a href="<?php echo esc_url( $product_url ); ?>"><?php echo esc_html( $product_name ); ?></a>
+                            </h3>
+                            <?php if ( $label ) : ?>
+                                <span class="erh-shortlist__label"><?php echo esc_html( $label ); ?></span>
+                            <?php endif; ?>
+                        </div>
 
                         <?php if ( ! empty( $specs ) ) : ?>
                             <div class="erh-shortlist__specs">
@@ -204,7 +204,12 @@ $item_number = 0;
                                     <?php if ( $i > 0 ) : ?>
                                         <span class="erh-shortlist__specs-sep" aria-hidden="true">&middot;</span>
                                     <?php endif; ?>
-                                    <span class="erh-shortlist__spec"><?php echo esc_html( $spec['value'] ); ?></span>
+                                    <span class="erh-shortlist__spec">
+                                        <?php echo esc_html( $spec['value'] ); ?>
+                                        <?php if ( ! empty( $spec['tested'] ) ) : ?>
+                                            <span class="erh-shortlist__tested">tested</span>
+                                        <?php endif; ?>
+                                    </span>
                                 <?php endforeach; ?>
                             </div>
                         <?php endif; ?>
