@@ -26,3 +26,16 @@ require_once ERH_THEME_DIR . '/inc/compare-routes.php';
 require_once ERH_THEME_DIR . '/inc/archive-routes.php';
 require_once ERH_THEME_DIR . '/inc/coupon-routes.php';
 require_once ERH_THEME_DIR . '/inc/litespeed-tuning.php';
+
+/**
+ * Prevent Complianz from blocking our core app scripts.
+ *
+ * Complianz's cookie blocker detects YouTube URLs inside the bundled JS
+ * and incorrectly blocks the erhData inline script + app bundle.
+ */
+add_filter( 'cmplz_whitelisted_script_tags', function ( array $tags ): array {
+    $tags[] = 'erh-app';
+    $tags[] = 'erhData';
+    $tags[] = 'app.min.js';
+    return $tags;
+} );
