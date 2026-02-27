@@ -70,6 +70,11 @@ function erh_enqueue_assets(): void {
             filemtime( $dist_js ),
             true
         );
+
+        // Defer execution so page-specific data injected after get_footer()
+        // (e.g. finderProducts, compareConfig) is available when the bundle runs.
+        // ES modules are implicitly deferred; IIFE bundles need this explicitly.
+        add_filter( 'script_loader_tag', 'erh_add_defer_attr', 10, 3 );
     } else {
         // Development: Use ES modules (filemtime for cache busting)
         wp_enqueue_script(
@@ -164,13 +169,25 @@ function erh_enqueue_assets(): void {
 add_action( 'wp_enqueue_scripts', 'erh_enqueue_assets' );
 
 /**
- * Add type="module" to ES module scripts
+ * Add type="module" to ES module scripts (development)
  */
 function erh_add_module_type( string $tag, string $handle, string $src ): string {
-    $module_handles = array( 'erh-app' );
-
-    if ( in_array( $handle, $module_handles, true ) ) {
+    if ( 'erh-app' === $handle ) {
         $tag = str_replace( '<script ', '<script type="module" ', $tag );
+    }
+
+    return $tag;
+}
+
+/**
+ * Add defer to IIFE bundle (production)
+ *
+ * Matches the implicit defer behavior of ES modules so that page-specific
+ * data injected after get_footer() is available when the script executes.
+ */
+function erh_add_defer_attr( string $tag, string $handle, string $src ): string {
+    if ( 'erh-app' === $handle && strpos( $tag, 'defer' ) === false ) {
+        $tag = str_replace( '<script ', '<script defer ', $tag );
     }
 
     return $tag;
