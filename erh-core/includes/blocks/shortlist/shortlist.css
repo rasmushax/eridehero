@@ -127,6 +127,11 @@
     white-space: nowrap;
 }
 
+.erh-shortlist__spec-label {
+    color: var(--color-muted);
+    margin-left: 2px;
+}
+
 .erh-shortlist__specs-sep {
     color: var(--color-muted);
     margin: 0 var(--space-1);
