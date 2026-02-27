@@ -21,29 +21,39 @@ if ( ! defined( 'ABSPATH' ) ) {
  *
  * @param int   $product_id      The product ID (for checking performance data, etc.).
  * @param array $options         Options for conditional sections.
+ *                               'has_quick_take'  => bool - Show "Quick take" section
+ *                               'has_pros_cons'   => bool - Show "Pros & cons" section
  *                               'has_prices'      => bool - Show "Where to buy" section
  *                               'has_performance' => bool - Show "Tested performance" section
+ *                               'has_full_specs'  => bool - Show "Full specifications" section
  *                               'content_post_id' => int  - Post ID to extract headings from (defaults to current post)
  * @return array Array of TOC items with 'id', 'label', and optional 'children'.
  */
 function erh_get_toc_items( int $product_id, array $options = array() ): array {
+    $has_quick_take   = $options['has_quick_take'] ?? false;
+    $has_pros_cons    = $options['has_pros_cons'] ?? false;
     $has_prices       = $options['has_prices'] ?? false;
     $has_performance  = $options['has_performance'] ?? false;
+    $has_full_specs   = $options['has_full_specs'] ?? false;
     $content_post_id  = $options['content_post_id'] ?? get_the_ID();
 
     $items = array();
 
-    // Static section: Quick take
-    $items[] = array(
-        'id'    => 'quick-take',
-        'label' => 'Quick take',
-    );
+    // Conditional section: Quick take (only if review has quick take text)
+    if ( $has_quick_take ) {
+        $items[] = array(
+            'id'    => 'quick-take',
+            'label' => 'Quick take',
+        );
+    }
 
-    // Static section: Pros & cons
-    $items[] = array(
-        'id'    => 'pros-cons',
-        'label' => 'Pros & cons',
-    );
+    // Conditional section: Pros & cons (only if review has pros or cons)
+    if ( $has_pros_cons ) {
+        $items[] = array(
+            'id'    => 'pros-cons',
+            'label' => 'Pros & cons',
+        );
+    }
 
     // Conditional section: Where to buy (only if product has prices)
     if ( $has_prices ) {
@@ -68,11 +78,13 @@ function erh_get_toc_items( int $product_id, array $options = array() ): array {
         $items[] = $heading;
     }
 
-    // Static section: Full specifications
-    $items[] = array(
-        'id'    => 'full-specs',
-        'label' => 'Full specifications',
-    );
+    // Conditional section: Full specifications (only if product has spec data)
+    if ( $has_full_specs ) {
+        $items[] = array(
+            'id'    => 'full-specs',
+            'label' => 'Full specifications',
+        );
+    }
 
     return $items;
 }

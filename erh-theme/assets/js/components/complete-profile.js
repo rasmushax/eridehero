@@ -29,12 +29,14 @@ export function initCompleteProfile() {
         clearTimeout(checkTimeout);
         clearError();
 
+        // Reset immediately on any change so stale state can't block submission.
+        emailExists = false;
+        passwordField.hidden = true;
+
         const email = emailInput.value.trim();
 
         // Basic email validation before checking
         if (!email || !email.includes('@') || !email.includes('.')) {
-            passwordField.hidden = true;
-            emailExists = false;
             return;
         }
 

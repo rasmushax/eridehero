@@ -72,10 +72,24 @@ if ( ! empty( $product_type_terms ) && ! is_wp_error( $product_type_terms ) ) {
 $has_prices      = erh_product_has_prices( $product_id );
 $has_performance = erh_product_has_performance_data( $product_id );
 
+// Check if review has quick take and pros/cons content
+$quick_take    = get_field( 'review_quick_take', $post_id );
+$pros          = get_field( 'review_pros', $post_id );
+$cons          = get_field( 'review_cons', $post_id );
+$has_quick_take = ! empty( $quick_take );
+$has_pros_cons  = ! empty( $pros ) || ! empty( $cons );
+
+// Check if product has full specs data
+$spec_groups    = erh_get_spec_groups( $product_id, $product_type );
+$has_full_specs = ! empty( $spec_groups );
+
 // Build TOC items for sidebar
 $toc_items = erh_get_toc_items( $product_id, array(
+    'has_quick_take'  => $has_quick_take,
+    'has_pros_cons'   => $has_pros_cons,
     'has_prices'      => $has_prices,
     'has_performance' => $has_performance,
+    'has_full_specs'  => $has_full_specs,
     'content_post_id' => $post_id, // Review post has the content, not the product
 ) );
 ?>
@@ -116,19 +130,15 @@ $toc_items = erh_get_toc_items( $product_id, array(
                     </div>
 
                     <?php
-                    // Quick take section
-                    $quick_take = get_field( 'review_quick_take', $post_id );
-                    $score      = get_field( 'editor_rating', $product_id );
+                    // Quick take section (fields already fetched above for TOC)
+                    $score = get_field( 'editor_rating', $product_id );
 
                     get_template_part( 'template-parts/components/quick-take', null, array(
                         'text'  => $quick_take,
                         'score' => $score,
                     ) );
 
-                    // Pros & cons section
-                    $pros = get_field( 'review_pros', $post_id );
-                    $cons = get_field( 'review_cons', $post_id );
-
+                    // Pros & cons section (fields already fetched above for TOC)
                     get_template_part( 'template-parts/components/pros-cons', null, array(
                         'pros' => $pros,
                         'cons' => $cons,

@@ -122,6 +122,12 @@ export function initSocialLogin(provider, { popup = false, redirect = '' } = {})
                 clearInterval(checkClosed);
                 popupWindow?.close();
                 resolve(event.data);
+            } else if (event.data?.type === 'auth-redirect') {
+                // Provider needs main window to navigate (e.g. Reddit complete-profile).
+                window.removeEventListener('message', handleMessage);
+                clearInterval(checkClosed);
+                popupWindow?.close();
+                window.location.href = event.data.redirect;
             } else if (event.data?.type === 'auth-error') {
                 window.removeEventListener('message', handleMessage);
                 clearInterval(checkClosed);

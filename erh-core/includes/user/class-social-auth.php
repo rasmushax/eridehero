@@ -246,8 +246,15 @@ class SocialAuth {
         if (is_wp_error($result)) {
             // Check for special redirect case (no email, need to collect it).
             if ($result->get_error_code() === 'email_required_redirect') {
-                // Email-required always redirects (popup shows complete-profile page).
-                wp_redirect($result->get_error_message());
+                $complete_url = $result->get_error_message();
+
+                if ($is_popup) {
+                    // Send redirect URL to opener so complete-profile opens in main window.
+                    $this->send_popup_redirect($complete_url);
+                    return;
+                }
+
+                wp_redirect($complete_url);
                 exit;
             }
 
@@ -537,6 +544,35 @@ class SocialAuth {
      */
     private function clear_state(string $state): void {
         delete_transient(self::STATE_TRANSIENT_PREFIX . $state);
+    }
+
+    /**
+     * Send a redirect URL to the popup opener and close the popup.
+     *
+     * Used when the OAuth flow needs the main window to navigate somewhere
+     * (e.g. /complete-profile/ for providers that don't return email).
+     *
+     * @param string $redirect_url The URL the opener should navigate to.
+     * @return void
+     */
+    private function send_popup_redirect(string $redirect_url): void {
+        $origin = home_url();
+        $data = wp_json_encode([
+            'type'     => 'auth-redirect',
+            'redirect' => $redirect_url,
+        ]);
+
+        header('Content-Type: text/html; charset=utf-8');
+        echo '<!DOCTYPE html><html><head><title>Authentication</title></head><body>';
+        echo '<script>';
+        echo 'if(window.opener){';
+        echo 'window.opener.postMessage(' . $data . ',' . wp_json_encode($origin) . ');';
+        echo '}';
+        echo 'window.close();';
+        echo '</script>';
+        echo '<p>Redirecting... You can close this window.</p>';
+        echo '</body></html>';
+        exit;
     }
 
     /**

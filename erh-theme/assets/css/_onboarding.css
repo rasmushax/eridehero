@@ -4,7 +4,8 @@
    ============================================= */
 
 /* Page Layout */
-.onboarding-page {
+.onboarding-page,
+.complete-profile-page {
     min-height: calc(100vh - var(--header-height));
     display: flex;
     align-items: center;
@@ -12,7 +13,8 @@
     padding: var(--space-12) var(--space-7);
 }
 
-.onboarding-page .container--narrow {
+.onboarding-page .container--narrow,
+.complete-profile-page .container--narrow {
     max-width: 600px;
     width: 100%;
 }
@@ -273,13 +275,18 @@
 }
 
 /* Form */
+.onboarding-form {
+    display: flex;
+    flex-direction: column;
+    gap: var(--space-5);
+}
+
 .onboarding-form .form-error {
     background: var(--color-error-light);
     color: var(--color-error);
     padding: var(--space-4) var(--space-5);
     border-radius: var(--radius-md);
     font-size: var(--text-sm);
-    margin-bottom: var(--space-5);
 }
 
 .onboarding-form .btn-block {
@@ -329,7 +336,8 @@
 /* ===== RESPONSIVE ===== */
 
 @media (max-width: 540px) {
-    .onboarding-page {
+    .onboarding-page,
+    .complete-profile-page {
         padding: var(--space-8) var(--space-5);
         align-items: flex-start;
     }
