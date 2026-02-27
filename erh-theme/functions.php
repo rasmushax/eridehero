@@ -25,3 +25,4 @@ require_once ERH_THEME_DIR . '/inc/acf-options.php';
 require_once ERH_THEME_DIR . '/inc/compare-routes.php';
 require_once ERH_THEME_DIR . '/inc/archive-routes.php';
 require_once ERH_THEME_DIR . '/inc/coupon-routes.php';
+require_once ERH_THEME_DIR . '/inc/litespeed-tuning.php';

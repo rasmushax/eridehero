@@ -1,4 +1,4 @@
-name: Deploy to Staging
+name: Deploy to Production
 
 on:
   push:
@@ -66,13 +66,13 @@ jobs:
             echo "Created erh-core.zip ($(du -h erh-core.zip | cut -f1))"
           fi
 
-      # Deploy to staging server
+      # Deploy to production server
       - name: Deploy via SSH
         env:
           SSH_KEY: ${{ secrets.STAGING_SSH_KEY }}
         run: |
           TARGET="${{ steps.targets.outputs.target }}"
-          WP_PATH="/home/haxholmw/staging.eridehero.com"
+          WP_PATH="/home/haxholmw/eridehero.com"
 
           # Set up SSH
           mkdir -p ~/.ssh
