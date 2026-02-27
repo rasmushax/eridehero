@@ -205,14 +205,20 @@ $item_number = 0;
                                         <span class="erh-shortlist__specs-sep" aria-hidden="true">&middot;</span>
                                     <?php endif; ?>
                                     <span class="erh-shortlist__spec">
+                                        <?php
+                                        // Strip "Tested " prefix from label since the badge handles it.
+                                        $spec_label = $spec['label'];
+                                        if ( ! empty( $spec['tested'] ) ) {
+                                            $spec_label = preg_replace( '/^Tested\s+/i', '', $spec_label );
+                                        }
+                                        ?>
                                         <?php echo esc_html( $spec['value'] ); ?>
+                                        <span class="erh-shortlist__spec-label"><?php echo esc_html( strtolower( $spec_label ) ); ?></span>
                                         <?php if ( ! empty( $spec['tested'] ) ) : ?>
                                             <span class="erh-shortlist__tested">
                                                 <svg class="icon" aria-hidden="true"><use href="#icon-check"></use></svg>
-                                                tested <?php echo esc_html( strtolower( $spec['label'] ) ); ?>
+                                                tested
                                             </span>
-                                        <?php else : ?>
-                                            <span class="erh-shortlist__spec-label"><?php echo esc_html( strtolower( $spec['label'] ) ); ?></span>
                                         <?php endif; ?>
                                     </span>
                                 <?php endforeach; ?>
