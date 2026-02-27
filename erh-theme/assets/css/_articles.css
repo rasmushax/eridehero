@@ -460,6 +460,11 @@ figure.product table tr > td:first-child {
     font-weight: var(--font-semibold);
 }
 
+figure.minimalistic a,
+figure.product a {
+    text-decoration: underline;
+}
+
 /* Contrast table — neutral header, clean borders, zebra striping */
 figure.contrast {
     margin: var(--space-4) 0;
