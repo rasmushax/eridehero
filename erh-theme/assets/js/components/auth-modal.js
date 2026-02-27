@@ -353,7 +353,7 @@ class AuthModalManager {
                     </svg>
                 </div>
                 <h2 class="auth-modal-title">Check your email</h2>
-                <p class="auth-modal-subtitle">We've sent a password reset link to your email address. The link will expire in 24 hours.</p>
+                <p class="auth-modal-subtitle">We've sent a password reset link to your email address. The link will expire in 12 hours.</p>
                 <button type="button" class="btn btn-secondary btn-block" data-modal-close>Done</button>
             </div>
         `;

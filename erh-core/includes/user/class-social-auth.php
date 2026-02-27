@@ -121,19 +121,6 @@ class SocialAuth {
             'permission_callback' => '__return_true',
         ]);
 
-        // Link/unlink social account (for logged-in users).
-        register_rest_route(self::REST_NAMESPACE, '/user/social/(?P<provider>google|facebook|reddit)', [
-            'methods'             => 'DELETE',
-            'callback'            => [$this, 'unlink_provider'],
-            'permission_callback' => 'is_user_logged_in',
-            'args'                => [
-                'provider' => [
-                    'required' => true,
-                    'type'     => 'string',
-                    'enum'     => ['google', 'facebook', 'reddit'],
-                ],
-            ],
-        ]);
     }
 
     /**
@@ -210,11 +197,13 @@ class SocialAuth {
             return $this->redirect_with_error('Invalid or expired state token.');
         }
 
+        // Consume state immediately to prevent replay attacks.
+        $this->clear_state($state);
+
         $is_popup = !empty($state_data['popup']);
 
         // Ensure provider matches.
         if ($state_data['provider'] !== $provider_name) {
-            $this->clear_state($state);
             if ($is_popup) {
                 $this->send_popup_response(false, 'Provider mismatch.');
                 return;
@@ -224,7 +213,6 @@ class SocialAuth {
 
         $provider = $this->get_provider($provider_name);
         if (!$provider) {
-            $this->clear_state($state);
             if ($is_popup) {
                 $this->send_popup_response(false, 'Invalid provider.');
                 return;
@@ -235,7 +223,6 @@ class SocialAuth {
         // Exchange code for token.
         $token_data = $provider->get_access_token($code);
         if (!$token_data) {
-            $this->clear_state($state);
             if ($is_popup) {
                 $this->send_popup_response(false, 'Failed to get access token.');
                 return;
@@ -246,7 +233,6 @@ class SocialAuth {
         // Get user profile from provider.
         $profile = $provider->get_user_profile($token_data['access_token']);
         if (!$profile) {
-            $this->clear_state($state);
             if ($is_popup) {
                 $this->send_popup_response(false, 'Failed to get user profile.');
                 return;
@@ -260,22 +246,17 @@ class SocialAuth {
         if (is_wp_error($result)) {
             // Check for special redirect case (no email, need to collect it).
             if ($result->get_error_code() === 'email_required_redirect') {
-                $this->clear_state($state);
                 // Email-required always redirects (popup shows complete-profile page).
                 wp_redirect($result->get_error_message());
                 exit;
             }
 
-            $this->clear_state($state);
             if ($is_popup) {
                 $this->send_popup_response(false, $result->get_error_message());
                 return;
             }
             return $this->redirect_with_error($result->get_error_message());
         }
-
-        // Clear state.
-        $this->clear_state($state);
 
         // Popup mode: send postMessage back to opener.
         if ($is_popup) {
@@ -284,8 +265,8 @@ class SocialAuth {
             return;
         }
 
-        // Build redirect URL.
-        $redirect_url = $state_data['redirect'] ?: home_url('/');
+        // Build redirect URL (validated against site domain to prevent open redirect).
+        $redirect_url = $this->validate_redirect_url($state_data['redirect']);
 
         // If a social account was auto-linked to existing account, add toast param.
         if (!empty($result['linked']) && !empty($result['provider'])) {
@@ -298,7 +279,7 @@ class SocialAuth {
             $redirect_url = home_url('/email-preferences/?redirect=' . $return_url);
         }
 
-        wp_redirect($redirect_url);
+        wp_safe_redirect($redirect_url);
         exit;
     }
 
@@ -323,50 +304,6 @@ class SocialAuth {
         return new \WP_REST_Response([
             'success'   => true,
             'providers' => $available,
-        ], 200);
-    }
-
-    /**
-     * Unlink a social provider from the current user.
-     *
-     * @param \WP_REST_Request $request The request object.
-     * @return \WP_REST_Response|\WP_Error Response or error.
-     */
-    public function unlink_provider(\WP_REST_Request $request) {
-        $provider_name = $request->get_param('provider');
-        $user_id = get_current_user_id();
-
-        // Check if user has a password set (can't unlink if no other auth method).
-        $user = get_userdata($user_id);
-        $linked_providers = $this->user_repo->get_linked_providers($user_id);
-
-        // Count linked providers.
-        $linked_count = count(array_filter($linked_providers));
-
-        // Check if user has a password.
-        $has_password = !empty($user->user_pass);
-
-        if (!$has_password && $linked_count <= 1) {
-            return new \WP_Error(
-                'cannot_unlink',
-                'You cannot unlink your only login method. Please set a password first.',
-                ['status' => 400]
-            );
-        }
-
-        $success = $this->user_repo->unlink_social_account($user_id, $provider_name);
-
-        if (!$success) {
-            return new \WP_Error(
-                'unlink_failed',
-                'Failed to unlink provider.',
-                ['status' => 500]
-            );
-        }
-
-        return new \WP_REST_Response([
-            'success' => true,
-            'message' => ucfirst($provider_name) . ' account unlinked successfully.',
         ], 200);
     }
 
@@ -660,5 +597,27 @@ class SocialAuth {
      */
     private function get_provider(string $name): ?OAuthProviderInterface {
         return $this->providers[$name] ?? null;
+    }
+
+    /**
+     * Validate a redirect URL is on the same site to prevent open redirects.
+     *
+     * @param string $url The URL to validate.
+     * @return string The validated URL, or home_url() if invalid.
+     */
+    private function validate_redirect_url(string $url): string {
+        if (empty($url)) {
+            return home_url('/');
+        }
+
+        $site_host = wp_parse_url(home_url(), PHP_URL_HOST);
+        $redirect_host = wp_parse_url($url, PHP_URL_HOST);
+
+        // Allow relative URLs and same-host URLs only.
+        if ($redirect_host === null || $redirect_host === $site_host) {
+            return $url;
+        }
+
+        return home_url('/');
     }
 }

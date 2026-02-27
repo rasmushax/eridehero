@@ -212,7 +212,7 @@ $auth_image = get_field( 'auth_page_image', 'option' );
 						</svg>
 					</div>
 					<h1 class="auth-title"><?php esc_html_e( 'Check your email', 'erh' ); ?></h1>
-					<p class="auth-subtitle"><?php esc_html_e( "We've sent a password reset link to your email address. The link will expire in 24 hours.", 'erh' ); ?></p>
+					<p class="auth-subtitle"><?php esc_html_e( "We've sent a password reset link to your email address. The link will expire in 12 hours.", 'erh' ); ?></p>
 					<a href="<?php echo esc_url( home_url( '/login/' ) ); ?>" class="btn btn-secondary"><?php esc_html_e( 'Back to sign in', 'erh' ); ?></a>
 				</div>
 			</div>
