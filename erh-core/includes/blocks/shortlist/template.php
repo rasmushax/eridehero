@@ -207,7 +207,10 @@ $item_number = 0;
                                     <span class="erh-shortlist__spec">
                                         <?php echo esc_html( $spec['value'] ); ?>
                                         <?php if ( ! empty( $spec['tested'] ) ) : ?>
-                                            <span class="erh-shortlist__tested">tested</span>
+                                            <span class="erh-shortlist__tested">
+                                                <svg class="icon" aria-hidden="true"><use href="#icon-check"></use></svg>
+                                                tested
+                                            </span>
                                         <?php endif; ?>
                                     </span>
                                 <?php endforeach; ?>
