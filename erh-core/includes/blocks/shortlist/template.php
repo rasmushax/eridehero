@@ -20,6 +20,7 @@ if ( ! defined( 'ABSPATH' ) ) {
 
 // Get block data.
 $title       = get_field( 'shortlist_title' ) ?: 'Our Top Picks';
+$subtitle    = get_field( 'shortlist_subtitle' );
 $numbering   = get_field( 'shortlist_numbering' );
 $use_groups  = get_field( 'shortlist_use_groups' );
 
@@ -84,6 +85,10 @@ $item_number = 0;
 >
     <?php if ( $title ) : ?>
         <h2 class="erh-shortlist__title"><?php echo esc_html( $title ); ?></h2>
+    <?php endif; ?>
+
+    <?php if ( $subtitle ) : ?>
+        <p class="firstparagraph"><?php echo esc_html( $subtitle ); ?></p>
     <?php endif; ?>
 
     <?php foreach ( $sections as $section ) : ?>

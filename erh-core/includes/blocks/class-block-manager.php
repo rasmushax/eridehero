@@ -1976,6 +1976,14 @@ class BlockManager {
                     'wrapper'       => ['width' => '50'],
                 ],
                 [
+                    'key'         => 'field_sl_subtitle',
+                    'label'       => 'Subtitle',
+                    'name'        => 'shortlist_subtitle',
+                    'type'        => 'text',
+                    'placeholder' => 'Optional intro text below the title',
+                    'wrapper'     => ['width' => '50'],
+                ],
+                [
                     'key'           => 'field_sl_numbering',
                     'label'         => 'Show Numbering',
                     'name'          => 'shortlist_numbering',
