@@ -6,27 +6,14 @@
     margin: var(--space-8) 0;
 }
 
-/* Title */
-.erh-shortlist__title {
-    font-size: var(--text-2xl);
-    font-weight: var(--font-bold);
-    color: var(--color-dark);
-    margin: 0 0 var(--space-4);
-    padding-bottom: var(--space-3);
-    border-bottom: 2px solid var(--color-dark);
-}
-
 /* Group Headings */
 .erh-shortlist__group-heading {
-    font-size: var(--text-sm);
+    font-size: var(--text-xl);
     font-weight: var(--font-bold);
-    text-transform: uppercase;
-    letter-spacing: 0.05em;
-    color: var(--color-muted);
-    background: var(--color-bg-subtle, var(--color-bg-alt));
-    padding: var(--space-2) var(--space-4);
-    margin-top: var(--space-4);
-    border-radius: var(--radius-md);
+    color: var(--color-dark);
+    padding: var(--space-6) 0 0;
+    margin: var(--space-6) 0;
+    border-top: 1px solid var(--color-border);
 }
 
 /* Items */
