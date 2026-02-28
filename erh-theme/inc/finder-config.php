@@ -24,7 +24,7 @@ function erh_get_finder_page_config(): array {
             'subtitle'         => 'Browse our database of %d electric scooters. Filter by specs, find deals, and discover your next ride.',
             'short'            => 'E-Scooter',
             'product_type'     => 'Electric Scooter',
-            'meta_title'       => 'Electric Scooter Database: %d+ Models with Specs & Prices | ERideHero',
+            'meta_title'       => 'Electric Scooter Finder – Browse %d+ in Our Database | ERideHero',
             'meta_description' => 'Browse %d+ electric scooters in our database. Filter by speed, range, weight, price, and more. Real specs, real prices, updated daily.',
         ],
         'ebike' => [
@@ -32,7 +32,7 @@ function erh_get_finder_page_config(): array {
             'subtitle'         => 'Browse our database of %d electric bikes. Filter by specs, find deals, and discover your next ride.',
             'short'            => 'E-Bike',
             'product_type'     => 'Electric Bike',
-            'meta_title'       => 'Electric Bike Database: %d+ Models with Specs & Prices | ERideHero',
+            'meta_title'       => 'Electric Bike Finder – Browse %d+ in Our Database | ERideHero',
             'meta_description' => 'Browse %d+ electric bikes in our database. Filter by motor, torque, range, price, and more. Real specs, real prices, updated daily.',
         ],
         'eskate' => [
@@ -40,7 +40,7 @@ function erh_get_finder_page_config(): array {
             'subtitle'         => 'Browse our database of %d electric skateboards. Filter by specs, find deals, and discover your next ride.',
             'short'            => 'E-Skateboard',
             'product_type'     => 'Electric Skateboard',
-            'meta_title'       => 'Electric Skateboard Database: %d+ Models with Specs & Prices | ERideHero',
+            'meta_title'       => 'Electric Skateboard Finder – Browse %d+ in Our Database | ERideHero',
             'meta_description' => 'Browse %d+ electric skateboards in our database. Filter by speed, range, weight, price, and more. Real specs, real prices, updated daily.',
         ],
         'euc' => [
@@ -48,7 +48,7 @@ function erh_get_finder_page_config(): array {
             'subtitle'         => 'Browse our database of %d electric unicycles. Filter by specs, find deals, and discover your next ride.',
             'short'            => 'EUC',
             'product_type'     => 'Electric Unicycle',
-            'meta_title'       => 'Electric Unicycle Database: %d+ EUCs with Specs & Prices | ERideHero',
+            'meta_title'       => 'Electric Unicycle Finder – Browse %d+ in Our Database | ERideHero',
             'meta_description' => 'Browse %d+ electric unicycles in our database. Filter by speed, range, weight, price, and more. Real specs, real prices, updated daily.',
         ],
         'hoverboard' => [
@@ -56,7 +56,7 @@ function erh_get_finder_page_config(): array {
             'subtitle'         => 'Browse our database of %d hoverboards. Filter by specs, find deals, and discover your next ride.',
             'short'            => 'Hoverboard',
             'product_type'     => 'Hoverboard',
-            'meta_title'       => 'Hoverboard Database: %d+ Models with Specs & Prices | ERideHero',
+            'meta_title'       => 'Hoverboard Finder – Browse %d+ in Our Database | ERideHero',
             'meta_description' => 'Browse %d+ hoverboards in our database. Filter by speed, range, weight, price, and more. Real specs, real prices, updated daily.',
         ],
     ];
