@@ -365,7 +365,7 @@ get_footer();
 
 // Page-specific data must come AFTER get_footer() so it runs after wp_localize_script output.
 ?>
-<script>
+<script data-no-optimize="1">
 // Extend erhData with finder-specific config (erhData set by wp_localize_script in footer)
 window.erhData = window.erhData || {};
 window.erhData.finderProducts = <?php echo wp_json_encode( $js_products ); ?>;

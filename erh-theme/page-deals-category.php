@@ -222,7 +222,7 @@ $parent_url = $parent_id ? get_permalink( $parent_id ) : home_url( '/deals/' );
 
 <?php get_footer(); ?>
 
-<script>
+<script data-no-optimize="1">
 // Page-specific config
 window.erhData = window.erhData || {};
 window.erhData.dealsConfig = {

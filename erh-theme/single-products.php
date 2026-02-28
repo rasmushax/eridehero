@@ -150,7 +150,7 @@ get_footer();
 
 // Inject product data for JS components (view tracking, analysis, tooltips).
 ?>
-<script>
+<script data-no-optimize="1">
 window.erhData = window.erhData || {};
 window.erhData.productId = <?php echo (int) $product_id; ?>;
 window.erhData.specConfig = <?php echo wp_json_encode( \ERH\Config\SpecConfig::export_compare_config( $category_key ), JSON_HEX_TAG | JSON_HEX_AMP ); ?>;

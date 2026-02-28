@@ -299,7 +299,7 @@ erh_breadcrumb_schema( $breadcrumb_items );
 
 get_footer();
 ?>
-<script>
+<script data-no-optimize="1">
 // Coupon "Get Code" — reveal code, copy to clipboard, open retailer in new tab.
 document.querySelectorAll('.coupon-get-code-btn').forEach(btn => {
 	btn.addEventListener('click', () => {

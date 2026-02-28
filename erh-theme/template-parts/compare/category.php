@@ -360,7 +360,7 @@ if ( ! $featured_comparisons->have_posts() ) {
 get_footer();
 ?>
 
-<script>
+<script data-no-optimize="1">
 // Extend erhData with page-specific config.
 window.erhData = window.erhData || {};
 window.erhData.compareConfig = {

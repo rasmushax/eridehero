@@ -126,7 +126,7 @@ if ( $search_query && strlen( $search_query ) >= 2 ) {
 <?php
 get_footer();
 ?>
-<script>
+<script data-no-optimize="1">
 window.erhData = window.erhData || {};
 window.erhData.searchQuery = <?php echo wp_json_encode( $search_query ); ?>;
 </script>

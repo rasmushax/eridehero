@@ -87,7 +87,7 @@ if ( preg_match_all( '/<h2[^>]*id=["\']([^"\']+)["\'][^>]*>([^<]+)<\/h2>/i', $co
 <?php
 get_footer();
 ?>
-<script>
+<script data-no-optimize="1">
 window.erhData = window.erhData || {};
 window.erhData.toolSlug = <?php echo wp_json_encode( $tool_slug ); ?>;
 </script>

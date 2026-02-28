@@ -81,7 +81,7 @@ get_header();
 <?php
 get_footer();
 ?>
-<script>
+<script data-no-optimize="1">
 window.erhData = window.erhData || {};
 window.erhData.toolSlug = <?php echo wp_json_encode( get_post_field( 'post_name', get_the_ID() ) ); ?>;
 window.erhData.lawsData = <?php echo wp_json_encode( $laws_data ); ?>;
