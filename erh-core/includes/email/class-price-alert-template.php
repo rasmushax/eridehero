@@ -164,8 +164,8 @@ class PriceAlertTemplate extends EmailBuilder {
                                 <table role="presentation" cellpadding="0" cellspacing="0" border="0">
                                     <tr>
                                         <td>
-                                            <span style="font-size: 20px; font-weight: 700; color: ' . self::COLOR_DARK . ';">' . esc_html($currency_symbol . number_format($current_price, 0)) . '</span>
-                                            <span style="font-size: 14px; color: ' . self::COLOR_MUTED . '; text-decoration: line-through; padding-left: 8px;">was ' . esc_html($currency_symbol . number_format($compare_price, 0)) . '</span>
+                                            <span style="font-size: 20px; font-weight: 700; color: ' . self::COLOR_DARK . ';">' . esc_html($currency_symbol . number_format($current_price, 2)) . '</span>
+                                            <span style="font-size: 14px; color: ' . self::COLOR_MUTED . '; text-decoration: line-through; padding-left: 8px;">was ' . esc_html($currency_symbol . number_format($compare_price, 2)) . '</span>
                                         </td>
                                     </tr>
                                     ' . $below_avg_html . '

@@ -236,7 +236,7 @@ class DealsDigestTemplate extends EmailBuilder {
      */
     private function render_product_cell(array $deal, string $padding_left, string $padding_right, string $padding_bottom): string {
         $name      = $deal['name'] ?? 'Product';
-        $image_url = $deal['image'] ?? $deal['thumbnail'] ?? '';
+        $image_url = $deal['image_url'] ?? '';
         $permalink = $deal['permalink'] ?? '#';
         $analysis  = $deal['deal_analysis'] ?? [];
 
@@ -263,7 +263,7 @@ class DealsDigestTemplate extends EmailBuilder {
                                                                 <a href="' . esc_url($permalink) . '" style="text-decoration: none; display: block; max-width: 100%;">
                                                                     <p style="margin: 0 0 6px 0; font-size: 13px; font-weight: 600; color: ' . self::COLOR_DARK . '; line-height: 1.3; white-space: nowrap; overflow: hidden; text-overflow: ellipsis; max-width: 140px;">' . esc_html($name) . '</p>
                                                                 </a>
-                                                                <p style="margin: 0 0 6px 0; font-size: 15px; font-weight: 700; color: ' . self::COLOR_DARK . ';">' . esc_html($this->get_currency_symbol() . number_format($price, 0)) . '</p>
+                                                                <p style="margin: 0 0 6px 0; font-size: 15px; font-weight: 700; color: ' . self::COLOR_DARK . ';">' . esc_html($this->get_currency_symbol() . number_format($price, 2)) . '</p>
                                                                 <span style="display: inline-block; padding: 2px 6px; background-color: #ebf9f4; color: #00b572; font-size: 11px; font-weight: 600; border-radius: 4px;"><img src="' . esc_url($this->get_theme_url() . '/assets/images/icons/arrow-down.png') . '" alt="" width="12" height="12" style="display: inline; vertical-align: middle; margin-right: 2px;">' . esc_html(round($discount)) . '% below avg</span>
                                                             </td>
                                                         </tr>
