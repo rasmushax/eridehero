@@ -111,8 +111,7 @@ class PriceAlertTemplate extends EmailBuilder {
         $current_price = $deal['current_price'] ?? 0;
         $compare_price = $deal['compare_price'] ?? 0;
         $percent_below_avg = $deal['percent_below_avg'] ?? null;
-        $product_url = $deal['url'] ?? '#';
-        $deal_url = $deal['tracked_url'] ?: $product_url;
+        $url = $deal['url'] ?? '#';
         $tracking_users = $deal['tracking_users'] ?? 0;
         $currency = $deal['currency'] ?? 'USD';
         $tracker_id = $deal['tracker_id'] ?? 0;
@@ -152,12 +151,12 @@ class PriceAlertTemplate extends EmailBuilder {
                     <table role="presentation" cellpadding="0" cellspacing="0" border="0" width="100%">
                         <tr>
                             <td width="100" valign="top" style="padding-right: 16px;">
-                                <a href="' . esc_url($product_url) . '" style="text-decoration: none;">
+                                <a href="' . esc_url($url) . '" style="text-decoration: none;">
                                     <img src="' . esc_url($image_url) . '" alt="' . esc_attr($name) . '" width="100" style="display: block; border-radius: 8px; max-width: 100px;">
                                 </a>
                             </td>
                             <td valign="top">
-                                <a href="' . esc_url($product_url) . '" style="text-decoration: none;">
+                                <a href="' . esc_url($url) . '" style="text-decoration: none;">
                                     <p style="margin: 0 0 8px 0; font-size: 16px; font-weight: 600; color: ' . self::COLOR_DARK . '; line-height: 1.3;">
                                         ' . esc_html($name) . '
                                     </p>
@@ -180,7 +179,7 @@ class PriceAlertTemplate extends EmailBuilder {
                                 <table role="presentation" cellpadding="0" cellspacing="0" border="0" style="margin-top: 12px;">
                                     <tr>
                                         <td style="padding-right: 12px;">
-                                            <a href="' . esc_url($deal_url) . '" rel="sponsored noopener" style="display: inline-block; padding: 8px 16px; background-color: ' . self::COLOR_DARK . '; color: #ffffff; font-size: 13px; font-weight: 600; text-decoration: none; border-radius: 6px;">View Deal</a>
+                                            <a href="' . esc_url($url) . '" style="display: inline-block; padding: 8px 16px; background-color: ' . self::COLOR_DARK . '; color: #ffffff; font-size: 13px; font-weight: 600; text-decoration: none; border-radius: 6px;">View Deal</a>
                                         </td>
                                         ' . ($stop_tracking_url ? '<td>
                                             <a href="' . esc_url($stop_tracking_url) . '" style="font-size: 12px; color: ' . self::COLOR_MUTED . '; text-decoration: underline;">Stop tracking</a>

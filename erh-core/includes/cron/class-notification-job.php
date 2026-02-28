@@ -274,10 +274,17 @@ class NotificationJob implements CronJobInterface {
                     continue;
                 }
 
-                // Get product image.
+                // Get product image (handle ACF returning array or ID).
                 $acf_fields = get_fields($product_id);
-                $thumbnail_id = $acf_fields['big_thumbnail'] ?? get_post_thumbnail_id($product_id);
-                $image_url = $thumbnail_id ? wp_get_attachment_image_url($thumbnail_id, 'thumbnail') : '';
+                $big_thumb = $acf_fields['big_thumbnail'] ?? null;
+
+                if (is_array($big_thumb)) {
+                    $thumbnail_id = $big_thumb['ID'] ?? 0;
+                } else {
+                    $thumbnail_id = $big_thumb ?: get_post_thumbnail_id($product_id);
+                }
+
+                $image_url = $thumbnail_id ? wp_get_attachment_image_url((int) $thumbnail_id, 'thumbnail') : '';
 
                 // Calculate savings vs previous price.
                 $savings = $compare_price - $current_price;
