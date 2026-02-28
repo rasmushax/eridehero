@@ -16,7 +16,9 @@ if ( ! defined( 'ABSPATH' ) ) {
 // Load finder configuration.
 require_once get_template_directory() . '/inc/finder-config.php';
 
-get_header();
+// =========================================================================
+// Data loading — must happen BEFORE get_header() so RankMath filters work.
+// =========================================================================
 
 // Get product type from query var or page slug.
 $product_type_slug = get_query_var( 'product_type', '' );
@@ -79,6 +81,8 @@ if ( ! empty( $page_info['meta_description'] ) ) {
         return sprintf( $page_info['meta_description'], $meta_count );
     }, 20 );
 }
+
+get_header();
 ?>
 
 <main class="finder-page" data-finder-page data-product-type="<?php echo esc_attr( $page_info['product_type'] ); ?>">
