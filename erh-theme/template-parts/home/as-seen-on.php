@@ -50,7 +50,7 @@ if ( empty( $logos ) ) {
                         $logo_name = $item['name'] ?? '';
                         ?>
                         <span class="logo-marquee-item">
-                            <img src="<?php echo esc_url( $logo_url ); ?>" alt="<?php echo esc_attr( $logo_name ); ?>">
+                            <img src="<?php echo esc_url( $logo_url ); ?>" alt="<?php echo esc_attr( $logo_name ); ?>" width="92" height="20">
                         </span>
                         <?php
                     endforeach;

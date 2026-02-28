@@ -186,7 +186,7 @@
 
 .stat-label {
     font-size: var(--text-xs);
-    color: var(--color-muted);
+    color: var(--color-body);
 }
 
 .sidebar-card-author {
@@ -212,7 +212,7 @@
 .sidebar-card-role {
     display: block;
     font-size: var(--text-sm);
-    color: var(--color-muted);
+    color: var(--color-body);
 }
 
 .sidebar-card-link {
