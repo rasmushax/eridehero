@@ -160,7 +160,8 @@ function updateCurrentRegionDisplay(geo) {
     }
 
     if (flagEl && window.erhData?.themeUrl) {
-        const flagBase = window.erhData.themeUrl + '/assets/images/countries/';
-        flagEl.src = flagBase + region.flag;
+        const flagUrl = window.erhData.themeUrl + '/assets/images/countries/' + region.flag;
+        flagEl.src = flagUrl;
+        flagEl.dataset.src = flagUrl;
     }
 }
