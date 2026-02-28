@@ -64,6 +64,21 @@ $tristate_config = erh_get_tristate_filter_config();
 $group_config    = erh_get_filter_group_config( $json_type );
 
 $product_count = count( $products );
+
+// Round product count down to nearest 10 for meta (e.g. 339 → 330).
+$meta_count = (int) floor( $product_count / 10 ) * 10;
+
+// Override RankMath meta title and description with dynamic product counts.
+if ( ! empty( $page_info['meta_title'] ) ) {
+    add_filter( 'rank_math/frontend/title', function () use ( $page_info, $meta_count ): string {
+        return sprintf( $page_info['meta_title'], $meta_count );
+    }, 20 );
+}
+if ( ! empty( $page_info['meta_description'] ) ) {
+    add_filter( 'rank_math/frontend/description', function () use ( $page_info, $meta_count ): string {
+        return sprintf( $page_info['meta_description'], $meta_count );
+    }, 20 );
+}
 ?>
 
 <main class="finder-page" data-finder-page data-product-type="<?php echo esc_attr( $page_info['product_type'] ); ?>">
@@ -72,7 +87,7 @@ $product_count = count( $products );
     <section class="finder-page-header">
         <div class="container">
             <h1 class="finder-page-title"><?php echo esc_html( $page_info['title'] ); ?></h1>
-            <p class="finder-page-subtitle"><?php echo esc_html( $page_info['subtitle'] ); ?></p>
+            <p class="finder-page-subtitle"><?php echo esc_html( sprintf( $page_info['subtitle'], $product_count ) ); ?></p>
         </div>
     </section>
 
