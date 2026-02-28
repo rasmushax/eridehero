@@ -159,6 +159,7 @@ $js_data = wp_json_encode([
                 data-price-alert-trigger
                 data-product-id="<?php echo esc_attr($product_id); ?>"
                 data-product-name="<?php echo esc_attr($product_name); ?>"
+                aria-label="<?php echo esc_attr(sprintf(__('Track price for %s', 'erh-core'), $product_name)); ?>"
             >
                 <?php erh_the_icon('bell'); ?>
                 <span><?php esc_html_e('Track price', 'erh-core'); ?></span>
@@ -167,7 +168,7 @@ $js_data = wp_json_encode([
 
         <!-- Video Card Overlay (bottom-right) -->
         <?php if ($video_id) : ?>
-            <button class="listicle-item-video-card" data-video="<?php echo esc_attr($video_id); ?>">
+            <button class="listicle-item-video-card" data-video="<?php echo esc_attr($video_id); ?>" aria-label="<?php echo esc_attr(sprintf(__('Watch video review of %s', 'erh-core'), $product_name)); ?>">
                 <div class="listicle-item-video-thumb">
                     <img src="https://img.youtube.com/vi/<?php echo esc_attr($video_id); ?>/mqdefault.jpg" alt="" loading="lazy">
                     <svg class="icon icon-play" aria-hidden="true"><use href="#icon-play"></use></svg>

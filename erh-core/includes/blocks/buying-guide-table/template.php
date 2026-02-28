@@ -171,7 +171,7 @@ $js_data = wp_json_encode( [
                         <th class="bgt-col-product">
                             <div class="bgt-product-header">
                                 <?php if ( $product['image_id'] ) : ?>
-                                    <a href="<?php echo esc_url( $product['url'] ); ?>" class="bgt-product-thumb">
+                                    <a href="<?php echo esc_url( $product['url'] ); ?>" class="bgt-product-thumb" aria-label="<?php echo esc_attr( $product['name'] ); ?>">
                                         <?php echo wp_get_attachment_image( $product['image_id'], 'thumbnail', false, [
                                             'class'   => 'bgt-thumb-img',
                                             'loading' => 'lazy',

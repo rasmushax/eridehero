@@ -281,8 +281,7 @@ class ListicleItemComponent {
                 if (buySpinner) buySpinner.style.display = 'none';
             }
 
-        } catch (error) {
-            console.error('[ListicleItem] Failed to hydrate price bar:', error);
+        } catch {
             priceBar.style.display = 'none';
 
             // Also hide the track button since there's no regional pricing
