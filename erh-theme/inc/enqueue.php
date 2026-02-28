@@ -186,8 +186,12 @@ function erh_add_module_type( string $tag, string $handle, string $src ): string
  * data injected after get_footer() is available when the script executes.
  */
 function erh_add_defer_attr( string $tag, string $handle, string $src ): string {
-    if ( 'erh-app' === $handle && strpos( $tag, 'defer' ) === false ) {
-        $tag = str_replace( '<script ', '<script defer ', $tag );
+    if ( 'erh-app' === $handle ) {
+        if ( strpos( $tag, 'defer' ) === false ) {
+            $tag = str_replace( '<script ', '<script defer ', $tag );
+        }
+        // Prevent LiteSpeed from combining/deferring/rewriting this script.
+        $tag = str_replace( '<script ', '<script data-no-optimize="1" ', $tag );
     }
 
     return $tag;
