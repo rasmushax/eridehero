@@ -307,6 +307,8 @@ class NotificationJob implements CronJobInterface {
                     'notification_type' => $notification_type,
                     'image_url'         => $image_url,
                     'url'               => get_permalink($product_id),
+                    'tracked_url'       => $prices[0]['tracked_url'] ?? '',
+                    'retailer'          => $prices[0]['retailer'] ?? '',
                     'tracking_users'    => $tracking_users,
                     'tracker_id'        => $tracker['id'],
                     'user_id'           => $user_id,

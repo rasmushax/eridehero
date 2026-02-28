@@ -350,7 +350,7 @@ class EmailBuilder {
             $unsubscribe_url = $settings_url;
         }
 
-        // Get category links from CategoryConfig (use finder pages - real WP pages).
+        // Get category links from CategoryConfig.
         $escooter = CategoryConfig::get_by_key('escooter');
         $ebike    = CategoryConfig::get_by_key('ebike');
         $euc      = CategoryConfig::get_by_key('euc');
@@ -363,11 +363,11 @@ class EmailBuilder {
                                 <tr>
                                     <td align="center" style="padding-bottom: 24px;">
                                         <p style="margin: 0; font-size: 13px; color: ' . self::COLOR_MUTED . '; line-height: 2;">
-                                            <a href="' . esc_url($this->site_url . '/' . $escooter['finder_slug'] . '/') . '" style="color: ' . self::COLOR_DARK . '; text-decoration: none; font-weight: 500;">' . esc_html($escooter['name']) . '</a>
+                                            <a href="' . esc_url($this->site_url . '/' . $escooter['slug'] . '/') . '" style="color: ' . self::COLOR_DARK . '; text-decoration: none; font-weight: 500;">' . esc_html($escooter['name']) . '</a>
                                             &nbsp;&nbsp;&bull;&nbsp;&nbsp;
-                                            <a href="' . esc_url($this->site_url . '/' . $ebike['finder_slug'] . '/') . '" style="color: ' . self::COLOR_DARK . '; text-decoration: none; font-weight: 500;">' . esc_html($ebike['name']) . '</a>
+                                            <a href="' . esc_url($this->site_url . '/' . $ebike['slug'] . '/') . '" style="color: ' . self::COLOR_DARK . '; text-decoration: none; font-weight: 500;">' . esc_html($ebike['name']) . '</a>
                                             &nbsp;&nbsp;&bull;&nbsp;&nbsp;
-                                            <a href="' . esc_url($this->site_url . '/' . $euc['finder_slug'] . '/') . '" style="color: ' . self::COLOR_DARK . '; text-decoration: none; font-weight: 500;">' . esc_html($euc['name_short']) . '</a>
+                                            <a href="' . esc_url($this->site_url . '/' . $euc['slug'] . '/') . '" style="color: ' . self::COLOR_DARK . '; text-decoration: none; font-weight: 500;">' . esc_html($euc['name_short']) . '</a>
                                             &nbsp;&nbsp;&bull;&nbsp;&nbsp;
                                             <a href="' . esc_url($this->site_url . '/deals/') . '" style="color: ' . self::COLOR_DARK . '; text-decoration: none; font-weight: 500;">Deals</a>
                                         </p>
