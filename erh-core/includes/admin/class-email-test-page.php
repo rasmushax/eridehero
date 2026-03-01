@@ -904,50 +904,25 @@ class EmailTestPage {
         $currency = GeoConfig::get_currency($geo);
         $table = $wpdb->prefix . 'product_data';
 
-        // Get products that have pricing data for this geo.
+        // Geo pricing is stored serialized in the price_history column (one row per product).
+        // Fetch more than needed so we can filter for products with geo pricing in PHP.
         // phpcs:ignore WordPress.DB.DirectDatabaseQuery
         $rows = $wpdb->get_results(
-            $wpdb->prepare(
-                "SELECT pd.product_id, pd.name, pd.permalink, pd.image_url,
-                        pd.current_price, pd.average_price
-                 FROM {$table} pd
-                 INNER JOIN {$wpdb->posts} p ON p.ID = pd.product_id AND p.post_status = 'publish'
-                 WHERE pd.geo = %s
-                   AND pd.current_price > 0
-                   AND pd.average_price > 0
-                   AND pd.current_price < pd.average_price
-                 ORDER BY (pd.average_price - pd.current_price) / pd.average_price DESC
-                 LIMIT %d",
-                $geo,
-                $product_count * 2 // Fetch extra in case some fail.
-            ),
+            "SELECT pd.product_id, pd.name, pd.image_url, pd.price_history
+             FROM {$table} pd
+             INNER JOIN {$wpdb->posts} p ON p.ID = pd.product_id AND p.post_status = 'publish'
+             WHERE pd.price_history IS NOT NULL AND pd.price_history != ''
+             ORDER BY pd.popularity_score DESC
+             LIMIT 50",
             ARRAY_A
         );
 
         if (empty($rows)) {
-            $this->log("No products with pricing data found for geo: {$geo}", 'warning');
-
-            // Fallback: get any published products.
-            $rows = $wpdb->get_results(
-                $wpdb->prepare(
-                    "SELECT pd.product_id, pd.name, pd.permalink, pd.image_url,
-                            pd.current_price, pd.average_price
-                     FROM {$table} pd
-                     INNER JOIN {$wpdb->posts} p ON p.ID = pd.product_id AND p.post_status = 'publish'
-                     WHERE pd.geo = %s
-                       AND pd.current_price > 0
-                     ORDER BY pd.product_id DESC
-                     LIMIT %d",
-                    $geo,
-                    $product_count * 2
-                ),
-                ARRAY_A
-            );
-        }
-
-        if (empty($rows)) {
+            $this->log('No products with price_history found in wp_product_data', 'warning');
             return [];
         }
+
+        $this->log(sprintf('Fetched %d product rows, filtering for geo: %s', count($rows), $geo), 'info');
 
         $deals = [];
 
@@ -957,16 +932,27 @@ class EmailTestPage {
             }
 
             $product_id = (int) $row['product_id'];
-            $current_price = (float) $row['current_price'];
-            $average_price = (float) ($row['average_price'] ?: 0);
+            $price_history = maybe_unserialize($row['price_history']);
 
-            // Use get_permalink() for correct URL (not cached permalink which may be stale).
+            if (!is_array($price_history) || empty($price_history[$geo])) {
+                continue;
+            }
+
+            $geo_data = $price_history[$geo];
+            $current_price = (float) ($geo_data['current_price'] ?? 0);
+            $average_price = (float) ($geo_data['avg_6m'] ?? $geo_data['avg_3m'] ?? 0);
+
+            if ($current_price <= 0) {
+                continue;
+            }
+
+            // Use get_permalink() for correct URL.
             $url = get_permalink($product_id);
             if (!$url) {
                 continue;
             }
 
-            // Get image URL - prefer big_thumbnail ACF field, then featured image.
+            // Get image URL - prefer ACF big_thumbnail, then featured image, then cached.
             $image_url = $this->get_product_image_url($product_id);
             if (empty($image_url)) {
                 $image_url = $row['image_url'] ?? '';
