@@ -645,7 +645,13 @@ class EmailTestPage {
                 // phpcs:ignore WordPress.Security.NonceVerification.Missing
                 $product_count = isset($_POST['alert_product_count']) ? (int) $_POST['alert_product_count'] : 3;
                 $product_count = max(1, min(3, $product_count));
-                $product_name = $product_count === 1 ? 'Segway Ninebot Max G2' : null;
+                // For single-product alerts, use a real product name from the DB.
+                $product_name = null;
+                if ($product_count === 1) {
+                    $geo = isset($_POST['geo']) ? sanitize_text_field($_POST['geo']) : 'US';
+                    $sample = $this->get_sample_price_alert_deals($geo, 1);
+                    $product_name = !empty($sample[0]['product_name']) ? $sample[0]['product_name'] : null;
+                }
                 return '[TEST] ' . PriceAlertTemplate::get_subject($product_count, $product_name);
 
             default:
@@ -853,45 +859,16 @@ class EmailTestPage {
 
         $this->log("Using username: {$username}", 'info');
 
-        // Create sample deal data for preview.
-        $all_sample_deals = [
-            [
-                'product_name'      => 'Segway Ninebot Max G2',
-                'image_url'         => 'https://eridehero.com/wp-content/uploads/2024/03/Segway-Ninebot-KickScooter-Max-G2.webp',
-                'current_price'     => 749,
-                'compare_price'     => 899,
-                'percent_below_avg' => 12,
-                'url'               => home_url('/electric-scooter/segway-ninebot-max-g2/'),
-                'tracking_users'    => 47,
-                'currency'          => GeoConfig::get_currency($geo),
-                'geo'               => $geo,
-            ],
-            [
-                'product_name'      => 'NIU KQi3 Max',
-                'image_url'         => 'https://eridehero.com/wp-content/uploads/2023/02/NIU-KQi3-Max.webp',
-                'current_price'     => 599,
-                'compare_price'     => 699,
-                'percent_below_avg' => 8,
-                'url'               => home_url('/electric-scooter/niu-kqi3-max/'),
-                'tracking_users'    => 23,
-                'currency'          => GeoConfig::get_currency($geo),
-                'geo'               => $geo,
-            ],
-            [
-                'product_name'      => 'Apollo City Pro',
-                'image_url'         => 'https://eridehero.com/wp-content/uploads/2023/10/Apollo-City-Pro-2023.webp',
-                'current_price'     => 1399,
-                'compare_price'     => 1599,
-                'percent_below_avg' => null, // No average data for this one.
-                'url'               => home_url('/electric-scooter/apollo-city-pro-2023/'),
-                'tracking_users'    => 12,
-                'currency'          => GeoConfig::get_currency($geo),
-                'geo'               => $geo,
-            ],
-        ];
+        // Build sample deals from real products in the database.
+        $sample_deals = $this->get_sample_price_alert_deals($geo, $product_count);
 
-        // Slice to requested count.
-        $sample_deals = array_slice($all_sample_deals, 0, $product_count);
+        if (empty($sample_deals)) {
+            $this->log('No products found to generate sample deals', 'error');
+            return [
+                'success' => false,
+                'message' => __('No products found in the database to generate sample deals.', 'erh-core'),
+            ];
+        }
 
         $this->log('Using ' . count($sample_deals) . ' sample deal(s) for preview', 'info');
         foreach ($sample_deals as $deal) {
@@ -909,6 +886,156 @@ class EmailTestPage {
             'success' => true,
             'html'    => $html,
         ];
+    }
+
+    /**
+     * Get sample price alert deals from real products in the database.
+     *
+     * Queries published products with pricing data and builds deal arrays
+     * in the format expected by PriceAlertTemplate::render().
+     *
+     * @param string $geo           Region code (US, GB, EU, etc.).
+     * @param int    $product_count Number of products to include.
+     * @return array Array of deal data arrays.
+     */
+    private function get_sample_price_alert_deals(string $geo, int $product_count): array {
+        global $wpdb;
+
+        $currency = GeoConfig::get_currency($geo);
+        $table = $wpdb->prefix . 'product_data';
+
+        // Get products that have pricing data for this geo.
+        // phpcs:ignore WordPress.DB.DirectDatabaseQuery
+        $rows = $wpdb->get_results(
+            $wpdb->prepare(
+                "SELECT pd.product_id, pd.name, pd.permalink, pd.image_url,
+                        pd.current_price, pd.average_price
+                 FROM {$table} pd
+                 INNER JOIN {$wpdb->posts} p ON p.ID = pd.product_id AND p.post_status = 'publish'
+                 WHERE pd.geo = %s
+                   AND pd.current_price > 0
+                   AND pd.average_price > 0
+                   AND pd.current_price < pd.average_price
+                 ORDER BY (pd.average_price - pd.current_price) / pd.average_price DESC
+                 LIMIT %d",
+                $geo,
+                $product_count * 2 // Fetch extra in case some fail.
+            ),
+            ARRAY_A
+        );
+
+        if (empty($rows)) {
+            $this->log("No products with pricing data found for geo: {$geo}", 'warning');
+
+            // Fallback: get any published products.
+            $rows = $wpdb->get_results(
+                $wpdb->prepare(
+                    "SELECT pd.product_id, pd.name, pd.permalink, pd.image_url,
+                            pd.current_price, pd.average_price
+                     FROM {$table} pd
+                     INNER JOIN {$wpdb->posts} p ON p.ID = pd.product_id AND p.post_status = 'publish'
+                     WHERE pd.geo = %s
+                       AND pd.current_price > 0
+                     ORDER BY pd.product_id DESC
+                     LIMIT %d",
+                    $geo,
+                    $product_count * 2
+                ),
+                ARRAY_A
+            );
+        }
+
+        if (empty($rows)) {
+            return [];
+        }
+
+        $deals = [];
+
+        foreach ($rows as $row) {
+            if (count($deals) >= $product_count) {
+                break;
+            }
+
+            $product_id = (int) $row['product_id'];
+            $current_price = (float) $row['current_price'];
+            $average_price = (float) ($row['average_price'] ?: 0);
+
+            // Use get_permalink() for correct URL (not cached permalink which may be stale).
+            $url = get_permalink($product_id);
+            if (!$url) {
+                continue;
+            }
+
+            // Get image URL - prefer big_thumbnail ACF field, then featured image.
+            $image_url = $this->get_product_image_url($product_id);
+            if (empty($image_url)) {
+                $image_url = $row['image_url'] ?? '';
+            }
+
+            // Simulate a price drop: compare_price is 10-25% above current.
+            $markup = 1 + (mt_rand(10, 25) / 100);
+            $compare_price = round($current_price * $markup, 2);
+
+            // Calculate percent below average.
+            $percent_below_avg = null;
+            if ($average_price > 0 && $current_price < $average_price) {
+                $percent_below_avg = round((($average_price - $current_price) / $average_price) * 100);
+            }
+
+            $deals[] = [
+                'product_id'        => $product_id,
+                'product_name'      => $row['name'] ?: get_the_title($product_id),
+                'current_price'     => $current_price,
+                'compare_price'     => $compare_price,
+                'savings'           => $compare_price - $current_price,
+                'savings_percent'   => round((($compare_price - $current_price) / $compare_price) * 100),
+                'average_price'     => $average_price,
+                'percent_below_avg' => $percent_below_avg,
+                'notification_type' => 'target',
+                'image_url'         => $image_url,
+                'url'               => $url,
+                'tracked_url'       => '',
+                'retailer'          => '',
+                'tracking_users'    => mt_rand(8, 45),
+                'tracker_id'        => 0,
+                'user_id'           => get_current_user_id(),
+                'geo'               => $geo,
+                'currency'          => $currency,
+            ];
+        }
+
+        return $deals;
+    }
+
+    /**
+     * Get a product's image URL suitable for email (non-WebP).
+     *
+     * @param int $product_id Product post ID.
+     * @return string Image URL, or empty string if none found.
+     */
+    private function get_product_image_url(int $product_id): string {
+        // Try ACF big_thumbnail field first.
+        $big_thumb = get_field('big_thumbnail', $product_id);
+
+        if (is_array($big_thumb)) {
+            $thumbnail_id = $big_thumb['ID'] ?? 0;
+        } else {
+            $thumbnail_id = $big_thumb ?: 0;
+        }
+
+        // Fall back to featured image.
+        if (!$thumbnail_id) {
+            $thumbnail_id = get_post_thumbnail_id($product_id);
+        }
+
+        if (!$thumbnail_id) {
+            return '';
+        }
+
+        // Get the image URL at a reasonable size.
+        $url = wp_get_attachment_image_url((int) $thumbnail_id, 'medium');
+
+        return $url ?: '';
     }
 
     /**
