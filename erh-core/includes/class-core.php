@@ -57,7 +57,6 @@ use ERH\Admin\EmailTestPage;
 use ERH\Admin\NewsletterAdmin;
 use ERH\Migration\MigrationAdmin;
 use ERH\Migration\MigrationCli;
-use ERH\Cli\EnrichBrakesCli;
 use ERH\Api\RestPrices;
 use ERH\Api\RestDeals;
 use ERH\Api\RestProducts;
@@ -376,9 +375,6 @@ class Core {
 
         // Register WP-CLI migration commands.
         MigrationCli::register();
-
-        // Register one-time enrichment CLI commands.
-        EnrichBrakesCli::register();
     }
 
     /**
