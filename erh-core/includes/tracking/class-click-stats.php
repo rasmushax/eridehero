@@ -454,15 +454,19 @@ class ClickStats {
     }
 
     /**
-     * Get product conversion funnel: views, clicks, and CTR per product.
+     * Get product conversion funnel: views, on-page clicks, and CTR per product.
      *
-     * Joins click data with product_views to calculate click-through rates.
+     * CTR is calculated using only clicks whose referrer_path matches the
+     * product's own page (by post_name slug). This avoids inflated CTR from
+     * clicks originating on listicles, compare pages, etc.
+     *
+     * A separate total_clicks column shows ALL clicks across all surfaces.
      *
      * @param int  $days         Number of days to look back.
      * @param int  $limit        Maximum results.
      * @param bool $exclude_bots Whether to exclude bot traffic.
      * @param int  $min_views    Minimum views to include (filters noise).
-     * @return array Products with views, clicks, and CTR.
+     * @return array Products with views, page_clicks, total_clicks, and CTR.
      */
     public function get_product_conversion_funnel(int $days = 30, int $limit = 15, bool $exclude_bots = true, int $min_views = 5): array {
         $date_from  = gmdate('Y-m-d H:i:s', strtotime("-{$days} days"));
@@ -475,9 +479,10 @@ class ClickStats {
                     p.ID as product_id,
                     p.post_title as product_name,
                     COALESCE(v.views, 0) as views,
-                    COALESCE(c.clicks, 0) as clicks,
+                    COALESCE(pc.page_clicks, 0) as page_clicks,
+                    COALESCE(tc.total_clicks, 0) as total_clicks,
                     CASE WHEN COALESCE(v.views, 0) > 0
-                        THEN ROUND((COALESCE(c.clicks, 0) / COALESCE(v.views, 0)) * 100, 1)
+                        THEN ROUND((COALESCE(pc.page_clicks, 0) / COALESCE(v.views, 0)) * 100, 1)
                         ELSE 0
                     END as ctr
                 FROM {$this->wpdb->posts} p
@@ -488,16 +493,26 @@ class ClickStats {
                     GROUP BY product_id
                 ) v ON p.ID = v.product_id
                 LEFT JOIN (
-                    SELECT product_id, COUNT(*) as clicks
+                    SELECT c.product_id, COUNT(*) as page_clicks
+                    FROM {$this->table_name} c
+                    INNER JOIN {$this->wpdb->posts} pp ON c.product_id = pp.ID
+                    WHERE c.clicked_at >= %s {$bot_clause}
+                    AND (c.referrer_path LIKE CONCAT('%%/', pp.post_name, '/')
+                         OR c.referrer_path LIKE CONCAT('%%/', pp.post_name))
+                    GROUP BY c.product_id
+                ) pc ON p.ID = pc.product_id
+                LEFT JOIN (
+                    SELECT product_id, COUNT(*) as total_clicks
                     FROM {$this->table_name}
                     WHERE clicked_at >= %s {$bot_clause}
                     GROUP BY product_id
-                ) c ON p.ID = c.product_id
+                ) tc ON p.ID = tc.product_id
                 WHERE p.post_type = 'products'
                 AND p.post_status = 'publish'
                 AND COALESCE(v.views, 0) >= %d
-                ORDER BY ctr DESC, clicks DESC
+                ORDER BY ctr DESC, page_clicks DESC
                 LIMIT %d",
+                $date_from,
                 $date_from,
                 $date_from,
                 $min_views,
@@ -510,10 +525,10 @@ class ClickStats {
     }
 
     /**
-     * Get "leaky bucket" products: high views but low click-through rate.
+     * Get "leaky bucket" products: high views but low on-page click-through rate.
      *
-     * These represent the biggest monetization opportunities — traffic
-     * that isn't converting to affiliate clicks.
+     * Uses only clicks originating from the product's own page (by slug match)
+     * to calculate CTR, consistent with the conversion funnel.
      *
      * @param int  $days         Number of days to look back.
      * @param int  $limit        Maximum results.
@@ -526,45 +541,23 @@ class ClickStats {
         $bot_clause = $this->get_bot_clause($exclude_bots);
         $views_table = $this->wpdb->prefix . ERH_TABLE_PRODUCT_VIEWS;
 
-        // First get the average CTR across all products to calculate wasted potential.
-        $avg_ctr = (float) $this->wpdb->get_var(
-            $this->wpdb->prepare(
-                "SELECT
-                    CASE WHEN SUM(v.views) > 0
-                        THEN (SUM(c.clicks) / SUM(v.views)) * 100
-                        ELSE 0
-                    END as avg_ctr
-                FROM (
-                    SELECT product_id, COUNT(*) as views
-                    FROM {$views_table}
-                    WHERE view_date >= %s
-                    GROUP BY product_id
-                ) v
-                LEFT JOIN (
-                    SELECT product_id, COUNT(*) as clicks
-                    FROM {$this->table_name}
-                    WHERE clicked_at >= %s {$bot_clause}
-                    GROUP BY product_id
-                ) c ON v.product_id = c.product_id",
-                $date_from,
-                $date_from
-            )
-        );
+        // Get average on-page CTR.
+        $avg_ctr = $this->get_average_product_ctr($days, $exclude_bots);
 
-        // Get products with high views but below-average CTR.
+        // Get products with high views but below-average on-page CTR.
         $results = $this->wpdb->get_results(
             $this->wpdb->prepare(
                 "SELECT
                     p.ID as product_id,
                     p.post_title as product_name,
                     COALESCE(v.views, 0) as views,
-                    COALESCE(c.clicks, 0) as clicks,
+                    COALESCE(pc.page_clicks, 0) as page_clicks,
                     CASE WHEN COALESCE(v.views, 0) > 0
-                        THEN ROUND((COALESCE(c.clicks, 0) / COALESCE(v.views, 0)) * 100, 1)
+                        THEN ROUND((COALESCE(pc.page_clicks, 0) / COALESCE(v.views, 0)) * 100, 1)
                         ELSE 0
                     END as ctr,
                     ROUND(COALESCE(v.views, 0) * (%f - CASE WHEN COALESCE(v.views, 0) > 0
-                        THEN (COALESCE(c.clicks, 0) / COALESCE(v.views, 0)) * 100
+                        THEN (COALESCE(pc.page_clicks, 0) / COALESCE(v.views, 0)) * 100
                         ELSE 0
                     END) / 100) as missed_clicks
                 FROM {$this->wpdb->posts} p
@@ -575,16 +568,19 @@ class ClickStats {
                     GROUP BY product_id
                 ) v ON p.ID = v.product_id
                 LEFT JOIN (
-                    SELECT product_id, COUNT(*) as clicks
-                    FROM {$this->table_name}
-                    WHERE clicked_at >= %s {$bot_clause}
-                    GROUP BY product_id
-                ) c ON p.ID = c.product_id
+                    SELECT c.product_id, COUNT(*) as page_clicks
+                    FROM {$this->table_name} c
+                    INNER JOIN {$this->wpdb->posts} pp ON c.product_id = pp.ID
+                    WHERE c.clicked_at >= %s {$bot_clause}
+                    AND (c.referrer_path LIKE CONCAT('%%/', pp.post_name, '/')
+                         OR c.referrer_path LIKE CONCAT('%%/', pp.post_name))
+                    GROUP BY c.product_id
+                ) pc ON p.ID = pc.product_id
                 WHERE p.post_type = 'products'
                 AND p.post_status = 'publish'
                 AND COALESCE(v.views, 0) >= %d
                 AND (CASE WHEN COALESCE(v.views, 0) > 0
-                    THEN (COALESCE(c.clicks, 0) / COALESCE(v.views, 0)) * 100
+                    THEN (COALESCE(pc.page_clicks, 0) / COALESCE(v.views, 0)) * 100
                     ELSE 0
                 END) < %f
                 ORDER BY missed_clicks DESC
@@ -599,7 +595,6 @@ class ClickStats {
             ARRAY_A
         );
 
-        // Attach the avg CTR for context.
         return [
             'avg_ctr'  => round($avg_ctr, 1),
             'products' => $results ?: [],
@@ -806,7 +801,10 @@ class ClickStats {
     }
 
     /**
-     * Get average product CTR across all products with views.
+     * Get average on-page product CTR across all products with views.
+     *
+     * Only counts clicks whose referrer_path matches the product's own
+     * page slug, giving a true product page conversion rate.
      *
      * @param int  $days         Number of days to look back.
      * @param bool $exclude_bots Whether to exclude bot traffic.
@@ -821,7 +819,7 @@ class ClickStats {
             $this->wpdb->prepare(
                 "SELECT
                     CASE WHEN SUM(v.views) > 0
-                        THEN (SUM(COALESCE(c.clicks, 0)) / SUM(v.views)) * 100
+                        THEN (SUM(COALESCE(pc.page_clicks, 0)) / SUM(v.views)) * 100
                         ELSE 0
                     END
                 FROM (
@@ -831,11 +829,14 @@ class ClickStats {
                     GROUP BY product_id
                 ) v
                 LEFT JOIN (
-                    SELECT product_id, COUNT(*) as clicks
-                    FROM {$this->table_name}
-                    WHERE clicked_at >= %s {$bot_clause}
-                    GROUP BY product_id
-                ) c ON v.product_id = c.product_id",
+                    SELECT c.product_id, COUNT(*) as page_clicks
+                    FROM {$this->table_name} c
+                    INNER JOIN {$this->wpdb->posts} pp ON c.product_id = pp.ID
+                    WHERE c.clicked_at >= %s {$bot_clause}
+                    AND (c.referrer_path LIKE CONCAT('%%/', pp.post_name, '/')
+                         OR c.referrer_path LIKE CONCAT('%%/', pp.post_name))
+                    GROUP BY c.product_id
+                ) pc ON v.product_id = pc.product_id",
                 $date_from,
                 $date_from
             )
