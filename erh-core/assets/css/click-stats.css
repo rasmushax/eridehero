@@ -50,7 +50,7 @@
 /* Summary Cards */
 .erh-cs-summary {
     display: grid;
-    grid-template-columns: repeat(4, 1fr);
+    grid-template-columns: repeat(6, 1fr);
     gap: 15px;
     margin-bottom: 25px;
 }
@@ -59,7 +59,7 @@
     display: flex;
     flex-direction: column;
     align-items: center;
-    padding: 20px;
+    padding: 20px 15px;
     background: #fff;
     border: 1px solid #c3c4c7;
     border-radius: 4px;
@@ -67,16 +67,61 @@
 }
 
 .erh-cs-card-value {
-    font-size: 32px;
+    font-size: 28px;
     font-weight: 600;
     color: #1d2327;
     line-height: 1.2;
 }
 
 .erh-cs-card-label {
-    font-size: 13px;
+    font-size: 12px;
     color: #646970;
     margin-top: 5px;
+}
+
+.erh-cs-card-hint {
+    font-size: 11px;
+    color: #a7aaad;
+    margin-top: 2px;
+    max-width: 140px;
+    overflow: hidden;
+    text-overflow: ellipsis;
+    white-space: nowrap;
+}
+
+/* Delta Badges */
+.erh-cs-delta {
+    display: inline-flex;
+    align-items: center;
+    gap: 2px;
+    font-size: 12px;
+    font-weight: 500;
+    margin-top: 4px;
+    padding: 2px 6px;
+    border-radius: 3px;
+}
+
+.erh-cs-delta-up {
+    color: #00a32a;
+    background: #edfaef;
+}
+
+.erh-cs-delta-down {
+    color: #d63638;
+    background: #fce8e8;
+}
+
+.erh-cs-delta-neutral {
+    color: #646970;
+    background: #f0f0f1;
+}
+
+.erh-cs-delta-label {
+    font-size: 10px;
+    font-weight: 400;
+    color: inherit;
+    opacity: 0.7;
+    margin-left: 2px;
 }
 
 /* Grid Layout */
@@ -103,6 +148,13 @@
     color: #1d2327;
 }
 
+.erh-cs-section-hint {
+    font-weight: 400;
+    font-size: 12px;
+    color: #646970;
+    margin-left: 8px;
+}
+
 .erh-cs-section-small {
     /* Takes half width within grid */
 }
@@ -115,6 +167,12 @@
     color: #646970;
     font-style: italic;
     margin: 0;
+}
+
+.erh-cs-context {
+    font-size: 13px;
+    color: #646970;
+    margin: 0 0 10px;
 }
 
 /* Chart Section */
@@ -151,6 +209,82 @@
 
 .erh-cs-section table a:hover {
     text-decoration: underline;
+}
+
+/* CTR Color Coding */
+.erh-cs-ctr {
+    font-weight: 600;
+}
+
+.erh-cs-ctr-high {
+    color: #00a32a;
+}
+
+.erh-cs-ctr-good {
+    color: #2271b1;
+}
+
+.erh-cs-ctr-mid {
+    color: #996800;
+}
+
+.erh-cs-ctr-low {
+    color: #d63638;
+}
+
+/* Inline Bars */
+.erh-cs-bar-col {
+    width: 120px;
+}
+
+.erh-cs-bar-bg {
+    background: #f0f0f1;
+    border-radius: 3px;
+    height: 8px;
+    overflow: hidden;
+}
+
+.erh-cs-bar {
+    height: 100%;
+    border-radius: 3px;
+    transition: width 0.3s ease;
+}
+
+.erh-cs-bar.erh-cs-ctr-high {
+    background: #00a32a;
+}
+
+.erh-cs-bar.erh-cs-ctr-good {
+    background: #2271b1;
+}
+
+.erh-cs-bar.erh-cs-ctr-mid {
+    background: #dba617;
+}
+
+.erh-cs-bar.erh-cs-ctr-low {
+    background: #d63638;
+}
+
+.erh-cs-bar.erh-cs-bar-blue {
+    background: #2271b1;
+}
+
+/* Share badge in content type table */
+.erh-cs-share {
+    display: inline-block;
+    font-size: 11px;
+    color: #646970;
+    background: #f0f0f1;
+    padding: 1px 5px;
+    border-radius: 3px;
+    margin-left: 6px;
+}
+
+/* Missed clicks indicator */
+.erh-cs-missed {
+    color: #d63638;
+    font-weight: 500;
 }
 
 /* Legacy Daily Trend (CSS bars) - kept for fallback */
@@ -192,6 +326,12 @@
 }
 
 /* Responsive */
+@media screen and (max-width: 1400px) {
+    .erh-cs-summary {
+        grid-template-columns: repeat(3, 1fr);
+    }
+}
+
 @media screen and (max-width: 1200px) {
     .erh-cs-summary {
         grid-template-columns: repeat(2, 1fr);
@@ -218,5 +358,15 @@
 
     .erh-cs-chart-container {
         height: 200px;
+    }
+
+    .erh-cs-bar-col {
+        width: 80px;
+    }
+
+    .erh-cs-section-hint {
+        display: block;
+        margin-left: 0;
+        margin-top: 4px;
     }
 }
