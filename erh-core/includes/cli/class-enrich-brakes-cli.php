@@ -48,8 +48,7 @@ class EnrichBrakesCli {
      * Enrich brake data for electric scooters using Perplexity AI.
      *
      * Queries all electric scooter products with missing brake fields
-     * and uses Perplexity sonar-pro to look up front brake, rear brake,
-     * and regenerative braking specs.
+     * and uses Perplexity sonar-pro to look up front and rear brake type.
      *
      * ## OPTIONS
      *
@@ -187,10 +186,6 @@ class EnrichBrakesCli {
             if (empty($brakes['rear'])) {
                 $missing[] = 'rear';
             }
-            // For true_false, null means not set (0/false is a valid value).
-            if (!isset($brakes['regenerative']) || $brakes['regenerative'] === null) {
-                $missing[] = 'regenerative';
-            }
 
             if (!empty($missing)) {
                 $to_process[] = [
@@ -278,17 +273,6 @@ class EnrichBrakesCli {
                 }
             }
 
-            if (in_array('regenerative', $product['missing'], true)) {
-                $value = $parsed['regenerative'] ?? null;
-
-                if (is_bool($value)) {
-                    $saved_fields['regenerative'] = $value;
-                } else {
-                    $skipped_fields['regenerative'] = $value;
-                    \WP_CLI::warning(sprintf('  Invalid regenerative value: %s', var_export($value, true)));
-                }
-            }
-
             // Save all valid fields in a single update.
             if (!empty($saved_fields) && !$dry_run) {
                 $this->save_brake_fields($id, $saved_fields);
@@ -297,13 +281,10 @@ class EnrichBrakesCli {
             $status = !empty($saved_fields) ? 'saved' : 'skipped';
 
             \WP_CLI::log(sprintf(
-                '  %s | front: %s | rear: %s | regen: %s',
+                '  %s | front: %s | rear: %s',
                 strtoupper($status),
                 $saved_fields['front'] ?? ($skipped_fields['front'] ?? '-'),
-                $saved_fields['rear'] ?? ($skipped_fields['rear'] ?? '-'),
-                isset($saved_fields['regenerative'])
-                    ? ($saved_fields['regenerative'] ? 'yes' : 'no')
-                    : '-'
+                $saved_fields['rear'] ?? ($skipped_fields['rear'] ?? '-')
             ));
 
             $results[] = [
@@ -400,21 +381,17 @@ class EnrichBrakesCli {
      */
     private function get_user_prompt(string $product_name): string {
         return sprintf(
-            'What are the brake specifications for the %s electric scooter?
+            'What are the front and rear brake types on the %s electric scooter?
 
-Return ONLY a JSON object with these exact fields:
-- "front": one of "None", "Drum", "Disc (Mechanical)", "Disc (Hydraulic)"
-- "rear": one of "None", "Drum", "Disc (Mechanical)", "Disc (Hydraulic)"
-- "regenerative": true or false (does this scooter have electronic/regenerative braking?)
+Return ONLY valid JSON: {"front": "...", "rear": "..."}
 
-Rules:
-- Use "Disc (Mechanical)" for cable-actuated disc brakes
-- Use "Disc (Hydraulic)" for hydraulic disc brakes
-- Use "Drum" for drum brakes
-- Use "None" if that wheel position has no mechanical brake (even if it has electronic braking)
-- "regenerative" refers to electronic braking/regenerative braking/eABS
+Each value MUST be one of these exact strings:
+- "None" (no mechanical brake on that wheel)
+- "Drum"
+- "Disc (Mechanical)" (cable-actuated disc brake)
+- "Disc (Hydraulic)" (hydraulic disc brake)
 
-Example response: {"front": "Disc (Mechanical)", "rear": "Drum", "regenerative": true}',
+Example: {"front": "Disc (Mechanical)", "rear": "Drum"}',
             $product_name
         );
     }
@@ -422,7 +399,8 @@ Example response: {"front": "Disc (Mechanical)", "rear": "Drum", "regenerative":
     /**
      * Parse JSON from Perplexity response.
      *
-     * Handles markdown fences and extracts the first JSON object.
+     * Handles markdown fences, stray characters, and malformed starts.
+     * Tries each { position until valid JSON is found.
      *
      * @param string $content Raw API response content.
      * @return array|null Parsed data or null on failure.
@@ -434,31 +412,25 @@ Example response: {"front": "Disc (Mechanical)", "rear": "Drum", "regenerative":
         $content = preg_replace('/^```(?:json)?\s*/i', '', $content);
         $content = preg_replace('/\s*```\s*$/', '', $content);
 
-        // Find first { to last }.
-        $start = strpos($content, '{');
-        $end   = strrpos($content, '}');
-
-        if ($start === false || $end === false || $end <= $start) {
+        $end = strrpos($content, '}');
+        if ($end === false) {
             return null;
         }
 
-        $json = substr($content, $start, $end - $start + 1);
-        $data = json_decode($json, true);
+        // Try each { position left to right until we find valid JSON.
+        $offset = 0;
+        while (($start = strpos($content, '{', $offset)) !== false && $start < $end) {
+            $json = substr($content, $start, $end - $start + 1);
+            $data = json_decode($json, true);
 
-        if (!is_array($data)) {
-            return null;
+            if (is_array($data) && (isset($data['front']) || isset($data['rear']))) {
+                return $data;
+            }
+
+            $offset = $start + 1;
         }
 
-        // Coerce regenerative to boolean if string.
-        if (isset($data['regenerative']) && is_string($data['regenerative'])) {
-            $data['regenerative'] = in_array(
-                strtolower($data['regenerative']),
-                ['true', 'yes', '1'],
-                true
-            );
-        }
-
-        return $data;
+        return null;
     }
 
     /**
