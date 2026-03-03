@@ -38,6 +38,7 @@ class ComposerStaticInitb5e889746c5280811e87a72c161db6db
         'ERH\\Blocks\\BlockManager' => __DIR__ . '/../..' . '/includes/blocks/class-block-manager.php',
         'ERH\\CacheKeys' => __DIR__ . '/../..' . '/includes/class-cache-keys.php',
         'ERH\\CategoryConfig' => __DIR__ . '/../..' . '/includes/class-category-config.php',
+        'ERH\\Cli\\EnrichBrakesCli' => __DIR__ . '/../..' . '/includes/cli/class-enrich-brakes-cli.php',
         'ERH\\Comparison\\AdvantageCalculatorBase' => __DIR__ . '/../..' . '/includes/comparison/class-advantage-calculator-base.php',
         'ERH\\Comparison\\AdvantageCalculatorFactory' => __DIR__ . '/../..' . '/includes/comparison/class-advantage-calculator-factory.php',
         'ERH\\Comparison\\AdvantageCalculatorInterface' => __DIR__ . '/../..' . '/includes/comparison/interface-advantage-calculator.php',

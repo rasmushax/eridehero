@@ -37,6 +37,7 @@ return array(
     'ERH\\Blocks\\BlockManager' => $baseDir . '/includes/blocks/class-block-manager.php',
     'ERH\\CacheKeys' => $baseDir . '/includes/class-cache-keys.php',
     'ERH\\CategoryConfig' => $baseDir . '/includes/class-category-config.php',
+    'ERH\\Cli\\EnrichBrakesCli' => $baseDir . '/includes/cli/class-enrich-brakes-cli.php',
     'ERH\\Comparison\\AdvantageCalculatorBase' => $baseDir . '/includes/comparison/class-advantage-calculator-base.php',
     'ERH\\Comparison\\AdvantageCalculatorFactory' => $baseDir . '/includes/comparison/class-advantage-calculator-factory.php',
     'ERH\\Comparison\\AdvantageCalculatorInterface' => $baseDir . '/includes/comparison/interface-advantage-calculator.php',
