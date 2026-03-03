@@ -281,6 +281,11 @@
     margin-left: 6px;
 }
 
+/* Total clicks (secondary context column) */
+.erh-cs-total-clicks {
+    color: #646970;
+}
+
 /* Missed clicks indicator */
 .erh-cs-missed {
     color: #d63638;

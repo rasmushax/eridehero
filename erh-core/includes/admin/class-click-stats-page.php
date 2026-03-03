@@ -232,7 +232,7 @@ class ClickStatsPage {
             <div class="erh-cs-section erh-cs-section-full">
                 <h2>
                     <?php esc_html_e('Product Conversion Funnel', 'erh-core'); ?>
-                    <span class="erh-cs-section-hint"><?php esc_html_e('Which products convert page views into affiliate clicks', 'erh-core'); ?></span>
+                    <span class="erh-cs-section-hint"><?php esc_html_e('Page CTR = clicks from product page only. All Clicks includes listicles, compare, etc.', 'erh-core'); ?></span>
                 </h2>
                 <?php if (empty($conversion_funnel)) : ?>
                     <p class="erh-cs-empty"><?php esc_html_e('Not enough view data yet. Products need at least 5 views to appear.', 'erh-core'); ?></p>
@@ -242,8 +242,9 @@ class ClickStatsPage {
                             <tr>
                                 <th><?php esc_html_e('Product', 'erh-core'); ?></th>
                                 <th class="num"><?php esc_html_e('Views', 'erh-core'); ?></th>
-                                <th class="num"><?php esc_html_e('Clicks', 'erh-core'); ?></th>
-                                <th class="num"><?php esc_html_e('CTR', 'erh-core'); ?></th>
+                                <th class="num" title="<?php esc_attr_e('Clicks from the product page itself', 'erh-core'); ?>"><?php esc_html_e('Page Clicks', 'erh-core'); ?></th>
+                                <th class="num" title="<?php esc_attr_e('All clicks including listicles, compare, etc.', 'erh-core'); ?>"><?php esc_html_e('All Clicks', 'erh-core'); ?></th>
+                                <th class="num" title="<?php esc_attr_e('Page clicks / views', 'erh-core'); ?>"><?php esc_html_e('Page CTR', 'erh-core'); ?></th>
                                 <th class="erh-cs-bar-col"><?php esc_html_e('Conversion', 'erh-core'); ?></th>
                             </tr>
                         </thead>
@@ -261,7 +262,8 @@ class ClickStatsPage {
                                         </a>
                                     </td>
                                     <td class="num"><?php echo esc_html(number_format((int) $row['views'])); ?></td>
-                                    <td class="num"><?php echo esc_html(number_format((int) $row['clicks'])); ?></td>
+                                    <td class="num"><?php echo esc_html(number_format((int) $row['page_clicks'])); ?></td>
+                                    <td class="num erh-cs-total-clicks"><?php echo esc_html(number_format((int) $row['total_clicks'])); ?></td>
                                     <td class="num erh-cs-ctr <?php echo esc_attr($ctr_class); ?>"><?php echo esc_html($row['ctr']); ?>%</td>
                                     <td class="erh-cs-bar-col">
                                         <div class="erh-cs-bar-bg">
