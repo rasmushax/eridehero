@@ -184,8 +184,8 @@ class ClickRedirector {
         $product_id = $this->get_product_id_by_slug($product_slug);
 
         if (!$product_id) {
-            // Check if this is a legacy ThirstyAffiliates slug.
-            $new_slug = self::LEGACY_GO_SLUGS[$product_slug] ?? null;
+            // Check if this is a legacy ThirstyAffiliates slug (case-insensitive).
+            $new_slug = self::LEGACY_GO_SLUGS[strtolower($product_slug)] ?? null;
             if ($new_slug) {
                 header('X-Robots-Tag: noindex, nofollow', true);
                 wp_redirect(home_url('/go/' . $new_slug . '/'), 301);
