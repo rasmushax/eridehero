@@ -218,6 +218,13 @@ class ClickRedirector {
         $redirect_url = $link['url'];
 
         if (empty($redirect_url)) {
+            // No URL available — fall back to product page.
+            $product_url = get_permalink($product_id);
+            if ($product_url) {
+                header('X-Robots-Tag: noindex, nofollow', true);
+                wp_redirect($product_url, 302);
+                exit;
+            }
             $this->show_not_found('No redirect URL available.');
             return;
         }
@@ -227,6 +234,19 @@ class ClickRedirector {
             || preg_match('#^https?://#i', $redirect_url);
 
         if (!$is_valid) {
+            // Invalid URL — fall back to product page instead of showing error.
+            error_log(sprintf(
+                '[ERH Redirect] Invalid redirect URL for product %d (link %d): %s',
+                $product_id,
+                $link['id'] ?? 0,
+                $redirect_url
+            ));
+            $product_url = get_permalink($product_id);
+            if ($product_url) {
+                header('X-Robots-Tag: noindex, nofollow', true);
+                wp_redirect($product_url, 302);
+                exit;
+            }
             $this->show_not_found('Invalid redirect URL.');
             return;
         }
