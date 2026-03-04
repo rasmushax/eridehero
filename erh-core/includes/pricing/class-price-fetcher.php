@@ -516,7 +516,15 @@ class PriceFetcher {
      */
     private function transform_price_row(array $row): array {
         // Build the affiliate URL.
-        $url = $row['affiliate_link_override'] ?: $this->build_affiliate_url($row);
+        // For Amazon links, tracking_url stores the ASIN (not a full URL),
+        // so we need to build the full Amazon URL from it.
+        if (!empty($row['affiliate_link_override'])) {
+            $url = $row['affiliate_link_override'];
+        } elseif (($row['parser_identifier'] ?? '') === 'amazon' && !empty($row['tracking_url'])) {
+            $url = $this->build_amazon_url($row['tracking_url'], $row['geo_target'] ?? 'US');
+        } else {
+            $url = $this->build_affiliate_url($row);
+        }
 
         // Get retailer logo and name.
         $logo_url = null;
@@ -592,6 +600,92 @@ class PriceFetcher {
         );
 
         return $url;
+    }
+
+    /**
+     * Build a full Amazon product URL from an ASIN and geo target.
+     *
+     * Amazon tracked links store just the ASIN as tracking_url.
+     * This builds the full URL with the correct regional domain and affiliate tag.
+     *
+     * @param string      $asin The Amazon ASIN.
+     * @param string|null $geo  The geo target (US, GB, DE, etc.).
+     * @return string The full Amazon affiliate URL.
+     */
+    private function build_amazon_url(string $asin, ?string $geo): string {
+        $domains = [
+            'US' => 'www.amazon.com',
+            'GB' => 'www.amazon.co.uk',
+            'UK' => 'www.amazon.co.uk',
+            'DE' => 'www.amazon.de',
+            'FR' => 'www.amazon.fr',
+            'IT' => 'www.amazon.it',
+            'ES' => 'www.amazon.es',
+            'CA' => 'www.amazon.ca',
+            'AU' => 'www.amazon.com.au',
+            'JP' => 'www.amazon.co.jp',
+            'IN' => 'www.amazon.in',
+            'MX' => 'www.amazon.com.mx',
+            'BR' => 'www.amazon.com.br',
+        ];
+
+        $domain = $domains[strtoupper($geo ?? 'US')] ?? 'www.amazon.com';
+
+        // Get Amazon associate tag from HFT settings.
+        $tag = $this->get_amazon_associate_tag($geo);
+
+        $url = "https://{$domain}/dp/{$asin}";
+
+        if ($tag) {
+            $url .= "?tag={$tag}";
+        }
+
+        return $url;
+    }
+
+    /**
+     * Get Amazon associate tag for a geo from HFT settings.
+     *
+     * @param string|null $geo The geo target.
+     * @return string|null The associate tag or null.
+     */
+    private function get_amazon_associate_tag(?string $geo): ?string {
+        $settings = get_option('hft_settings', []);
+        $geo_upper = strtoupper($geo ?? 'US');
+
+        // Check affiliate tag overrides first.
+        $overrides = $settings['amazon_affiliate_tag_overrides'] ?? [];
+        foreach ($overrides as $tag_config) {
+            $config_geo = isset($tag_config['geo']) && is_string($tag_config['geo'])
+                ? strtoupper(trim($tag_config['geo']))
+                : null;
+            $tag_value = isset($tag_config['tag']) ? trim($tag_config['tag']) : null;
+
+            if ($config_geo === $geo_upper && !empty($tag_value)) {
+                return $tag_value;
+            }
+        }
+
+        // Fall back to standard associate tags.
+        $tags_by_geo = $settings['amazon_associate_tags'] ?? [];
+        $global_tag = null;
+
+        foreach ($tags_by_geo as $tag_config) {
+            $config_geo = isset($tag_config['geo']) && is_string($tag_config['geo'])
+                ? strtoupper(trim($tag_config['geo']))
+                : null;
+            $tag_value = isset($tag_config['tag']) ? trim($tag_config['tag']) : null;
+
+            if ($config_geo === $geo_upper && !empty($tag_value)) {
+                return $tag_value;
+            }
+
+            if (($config_geo === 'GLOBAL' || empty($config_geo)) && !empty($tag_value)) {
+                $global_tag = $tag_value;
+            }
+        }
+
+        return $global_tag;
     }
 
     /**
