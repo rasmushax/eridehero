@@ -354,7 +354,7 @@ function erh_get_page_css_bundle(): ?string {
         return 'account.min.css';
     }
 
-    if ( is_page( array( 'my-account', 'login', 'email-preferences', 'complete-profile', 'reset-password' ) ) ) {
+    if ( is_page( array( 'account', 'my-account', 'login', 'email-preferences', 'complete-profile', 'reset-password' ) ) ) {
         return 'account.min.css';
     }
 
@@ -371,6 +371,17 @@ function erh_get_page_css_bundle(): ?string {
     // Author archives.
     if ( is_author() ) {
         return 'archive.min.css';
+    }
+
+    // Deals category pages (children of /deals/ page, may not have template explicitly assigned).
+    if ( is_page() ) {
+        $current = get_queried_object();
+        if ( $current && $current->post_parent ) {
+            $parent = get_post( $current->post_parent );
+            if ( $parent && 'deals' === $parent->post_name ) {
+                return 'deals.min.css';
+            }
+        }
     }
 
     // Generic pages (editorial, privacy, how-we-test, etc.).

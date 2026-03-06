@@ -152,7 +152,7 @@
     aspect-ratio: 16 / 9;
     border-radius: var(--radius-lg);
     overflow: hidden;
-    background: var(--color-bg);
+    background: var(--color-background);
 }
 
 .archive-card-img img {
@@ -329,7 +329,7 @@
 .pagination-btn:hover:not([aria-disabled="true"]) {
     color: var(--color-dark);
     border-color: var(--color-border-hover);
-    background: var(--color-bg);
+    background: var(--color-background);
 }
 
 .pagination-btn:hover:not([aria-disabled="true"]) .icon {
@@ -369,7 +369,7 @@
 }
 
 .pagination-page:hover:not(.is-active) {
-    background: var(--color-bg);
+    background: var(--color-background);
     color: var(--color-dark);
 }
 
@@ -511,7 +511,7 @@
 
 .author-header-social:hover {
     color: var(--color-dark);
-    background-color: var(--color-bg);
+    background-color: var(--color-background);
 }
 
 .author-header-social .icon {
