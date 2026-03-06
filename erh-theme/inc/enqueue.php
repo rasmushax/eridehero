@@ -295,6 +295,14 @@ function erh_get_page_css_bundle(): ?string {
         return 'product.min.css';
     }
 
+    // Single post (reviews, guides, articles).
+    if ( is_singular( 'post' ) ) {
+        if ( has_tag( 'review' ) ) {
+            return 'product.min.css';
+        }
+        return 'archive.min.css';
+    }
+
     // Single tool.
     if ( is_singular( 'tool' ) ) {
         return 'tools.min.css';
