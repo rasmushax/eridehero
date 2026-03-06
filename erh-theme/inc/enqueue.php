@@ -16,15 +16,19 @@ if ( ! defined( 'ABSPATH' ) ) {
 function erh_enqueue_assets(): void {
     $version = ERH_THEME_VERSION;
 
-    // Check if we have a production build
-    $dist_css = ERH_THEME_DIR . '/assets/css/dist/style.min.css';
-    $use_dist = file_exists( $dist_css );
+    // Check if we have split production builds.
+    $dist_base = ERH_THEME_DIR . '/assets/css/dist/base.min.css';
+    $use_split = file_exists( $dist_base );
+
+    // Fallback: check for legacy single bundle.
+    $dist_css  = ERH_THEME_DIR . '/assets/css/dist/style.min.css';
+    $use_dist  = ! $use_split && file_exists( $dist_css );
 
     // =========================================
     // STYLES
     // =========================================
 
-    // Self-hosted Figtree font
+    // Self-hosted Figtree font.
     wp_enqueue_style(
         'erh-fonts',
         ERH_THEME_URI . '/assets/fonts/figtree.css',
@@ -32,8 +36,30 @@ function erh_enqueue_assets(): void {
         $version
     );
 
-    if ( $use_dist ) {
-        // Production: Use minified, concatenated CSS
+    if ( $use_split ) {
+        // Production: split bundles.
+        wp_enqueue_style(
+            'erh-base',
+            ERH_THEME_URI . '/assets/css/dist/base.min.css',
+            array( 'erh-fonts' ),
+            filemtime( $dist_base )
+        );
+
+        // Page-specific bundle.
+        $page_bundle = erh_get_page_css_bundle();
+        if ( $page_bundle ) {
+            $bundle_path = ERH_THEME_DIR . '/assets/css/dist/' . $page_bundle;
+            if ( file_exists( $bundle_path ) ) {
+                wp_enqueue_style(
+                    'erh-page',
+                    ERH_THEME_URI . '/assets/css/dist/' . $page_bundle,
+                    array( 'erh-base' ),
+                    filemtime( $bundle_path )
+                );
+            }
+        }
+    } elseif ( $use_dist ) {
+        // Fallback: legacy single bundle.
         wp_enqueue_style(
             'erh-style',
             ERH_THEME_URI . '/assets/css/dist/style.min.css',
@@ -41,7 +67,7 @@ function erh_enqueue_assets(): void {
             filemtime( $dist_css )
         );
     } else {
-        // Development: newest partial mtime for cache busting across @imports
+        // Development: load all-in-one source file.
         $css_dir   = ERH_THEME_DIR . '/assets/css';
         $css_mtime = max( array_map( 'filemtime', glob( $css_dir . '/*.css' ) ) );
 
@@ -252,3 +278,78 @@ function erh_admin_styles(): void {
     );
 }
 add_action( 'admin_enqueue_scripts', 'erh_admin_styles' );
+
+/**
+ * Determine which page-specific CSS bundle to load.
+ *
+ * @return string|null Bundle filename (e.g. 'product.min.css') or null for base-only pages.
+ */
+function erh_get_page_css_bundle(): ?string {
+    // Homepage.
+    if ( is_front_page() ) {
+        return 'home.min.css';
+    }
+
+    // Single product.
+    if ( is_singular( 'products' ) ) {
+        return 'product.min.css';
+    }
+
+    // Single tool.
+    if ( is_singular( 'tool' ) ) {
+        return 'tools.min.css';
+    }
+
+    // Page templates (matched by Template Name header).
+    if ( is_page_template( 'page-finder.php' ) ) {
+        return 'finder.min.css';
+    }
+
+    if ( is_page_template( 'page-compare.php' ) ) {
+        return 'compare.min.css';
+    }
+
+    if ( is_page_template( 'page-deals.php' ) || is_page_template( 'page-deals-category.php' ) ) {
+        return 'deals.min.css';
+    }
+
+    if ( is_page_template( 'page-account.php' )
+        || is_page_template( 'page-email-preferences.php' )
+        || is_page_template( 'page-complete-profile.php' )
+        || is_page_template( 'page-login.php' )
+        || is_page_template( 'page-reset-password.php' )
+    ) {
+        return 'account.min.css';
+    }
+
+    if ( is_page_template( 'page-search.php' )
+        || is_page_template( 'page-articles.php' )
+        || is_page_template( 'page-buying-guides.php' )
+        || is_page_template( 'page-reviews.php' )
+    ) {
+        return 'archive.min.css';
+    }
+
+    // Slug-based pages (no Template Name header).
+    if ( is_page( 'escooter-reviews' ) ) {
+        return 'archive.min.css';
+    }
+
+    // Author and post type archives.
+    if ( is_author() || is_post_type_archive( 'tool' ) ) {
+        return 'archive.min.css';
+    }
+
+    // About page.
+    if ( is_page_template( 'page-about.php' ) ) {
+        return 'home.min.css';
+    }
+
+    // Contact page.
+    if ( is_page_template( 'page-contact.php' ) ) {
+        return 'account.min.css';
+    }
+
+    // 404, index, generic pages — base only.
+    return null;
+}

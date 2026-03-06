@@ -4,7 +4,7 @@
   "description": "ERideHero WordPress Theme",
   "private": true,
   "scripts": {
-    "build:css": "postcss assets/css/style.css -o assets/css/dist/style.min.css",
+    "build:css": "node build-css.js",
     "build:js": "esbuild assets/js/app.js --bundle --minify --outfile=assets/js/dist/app.min.js --format=iife",
     "build": "npm run build:css && npm run build:js",
     "watch:css": "postcss assets/css/style.css -o assets/css/dist/style.min.css --watch",
