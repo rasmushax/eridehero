@@ -290,7 +290,7 @@ function erh_get_page_css_bundle(): ?string {
         return 'home.min.css';
     }
 
-    // Single product.
+    // Single product (CPT).
     if ( is_singular( 'products' ) ) {
         return 'product.min.css';
     }
@@ -308,26 +308,32 @@ function erh_get_page_css_bundle(): ?string {
         return 'tools.min.css';
     }
 
-    // Page templates (matched by Template Name header).
+    // Curated comparison CPT.
+    if ( is_singular( 'comparison' ) ) {
+        return 'compare.min.css';
+    }
+
+    // Virtual routes (compare, coupons, custom archives).
+    // These use template_include filters and bypass is_page_template().
+    if ( function_exists( 'erh_is_compare_page' ) && erh_is_compare_page() ) {
+        return 'compare.min.css';
+    }
+
+    if ( function_exists( 'erh_is_coupon_page' ) && erh_is_coupon_page() ) {
+        return 'product.min.css';
+    }
+
+    if ( function_exists( 'erh_is_custom_archive' ) && erh_is_custom_archive() ) {
+        return 'archive.min.css';
+    }
+
+    // Page templates (explicitly assigned in WP admin → is_page_template works).
     if ( is_page_template( 'page-finder.php' ) ) {
         return 'finder.min.css';
     }
 
-    if ( is_page_template( 'page-compare.php' ) ) {
-        return 'compare.min.css';
-    }
-
     if ( is_page_template( 'page-deals.php' ) || is_page_template( 'page-deals-category.php' ) ) {
         return 'deals.min.css';
-    }
-
-    if ( is_page_template( 'page-account.php' )
-        || is_page_template( 'page-email-preferences.php' )
-        || is_page_template( 'page-complete-profile.php' )
-        || is_page_template( 'page-login.php' )
-        || is_page_template( 'page-reset-password.php' )
-    ) {
-        return 'account.min.css';
     }
 
     if ( is_page_template( 'page-search.php' )
@@ -338,9 +344,18 @@ function erh_get_page_css_bundle(): ?string {
         return 'archive.min.css';
     }
 
-    // Slug-based pages (no Template Name header).
-    if ( is_page( 'escooter-reviews' ) ) {
-        return 'archive.min.css';
+    if ( is_page_template( 'page-about.php' ) ) {
+        return 'home.min.css';
+    }
+
+    // Slug-based pages (use page-{slug}.php without explicit WP admin assignment).
+    // is_page_template() does NOT work for these — use is_page(slug) instead.
+    if ( is_page( 'contact' ) ) {
+        return 'account.min.css';
+    }
+
+    if ( is_page( array( 'my-account', 'login', 'email-preferences', 'complete-profile', 'reset-password' ) ) ) {
+        return 'account.min.css';
     }
 
     // Category archives (hub pages like /electric-scooters/).
@@ -348,22 +363,17 @@ function erh_get_page_css_bundle(): ?string {
         return 'home.min.css';
     }
 
-    // Author and post type archives.
-    if ( is_author() || is_post_type_archive( 'tool' ) ) {
+    // Tools archive (/tools/).
+    if ( is_post_type_archive( 'tool' ) ) {
+        return 'tools.min.css';
+    }
+
+    // Author archives.
+    if ( is_author() ) {
         return 'archive.min.css';
     }
 
-    // About page.
-    if ( is_page_template( 'page-about.php' ) ) {
-        return 'home.min.css';
-    }
-
-    // Contact page.
-    if ( is_page_template( 'page-contact.php' ) ) {
-        return 'account.min.css';
-    }
-
-    // Generic pages (editorial, privacy, how-we-test, etc.) — need article body styles.
+    // Generic pages (editorial, privacy, how-we-test, etc.).
     if ( is_page() ) {
         return 'archive.min.css';
     }
