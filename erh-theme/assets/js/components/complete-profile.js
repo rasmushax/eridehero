@@ -91,11 +91,11 @@ export function initCompleteProfile() {
         clearError();
 
         try {
+            // No X-WP-Nonce — public endpoint; stale cached nonce causes 403.
             const response = await fetch(`${getApiBase()}/auth/social/complete`, {
                 method: 'POST',
                 headers: {
                     'Content-Type': 'application/json',
-                    'X-WP-Nonce': getNonce()
                 },
                 credentials: 'same-origin',
                 body: JSON.stringify({ state, provider, email, password })

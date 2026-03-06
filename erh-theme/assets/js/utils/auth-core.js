@@ -34,11 +34,13 @@ export async function submitAuthForm(formType, formData) {
         throw new Error(`Unknown form type: ${formType}`);
     }
 
+    // No X-WP-Nonce for public auth endpoints — sending a stale nonce
+    // (from page cache) triggers WordPress 403 "Cookie check failed".
+    // These endpoints use permission_callback => '__return_true'.
     const response = await fetch(`${REST_URL}${endpoint}`, {
         method: 'POST',
         headers: {
             'Content-Type': 'application/json',
-            'X-WP-Nonce': window.erhData?.nonce || '',
         },
         body: JSON.stringify(formData),
     });
@@ -60,11 +62,11 @@ export async function submitAuthForm(formType, formData) {
  * @throws {Error} On HTTP error with server message
  */
 export async function submitPasswordReset(data) {
+    // No X-WP-Nonce — public endpoint, same cache-safety reason as above.
     const response = await fetch(`${REST_URL}auth/reset-password`, {
         method: 'POST',
         headers: {
             'Content-Type': 'application/json',
-            'X-WP-Nonce': window.erhData?.nonce || '',
         },
         body: JSON.stringify(data),
     });
