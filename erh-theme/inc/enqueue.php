@@ -363,6 +363,11 @@ function erh_get_page_css_bundle(): ?string {
         return 'account.min.css';
     }
 
-    // 404, index, generic pages — base only.
+    // Generic pages (editorial, privacy, how-we-test, etc.) — need article body styles.
+    if ( is_page() ) {
+        return 'archive.min.css';
+    }
+
+    // 404, index — base only.
     return null;
 }
