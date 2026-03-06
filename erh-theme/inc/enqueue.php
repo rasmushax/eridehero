@@ -343,6 +343,11 @@ function erh_get_page_css_bundle(): ?string {
         return 'archive.min.css';
     }
 
+    // Category archives (hub pages like /electric-scooters/).
+    if ( is_category() ) {
+        return 'home.min.css';
+    }
+
     // Author and post type archives.
     if ( is_author() || is_post_type_archive( 'tool' ) ) {
         return 'archive.min.css';
