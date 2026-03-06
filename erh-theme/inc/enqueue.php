@@ -235,6 +235,58 @@ function erh_preload_fonts(): void {
 add_action( 'wp_head', 'erh_preload_fonts', 1 );
 
 /**
+ * Preload LCP hero image on singular pages.
+ *
+ * Outputs a <link rel="preload"> so the browser fetches the hero image
+ * in parallel with render-blocking CSS instead of waiting to discover
+ * the <img> tag in the body.
+ */
+function erh_preload_lcp_image(): void {
+    if ( ! is_singular() ) {
+        return;
+    }
+
+    $image_id = null;
+    $size     = 'large';
+
+    if ( is_singular( 'products' ) ) {
+        // Product hero: featured image → big_thumbnail ACF fallback.
+        $image_id = get_post_thumbnail_id();
+        if ( ! $image_id ) {
+            $image_id = get_field( 'big_thumbnail', get_the_ID() );
+        }
+        // erh-product-lg isn't a registered size; WP falls back to full.
+        $size = 'full';
+    } elseif ( is_singular( array( 'post', 'page' ) ) && has_post_thumbnail() ) {
+        // Articles, guides, generic pages: featured image at 'large'.
+        $image_id = get_post_thumbnail_id();
+        $size     = 'large';
+    }
+
+    if ( ! $image_id ) {
+        return;
+    }
+
+    $src    = wp_get_attachment_image_url( $image_id, $size );
+    $srcset = wp_get_attachment_image_srcset( $image_id, $size );
+    $sizes  = wp_get_attachment_image_sizes( $image_id, $size );
+
+    if ( ! $src ) {
+        return;
+    }
+
+    echo '<link rel="preload" as="image" href="' . esc_url( $src ) . '"';
+    if ( $srcset ) {
+        echo ' imagesrcset="' . esc_attr( $srcset ) . '"';
+    }
+    if ( $sizes ) {
+        echo ' imagesizes="' . esc_attr( $sizes ) . '"';
+    }
+    echo ">\n";
+}
+add_action( 'wp_head', 'erh_preload_lcp_image', 2 );
+
+/**
  * Add preconnect for any external resources
  */
 function erh_resource_hints( array $hints, string $relation_type ): array {
