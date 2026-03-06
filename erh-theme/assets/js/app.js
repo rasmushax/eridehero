@@ -37,8 +37,16 @@ import { Toast } from './components/toast.js'; // For programmatic toasts
     // Handle query params that trigger UI feedback
     // ===========================================
 
+    // Clean up post-login cache-busting param (set by auth-core.js handleAuthSuccess)
+    const params = new URLSearchParams(window.location.search);
+    if (params.has('_auth')) {
+        params.delete('_auth');
+        const clean = params.toString();
+        window.history.replaceState({}, '', window.location.pathname + (clean ? '?' + clean : '') + window.location.hash);
+    }
+
     // Show toast when social account was auto-linked (?linked=google)
-    const linkedProvider = new URLSearchParams(window.location.search).get('linked');
+    const linkedProvider = params.get('linked');
     if (linkedProvider) {
         const providerName = linkedProvider.charAt(0).toUpperCase() + linkedProvider.slice(1);
         Toast.success(`Your ${providerName} account has been linked.`);

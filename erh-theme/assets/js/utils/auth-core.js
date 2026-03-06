@@ -175,7 +175,13 @@ export function handleAuthSuccess(method, needsOnboarding = false, redirectUrl =
         } else if (redirectUrl) {
             window.location.href = redirectUrl;
         } else {
-            window.location.reload();
+            // Cache-busting reload: LiteSpeed doesn't update its _lscache_vary
+            // cookie during REST API requests, so a plain reload serves the
+            // cached logged-out page. Adding a query param forces PHP execution,
+            // which updates the vary cookie. Cleaned up in app.js on next load.
+            const url = new URL(window.location.href);
+            url.searchParams.set('_auth', '1');
+            window.location.href = url.toString();
         }
     }, 500);
 }
