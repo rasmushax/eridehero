@@ -1,4 +1,4 @@
-/* Homepage — front-page.php */
+/* Homepage — front-page.php, category hubs */
 @import '../_hero.css';
 @import '../_features.css';
 @import '../_comparison.css';
@@ -11,3 +11,4 @@
 @import '../_social-proof.css';
 @import '../_hub.css';
 @import '../_about.css';
+@import '../_price-alert-modal.css';
