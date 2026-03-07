@@ -290,11 +290,6 @@
     border-radius: var(--radius-md);
     cursor: pointer;
     transition: all var(--transition-fast);
-    opacity: 0;
-}
-
-.deal-card:hover .deal-card-track {
-    opacity: 1;
 }
 
 .deal-card-track .icon {
