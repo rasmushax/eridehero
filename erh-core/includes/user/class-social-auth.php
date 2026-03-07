@@ -286,6 +286,12 @@ class SocialAuth {
             $redirect_url = home_url('/email-preferences/?redirect=' . $return_url);
         }
 
+        // Cache-busting: LiteSpeed doesn't update _lscache_vary cookie during
+        // REST API requests, so the redirect would serve the cached logged-out
+        // page. Adding _auth=1 forces PHP execution on the target page, which
+        // updates the vary cookie. Cleaned up by app.js on page load.
+        $redirect_url = add_query_arg('_auth', '1', $redirect_url);
+
         wp_safe_redirect($redirect_url);
         exit;
     }

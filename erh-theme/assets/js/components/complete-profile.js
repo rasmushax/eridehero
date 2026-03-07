@@ -5,12 +5,10 @@
  * who need to provide an email address to complete signup.
  */
 
-import { Toast } from './toast.js';
+import { handleAuthSuccess } from '../utils/auth-core.js';
 import { getRestUrl } from '../utils/api.js';
 
 const getApiBase = () => getRestUrl().replace(/\/$/, '');
-const getSiteUrl = () => window.erhData?.siteUrl || '';
-const getNonce = () => window.erhData?.nonce || '';
 
 export function initCompleteProfile() {
     const form = document.querySelector('[data-complete-profile-form]');
@@ -107,18 +105,8 @@ export function initCompleteProfile() {
                 throw new Error(result.message || 'Something went wrong');
             }
 
-            // Success
-            Toast.success(result.message || 'Success!');
-
-            // Redirect to onboarding or home
-            setTimeout(() => {
-                if (result.needsOnboarding) {
-                    const returnUrl = encodeURIComponent(result.redirect || getSiteUrl() || '/');
-                    window.location.href = `${getSiteUrl()}/email-preferences/?redirect=${returnUrl}`;
-                } else {
-                    window.location.href = result.redirect || getSiteUrl() || '/';
-                }
-            }, 500);
+            // Success — use shared handler for cache-busting reload
+            handleAuthSuccess('social', result.needsOnboarding || false, result.redirect || '');
 
         } catch (error) {
             showError(error.message);
