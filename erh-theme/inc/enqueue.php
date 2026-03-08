@@ -410,9 +410,13 @@ function erh_get_page_css_bundle(): ?string {
         return 'account.min.css';
     }
 
-    // Category archives (hub pages like /electric-scooters/).
+    // Category archives: hub pages (e-scooters, e-bikes) vs standard archives (skating).
     if ( is_category() ) {
-        return 'home.min.css';
+        $cat = get_queried_object();
+        if ( $cat instanceof WP_Term && function_exists( 'erh_get_hub_context' ) && erh_get_hub_context( $cat ) ) {
+            return 'home.min.css';
+        }
+        return 'archive.min.css';
     }
 
     // Tools archive (/tools/).
