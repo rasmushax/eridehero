@@ -361,6 +361,58 @@ class PriceHistory {
     }
 
     /**
+     * Get the most recent price that differs from the current price.
+     *
+     * Useful for "was $X" display — returns what the price was before
+     * the current value, skipping consecutive days at the same price.
+     *
+     * @param int         $product_id   The product post ID.
+     * @param float       $current_price The current price to compare against.
+     * @param string|null $geo          Optional geo filter.
+     * @param string|null $currency     Optional currency filter.
+     * @return float|null The previous different price, or null if not found.
+     */
+    public function get_previous_price(
+        int $product_id,
+        float $current_price,
+        ?string $geo = null,
+        ?string $currency = null
+    ): ?float {
+        $where_clauses = ['product_id = %d', 'price != %f'];
+        $params = [$product_id, $current_price];
+
+        if ($geo !== null) {
+            $geo = strtoupper($geo);
+            if ($geo === 'US') {
+                $where_clauses[] = "(geo = %s OR geo = '' OR geo IS NULL)";
+            } else {
+                $where_clauses[] = 'geo = %s';
+            }
+            $params[] = $geo;
+        }
+
+        if ($currency !== null) {
+            $where_clauses[] = 'currency = %s';
+            $params[] = strtoupper($currency);
+        }
+
+        $where_sql = implode(' AND ', $where_clauses);
+
+        // phpcs:ignore WordPress.DB.PreparedSQL.InterpolatedNotPrepared
+        $result = $this->wpdb->get_var(
+            $this->wpdb->prepare(
+                "SELECT price FROM {$this->table_name}
+                 WHERE {$where_sql}
+                 ORDER BY date DESC
+                 LIMIT 1",
+                ...$params
+            )
+        );
+
+        return $result !== null ? (float) $result : null;
+    }
+
+    /**
      * Get all available geos for a product.
      *
      * @param int $product_id The product post ID.

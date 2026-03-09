@@ -236,11 +236,21 @@ class NotificationJob implements CronJobInterface {
             // Determine comparison price for threshold logic.
             $compare_price = $last_notified_price !== null ? $last_notified_price : $start_price;
 
-            // Display "was" price is always the start_price (user's anchor).
-            // last_notified_price is for threshold logic only — on rebound
-            // notifications it can be lower than current_price, which makes
-            // the email show "was $X" where X < current price.
-            $display_was_price = $start_price;
+            // Display "was" price: the most recent higher price from history.
+            // This shows what the price dropped FROM, not the start price
+            // (which could be months old) or last_notified_price (which
+            // on rebound notifications can be lower than current).
+            $display_was_price = $this->price_history->get_previous_price(
+                $product_id,
+                $current_price,
+                $tracker_geo,
+                $price_currency
+            );
+
+            // Fall back to start_price if no history available.
+            if ($display_was_price === null || $display_was_price <= $current_price) {
+                $display_was_price = $start_price;
+            }
 
             // Skip if no valid comparison price.
             if (empty($compare_price) || $compare_price <= 0) {
