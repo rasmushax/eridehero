@@ -233,8 +233,14 @@ class NotificationJob implements CronJobInterface {
                 continue;
             }
 
-            // Determine comparison price.
+            // Determine comparison price for threshold logic.
             $compare_price = $last_notified_price !== null ? $last_notified_price : $start_price;
+
+            // Display "was" price is always the start_price (user's anchor).
+            // last_notified_price is for threshold logic only — on rebound
+            // notifications it can be lower than current_price, which makes
+            // the email show "was $X" where X < current price.
+            $display_was_price = $start_price;
 
             // Skip if no valid comparison price.
             if (empty($compare_price) || $compare_price <= 0) {
@@ -293,9 +299,9 @@ class NotificationJob implements CronJobInterface {
 
                 $image_url = $thumbnail_id ? wp_get_attachment_image_url((int) $thumbnail_id, 'thumbnail') : '';
 
-                // Calculate savings vs previous price.
-                $savings = $compare_price - $current_price;
-                $savings_percent = round(($savings / $compare_price) * 100);
+                // Calculate savings vs start price (user's anchor).
+                $savings = $display_was_price - $current_price;
+                $savings_percent = $display_was_price > 0 ? round(($savings / $display_was_price) * 100) : 0;
 
                 // Get 6-month average price for "below avg" display.
                 $stats = $this->price_history->get_statistics($product_id, 180, $tracker_geo, $price_currency);
@@ -313,7 +319,7 @@ class NotificationJob implements CronJobInterface {
                     'product_id'        => $product_id,
                     'product_name'      => $product->post_title,
                     'current_price'     => $current_price,
-                    'compare_price'     => $compare_price,
+                    'compare_price'     => $display_was_price,
                     'savings'           => $savings,
                     'savings_percent'   => $savings_percent,
                     'average_price'     => $average_price,
