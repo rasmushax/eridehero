@@ -253,8 +253,6 @@ class PerplexityClient {
             ],
         ]);
 
-        error_log('[ERH PerplexityClient] Sending Pro Search request');
-
         return $this->send_streaming_request($payload, $timeout);
     }
 
@@ -357,7 +355,6 @@ class PerplexityClient {
         if ($http_code !== 200) {
             $error_data = json_decode($error_body, true);
             $error = $error_data['error']['message'] ?? ('Unknown API error (HTTP ' . $http_code . ')');
-            error_log('[ERH PerplexityClient] API error: ' . $error);
             return [
                 'success' => false,
                 'content' => null,
@@ -374,8 +371,6 @@ class PerplexityClient {
                 'error'   => 'No content in streaming response.',
             ];
         }
-
-        error_log('[ERH PerplexityClient] Pro Search complete, content length: ' . strlen($content));
 
         return [
             'success' => true,

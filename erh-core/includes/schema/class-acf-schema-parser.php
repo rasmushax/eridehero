@@ -145,8 +145,6 @@ class AcfSchemaParser {
         // Get type-specific field group.
         $type_group_key = self::TYPE_GROUP_MAP[$product_type] ?? null;
 
-        error_log('[ERH AcfSchemaParser] get_schema("' . $product_type . '") — type_group_key: ' . ($type_group_key ?: 'NULL'));
-
         // Collect all groups to process.
         $groups_to_process = [];
 
@@ -160,23 +158,17 @@ class AcfSchemaParser {
             $groups_to_process[] = $type_group_key;
         }
 
-        error_log('[ERH AcfSchemaParser] Groups to process: ' . implode(', ', $groups_to_process));
-
         // Process each group.
         foreach ($groups_to_process as $group_key) {
             $group = acf_get_field_group($group_key);
             if (!$group) {
-                error_log('[ERH AcfSchemaParser] Group not found: ' . $group_key);
                 continue;
             }
 
             $fields = acf_get_fields($group_key);
             if (!$fields) {
-                error_log('[ERH AcfSchemaParser] No fields for group: ' . $group_key);
                 continue;
             }
-
-            error_log('[ERH AcfSchemaParser] Loaded group "' . $group_key . '" with ' . count($fields) . ' top-level field(s)');
 
             $group_title = $group['title'] ?? 'Unknown';
 

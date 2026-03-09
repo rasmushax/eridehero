@@ -114,9 +114,6 @@ class AnthropicClient {
 
         $body = $this->build_request_body($system_prompt, $user_prompt, $max_tokens, $temperature);
 
-        error_log('[ERH AnthropicClient] Sending request to ' . $this->model
-            . ' (thinking=' . ($this->extended_thinking ? 'on' : 'off') . ')');
-
         $response = wp_remote_post(self::API_URL, [
             'timeout' => $timeout,
             'headers' => $this->build_headers(),
@@ -145,7 +142,6 @@ class AnthropicClient {
 
         if ($code !== 200) {
             $error = $data['error']['message'] ?? ('Unknown API error (HTTP ' . $code . ')');
-            error_log('[ERH AnthropicClient] API error: ' . $error);
             return [
                 'success' => false,
                 'content' => null,
@@ -157,17 +153,12 @@ class AnthropicClient {
         $content = $this->extract_text_content($data);
 
         if ($content === null) {
-            error_log('[ERH AnthropicClient] No text content in response: ' . substr($raw_body, 0, 2000));
             return [
                 'success' => false,
                 'content' => null,
                 'error'   => 'No text content in API response.',
             ];
         }
-
-        error_log('[ERH AnthropicClient] Response usage: '
-            . ($data['usage']['input_tokens'] ?? '?') . ' in / '
-            . ($data['usage']['output_tokens'] ?? '?') . ' out');
 
         return [
             'success' => true,

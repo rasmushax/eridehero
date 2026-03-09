@@ -147,22 +147,12 @@ class SpecPopulatorHandler {
 
         // Get the AI client (respects defaults + per-request overrides).
         $client = AiProviderConfig::get_client($this->ai_overrides);
-        $provider_label = ($this->ai_overrides['provider'] ?? get_option('erh_ai_provider', 'perplexity'));
-
-        // Debug: log what we send.
-        error_log('[ERH Spec Populator] Provider: ' . $provider_label . ' | Sending prompt for product #' . $product_id . ' (' . $product_name . ')');
-        error_log('[ERH Spec Populator] System: ' . $system_prompt);
-        error_log('[ERH Spec Populator] User prompt: ' . substr($user_prompt, 0, 2000) . (strlen($user_prompt) > 2000 ? '...[truncated]' : ''));
-        error_log('[ERH Spec Populator] Fields to populate: ' . count($fields_to_populate));
 
         $api_result = $client->send_request($system_prompt, $user_prompt);
         if (!$api_result['success']) {
             error_log('[ERH Spec Populator] API error: ' . $api_result['error']);
             return ['success' => false, 'error' => $api_result['error']];
         }
-
-        // Debug: log what we receive.
-        error_log('[ERH Spec Populator] Raw API response: ' . substr($api_result['content'], 0, 3000));
 
         // Parse JSON response.
         $raw_json = $this->extract_json($api_result['content']);
@@ -171,12 +161,8 @@ class SpecPopulatorHandler {
             return ['success' => false, 'error' => 'AI returned invalid JSON format.'];
         }
 
-        error_log('[ERH Spec Populator] Parsed JSON keys: ' . implode(', ', array_keys($raw_json)));
-
         // Map numbered keys back to field paths (and reassemble checkbox arrays).
         $suggestions = $this->map_numbered_response($raw_json, $index_map, $checkbox_map);
-
-        error_log('[ERH Spec Populator] Mapped ' . count($suggestions) . ' field(s): ' . implode(', ', array_keys($suggestions)));
 
         // Validate each suggestion against schema.
         $validated = $this->validate_suggestions($suggestions, $fields_to_populate);
@@ -192,8 +178,6 @@ class SpecPopulatorHandler {
                 ];
             }
         }
-
-        error_log('[ERH Spec Populator] Total fields: ' . count($validated) . ' (' . count($suggestions) . ' from AI)');
 
         // Build schema map for frontend (keyed by field path).
         $schema_map = [];
