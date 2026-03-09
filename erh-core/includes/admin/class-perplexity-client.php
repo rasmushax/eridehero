@@ -207,6 +207,10 @@ class PerplexityClient {
      * Returns the raw content string from the API response.
      * Used by consumers that need custom prompts (e.g., spec population).
      *
+     * Uses Pro Search (streaming) for multi-step reasoning across multiple
+     * sources. Requires curl for SSE stream handling since wp_remote_post
+     * doesn't support streaming.
+     *
      * @param string $system_prompt System prompt for the AI.
      * @param string $user_prompt   User prompt with the actual request.
      * @param int    $max_tokens    Maximum tokens in the response.
@@ -219,7 +223,7 @@ class PerplexityClient {
         string $user_prompt,
         int $max_tokens = 4000,
         float $temperature = 0.1,
-        int $timeout = 60
+        int $timeout = 120
     ): array {
         if (!$this->is_configured()) {
             return [
@@ -229,41 +233,116 @@ class PerplexityClient {
             ];
         }
 
-        $response = wp_remote_post(self::API_URL, [
-            'timeout' => $timeout,
-            'headers' => [
-                'Authorization' => 'Bearer ' . $this->get_api_key(),
-                'Content-Type'  => 'application/json',
-            ],
-            'body' => wp_json_encode([
-                'model'    => self::MODEL,
-                'messages' => [
-                    [
-                        'role'    => 'system',
-                        'content' => $system_prompt,
-                    ],
-                    [
-                        'role'    => 'user',
-                        'content' => $user_prompt,
-                    ],
+        $payload = wp_json_encode([
+            'model'    => self::MODEL,
+            'stream'   => true,
+            'messages' => [
+                [
+                    'role'    => 'system',
+                    'content' => $system_prompt,
                 ],
-                'max_tokens'  => $max_tokens,
-                'temperature' => $temperature,
-            ]),
+                [
+                    'role'    => 'user',
+                    'content' => $user_prompt,
+                ],
+            ],
+            'max_tokens'         => $max_tokens,
+            'temperature'        => $temperature,
+            'web_search_options' => [
+                'search_type' => 'pro',
+            ],
         ]);
 
-        if (is_wp_error($response)) {
+        error_log('[ERH PerplexityClient] Sending Pro Search request');
+
+        return $this->send_streaming_request($payload, $timeout);
+    }
+
+    /**
+     * Send a streaming request via curl and collect SSE content deltas.
+     *
+     * @param string $payload JSON request body.
+     * @param int    $timeout Request timeout in seconds.
+     * @return array{success: bool, content: string|null, error: string|null}
+     */
+    private function send_streaming_request(string $payload, int $timeout): array {
+        $ch = curl_init(self::API_URL);
+
+        if ($ch === false) {
             return [
                 'success' => false,
                 'content' => null,
-                'error'   => $response->get_error_message(),
+                'error'   => 'Failed to initialize curl.',
             ];
         }
 
-        $code = wp_remote_retrieve_response_code($response);
-        $body = json_decode(wp_remote_retrieve_body($response), true);
+        $content_parts = [];
+        $http_code = 0;
+        $error_body = '';
 
-        if ($code === 429) {
+        curl_setopt_array($ch, [
+            CURLOPT_POST           => true,
+            CURLOPT_POSTFIELDS     => $payload,
+            CURLOPT_HTTPHEADER     => [
+                'Authorization: Bearer ' . $this->get_api_key(),
+                'Content-Type: application/json',
+                'Accept: text/event-stream',
+            ],
+            CURLOPT_TIMEOUT        => $timeout,
+            CURLOPT_RETURNTRANSFER => false,
+            CURLOPT_HEADER         => false,
+            CURLOPT_WRITEFUNCTION  => function ($ch, $data) use (&$content_parts, &$http_code, &$error_body) {
+                // Capture HTTP code on first callback.
+                if ($http_code === 0) {
+                    $http_code = (int) curl_getinfo($ch, CURLINFO_HTTP_CODE);
+                }
+
+                // If non-200, collect raw body for error parsing.
+                if ($http_code !== 0 && $http_code !== 200) {
+                    $error_body .= $data;
+                    return strlen($data);
+                }
+
+                // Parse SSE lines.
+                $lines = explode("\n", $data);
+                foreach ($lines as $line) {
+                    $line = trim($line);
+
+                    if ($line === '' || $line === 'data: [DONE]') {
+                        continue;
+                    }
+
+                    if (strpos($line, 'data: ') === 0) {
+                        $json_str = substr($line, 6);
+                        $chunk = json_decode($json_str, true);
+
+                        if (is_array($chunk)) {
+                            $delta = $chunk['choices'][0]['delta']['content'] ?? null;
+                            if ($delta !== null && $delta !== '') {
+                                $content_parts[] = $delta;
+                            }
+                        }
+                    }
+                }
+
+                return strlen($data);
+            },
+        ]);
+
+        curl_exec($ch);
+        $curl_error = curl_error($ch);
+        $http_code = (int) curl_getinfo($ch, CURLINFO_HTTP_CODE);
+        curl_close($ch);
+
+        if ($curl_error) {
+            return [
+                'success' => false,
+                'content' => null,
+                'error'   => 'Curl error: ' . $curl_error,
+            ];
+        }
+
+        if ($http_code === 429) {
             return [
                 'success' => false,
                 'content' => null,
@@ -271,8 +350,10 @@ class PerplexityClient {
             ];
         }
 
-        if ($code !== 200) {
-            $error = $body['error']['message'] ?? 'Unknown API error (HTTP ' . $code . ')';
+        if ($http_code !== 200) {
+            $error_data = json_decode($error_body, true);
+            $error = $error_data['error']['message'] ?? ('Unknown API error (HTTP ' . $http_code . ')');
+            error_log('[ERH PerplexityClient] API error: ' . $error);
             return [
                 'success' => false,
                 'content' => null,
@@ -280,7 +361,17 @@ class PerplexityClient {
             ];
         }
 
-        $content = $body['choices'][0]['message']['content'] ?? '';
+        $content = implode('', $content_parts);
+
+        if (empty($content)) {
+            return [
+                'success' => false,
+                'content' => null,
+                'error'   => 'No content in streaming response.',
+            ];
+        }
+
+        error_log('[ERH PerplexityClient] Pro Search complete, content length: ' . strlen($content));
 
         return [
             'success' => true,
