@@ -156,15 +156,14 @@ class ProductPage {
             // Continue with tracking - server-side will handle deduplication
         }
 
-        const { restUrl, nonce } = window.erhData || {};
+        const { restUrl } = window.erhData || {};
         if (!restUrl) return;
 
-        // Fire-and-forget request
+        // Fire-and-forget request (no nonce — public endpoint, avoids 403 on cached pages)
         fetch(`${restUrl}products/${this.productId}/view`, {
             method: 'POST',
             headers: {
                 'Content-Type': 'application/json',
-                'X-WP-Nonce': nonce,
             },
         })
             .then(response => {
@@ -227,7 +226,7 @@ class ProductPage {
      * @returns {Promise<Object>} Analysis data
      */
     async fetchAnalysis(geo) {
-        const { restUrl, nonce } = window.erhData || {};
+        const { restUrl } = window.erhData || {};
 
         if (!restUrl || !this.productId) {
             throw new Error('Missing required data');
@@ -235,11 +234,8 @@ class ProductPage {
 
         const url = `${restUrl}products/${this.productId}/analysis?geo=${geo}`;
 
-        const response = await fetch(url, {
-            headers: {
-                'X-WP-Nonce': nonce,
-            },
-        });
+        // No nonce — public endpoint, avoids 403 on cached pages
+        const response = await fetch(url);
 
         if (!response.ok) {
             throw new Error(`API error: ${response.status}`);
