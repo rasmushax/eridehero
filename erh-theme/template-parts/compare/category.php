@@ -72,7 +72,7 @@ if ( ! $featured_comparisons->have_posts() ) {
 }
 ?>
 
-<main class="compare-page compare-page--category" data-compare-page data-category="<?php echo esc_attr( $category_key ); ?>">
+<main class="compare-page compare-page--category" data-compare-page data-category="<?php echo esc_attr( $category_key ); ?>" data-click-source="compare">
 
     <!-- Breadcrumb -->
     <div class="container">

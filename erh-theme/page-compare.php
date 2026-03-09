@@ -126,7 +126,7 @@ $page_classes      .= $is_full_width ? ' compare-page--full-width' : '';
 // Extra data attributes for curated.
 $curated_attrs = $is_curated ? ' data-comparison-id="' . esc_attr( $comparison_id ) . '"' : '';
 ?>
-<main class="<?php echo esc_attr( $page_classes ); ?>" data-compare-page data-category="<?php echo esc_attr( $category ); ?>"<?php echo $product_count_attr . $curated_attrs; ?>>
+<main class="<?php echo esc_attr( $page_classes ); ?>" data-compare-page data-category="<?php echo esc_attr( $category ); ?>" data-click-source="compare"<?php echo $product_count_attr . $curated_attrs; ?>>
 
 	<?php if ( $is_hub_page ) : ?>
 		<!-- Hub Page: Compare Center -->

@@ -202,11 +202,12 @@ class ClickTracker {
     /**
      * Record a click event.
      *
-     * @param int $link_id    The tracked link ID from HFT.
-     * @param int $product_id The product post ID.
+     * @param int         $link_id      The tracked link ID from HFT.
+     * @param int         $product_id   The product post ID.
+     * @param string|null $click_source The UI placement identifier (e.g., 'sticky-buy-bar').
      * @return bool True on success.
      */
-    public function record_click(int $link_id, int $product_id): bool {
+    public function record_click(int $link_id, int $product_id, ?string $click_source = null): bool {
         $start_time = microtime(true);
         $timings = [];
 
@@ -236,39 +237,46 @@ class ClickTracker {
         $referrer_url = $this->get_referrer_url();
         $referrer_path = $this->get_referrer_path();
 
+        // External referrer detection.
+        $external_info = $this->detect_external_referrer($referrer_url);
+
         // Database insert.
         $db_start = microtime(true);
-        $result = $this->wpdb->insert(
-            $this->table_name,
-            [
-                'tracked_link_id' => $link_id,
-                'product_id'      => $product_id,
-                'referrer_url'    => $referrer_url,
-                'referrer_path'   => $referrer_path,
-                'user_geo'        => $user_geo,
-                'user_id'         => $this->get_user_id(),
-                'device_type'     => $device_type,
-                'is_bot'          => $is_bot ? 1 : 0,
-                'clicked_at'      => current_time('mysql', true),
-            ],
-            ['%d', '%d', '%s', '%s', '%s', '%d', '%s', '%d', '%s']
-        );
+        $insert_data = [
+            'tracked_link_id' => $link_id,
+            'product_id'      => $product_id,
+            'referrer_url'    => $referrer_url,
+            'referrer_path'   => $referrer_path,
+            'user_geo'        => $user_geo,
+            'user_id'         => $this->get_user_id(),
+            'device_type'     => $device_type,
+            'is_bot'          => $is_bot ? 1 : 0,
+            'is_external'     => $external_info['is_external'] ? 1 : 0,
+            'referrer_domain' => $external_info['referrer_domain'],
+            'click_source'    => $click_source,
+            'clicked_at'      => current_time('mysql', true),
+        ];
+        $insert_format = ['%d', '%d', '%s', '%s', '%s', '%d', '%s', '%d', '%d', '%s', '%s', '%s'];
+        $result = $this->wpdb->insert($this->table_name, $insert_data, $insert_format);
         $timings['db_insert'] = round((microtime(true) - $db_start) * 1000, 2);
 
         $total_time = round((microtime(true) - $start_time) * 1000, 2);
 
         // Log comprehensive debug info.
         $this->log('Click recorded', [
-            'link_id'       => $link_id,
-            'product_id'    => $product_id,
-            'is_bot'        => $is_bot,
-            'geo'           => $user_geo ?? 'unknown',
-            'geo_source'    => $geo_source,
-            'device'        => $device_type,
-            'referrer_path' => $referrer_path,
-            'success'       => $result !== false,
-            'timings_ms'    => $timings,
-            'total_ms'      => $total_time,
+            'link_id'         => $link_id,
+            'product_id'      => $product_id,
+            'is_bot'          => $is_bot,
+            'geo'             => $user_geo ?? 'unknown',
+            'geo_source'      => $geo_source,
+            'device'          => $device_type,
+            'referrer_path'   => $referrer_path,
+            'is_external'     => $external_info['is_external'],
+            'referrer_domain' => $external_info['referrer_domain'],
+            'click_source'    => $click_source,
+            'success'         => $result !== false,
+            'timings_ms'      => $timings,
+            'total_ms'        => $total_time,
         ]);
 
         return $result !== false;
@@ -692,20 +700,42 @@ class ClickTracker {
     }
 
     /**
-     * Clean up old click data.
+     * Detect if the referrer is external (not from our site).
      *
-     * @param int $days_to_keep Number of days of data to retain.
-     * @return int Number of rows deleted.
+     * @param string|null $referrer_url The full referrer URL.
+     * @return array{is_external: bool, referrer_domain: string|null}
      */
-    public function cleanup_old_clicks(int $days_to_keep = 90): int {
-        $result = $this->wpdb->query(
-            $this->wpdb->prepare(
-                "DELETE FROM {$this->table_name}
-                WHERE clicked_at < DATE_SUB(NOW(), INTERVAL %d DAY)",
-                $days_to_keep
-            )
-        );
+    private function detect_external_referrer(?string $referrer_url): array {
+        if (empty($referrer_url)) {
+            return ['is_external' => false, 'referrer_domain' => null];
+        }
 
-        return $result !== false ? (int) $result : 0;
+        $referrer_host = wp_parse_url($referrer_url, PHP_URL_HOST);
+        if (empty($referrer_host)) {
+            return ['is_external' => false, 'referrer_domain' => null];
+        }
+
+        $site_host = wp_parse_url(home_url(), PHP_URL_HOST);
+
+        // Normalize both: strip www. prefix, lowercase.
+        $normalize = function (string $host): string {
+            $host = strtolower($host);
+            if (strpos($host, 'www.') === 0) {
+                $host = substr($host, 4);
+            }
+            return $host;
+        };
+
+        $referrer_normalized = $normalize($referrer_host);
+        $site_normalized = $normalize($site_host ?? '');
+
+        if ($referrer_normalized === $site_normalized) {
+            return ['is_external' => false, 'referrer_domain' => null];
+        }
+
+        return [
+            'is_external'     => true,
+            'referrer_domain' => substr($referrer_normalized, 0, 100),
+        ];
     }
 }

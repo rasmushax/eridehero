@@ -37,6 +37,7 @@ define('ERH_TABLE_PRICE_TRACKERS', 'price_trackers');
 define('ERH_TABLE_PRODUCT_VIEWS', 'product_views');
 define('ERH_TABLE_CLICKS', 'erh_clicks');
 define('ERH_TABLE_COMPARISON_VIEWS', 'comparison_views');
+define('ERH_TABLE_PAGE_VIEWS', 'erh_page_views');
 
 /**
  * Load Composer autoloader.

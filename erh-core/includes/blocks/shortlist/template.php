@@ -82,6 +82,7 @@ $item_number = 0;
     id="<?php echo esc_attr( $block_id ); ?>"
     class="<?php echo esc_attr( implode( ' ', $classes ) ); ?>"
     data-shortlist
+    data-click-source="shortlist"
 >
     <?php if ( $title ) : ?>
         <h2 class="erh-shortlist__title"><?php echo esc_html( $title ); ?></h2>

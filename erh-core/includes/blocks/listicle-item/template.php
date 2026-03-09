@@ -107,6 +107,7 @@ $js_data = wp_json_encode([
     id="<?php echo esc_attr($block_id); ?>"
     class="<?php echo esc_attr(implode(' ', $classes)); ?>"
     data-listicle-item='<?php echo esc_attr($js_data); ?>'
+    data-click-source="listicle-item"
 >
     <!-- Header: Product Name (left) + Label (right) -->
     <header class="listicle-item-header">

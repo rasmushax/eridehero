@@ -45,7 +45,8 @@ if ( empty( $thumbnail_url ) ) {
      id="sticky-buy-bar"
      aria-hidden="true"
      data-product-id="<?php echo esc_attr( $product_id ); ?>"
-     data-product-name="<?php echo esc_attr( $product_name ); ?>">
+     data-product-name="<?php echo esc_attr( $product_name ); ?>"
+     data-click-source="sticky-buy-bar">
     <div class="sticky-buy-bar-inner">
         <!-- Left: Product info + action links -->
         <div class="sticky-buy-bar-left">

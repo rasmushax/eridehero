@@ -158,6 +158,7 @@ $js_data = wp_json_encode( [
     id="<?php echo esc_attr( $block_id ); ?>"
     class="<?php echo esc_attr( implode( ' ', $classes ) ); ?>"
     data-buying-guide-table='<?php echo esc_attr( $js_data ); ?>'
+    data-click-source="buying-guide"
 >
     <div class="bgt-scroll-container">
         <table class="bgt-table">

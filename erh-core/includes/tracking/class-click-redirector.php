@@ -93,6 +93,15 @@ class ClickRedirector {
     ];
 
     /**
+     * Valid click source identifiers.
+     */
+    private const VALID_CLICK_SOURCES = [
+        'sticky-buy-bar', 'price-intel', 'listicle-item', 'compare',
+        'similar-products', 'shortlist', 'deals', 'buying-guide',
+        'bfdeal',
+    ];
+
+    /**
      * Click data to record after redirect (async tracking).
      *
      * @var array|null
@@ -251,10 +260,17 @@ class ClickRedirector {
             return;
         }
 
+        // Read click source from query param.
+        $click_source = isset($_GET['cs']) ? sanitize_key(substr($_GET['cs'], 0, 30)) : null;
+        if ($click_source && !in_array($click_source, self::VALID_CLICK_SOURCES, true)) {
+            $click_source = null;
+        }
+
         // Queue click for async recording (after redirect).
         self::$pending_click = [
-            'link_id'    => $link['id'],
-            'product_id' => $product_id,
+            'link_id'      => $link['id'],
+            'product_id'   => $product_id,
+            'click_source' => $click_source,
         ];
 
         // Perform the redirect.
@@ -324,7 +340,7 @@ class ClickRedirector {
 
         // Record the click.
         $tracker = new ClickTracker();
-        $tracker->record_click($click_data['link_id'], $click_data['product_id']);
+        $tracker->record_click($click_data['link_id'], $click_data['product_id'], $click_data['click_source'] ?? null);
     }
 
     /**

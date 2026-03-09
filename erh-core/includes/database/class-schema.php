@@ -55,6 +55,7 @@ class Schema {
         $this->create_product_views_table();
         $this->create_clicks_table();
         $this->create_comparison_views_table();
+        $this->create_page_views_table();
 
         // Email queue table (uses its own static method).
         EmailQueue::create_table();
@@ -102,6 +103,12 @@ class Schema {
         if (version_compare($current_version, '1.6.0', '<')) {
             $this->upgrade_price_trackers_renotify();
             update_option('erh_db_version', '1.6.0');
+        }
+
+        // Upgrade to add click tracking columns and page views table.
+        if (version_compare($current_version, '1.7.0', '<')) {
+            $this->upgrade_clicks_add_tracking_columns();
+            update_option('erh_db_version', '1.7.0');
         }
 
         // Re-run table creation to ensure all tables and columns exist.
@@ -390,6 +397,77 @@ class Schema {
     }
 
     /**
+     * Upgrade clicks table to add external referrer and click source columns.
+     *
+     * @return void
+     */
+    private function upgrade_clicks_add_tracking_columns(): void {
+        $table_name = $this->get_table_name(ERH_TABLE_CLICKS);
+
+        // Check if table exists.
+        $table_exists = $this->wpdb->get_var(
+            $this->wpdb->prepare('SHOW TABLES LIKE %s', $table_name)
+        );
+
+        if (!$table_exists) {
+            return; // Table will be created by create_tables().
+        }
+
+        // Add is_external column if missing.
+        $col_exists = $this->wpdb->get_var(
+            "SHOW COLUMNS FROM {$table_name} LIKE 'is_external'"
+        );
+        if (!$col_exists) {
+            $this->wpdb->query(
+                "ALTER TABLE {$table_name} ADD COLUMN is_external tinyint(1) NOT NULL DEFAULT 0 AFTER is_bot"
+            );
+            error_log('[ERH Schema] Added is_external column to clicks table');
+        }
+
+        // Add referrer_domain column if missing.
+        $col_exists = $this->wpdb->get_var(
+            "SHOW COLUMNS FROM {$table_name} LIKE 'referrer_domain'"
+        );
+        if (!$col_exists) {
+            $this->wpdb->query(
+                "ALTER TABLE {$table_name} ADD COLUMN referrer_domain varchar(100) DEFAULT NULL AFTER is_external"
+            );
+            error_log('[ERH Schema] Added referrer_domain column to clicks table');
+        }
+
+        // Add click_source column if missing.
+        $col_exists = $this->wpdb->get_var(
+            "SHOW COLUMNS FROM {$table_name} LIKE 'click_source'"
+        );
+        if (!$col_exists) {
+            $this->wpdb->query(
+                "ALTER TABLE {$table_name} ADD COLUMN click_source varchar(30) DEFAULT NULL AFTER referrer_domain"
+            );
+            error_log('[ERH Schema] Added click_source column to clicks table');
+        }
+
+        // Add is_external index if missing.
+        $idx = $this->wpdb->get_var(
+            "SHOW INDEX FROM {$table_name} WHERE Key_name = 'is_external'"
+        );
+        if (!$idx) {
+            $this->wpdb->query("ALTER TABLE {$table_name} ADD KEY is_external (is_external)");
+            error_log('[ERH Schema] Added is_external index to clicks table');
+        }
+
+        // Add click_source index if missing.
+        $idx = $this->wpdb->get_var(
+            "SHOW INDEX FROM {$table_name} WHERE Key_name = 'click_source'"
+        );
+        if (!$idx) {
+            $this->wpdb->query("ALTER TABLE {$table_name} ADD KEY click_source (click_source)");
+            error_log('[ERH Schema] Added click_source index to clicks table');
+        }
+
+        error_log('[ERH Schema] Clicks table upgraded with tracking columns');
+    }
+
+    /**
      * Create the product_data table (Finder tool cache).
      *
      * This table stores pre-computed product data for the finder tool
@@ -541,6 +619,9 @@ class Schema {
             user_id bigint(20) unsigned DEFAULT NULL,
             device_type enum('desktop','mobile','tablet') DEFAULT 'desktop',
             is_bot tinyint(1) NOT NULL DEFAULT 0,
+            is_external tinyint(1) NOT NULL DEFAULT 0,
+            referrer_domain varchar(100) DEFAULT NULL,
+            click_source varchar(30) DEFAULT NULL,
             clicked_at datetime NOT NULL,
             PRIMARY KEY  (id),
             KEY tracked_link_id (tracked_link_id),
@@ -548,7 +629,9 @@ class Schema {
             KEY referrer_path (referrer_path),
             KEY clicked_at (clicked_at),
             KEY user_geo (user_geo),
-            KEY is_bot (is_bot)
+            KEY is_bot (is_bot),
+            KEY is_external (is_external),
+            KEY click_source (click_source)
         ) {$charset_collate};";
 
         dbDelta($sql);
@@ -577,6 +660,33 @@ class Schema {
             UNIQUE KEY pair (product_1_id, product_2_id),
             KEY view_count (view_count),
             KEY last_viewed (last_viewed)
+        ) {$charset_collate};";
+
+        dbDelta($sql);
+    }
+
+    /**
+     * Create the page_views table.
+     *
+     * Tracks page-level views (non-product pages) for CTR calculations.
+     *
+     * @return void
+     */
+    private function create_page_views_table(): void {
+        $table_name = $this->get_table_name(ERH_TABLE_PAGE_VIEWS);
+        $charset_collate = $this->wpdb->get_charset_collate();
+
+        $sql = "CREATE TABLE {$table_name} (
+            id bigint(20) unsigned NOT NULL AUTO_INCREMENT,
+            page_path varchar(255) NOT NULL,
+            page_type varchar(30) NOT NULL,
+            ip_hash varchar(64) NOT NULL,
+            view_date datetime DEFAULT CURRENT_TIMESTAMP,
+            PRIMARY KEY  (id),
+            KEY page_path (page_path),
+            KEY page_type (page_type),
+            KEY view_date (view_date),
+            KEY path_date (page_path, view_date)
         ) {$charset_collate};";
 
         dbDelta($sql);
@@ -614,6 +724,7 @@ class Schema {
             ERH_TABLE_PRODUCT_VIEWS,
             ERH_TABLE_CLICKS,
             ERH_TABLE_COMPARISON_VIEWS,
+            ERH_TABLE_PAGE_VIEWS,
         ];
 
         foreach ($tables as $table) {

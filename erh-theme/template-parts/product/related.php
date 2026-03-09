@@ -42,6 +42,7 @@ $finder_url = erh_get_finder_url( $product_id );
     id="similar"
     data-similar-products
     data-product-id="<?php echo esc_attr( $product_id ); ?>"
+    data-click-source="similar-products"
     data-limit="<?php echo esc_attr( $limit ); ?>"
 >
     <div class="section-header">

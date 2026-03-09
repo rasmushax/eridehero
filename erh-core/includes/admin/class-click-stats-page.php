@@ -132,6 +132,9 @@ class ClickStatsPage {
         $conversion_funnel = $this->stats->get_product_conversion_funnel($days, 15, $exclude_bots);
         $leaky_buckets    = $this->stats->get_leaky_buckets($days, 10, $exclude_bots);
         $retailer_pref    = $this->stats->get_retailer_preference($days, 10, $exclude_bots);
+        $clicks_by_source = $this->stats->get_clicks_by_source($days, $exclude_bots);
+        $external_sources = $this->stats->get_external_traffic_sources($days, 15, $exclude_bots);
+        $external_summary = $this->stats->get_external_summary($days, $exclude_bots);
 
         // Calculate deltas.
         $clicks_delta   = $this->calculate_delta($summary['total_clicks'], $prev_summary['total_clicks']);
@@ -200,6 +203,11 @@ class ClickStatsPage {
                 <div class="erh-cs-card">
                     <span class="erh-cs-card-value"><?php echo esc_html($summary['mobile_percent']); ?>%</span>
                     <span class="erh-cs-card-label"><?php esc_html_e('Mobile/Tablet', 'erh-core'); ?></span>
+                </div>
+                <div class="erh-cs-card">
+                    <span class="erh-cs-card-value"><?php echo esc_html($external_summary['external_percent']); ?>%</span>
+                    <span class="erh-cs-card-label"><?php esc_html_e('External Traffic', 'erh-core'); ?></span>
+                    <span class="erh-cs-card-hint"><?php echo esc_html(number_format($external_summary['external_clicks'])); ?> <?php esc_html_e('clicks', 'erh-core'); ?></span>
                 </div>
                 <div class="erh-cs-card">
                     <?php
@@ -356,6 +364,82 @@ class ClickStatsPage {
                                         <td class="num"><?php echo esc_html(number_format($row['clicks'])); ?></td>
                                         <td class="num"><?php echo esc_html(number_format($row['pages'])); ?></td>
                                         <td class="num"><strong><?php echo esc_html($row['clicks_per_page']); ?></strong></td>
+                                    </tr>
+                                <?php endforeach; ?>
+                            </tbody>
+                        </table>
+                    <?php endif; ?>
+                </div>
+            </div>
+
+            <!-- Clicks by Placement + External Traffic Sources -->
+            <div class="erh-cs-grid">
+                <!-- Clicks by Placement -->
+                <div class="erh-cs-section">
+                    <h2>
+                        <?php esc_html_e('Clicks by Placement', 'erh-core'); ?>
+                        <span class="erh-cs-section-hint"><?php esc_html_e('Which UI components drive clicks', 'erh-core'); ?></span>
+                    </h2>
+                    <?php if (empty($clicks_by_source)) : ?>
+                        <p class="erh-cs-empty"><?php esc_html_e('No click source data yet. Data will appear after deployment.', 'erh-core'); ?></p>
+                    <?php else : ?>
+                        <table class="widefat striped">
+                            <thead>
+                                <tr>
+                                    <th><?php esc_html_e('Source', 'erh-core'); ?></th>
+                                    <th class="num"><?php esc_html_e('Clicks', 'erh-core'); ?></th>
+                                    <th class="erh-cs-bar-col"><?php esc_html_e('Share', 'erh-core'); ?></th>
+                                </tr>
+                            </thead>
+                            <tbody>
+                                <?php
+                                $total_source_clicks = array_sum(array_column($clicks_by_source, 'clicks'));
+                                $max_source_clicks = !empty($clicks_by_source) ? (int) $clicks_by_source[0]['clicks'] : 0;
+                                foreach ($clicks_by_source as $row) :
+                                    $bar_width = $max_source_clicks > 0 ? ((int) $row['clicks'] / $max_source_clicks) * 100 : 0;
+                                    $share = $total_source_clicks > 0 ? round(((int) $row['clicks'] / $total_source_clicks) * 100) : 0;
+                                ?>
+                                    <tr>
+                                        <td>
+                                            <?php echo esc_html($this->get_source_label($row['source'])); ?>
+                                            <span class="erh-cs-share"><?php echo esc_html($share); ?>%</span>
+                                        </td>
+                                        <td class="num"><?php echo esc_html(number_format((int) $row['clicks'])); ?></td>
+                                        <td class="erh-cs-bar-col">
+                                            <div class="erh-cs-bar-bg">
+                                                <div class="erh-cs-bar erh-cs-bar-blue" style="width: <?php echo esc_attr($bar_width); ?>%"></div>
+                                            </div>
+                                        </td>
+                                    </tr>
+                                <?php endforeach; ?>
+                            </tbody>
+                        </table>
+                    <?php endif; ?>
+                </div>
+
+                <!-- External Traffic Sources -->
+                <div class="erh-cs-section">
+                    <h2>
+                        <?php esc_html_e('External Traffic Sources', 'erh-core'); ?>
+                        <span class="erh-cs-section-hint"><?php esc_html_e('Clicks from outside the site (YouTube, Google, etc.)', 'erh-core'); ?></span>
+                    </h2>
+                    <?php if (empty($external_sources)) : ?>
+                        <p class="erh-cs-empty"><?php esc_html_e('No external traffic detected yet.', 'erh-core'); ?></p>
+                    <?php else : ?>
+                        <table class="widefat striped">
+                            <thead>
+                                <tr>
+                                    <th><?php esc_html_e('Domain', 'erh-core'); ?></th>
+                                    <th class="num"><?php esc_html_e('Clicks', 'erh-core'); ?></th>
+                                    <th class="num"><?php esc_html_e('Products', 'erh-core'); ?></th>
+                                </tr>
+                            </thead>
+                            <tbody>
+                                <?php foreach ($external_sources as $row) : ?>
+                                    <tr>
+                                        <td><?php echo esc_html($row['domain']); ?></td>
+                                        <td class="num"><?php echo esc_html(number_format((int) $row['clicks'])); ?></td>
+                                        <td class="num"><?php echo esc_html(number_format((int) $row['unique_products'])); ?></td>
                                     </tr>
                                 <?php endforeach; ?>
                             </tbody>
@@ -721,6 +805,28 @@ class ClickStatsPage {
         }
 
         return $path;
+    }
+
+    /**
+     * Get human-readable label for a click source.
+     *
+     * @param string $source The click source key.
+     * @return string The label.
+     */
+    private function get_source_label(string $source): string {
+        $labels = [
+            'sticky-buy-bar'    => 'Sticky Buy Bar',
+            'price-intel'       => 'Price Intel',
+            'listicle-item'     => 'Listicle Item',
+            'compare'           => 'Compare Page',
+            'similar-products'  => 'Similar Products',
+            'shortlist'         => 'Shortlist',
+            'deals'             => 'Deals Page',
+            'buying-guide'      => 'Buying Guide Table',
+            'bfdeal'            => 'BF Deal',
+            'unknown'           => 'Unknown / No Source',
+        ];
+        return $labels[$source] ?? ucwords(str_replace('-', ' ', $source));
     }
 
     /**

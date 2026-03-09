@@ -64,6 +64,7 @@ use ERH\Api\RestGeo;
 use ERH\Api\RestListicle;
 use ERH\Api\RestComparisonViews;
 use ERH\Api\RestSpecEditor;
+use ERH\Api\RestPages;
 use ERH\Api\ContactHandler;
 use ERH\Blocks\BlockManager;
 use ERH\Shortcodes\ShortcodeManager;
@@ -896,6 +897,10 @@ class Core {
         // Initialize and register REST Spec Editor API.
         $rest_spec_editor = new RestSpecEditor();
         $rest_spec_editor->register_routes();
+
+        // Initialize and register REST Pages API (page view tracking).
+        $rest_pages = new RestPages();
+        $rest_pages->register_routes();
     }
 
     /**

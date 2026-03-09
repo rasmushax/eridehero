@@ -131,6 +131,7 @@ if ( $needs_hydration ) {
     id="<?php echo esc_attr( $block_id ); ?>"
     class="<?php echo esc_attr( implode( ' ', $classes ) ); ?>"
     <?php if ( $js_config ) : ?>data-bfdeal-item='<?php echo esc_attr( $js_config ); ?>'<?php endif; ?>
+    data-click-source="bfdeal"
 >
     <?php if ( $image_id ) : ?>
         <a href="<?php echo esc_url( $link_href ); ?>" <?php echo $link_attrs; ?> class="erh-bfdeal__image" data-bfdeal-link>

@@ -231,7 +231,7 @@ $has_pricing = erh_product_has_pricing( $product_id );
 
     <?php else : ?>
 
-    <div class="price-intel" data-price-intel data-product-id="<?php echo esc_attr( $product_id ); ?>">
+    <div class="price-intel" data-price-intel data-product-id="<?php echo esc_attr( $product_id ); ?>" data-click-source="price-intel">
         <!-- Header: Best Price + CTA -->
         <div class="price-intel-header">
             <div class="price-intel-best">

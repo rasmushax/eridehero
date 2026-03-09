@@ -48,6 +48,16 @@ class ClickStats {
     }
 
     /**
+     * Get the internal-only filter clause (excludes external referrers).
+     *
+     * @param string $alias Optional table alias prefix (e.g., 'c.').
+     * @return string SQL WHERE clause fragment.
+     */
+    private function get_internal_clause(string $alias = ''): string {
+        return "AND {$alias}is_external = 0";
+    }
+
+    /**
      * Get summary statistics.
      *
      * @param int  $days         Number of days to look back.
@@ -57,11 +67,12 @@ class ClickStats {
     public function get_summary(int $days = 30, bool $exclude_bots = true): array {
         $date_from = gmdate('Y-m-d H:i:s', strtotime("-{$days} days"));
         $bot_clause = $this->get_bot_clause($exclude_bots);
+        $internal_clause = $this->get_internal_clause();
 
-        // Total clicks.
+        // Total clicks (internal only).
         $total_clicks = (int) $this->wpdb->get_var(
             $this->wpdb->prepare(
-                "SELECT COUNT(*) FROM {$this->table_name} WHERE clicked_at >= %s {$bot_clause}",
+                "SELECT COUNT(*) FROM {$this->table_name} WHERE clicked_at >= %s {$bot_clause} {$internal_clause}",
                 $date_from
             )
         );
@@ -69,7 +80,7 @@ class ClickStats {
         // Unique products clicked.
         $unique_products = (int) $this->wpdb->get_var(
             $this->wpdb->prepare(
-                "SELECT COUNT(DISTINCT product_id) FROM {$this->table_name} WHERE clicked_at >= %s {$bot_clause}",
+                "SELECT COUNT(DISTINCT product_id) FROM {$this->table_name} WHERE clicked_at >= %s {$bot_clause} {$internal_clause}",
                 $date_from
             )
         );
@@ -78,7 +89,7 @@ class ClickStats {
         $mobile_clicks = (int) $this->wpdb->get_var(
             $this->wpdb->prepare(
                 "SELECT COUNT(*) FROM {$this->table_name}
-                WHERE clicked_at >= %s AND device_type IN ('mobile', 'tablet') {$bot_clause}",
+                WHERE clicked_at >= %s AND device_type IN ('mobile', 'tablet') {$bot_clause} {$internal_clause}",
                 $date_from
             )
         );
@@ -88,7 +99,7 @@ class ClickStats {
         $unique_pages = (int) $this->wpdb->get_var(
             $this->wpdb->prepare(
                 "SELECT COUNT(DISTINCT referrer_path) FROM {$this->table_name}
-                WHERE clicked_at >= %s AND referrer_path IS NOT NULL {$bot_clause}",
+                WHERE clicked_at >= %s AND referrer_path IS NOT NULL {$bot_clause} {$internal_clause}",
                 $date_from
             )
         );
@@ -146,6 +157,7 @@ class ClickStats {
     public function get_top_referrers(int $days = 30, int $limit = 20, bool $exclude_bots = true): array {
         $date_from = gmdate('Y-m-d H:i:s', strtotime("-{$days} days"));
         $bot_clause = $this->get_bot_clause($exclude_bots);
+        $internal_clause = $this->get_internal_clause();
 
         $results = $this->wpdb->get_results(
             $this->wpdb->prepare(
@@ -158,6 +170,7 @@ class ClickStats {
                 AND referrer_path IS NOT NULL
                 AND referrer_path != ''
                 {$bot_clause}
+                {$internal_clause}
                 GROUP BY referrer_path
                 ORDER BY click_count DESC
                 LIMIT %d",
@@ -416,11 +429,12 @@ class ClickStats {
         $date_from = gmdate('Y-m-d H:i:s', strtotime("-" . ($days * 2) . " days"));
         $date_to   = gmdate('Y-m-d H:i:s', strtotime("-{$days} days"));
         $bot_clause = $this->get_bot_clause($exclude_bots);
+        $internal_clause = $this->get_internal_clause();
 
         $total_clicks = (int) $this->wpdb->get_var(
             $this->wpdb->prepare(
                 "SELECT COUNT(*) FROM {$this->table_name}
-                WHERE clicked_at >= %s AND clicked_at < %s {$bot_clause}",
+                WHERE clicked_at >= %s AND clicked_at < %s {$bot_clause} {$internal_clause}",
                 $date_from,
                 $date_to
             )
@@ -429,7 +443,7 @@ class ClickStats {
         $unique_products = (int) $this->wpdb->get_var(
             $this->wpdb->prepare(
                 "SELECT COUNT(DISTINCT product_id) FROM {$this->table_name}
-                WHERE clicked_at >= %s AND clicked_at < %s {$bot_clause}",
+                WHERE clicked_at >= %s AND clicked_at < %s {$bot_clause} {$internal_clause}",
                 $date_from,
                 $date_to
             )
@@ -439,7 +453,7 @@ class ClickStats {
             $this->wpdb->prepare(
                 "SELECT COUNT(*) FROM {$this->table_name}
                 WHERE clicked_at >= %s AND clicked_at < %s
-                AND device_type IN ('mobile', 'tablet') {$bot_clause}",
+                AND device_type IN ('mobile', 'tablet') {$bot_clause} {$internal_clause}",
                 $date_from,
                 $date_to
             )
@@ -471,6 +485,7 @@ class ClickStats {
     public function get_product_conversion_funnel(int $days = 30, int $limit = 15, bool $exclude_bots = true, int $min_views = 5): array {
         $date_from  = gmdate('Y-m-d H:i:s', strtotime("-{$days} days"));
         $bot_clause = $this->get_bot_clause($exclude_bots);
+        $internal_clause = $this->get_internal_clause('c.');
         $views_table = $this->wpdb->prefix . ERH_TABLE_PRODUCT_VIEWS;
 
         $results = $this->wpdb->get_results(
@@ -496,15 +511,14 @@ class ClickStats {
                     SELECT c.product_id, COUNT(*) as page_clicks
                     FROM {$this->table_name} c
                     INNER JOIN {$this->wpdb->posts} pp ON c.product_id = pp.ID
-                    WHERE c.clicked_at >= %s {$bot_clause}
-                    AND (c.referrer_path LIKE CONCAT('%%/', pp.post_name, '/')
-                         OR c.referrer_path LIKE CONCAT('%%/', pp.post_name))
+                    WHERE c.clicked_at >= %s {$bot_clause} {$internal_clause}
+                    AND c.referrer_path LIKE CONCAT('%%/', pp.post_name)
                     GROUP BY c.product_id
                 ) pc ON p.ID = pc.product_id
                 LEFT JOIN (
                     SELECT product_id, COUNT(*) as total_clicks
                     FROM {$this->table_name}
-                    WHERE clicked_at >= %s {$bot_clause}
+                    WHERE clicked_at >= %s {$bot_clause} AND is_external = 0
                     GROUP BY product_id
                 ) tc ON p.ID = tc.product_id
                 WHERE p.post_type = 'products'
@@ -539,6 +553,7 @@ class ClickStats {
     public function get_leaky_buckets(int $days = 30, int $limit = 10, bool $exclude_bots = true, int $min_views = 10): array {
         $date_from  = gmdate('Y-m-d H:i:s', strtotime("-{$days} days"));
         $bot_clause = $this->get_bot_clause($exclude_bots);
+        $internal_clause = $this->get_internal_clause('c.');
         $views_table = $this->wpdb->prefix . ERH_TABLE_PRODUCT_VIEWS;
 
         // Get average on-page CTR.
@@ -571,9 +586,8 @@ class ClickStats {
                     SELECT c.product_id, COUNT(*) as page_clicks
                     FROM {$this->table_name} c
                     INNER JOIN {$this->wpdb->posts} pp ON c.product_id = pp.ID
-                    WHERE c.clicked_at >= %s {$bot_clause}
-                    AND (c.referrer_path LIKE CONCAT('%%/', pp.post_name, '/')
-                         OR c.referrer_path LIKE CONCAT('%%/', pp.post_name))
+                    WHERE c.clicked_at >= %s {$bot_clause} {$internal_clause}
+                    AND c.referrer_path LIKE CONCAT('%%/', pp.post_name)
                     GROUP BY c.product_id
                 ) pc ON p.ID = pc.product_id
                 WHERE p.post_type = 'products'
@@ -619,6 +633,7 @@ class ClickStats {
     public function get_content_type_clicks(int $days = 30, bool $exclude_bots = true): array {
         $date_from  = gmdate('Y-m-d H:i:s', strtotime("-{$days} days"));
         $bot_clause = $this->get_bot_clause($exclude_bots);
+        $internal_clause = $this->get_internal_clause();
 
         // Get all referrer paths with their click counts for classification.
         $results = $this->wpdb->get_results(
@@ -631,6 +646,7 @@ class ClickStats {
                 AND referrer_path IS NOT NULL
                 AND referrer_path != ''
                 {$bot_clause}
+                {$internal_clause}
                 GROUP BY referrer_path",
                 $date_from
             ),
@@ -703,13 +719,21 @@ class ClickStats {
             return 'tool';
         }
 
+        if (strpos($path, '/deals') === 0) {
+            return 'deals';
+        }
+
+        if (strpos($path, '/finder') === 0) {
+            return 'finder';
+        }
+
         // Listicle patterns: /best-*, /top-*, category-level pages.
-        if (preg_match('#^/(best|top|cheapest|fastest|lightest)-#', $path)) {
+        if (preg_match('#^/(best|top|cheapest|fastest|lightest|most|longest|affordable|safest)-#', $path)) {
             return 'listicle';
         }
 
-        // Category archive pages.
-        if (preg_match('#^/(e-scooters|e-bikes|electric-skateboards|electric-unicycles|hoverboards)/?$#', $path)) {
+        // Category archive pages (with optional /page/N suffix).
+        if (preg_match('#^/(e-scooters|e-bikes|electric-skateboards|electric-unicycles|hoverboards)(/page/\d+)?$#', $path)) {
             return 'category';
         }
 
@@ -730,6 +754,8 @@ class ClickStats {
             'compare'  => 'Compare Pages',
             'listicle' => 'Listicles',
             'tool'     => 'Tools',
+            'deals'    => 'Deals Pages',
+            'finder'   => 'Finder Tool',
             'category' => 'Category Pages',
             'homepage' => 'Homepage',
             'other'    => 'Other',
@@ -813,6 +839,7 @@ class ClickStats {
     public function get_average_product_ctr(int $days = 30, bool $exclude_bots = true): float {
         $date_from  = gmdate('Y-m-d H:i:s', strtotime("-{$days} days"));
         $bot_clause = $this->get_bot_clause($exclude_bots);
+        $internal_clause = $this->get_internal_clause('c.');
         $views_table = $this->wpdb->prefix . ERH_TABLE_PRODUCT_VIEWS;
 
         $result = (float) $this->wpdb->get_var(
@@ -832,9 +859,8 @@ class ClickStats {
                     SELECT c.product_id, COUNT(*) as page_clicks
                     FROM {$this->table_name} c
                     INNER JOIN {$this->wpdb->posts} pp ON c.product_id = pp.ID
-                    WHERE c.clicked_at >= %s {$bot_clause}
-                    AND (c.referrer_path LIKE CONCAT('%%/', pp.post_name, '/')
-                         OR c.referrer_path LIKE CONCAT('%%/', pp.post_name))
+                    WHERE c.clicked_at >= %s {$bot_clause} {$internal_clause}
+                    AND c.referrer_path LIKE CONCAT('%%/', pp.post_name)
                     GROUP BY c.product_id
                 ) pc ON v.product_id = pc.product_id",
                 $date_from,
@@ -877,6 +903,130 @@ class ClickStats {
         return [
             'current_daily_avg'  => $days > 0 ? round($current / $days, 1) : 0,
             'previous_daily_avg' => $days > 0 ? round($previous / $days, 1) : 0,
+        ];
+    }
+
+    /**
+     * Get external traffic sources (clicks from outside our site).
+     *
+     * @param int  $days         Number of days to look back.
+     * @param int  $limit        Maximum results.
+     * @param bool $exclude_bots Whether to exclude bot traffic.
+     * @return array External sources with click counts.
+     */
+    public function get_external_traffic_sources(int $days = 30, int $limit = 15, bool $exclude_bots = true): array {
+        $date_from = gmdate('Y-m-d H:i:s', strtotime("-{$days} days"));
+        $bot_clause = $this->get_bot_clause($exclude_bots);
+
+        $results = $this->wpdb->get_results(
+            $this->wpdb->prepare(
+                "SELECT
+                    COALESCE(referrer_domain, 'unknown') as domain,
+                    COUNT(*) as clicks,
+                    COUNT(DISTINCT product_id) as unique_products
+                FROM {$this->table_name}
+                WHERE clicked_at >= %s
+                AND is_external = 1
+                {$bot_clause}
+                GROUP BY domain
+                ORDER BY clicks DESC
+                LIMIT %d",
+                $date_from,
+                $limit
+            ),
+            ARRAY_A
+        );
+
+        return $results ?: [];
+    }
+
+    /**
+     * Get direct traffic count (no referrer, not external).
+     *
+     * @param int  $days         Number of days to look back.
+     * @param bool $exclude_bots Whether to exclude bot traffic.
+     * @return array Direct traffic stats.
+     */
+    public function get_direct_traffic_count(int $days = 30, bool $exclude_bots = true): array {
+        $date_from = gmdate('Y-m-d H:i:s', strtotime("-{$days} days"));
+        $bot_clause = $this->get_bot_clause($exclude_bots);
+
+        $count = (int) $this->wpdb->get_var(
+            $this->wpdb->prepare(
+                "SELECT COUNT(*) FROM {$this->table_name}
+                WHERE clicked_at >= %s
+                AND referrer_path IS NULL
+                AND is_external = 0
+                {$bot_clause}",
+                $date_from
+            )
+        );
+
+        return ['clicks' => $count];
+    }
+
+    /**
+     * Get clicks grouped by click source (UI placement).
+     *
+     * @param int  $days         Number of days to look back.
+     * @param bool $exclude_bots Whether to exclude bot traffic.
+     * @return array Click sources with counts.
+     */
+    public function get_clicks_by_source(int $days = 30, bool $exclude_bots = true): array {
+        $date_from = gmdate('Y-m-d H:i:s', strtotime("-{$days} days"));
+        $bot_clause = $this->get_bot_clause($exclude_bots);
+        $internal_clause = $this->get_internal_clause();
+
+        $results = $this->wpdb->get_results(
+            $this->wpdb->prepare(
+                "SELECT
+                    COALESCE(click_source, 'unknown') as source,
+                    COUNT(*) as clicks
+                FROM {$this->table_name}
+                WHERE clicked_at >= %s
+                {$bot_clause}
+                {$internal_clause}
+                GROUP BY source
+                ORDER BY clicks DESC",
+                $date_from
+            ),
+            ARRAY_A
+        );
+
+        return $results ?: [];
+    }
+
+    /**
+     * Get total external + direct click count for the summary card.
+     *
+     * @param int  $days         Number of days to look back.
+     * @param bool $exclude_bots Whether to exclude bot traffic.
+     * @return array External and direct counts.
+     */
+    public function get_external_summary(int $days = 30, bool $exclude_bots = true): array {
+        $date_from = gmdate('Y-m-d H:i:s', strtotime("-{$days} days"));
+        $bot_clause = $this->get_bot_clause($exclude_bots);
+
+        $external = (int) $this->wpdb->get_var(
+            $this->wpdb->prepare(
+                "SELECT COUNT(*) FROM {$this->table_name}
+                WHERE clicked_at >= %s AND is_external = 1 {$bot_clause}",
+                $date_from
+            )
+        );
+
+        $total = (int) $this->wpdb->get_var(
+            $this->wpdb->prepare(
+                "SELECT COUNT(*) FROM {$this->table_name}
+                WHERE clicked_at >= %s {$bot_clause}",
+                $date_from
+            )
+        );
+
+        return [
+            'external_clicks' => $external,
+            'total_clicks'    => $total,
+            'external_percent' => $total > 0 ? round(($external / $total) * 100, 1) : 0,
         ];
     }
 }

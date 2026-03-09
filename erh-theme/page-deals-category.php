@@ -54,7 +54,7 @@ $parent_id  = wp_get_post_parent_id( get_the_ID() );
 $parent_url = $parent_id ? get_permalink( $parent_id ) : home_url( '/deals/' );
 ?>
 
-<main class="deals-page" data-deals-page data-category="<?php echo esc_attr( $config['category'] ); ?>">
+<main class="deals-page" data-deals-page data-category="<?php echo esc_attr( $config['category'] ); ?>" data-click-source="deals">
 
     <?php
     // Hero section - uses WordPress title and content.
