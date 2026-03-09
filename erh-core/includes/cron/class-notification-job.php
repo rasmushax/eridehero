@@ -226,6 +226,13 @@ class NotificationJob implements CronJobInterface {
                 continue;
             }
 
+            // Price must be below start_price to qualify as a drop.
+            // The start_price is the price when the user began tracking, so any
+            // notification where current >= start isn't a real drop for them.
+            if ($start_price !== null && $start_price > 0 && $current_price >= $start_price) {
+                continue;
+            }
+
             // Determine comparison price.
             $compare_price = $last_notified_price !== null ? $last_notified_price : $start_price;
 
