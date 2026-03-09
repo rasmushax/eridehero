@@ -10,7 +10,7 @@
     'use strict';
 
     const config = window.erhSpecPopulator || {};
-    const { ajaxUrl, nonce, isConfigured, productTypes } = config;
+    const { ajaxUrl, nonce, isConfigured, productTypes, aiConfig } = config;
 
     // State
     let currentType = '';
@@ -31,6 +31,12 @@
     const saveBtn = document.getElementById('erh-sp-save');
     const resultsContainer = document.getElementById('erh-sp-results');
 
+    // AI Config DOM
+    const providerSelect = document.getElementById('erh-sp-provider');
+    const modelSelect = document.getElementById('erh-sp-model');
+    const thinkingCheckbox = document.getElementById('erh-sp-thinking');
+    const thinkingWrap = document.getElementById('erh-sp-thinking-wrap');
+
     /**
      * Initialize the module.
      */
@@ -38,7 +44,74 @@
         if (!typeTabs.length) return;
         if (!isConfigured) return;
 
+        initAiConfig();
         bindEvents();
+    }
+
+    /**
+     * Initialize AI provider/model dropdowns from config.
+     */
+    function initAiConfig() {
+        if (!providerSelect || !modelSelect || !aiConfig) return;
+
+        var providers = aiConfig.providers || {};
+
+        // Populate provider dropdown.
+        Object.keys(providers).forEach(function(key) {
+            var p = providers[key];
+            if (!p.configured) return;
+            var opt = document.createElement('option');
+            opt.value = key;
+            opt.textContent = p.label;
+            if (key === aiConfig.provider) opt.selected = true;
+            providerSelect.appendChild(opt);
+        });
+
+        // Handle provider change.
+        providerSelect.addEventListener('change', updateModelDropdown);
+        updateModelDropdown();
+
+        // Set thinking default.
+        if (thinkingCheckbox) {
+            thinkingCheckbox.checked = aiConfig.extendedThinking || false;
+        }
+    }
+
+    /**
+     * Update model dropdown based on selected provider.
+     */
+    function updateModelDropdown() {
+        if (!modelSelect || !aiConfig) return;
+
+        var provider = providerSelect.value;
+        var providers = aiConfig.providers || {};
+        var models = (providers[provider] || {}).models || {};
+        var supportsThinking = (providers[provider] || {}).supportsThinking || false;
+
+        modelSelect.innerHTML = '';
+        Object.keys(models).forEach(function(key) {
+            var opt = document.createElement('option');
+            opt.value = key;
+            opt.textContent = models[key];
+            if (key === aiConfig.model) opt.selected = true;
+            modelSelect.appendChild(opt);
+        });
+
+        // Show/hide thinking toggle.
+        if (thinkingWrap) {
+            thinkingWrap.style.display = supportsThinking ? '' : 'none';
+        }
+    }
+
+    /**
+     * Get current AI settings from the UI.
+     */
+    function getAiSettings() {
+        return {
+            provider: providerSelect ? providerSelect.value : '',
+            model: modelSelect ? modelSelect.value : '',
+            thinking: thinkingCheckbox ? thinkingCheckbox.checked : false,
+        };
     }
 
     /**
@@ -273,6 +346,7 @@
             if (progressText) progressText.textContent = 'Processing ' + (i + 1) + ' of ' + selectedIds.length + ': ' + productName;
 
             try {
+                const ai = getAiSettings();
                 const formData = new FormData();
                 formData.append('action', 'erh_sp_fetch_specs');
                 formData.append('nonce', nonce);
@@ -281,6 +355,9 @@
                 if (overwrite) {
                     formData.append('overwrite_existing', '1');
                 }
+                if (ai.provider) formData.append('ai_provider', ai.provider);
+                if (ai.model) formData.append('ai_model', ai.model);
+                formData.append('ai_thinking', ai.thinking ? '1' : '0');
 
                 const response = await fetch(ajaxUrl, { method: 'POST', body: formData });
                 const data = await response.json();

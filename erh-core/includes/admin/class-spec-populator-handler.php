@@ -2,9 +2,9 @@
 /**
  * Spec Populator Handler - Shared backend for AI-powered spec population.
  *
- * Handles prompt building, Perplexity API calls, response parsing,
+ * Handles prompt building, AI API calls, response parsing,
  * validation, and saving. Used by both the bulk admin page and the
- * single-product modal.
+ * single-product modal. Supports multiple AI providers via AiProviderConfig.
  *
  * @package ERH\Admin
  */
@@ -42,7 +42,7 @@ class SpecPopulatorHandler {
 
     /**
      * Performance test fields to INCLUDE (all others in that group are excluded).
-     * These are manufacturer-claimed specs that Perplexity can research.
+     * These are manufacturer-claimed specs that AI can research.
      *
      * @var array<string>
      */
@@ -60,27 +60,36 @@ class SpecPopulatorHandler {
     private AcfSchemaParser $schema_parser;
 
     /**
-     * Perplexity client for spec research.
+     * Per-request AI provider overrides.
      *
-     * @var PerplexityClient
+     * @var array{provider?: string, model?: string, extended_thinking?: bool}
      */
-    private PerplexityClient $perplexity;
+    private array $ai_overrides = [];
 
     /**
      * Constructor.
      */
     public function __construct() {
         $this->schema_parser = new AcfSchemaParser();
-        $this->perplexity = new PerplexityClient();
     }
 
     /**
-     * Check if the Perplexity API is configured.
+     * Set per-request AI provider overrides.
+     *
+     * @param array{provider?: string, model?: string, extended_thinking?: bool} $overrides Override settings.
+     * @return void
+     */
+    public function set_ai_overrides(array $overrides): void {
+        $this->ai_overrides = $overrides;
+    }
+
+    /**
+     * Check if the active AI provider is configured.
      *
      * @return bool True if API key is set.
      */
     public function is_configured(): bool {
-        return $this->perplexity->is_configured();
+        return AiProviderConfig::any_configured();
     }
 
     /**
@@ -136,13 +145,17 @@ class SpecPopulatorHandler {
             $fields_to_populate
         );
 
+        // Get the AI client (respects defaults + per-request overrides).
+        $client = AiProviderConfig::get_client($this->ai_overrides);
+        $provider_label = ($this->ai_overrides['provider'] ?? get_option('erh_ai_provider', 'perplexity'));
+
         // Debug: log what we send.
-        error_log('[ERH Spec Populator] Sending prompt for product #' . $product_id . ' (' . $product_name . ')');
+        error_log('[ERH Spec Populator] Provider: ' . $provider_label . ' | Sending prompt for product #' . $product_id . ' (' . $product_name . ')');
         error_log('[ERH Spec Populator] System: ' . $system_prompt);
         error_log('[ERH Spec Populator] User prompt: ' . substr($user_prompt, 0, 2000) . (strlen($user_prompt) > 2000 ? '...[truncated]' : ''));
         error_log('[ERH Spec Populator] Fields to populate: ' . count($fields_to_populate));
 
-        $api_result = $this->perplexity->send_request($system_prompt, $user_prompt);
+        $api_result = $client->send_request($system_prompt, $user_prompt);
         if (!$api_result['success']) {
             error_log('[ERH Spec Populator] API error: ' . $api_result['error']);
             return ['success' => false, 'error' => $api_result['error']];
@@ -323,13 +336,13 @@ class SpecPopulatorHandler {
     }
 
     /**
-     * Build prompts for the Perplexity API.
+     * Build prompts for the AI provider.
      *
      * @param string $product_name       Product name.
      * @param string $brand              Brand name.
      * @param string $product_type_label Human-readable product type.
      * @param array  $fields             Array of column definitions to populate.
-     * @return array{0: string, 1: string} [system_prompt, user_prompt]
+     * @return array{0: string, 1: string, 2: array, 3: array} [system_prompt, user_prompt, index_map, checkbox_map]
      */
     private function build_prompt(string $product_name, string $brand, string $product_type_label, array $fields): array {
         $system_prompt = 'You are a product specification researcher. '

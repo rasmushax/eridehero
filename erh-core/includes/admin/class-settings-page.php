@@ -155,11 +155,66 @@ class SettingsPage {
             'default'           => '',
         ]);
 
+        register_setting(self::OPTION_GROUP_APIS, 'erh_anthropic_api_key', [
+            'type'              => 'string',
+            'sanitize_callback' => 'sanitize_text_field',
+            'default'           => '',
+        ]);
+
         register_setting(self::OPTION_GROUP_APIS, 'erh_serpapi_key', [
             'type'              => 'string',
             'sanitize_callback' => 'sanitize_text_field',
             'default'           => '',
         ]);
+
+        // AI Spec Populator defaults.
+        register_setting(self::OPTION_GROUP_APIS, 'erh_ai_provider', [
+            'type'              => 'string',
+            'sanitize_callback' => [$this, 'sanitize_ai_provider'],
+            'default'           => 'perplexity',
+        ]);
+
+        register_setting(self::OPTION_GROUP_APIS, 'erh_ai_model', [
+            'type'              => 'string',
+            'sanitize_callback' => [$this, 'sanitize_ai_model'],
+            'default'           => 'sonar-pro',
+        ]);
+
+        register_setting(self::OPTION_GROUP_APIS, 'erh_ai_extended_thinking', [
+            'type'              => 'string',
+            'sanitize_callback' => function ($val) { return $val ? '1' : '0'; },
+            'default'           => '0',
+        ]);
+    }
+
+    /**
+     * Sanitize AI provider option.
+     *
+     * @param mixed $value Input value.
+     * @return string Sanitized provider key.
+     */
+    public function sanitize_ai_provider($value): string {
+        $value = sanitize_text_field((string) $value);
+        return in_array($value, AiProviderConfig::PROVIDERS, true) ? $value : 'perplexity';
+    }
+
+    /**
+     * Sanitize AI model option.
+     *
+     * @param mixed $value Input value.
+     * @return string Sanitized model key.
+     */
+    public function sanitize_ai_model($value): string {
+        $value = sanitize_text_field((string) $value);
+
+        // Validate against all known models.
+        foreach (AiProviderConfig::PROVIDER_MODELS as $models) {
+            if (isset($models[$value])) {
+                return $value;
+            }
+        }
+
+        return 'sonar-pro';
     }
 
     /**
@@ -533,6 +588,56 @@ class SettingsPage {
         </table>
 
         <?php
+        // Anthropic API.
+        $anthropic_key = get_option('erh_anthropic_api_key', '');
+        $anthropic_configured = !empty($anthropic_key);
+        ?>
+
+        <table class="form-table" role="presentation">
+            <tr>
+                <th scope="row" colspan="2">
+                    <h3 style="margin-bottom: 0;"><?php esc_html_e('Anthropic (Claude)', 'erh-core'); ?></h3>
+                    <p class="description" style="font-weight: normal;">
+                        <?php esc_html_e('Used by the Spec Populator as an alternative AI provider. Supports web search and extended thinking.', 'erh-core'); ?>
+                    </p>
+                </th>
+            </tr>
+            <tr>
+                <th scope="row">
+                    <label for="erh_anthropic_api_key"><?php esc_html_e('API Key', 'erh-core'); ?></label>
+                </th>
+                <td>
+                    <input type="password"
+                           id="erh_anthropic_api_key"
+                           name="erh_anthropic_api_key"
+                           value="<?php echo esc_attr($anthropic_key); ?>"
+                           class="regular-text">
+                    <p class="description">
+                        <?php
+                        printf(
+                            /* translators: %s: Anthropic Console URL */
+                            esc_html__('Get your API key from %s', 'erh-core'),
+                            '<a href="https://console.anthropic.com/settings/keys" target="_blank">Anthropic Console</a>'
+                        );
+                        ?>
+                    </p>
+                </td>
+            </tr>
+            <tr>
+                <th scope="row"><?php esc_html_e('Status', 'erh-core'); ?></th>
+                <td>
+                    <?php if ($anthropic_configured) : ?>
+                        <span style="color: #46b450;">&#10003; <?php esc_html_e('Configured', 'erh-core'); ?></span>
+                    <?php else : ?>
+                        <span style="color: #dc3232;">&#10007; <?php esc_html_e('Not configured', 'erh-core'); ?></span>
+                    <?php endif; ?>
+                </td>
+            </tr>
+        </table>
+
+        <?php $this->render_ai_defaults_section(); ?>
+
+        <?php
         $serpapi_key = get_option('erh_serpapi_key', '');
         $serpapi_configured = !empty($serpapi_key);
         ?>
@@ -578,6 +683,118 @@ class SettingsPage {
                 </td>
             </tr>
         </table>
+        <?php
+    }
+
+    /**
+     * Render the AI Spec Populator defaults section.
+     *
+     * @return void
+     */
+    private function render_ai_defaults_section(): void {
+        $current_provider = get_option('erh_ai_provider', 'perplexity');
+        $current_model = get_option('erh_ai_model', 'sonar-pro');
+        $extended_thinking = get_option('erh_ai_extended_thinking', '0');
+
+        ?>
+        <table class="form-table" role="presentation">
+            <tr>
+                <th scope="row" colspan="2">
+                    <h3 style="margin-bottom: 0;"><?php esc_html_e('AI Spec Populator Defaults', 'erh-core'); ?></h3>
+                    <p class="description" style="font-weight: normal;">
+                        <?php esc_html_e('Default provider and model for the Spec Populator. Can be overridden per-run.', 'erh-core'); ?>
+                    </p>
+                </th>
+            </tr>
+            <tr>
+                <th scope="row">
+                    <label for="erh_ai_provider"><?php esc_html_e('Provider', 'erh-core'); ?></label>
+                </th>
+                <td>
+                    <select id="erh_ai_provider" name="erh_ai_provider">
+                        <?php foreach (AiProviderConfig::PROVIDER_LABELS as $key => $label) : ?>
+                            <option value="<?php echo esc_attr($key); ?>"
+                                <?php selected($current_provider, $key); ?>>
+                                <?php echo esc_html($label); ?>
+                            </option>
+                        <?php endforeach; ?>
+                    </select>
+                </td>
+            </tr>
+            <tr>
+                <th scope="row">
+                    <label for="erh_ai_model"><?php esc_html_e('Model', 'erh-core'); ?></label>
+                </th>
+                <td>
+                    <select id="erh_ai_model" name="erh_ai_model">
+                        <?php foreach (AiProviderConfig::PROVIDER_MODELS as $provider => $models) : ?>
+                            <?php foreach ($models as $model_key => $model_label) : ?>
+                                <option value="<?php echo esc_attr($model_key); ?>"
+                                    data-provider="<?php echo esc_attr($provider); ?>"
+                                    <?php selected($current_model, $model_key); ?>>
+                                    <?php echo esc_html($model_label); ?>
+                                </option>
+                            <?php endforeach; ?>
+                        <?php endforeach; ?>
+                    </select>
+                </td>
+            </tr>
+            <tr class="erh-ai-thinking-row">
+                <th scope="row">
+                    <label for="erh_ai_extended_thinking"><?php esc_html_e('Extended Thinking', 'erh-core'); ?></label>
+                </th>
+                <td>
+                    <label>
+                        <input type="checkbox"
+                               id="erh_ai_extended_thinking"
+                               name="erh_ai_extended_thinking"
+                               value="1"
+                               <?php checked($extended_thinking, '1'); ?>>
+                        <?php esc_html_e('Enable extended thinking (Anthropic only)', 'erh-core'); ?>
+                    </label>
+                    <p class="description">
+                        <?php esc_html_e('Lets Claude reason through complex specs before answering. Uses more tokens but may improve accuracy.', 'erh-core'); ?>
+                    </p>
+                </td>
+            </tr>
+        </table>
+
+        <script>
+        (function() {
+            var providerSelect = document.getElementById('erh_ai_provider');
+            var modelSelect = document.getElementById('erh_ai_model');
+            var thinkingRow = document.querySelector('.erh-ai-thinking-row');
+
+            if (!providerSelect || !modelSelect) return;
+
+            function updateModels() {
+                var provider = providerSelect.value;
+                var options = modelSelect.querySelectorAll('option');
+                var firstVisible = null;
+                var currentVisible = false;
+
+                options.forEach(function(opt) {
+                    var show = opt.dataset.provider === provider;
+                    opt.style.display = show ? '' : 'none';
+                    if (show && !firstVisible) firstVisible = opt;
+                    if (show && opt.selected) currentVisible = true;
+                });
+
+                // Select first visible option if current selection is hidden.
+                if (!currentVisible && firstVisible) {
+                    firstVisible.selected = true;
+                }
+
+                // Show/hide thinking row.
+                if (thinkingRow) {
+                    thinkingRow.style.display = provider === 'anthropic' ? '' : 'none';
+                }
+            }
+
+            providerSelect.addEventListener('change', updateModels);
+            updateModels();
+        })();
+        </script>
         <?php
     }
 

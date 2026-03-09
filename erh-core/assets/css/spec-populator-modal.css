@@ -110,6 +110,37 @@
     color: #1d2327;
 }
 
+/* AI Config */
+.erh-spm-ai-config {
+    display: flex;
+    align-items: center;
+    gap: 10px;
+    flex-wrap: wrap;
+    margin-bottom: 12px;
+    padding: 8px 12px;
+    background: #f6f7f7;
+    border: 1px solid #c3c4c7;
+    border-radius: 4px;
+    font-size: 13px;
+}
+
+.erh-spm-ai-config label {
+    display: flex;
+    align-items: center;
+    gap: 4px;
+    font-weight: 500;
+    color: #1d2327;
+    white-space: nowrap;
+}
+
+.erh-spm-ai-config select {
+    min-width: 130px;
+}
+
+.erh-spm-thinking-label {
+    margin-left: 4px;
+}
+
 .erh-spm-options {
     margin-bottom: 15px;
 }

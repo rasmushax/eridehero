@@ -9,7 +9,9 @@ class ComposerStaticInitb5e889746c5280811e87a72c161db6db
     public static $classMap = array (
         'Composer\\InstalledVersions' => __DIR__ . '/..' . '/composer/InstalledVersions.php',
         'ERH\\API\\ContactHandler' => __DIR__ . '/../..' . '/includes/api/class-contact-handler.php',
+        'ERH\\Admin\\AiProviderConfig' => __DIR__ . '/../..' . '/includes/admin/class-ai-provider-config.php',
         'ERH\\Admin\\AmazonApiClient' => __DIR__ . '/../..' . '/includes/admin/class-amazon-api-client.php',
+        'ERH\\Admin\\AnthropicClient' => __DIR__ . '/../..' . '/includes/admin/class-anthropic-client.php',
         'ERH\\Admin\\ClickStatsPage' => __DIR__ . '/../..' . '/includes/admin/class-click-stats-page.php',
         'ERH\\Admin\\ComparisonDashboardWidget' => __DIR__ . '/../..' . '/includes/admin/class-comparison-dashboard-widget.php',
         'ERH\\Admin\\EmailTestPage' => __DIR__ . '/../..' . '/includes/admin/class-email-test-page.php',

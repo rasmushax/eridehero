@@ -10,7 +10,7 @@
     'use strict';
 
     const config = window.erhSpecPopulatorModal || {};
-    const { ajaxUrl, nonce, productId, productName, productType, isConfigured } = config;
+    const { ajaxUrl, nonce, productId, productName, productType, isConfigured, aiConfig } = config;
 
     // Don't initialize if not configured or no product type.
     if (!isConfigured || !productId || !productType) return;
@@ -54,6 +54,9 @@
         modalEl.addEventListener('click', function(e) {
             if (e.target === modalEl) closeModal();
         });
+
+        // Initialize AI config dropdowns.
+        initModalAiConfig();
     }
 
     /**
@@ -76,6 +79,13 @@
             + '</div>'
             + '<div class="erh-spm-body">'
             + '<p class="erh-spm-product-name">' + escHtml(productName) + '</p>'
+            + '<div class="erh-spm-ai-config">'
+            + '<label>Provider: <select class="erh-spm-provider"></select></label> '
+            + '<label>Model: <select class="erh-spm-model"></select></label> '
+            + '<label class="erh-spm-thinking-label" style="display:none;">'
+            + '<input type="checkbox" class="erh-spm-thinking"> Extended Thinking'
+            + '</label>'
+            + '</div>'
             + '<div class="erh-spm-options">'
             + '<label>'
             + '<input type="checkbox" class="erh-spm-overwrite">'
@@ -91,6 +101,71 @@
             + '<span class="erh-spm-save-status"></span>'
             + '</div>'
             + '</div>';
+    }
+
+    /**
+     * Initialize AI config dropdowns inside the modal.
+     */
+    function initModalAiConfig() {
+        if (!aiConfig || !modalEl) return;
+
+        var providerSel = modalEl.querySelector('.erh-spm-provider');
+        var modelSel = modalEl.querySelector('.erh-spm-model');
+        var thinkingCb = modalEl.querySelector('.erh-spm-thinking');
+        var thinkingLabel = modalEl.querySelector('.erh-spm-thinking-label');
+        var providers = aiConfig.providers || {};
+
+        // Populate providers.
+        Object.keys(providers).forEach(function(key) {
+            var p = providers[key];
+            if (!p.configured) return;
+            var opt = document.createElement('option');
+            opt.value = key;
+            opt.textContent = p.label;
+            if (key === aiConfig.provider) opt.selected = true;
+            providerSel.appendChild(opt);
+        });
+
+        function updateModels() {
+            var provider = providerSel.value;
+            var models = (providers[provider] || {}).models || {};
+            var supportsThinking = (providers[provider] || {}).supportsThinking || false;
+
+            modelSel.innerHTML = '';
+            Object.keys(models).forEach(function(key) {
+                var opt = document.createElement('option');
+                opt.value = key;
+                opt.textContent = models[key];
+                if (key === aiConfig.model) opt.selected = true;
+                modelSel.appendChild(opt);
+            });
+
+            if (thinkingLabel) {
+                thinkingLabel.style.display = supportsThinking ? '' : 'none';
+            }
+        }
+
+        providerSel.addEventListener('change', updateModels);
+        updateModels();
+
+        if (thinkingCb) {
+            thinkingCb.checked = aiConfig.extendedThinking || false;
+        }
+    }
+
+    /**
+     * Get current AI settings from the modal UI.
+     */
+    function getModalAiSettings() {
+        if (!modalEl) return {};
+        var providerSel = modalEl.querySelector('.erh-spm-provider');
+        var modelSel = modalEl.querySelector('.erh-spm-model');
+        var thinkingCb = modalEl.querySelector('.erh-spm-thinking');
+        return {
+            provider: providerSel ? providerSel.value : '',
+            model: modelSel ? modelSel.value : '',
+            thinking: thinkingCb ? thinkingCb.checked : false,
+        };
     }
 
     /**
@@ -114,6 +189,7 @@
         footerEl.style.display = 'none';
 
         try {
+            const ai = getModalAiSettings();
             const formData = new FormData();
             formData.append('action', 'erh_sp_fetch_specs');
             formData.append('nonce', nonce);
@@ -122,6 +198,9 @@
             if (overwrite) {
                 formData.append('overwrite_existing', '1');
             }
+            if (ai.provider) formData.append('ai_provider', ai.provider);
+            if (ai.model) formData.append('ai_model', ai.model);
+            formData.append('ai_thinking', ai.thinking ? '1' : '0');
 
             const response = await fetch(ajaxUrl, { method: 'POST', body: formData });
             const data = await response.json();

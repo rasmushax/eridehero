@@ -38,18 +38,10 @@ class SpecPopulator {
     private SpecPopulatorHandler $handler;
 
     /**
-     * Perplexity client for config checks.
-     *
-     * @var PerplexityClient
-     */
-    private PerplexityClient $perplexity;
-
-    /**
      * Constructor.
      */
     public function __construct() {
         $this->handler = new SpecPopulatorHandler();
-        $this->perplexity = new PerplexityClient();
     }
 
     /**
@@ -115,8 +107,9 @@ class SpecPopulator {
         wp_localize_script('erh-spec-populator', 'erhSpecPopulator', [
             'ajaxUrl'      => admin_url('admin-ajax.php'),
             'nonce'        => wp_create_nonce(self::NONCE_ACTION),
-            'isConfigured' => $this->perplexity->is_configured(),
+            'isConfigured' => AiProviderConfig::any_configured(),
             'productTypes' => $this->get_product_types_for_js(),
+            'aiConfig'     => AiProviderConfig::get_js_config(),
         ]);
     }
 
@@ -179,7 +172,8 @@ class SpecPopulator {
             'productName'  => $product_name,
             'brand'        => $brand,
             'productType'  => $product_type,
-            'isConfigured' => $this->perplexity->is_configured(),
+            'isConfigured' => AiProviderConfig::any_configured(),
+            'aiConfig'     => AiProviderConfig::get_js_config(),
         ]);
     }
 
@@ -193,14 +187,14 @@ class SpecPopulator {
             return;
         }
 
-        $is_configured = $this->perplexity->is_configured();
+        $is_configured = AiProviderConfig::any_configured();
         $product_types = $this->get_product_types_for_js();
 
         ?>
         <div class="wrap erh-spec-populator">
             <h1><?php esc_html_e('Spec Populator', 'erh-core'); ?></h1>
             <p class="description">
-                <?php esc_html_e('Use Perplexity AI to automatically populate product specification fields.', 'erh-core'); ?>
+                <?php esc_html_e('Use AI to automatically populate product specification fields.', 'erh-core'); ?>
             </p>
 
             <?php if (!$is_configured) : ?>
@@ -208,7 +202,7 @@ class SpecPopulator {
                     <p>
                         <?php
                         printf(
-                            esc_html__('Perplexity API key not configured. %s to set it up.', 'erh-core'),
+                            esc_html__('No AI provider configured. %s to set up Perplexity or Anthropic API keys.', 'erh-core'),
                             '<a href="' . esc_url(admin_url('options-general.php?page=erh-settings&tab=apis')) . '">' .
                             esc_html__('Go to API Settings', 'erh-core') . '</a>'
                         );
@@ -268,6 +262,20 @@ class SpecPopulator {
                 <!-- Step 3: Configure & Fetch -->
                 <div class="erh-sp-step" data-step="3" style="display: none;">
                     <h2><?php esc_html_e('Step 3: Fetch Specs', 'erh-core'); ?></h2>
+                    <div class="erh-sp-ai-config" id="erh-sp-ai-config">
+                        <div class="erh-sp-ai-row">
+                            <label for="erh-sp-provider"><?php esc_html_e('Provider:', 'erh-core'); ?></label>
+                            <select id="erh-sp-provider"></select>
+
+                            <label for="erh-sp-model"><?php esc_html_e('Model:', 'erh-core'); ?></label>
+                            <select id="erh-sp-model"></select>
+
+                            <label class="erh-sp-thinking-label" id="erh-sp-thinking-wrap" style="display: none;">
+                                <input type="checkbox" id="erh-sp-thinking">
+                                <?php esc_html_e('Extended Thinking', 'erh-core'); ?>
+                            </label>
+                        </div>
+                    </div>
                     <div class="erh-sp-options">
                         <label class="erh-sp-toggle">
                             <input type="checkbox" id="erh-sp-overwrite">
@@ -392,6 +400,19 @@ class SpecPopulator {
         if (!$product_id || empty($product_type)) {
             wp_send_json_error(['message' => __('Missing required parameters.', 'erh-core')]);
         }
+
+        // Apply per-request AI provider overrides if sent from the UI.
+        $ai_overrides = [];
+        if (!empty($_POST['ai_provider'])) {
+            $ai_overrides['provider'] = sanitize_text_field($_POST['ai_provider']);
+        }
+        if (!empty($_POST['ai_model'])) {
+            $ai_overrides['model'] = sanitize_text_field($_POST['ai_model']);
+        }
+        if (isset($_POST['ai_thinking'])) {
+            $ai_overrides['extended_thinking'] = (bool) $_POST['ai_thinking'];
+        }
+        $this->handler->set_ai_overrides($ai_overrides);
 
         $result = $this->handler->fetch_specs($product_id, $product_type, $overwrite);
 

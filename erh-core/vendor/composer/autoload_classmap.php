@@ -8,7 +8,9 @@ $baseDir = dirname($vendorDir);
 return array(
     'Composer\\InstalledVersions' => $vendorDir . '/composer/InstalledVersions.php',
     'ERH\\API\\ContactHandler' => $baseDir . '/includes/api/class-contact-handler.php',
+    'ERH\\Admin\\AiProviderConfig' => $baseDir . '/includes/admin/class-ai-provider-config.php',
     'ERH\\Admin\\AmazonApiClient' => $baseDir . '/includes/admin/class-amazon-api-client.php',
+    'ERH\\Admin\\AnthropicClient' => $baseDir . '/includes/admin/class-anthropic-client.php',
     'ERH\\Admin\\ClickStatsPage' => $baseDir . '/includes/admin/class-click-stats-page.php',
     'ERH\\Admin\\ComparisonDashboardWidget' => $baseDir . '/includes/admin/class-comparison-dashboard-widget.php',
     'ERH\\Admin\\EmailTestPage' => $baseDir . '/includes/admin/class-email-test-page.php',

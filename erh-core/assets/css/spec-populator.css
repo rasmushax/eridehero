@@ -170,6 +170,39 @@
     color: #00a32a;
 }
 
+/* AI Config Row */
+.erh-sp-ai-config {
+    margin-bottom: 15px;
+    padding: 10px 14px;
+    background: #f6f7f7;
+    border: 1px solid #c3c4c7;
+    border-radius: 4px;
+}
+
+.erh-sp-ai-row {
+    display: flex;
+    align-items: center;
+    gap: 12px;
+    flex-wrap: wrap;
+}
+
+.erh-sp-ai-row label {
+    font-weight: 500;
+    color: #1d2327;
+    white-space: nowrap;
+}
+
+.erh-sp-ai-row select {
+    min-width: 150px;
+}
+
+.erh-sp-thinking-label {
+    display: flex;
+    align-items: center;
+    gap: 4px;
+    margin-left: 8px;
+}
+
 /* Options */
 .erh-sp-options {
     margin-bottom: 15px;
