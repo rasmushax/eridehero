@@ -226,8 +226,31 @@ class NotificationJob implements CronJobInterface {
                 continue;
             }
 
-            // Determine comparison price.
+            // Price must be below start_price to qualify as a drop.
+            // The start_price is the price when the user began tracking, so any
+            // notification where current >= start isn't a real drop for them.
+            if ($start_price !== null && $start_price > 0 && $current_price >= $start_price) {
+                continue;
+            }
+
+            // Determine comparison price for threshold logic.
             $compare_price = $last_notified_price !== null ? $last_notified_price : $start_price;
+
+            // Display "was" price: the most recent higher price from history.
+            // This shows what the price dropped FROM, not the start price
+            // (which could be months old) or last_notified_price (which
+            // on rebound notifications can be lower than current).
+            $display_was_price = $this->price_history->get_previous_price(
+                $product_id,
+                $current_price,
+                $tracker_geo,
+                $price_currency
+            );
+
+            // Fall back to start_price if no history available.
+            if ($display_was_price === null || $display_was_price <= $current_price) {
+                $display_was_price = $start_price;
+            }
 
             // Skip if no valid comparison price.
             if (empty($compare_price) || $compare_price <= 0) {
@@ -286,9 +309,9 @@ class NotificationJob implements CronJobInterface {
 
                 $image_url = $thumbnail_id ? wp_get_attachment_image_url((int) $thumbnail_id, 'thumbnail') : '';
 
-                // Calculate savings vs previous price.
-                $savings = $compare_price - $current_price;
-                $savings_percent = round(($savings / $compare_price) * 100);
+                // Calculate savings vs start price (user's anchor).
+                $savings = $display_was_price - $current_price;
+                $savings_percent = $display_was_price > 0 ? round(($savings / $display_was_price) * 100) : 0;
 
                 // Get 6-month average price for "below avg" display.
                 $stats = $this->price_history->get_statistics($product_id, 180, $tracker_geo, $price_currency);
@@ -306,7 +329,7 @@ class NotificationJob implements CronJobInterface {
                     'product_id'        => $product_id,
                     'product_name'      => $product->post_title,
                     'current_price'     => $current_price,
-                    'compare_price'     => $compare_price,
+                    'compare_price'     => $display_was_price,
                     'savings'           => $savings,
                     'savings_percent'   => $savings_percent,
                     'average_price'     => $average_price,
