@@ -257,23 +257,21 @@ class AnthropicClient {
             return null;
         }
 
-        $text_parts = [];
+        $last_text = null;
 
         foreach ($content_blocks as $block) {
             if (!is_array($block)) {
                 continue;
             }
 
-            // Only extract text blocks (skip thinking, tool_use, web_search_tool_result, etc.).
+            // Track the last text block — this is the final answer.
+            // Earlier text blocks are often conversational ("I'll search for...")
+            // before web search tool use, and would break JSON extraction.
             if (($block['type'] ?? '') === 'text' && isset($block['text'])) {
-                $text_parts[] = $block['text'];
+                $last_text = $block['text'];
             }
         }
 
-        if (empty($text_parts)) {
-            return null;
-        }
-
-        return implode("\n", $text_parts);
+        return $last_text;
     }
 }
