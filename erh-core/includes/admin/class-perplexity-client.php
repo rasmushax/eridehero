@@ -279,6 +279,7 @@ class PerplexityClient {
         $content_parts = [];
         $http_code = 0;
         $error_body = '';
+        $line_buffer = '';
 
         curl_setopt_array($ch, [
             CURLOPT_POST           => true,
@@ -291,7 +292,7 @@ class PerplexityClient {
             CURLOPT_TIMEOUT        => $timeout,
             CURLOPT_RETURNTRANSFER => false,
             CURLOPT_HEADER         => false,
-            CURLOPT_WRITEFUNCTION  => function ($ch, $data) use (&$content_parts, &$http_code, &$error_body) {
+            CURLOPT_WRITEFUNCTION  => function ($ch, $data) use (&$content_parts, &$http_code, &$error_body, &$line_buffer) {
                 // Capture HTTP code on first callback.
                 if ($http_code === 0) {
                     $http_code = (int) curl_getinfo($ch, CURLINFO_HTTP_CODE);
@@ -303,10 +304,13 @@ class PerplexityClient {
                     return strlen($data);
                 }
 
-                // Parse SSE lines.
-                $lines = explode("\n", $data);
-                foreach ($lines as $line) {
-                    $line = trim($line);
+                // Buffer data — SSE lines can be split across TCP chunks.
+                $line_buffer .= $data;
+
+                // Process only complete lines (ending with \n).
+                while (($newline_pos = strpos($line_buffer, "\n")) !== false) {
+                    $line = trim(substr($line_buffer, 0, $newline_pos));
+                    $line_buffer = substr($line_buffer, $newline_pos + 1);
 
                     if ($line === '' || $line === 'data: [DONE]') {
                         continue;
