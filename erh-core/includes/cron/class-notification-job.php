@@ -286,9 +286,30 @@ class NotificationJob implements CronJobInterface {
 
                 $image_url = $thumbnail_id ? wp_get_attachment_image_url((int) $thumbnail_id, 'thumbnail') : '';
 
-                // Calculate savings vs previous price.
-                $savings = $compare_price - $current_price;
-                $savings_percent = round(($savings / $compare_price) * 100);
+                // Get the recent previous price from history for the "was" display.
+                // The compare_price (start_price/last_notified) is used for threshold logic,
+                // but for display we want the price the user would have recently seen.
+                $display_was_price = $this->get_recent_previous_price(
+                    $product_id,
+                    $current_price,
+                    $tracker_geo,
+                    $price_currency
+                );
+
+                // Fall back to compare_price if no history, but only if it's higher than current.
+                if ($display_was_price === null && $compare_price > $current_price) {
+                    $display_was_price = $compare_price;
+                }
+
+                // Skip sending if we can't show a meaningful "was" price
+                // (i.e., current price isn't actually lower than what the user recently saw).
+                if ($display_was_price === null || $display_was_price <= $current_price) {
+                    continue;
+                }
+
+                // Calculate savings vs the displayed previous price.
+                $savings = $display_was_price - $current_price;
+                $savings_percent = round(($savings / $display_was_price) * 100);
 
                 // Get 6-month average price for "below avg" display.
                 $stats = $this->price_history->get_statistics($product_id, 180, $tracker_geo, $price_currency);
@@ -306,7 +327,7 @@ class NotificationJob implements CronJobInterface {
                     'product_id'        => $product_id,
                     'product_name'      => $product->post_title,
                     'current_price'     => $current_price,
-                    'compare_price'     => $compare_price,
+                    'compare_price'     => $display_was_price,
                     'savings'           => $savings,
                     'savings_percent'   => $savings_percent,
                     'average_price'     => $average_price,
@@ -384,6 +405,41 @@ class NotificationJob implements CronJobInterface {
         }
 
         return (bool) $queued_id;
+    }
+
+    /**
+     * Get the recent previous price before the current drop.
+     *
+     * Looks at the last 14 days of price history and finds the most recent price
+     * that was different from (and higher than) the current price. This gives us
+     * the "was" price to display in the email.
+     *
+     * @param int    $product_id    The product ID.
+     * @param float  $current_price The current price.
+     * @param string $geo           The geo region.
+     * @param string $currency      The currency code.
+     * @return float|null The recent previous price, or null if unavailable.
+     */
+    private function get_recent_previous_price(
+        int $product_id,
+        float $current_price,
+        string $geo,
+        string $currency
+    ): ?float {
+        $history = $this->price_history->get_history($product_id, 14, $geo, $currency, 'DESC');
+
+        if (empty($history)) {
+            return null;
+        }
+
+        // Find the most recent price that was higher than the current price.
+        foreach ($history as $record) {
+            if ($record['price'] > $current_price) {
+                return $record['price'];
+            }
+        }
+
+        return null;
     }
 
     /**
