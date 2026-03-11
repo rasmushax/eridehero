@@ -220,13 +220,16 @@ export async function init() {
  * @param {Object} config - Compare page config from PHP
  */
 async function initHydrationMode(config) {
-    // Parse products from embedded JSON (already has geo pricing from PHP)
+    // Parse products from embedded JSON.
+    // LSCache serves the same HTML to all users, so the PHP-resolved prices may be
+    // for a different geo. Re-enrich with the actual user's geo (from getUserGeo()).
     const productsJson = document.querySelector('[data-products-json]');
     if (productsJson) {
         try {
             const rawProducts = JSON.parse(productsJson.textContent || '[]');
-            // Normalize snake_case keys from PHP to camelCase for consistency
-            products = rawProducts.map(normalizeProduct);
+            // Enrich with user's actual geo pricing (same as client-side path).
+            // enrichProduct() uses product.pricing (multi-geo) + userGeo to resolve.
+            products = rawProducts.map(enrichProduct);
         } catch (e) {
             console.error('Failed to parse products JSON:', e);
             products = [];

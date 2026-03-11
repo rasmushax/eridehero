@@ -101,6 +101,9 @@ function erh_get_compare_products( array $product_ids, string $geo = 'US' ): arr
             'in_stock'      => $region_pricing['instock'] ?? false,
             'avg_3m'        => $region_pricing['avg_3m'] ?? null,
             'avg_6m'        => $region_pricing['avg_6m'] ?? null,
+            // Full multi-geo pricing for JS enrichment (LSCache serves same HTML to all users,
+            // so JS must re-resolve pricing for the actual user's geo).
+            'pricing'       => is_array( $price_history ) ? $price_history : new \stdClass(),
         );
     }
 
