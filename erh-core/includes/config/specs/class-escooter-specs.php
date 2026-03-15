@@ -39,7 +39,7 @@ class EscooterSpecs {
                     [ 'key' => 'motor.power_peak', 'label' => 'Peak Power', 'unit' => 'W', 'higherBetter' => true ],
                     [ 'key' => 'motor.voltage', 'label' => 'Voltage', 'unit' => 'V', 'higherBetter' => true ],
                     [ 'key' => 'motor.motor_position', 'label' => 'Motor Config' ],
-                    [ 'key' => 'hill_climbing', 'label' => 'Hill Climb', 'unit' => 's', 'higherBetter' => false ],
+                    [ 'key' => 'hill_climb_speed', 'label' => 'Hill Climb Speed', 'unit' => 'mph', 'higherBetter' => true ],
                     [ 'key' => 'max_incline', 'label' => 'Hill Grade', 'unit' => '°', 'higherBetter' => true ],
                     [ 'key' => 'acceleration_0_15_mph', 'label' => '0-15 mph', 'unit' => 's', 'higherBetter' => false ],
                     [ 'key' => 'acceleration_0_20_mph', 'label' => '0-20 mph', 'unit' => 's', 'higherBetter' => false ],

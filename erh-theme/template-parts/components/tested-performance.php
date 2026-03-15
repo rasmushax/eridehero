@@ -177,7 +177,11 @@ $tooltips = array(
             <?php endif; ?>
         <?php endif; ?>
 
-        <?php if ( $hill_climbing ) : ?>
+        <?php if ( $hill_climbing ) :
+            // ACF stores hill climb as time in seconds to climb 250ft hill.
+            // Convert to average speed in MPH: (250ft / seconds) * (3600/5280).
+            $hill_speed_mph = round( ( 250 / (float) $hill_climbing ) * ( 3600 / 5280 ), 1 );
+        ?>
             <div class="perf-list-item">
                 <dt>
                     Hill climb
@@ -186,7 +190,7 @@ $tooltips = array(
                     </span>
                     <span class="perf-meta">8% grade</span>
                 </dt>
-                <dd><?php echo esc_html( $hill_climbing ); ?> mph avg</dd>
+                <dd><?php echo esc_html( $hill_speed_mph ); ?> mph avg</dd>
             </div>
         <?php endif; ?>
 

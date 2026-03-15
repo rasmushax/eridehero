@@ -157,6 +157,10 @@ class SpecConfig {
             'methodology' => 'Average speed climbing 250 ft at 8% grade from kick-off start. Average of 5+ runs. 175-lb rider, 80%+ battery.',
             'comparison'  => 'Higher hill climb speed means better real-world climbing performance.',
         ],
+        'hill_climb_speed' => [
+            'methodology' => 'Average speed climbing 250 ft at 8% grade from kick-off start. Average of 5+ runs. 175-lb rider, 80%+ battery.',
+            'comparison'  => 'Higher hill climb speed means better real-world climbing performance.',
+        ],
         'max_incline' => [
             'methodology' => 'Maximum incline angle the manufacturer claims the product can climb. Actual results depend on rider weight and battery level.',
         ],

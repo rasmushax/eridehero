@@ -118,7 +118,7 @@ function erh_get_product_spec_groups_config( string $category ): array {
                     array( 'key' => 'acceleration_0_20_mph', 'label' => '0–20 mph', 'unit' => 's' ),
                     array( 'key' => 'acceleration_0_25_mph', 'label' => '0–25 mph', 'unit' => 's' ),
                     array( 'key' => 'acceleration_0_30_mph', 'label' => '0–30 mph', 'unit' => 's' ),
-                    array( 'key' => 'hill_climbing', 'label' => 'Hill Climb Speed', 'unit' => 'mph', 'tooltip' => $get_tooltip( 'hill_climbing' ) ),
+                    array( 'key' => 'hill_climb_speed', 'label' => 'Hill Climb Speed', 'unit' => 'mph', 'tooltip' => $get_tooltip( 'hill_climb_speed' ) ),
                     array( 'key' => 'brake_distance', 'label' => 'Braking Distance', 'unit' => 'ft', 'tooltip' => $get_tooltip( 'brake_distance' ) ),
                 ),
             ),
