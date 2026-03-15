@@ -147,10 +147,18 @@ function erh_get_spec_registry(): array {
 		],
 		'hill_climb'       => [
 			'label'  => 'Hill Climb',
+			'suffix' => ' mph',
+			'icon'   => 'mountain',
+			'paths'  => [
+				'default' => [ 'hill_climb_speed' ],
+			],
+		],
+		'hill_climb_angle' => [
+			'label'  => 'Hill Grade',
 			'suffix' => "\u{00B0}",
 			'icon'   => 'mountain',
 			'paths'  => [
-				'default'     => [ 'hill_climbing' ],
+				'default'     => [ 'max_incline' ],
 				'eskateboard' => [ 'hill_climb_angle' ],
 			],
 		],

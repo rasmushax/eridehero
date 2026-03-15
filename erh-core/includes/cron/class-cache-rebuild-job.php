@@ -467,6 +467,12 @@ class CacheRebuildJob implements CronJobInterface {
             }
         }
 
+        // Convert hill climbing time (seconds) to average speed (MPH).
+        // Formula: (250ft / seconds) * (3600/5280) = MPH on 250ft test hill.
+        if (!empty($specs['hill_climbing']) && is_numeric($specs['hill_climbing']) && (float) $specs['hill_climbing'] > 0) {
+            $specs['hill_climb_speed'] = round((250 / (float) $specs['hill_climbing']) * (3600 / 5280), 1);
+        }
+
         // Consolidate tire type for product types with wheels data.
         $specs = $this->consolidate_tire_type($specs, $product_type);
 

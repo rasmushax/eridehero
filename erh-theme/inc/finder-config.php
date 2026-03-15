@@ -464,12 +464,12 @@ function erh_get_range_filter_config( string $product_type = 'escooter' ): array
             'use_data_min' => true,
         ],
         'hill_climb' => [
-            'label'        => 'Hill Climbing',
+            'label'        => 'Hill Climb Speed',
             'field'        => 'hill_climb',
-            'spec_paths'   => [ 'hill_climbing' ],
-            'unit'         => '°',
+            'spec_paths'   => [ 'hill_climb_speed' ],
+            'unit'         => 'mph',
             'prefix'       => '',
-            'suffix'       => '°',
+            'suffix'       => 'mph',
             'default_max'  => 30,
             'round_factor' => 5,
             'use_data_min' => true,
@@ -1830,7 +1830,7 @@ function erh_get_js_filter_config( string $product_type = 'escooter' ): array {
         'accel_0_15'      => [ 'key' => 'accel_0_15',      'priority' => 5,  'round' => 2, 'suffix' => 's 0-15 mph' ],
         'accel_0_20'      => [ 'key' => 'accel_0_20',      'priority' => 6,  'round' => 2, 'suffix' => 's 0-20 mph' ],
         'brake_distance'  => [ 'key' => 'brake_distance',  'priority' => 7,  'round' => 1, 'suffix' => ' ft braking' ],
-        'hill_climb'      => [ 'key' => 'hill_climb',      'priority' => 8,  'round' => 1, 'suffix' => '° hill climb' ],
+        'hill_climb'      => [ 'key' => 'hill_climb',      'priority' => 8,  'round' => 1, 'suffix' => ' mph hill climb' ],
 
         // Battery.
         'battery'         => [ 'key' => 'battery',         'priority' => 3,  'round' => 0, 'suffix' => ' Wh battery' ],
@@ -2046,7 +2046,7 @@ function erh_get_js_filter_config( string $product_type = 'escooter' ): array {
         'accel_0_15'      => [ 'label' => '0-15 mph',      'suffix' => 's',      'sortable' => true, 'key' => 'accel_0_15',     'filterKey' => 'accel_0_15',     'filterType' => 'range', 'round' => 2, 'sort_dir' => 'asc' ],
         'accel_0_20'      => [ 'label' => '0-20 mph',      'suffix' => 's',      'sortable' => true, 'key' => 'accel_0_20',     'filterKey' => 'accel_0_20',     'filterType' => 'range', 'round' => 2, 'sort_dir' => 'asc' ],
         'brake_distance'  => [ 'label' => 'Braking',       'suffix' => 'ft',     'sortable' => true, 'key' => 'brake_distance', 'filterKey' => 'brake_distance', 'filterType' => 'range', 'round' => 1, 'sort_dir' => 'asc' ],
-        'hill_climb'      => [ 'label' => 'Hill Climb',    'suffix' => '°',      'sortable' => true, 'key' => 'hill_climb',     'filterKey' => 'hill_climb',     'filterType' => 'range', 'round' => 1 ],
+        'hill_climb'      => [ 'label' => 'Hill Climb',    'suffix' => 'mph',    'sortable' => true, 'key' => 'hill_climb',     'filterKey' => 'hill_climb',     'filterType' => 'range', 'round' => 1 ],
 
         // Motor.
         'motor_power'     => [ 'label' => 'Motor',         'suffix' => 'W',      'sortable' => true, 'key' => 'motor_power',    'filterKey' => 'motor_power',    'filterType' => 'range' ],
