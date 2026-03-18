@@ -151,7 +151,6 @@ class ListicleItemComponent {
                 method: 'POST',
                 headers: {
                     'Content-Type': 'application/json',
-                    'X-WP-Nonce': window.erhData.nonce
                 },
                 body: JSON.stringify({
                     product_id: this.productId,
