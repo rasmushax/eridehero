@@ -55,6 +55,7 @@ use ERH\Admin\SpecPopulator;
 use ERH\Admin\ImagePopulator;
 use ERH\Admin\PriceHistoryEditor;
 use ERH\Admin\EmailTestPage;
+use ERH\Admin\EmailQueuePage;
 use ERH\Admin\NewsletterAdmin;
 use ERH\Migration\MigrationAdmin;
 use ERH\Migration\MigrationCli;
@@ -684,6 +685,10 @@ class Core {
         // Initialize email test page.
         $this->email_test_page = new EmailTestPage();
         $this->email_test_page->register();
+
+        // Initialize email queue page.
+        $email_queue_page = new EmailQueuePage(new EmailQueueRepository());
+        $email_queue_page->register();
 
         // Initialize newsletter admin.
         $this->newsletter_admin = new NewsletterAdmin();

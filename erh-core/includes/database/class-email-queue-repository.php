@@ -485,6 +485,45 @@ class EmailQueueRepository {
     }
 
     /**
+     * Get recent emails with optional type and status filters.
+     *
+     * @param string $type   Optional email type filter.
+     * @param string $status Optional status filter.
+     * @param int    $limit  Maximum records to return.
+     * @return array
+     */
+    public function get_recent(string $type = '', string $status = '', int $limit = 50): array {
+        global $wpdb;
+        $table = EmailQueue::get_table_name();
+
+        $where = '1=1';
+        $params = [];
+
+        if ($type) {
+            $where .= ' AND email_type = %s';
+            $params[] = $type;
+        }
+
+        if ($status) {
+            $where .= ' AND status = %s';
+            $params[] = $status;
+        }
+
+        $params[] = $limit;
+
+        // phpcs:ignore WordPress.DB.PreparedSQL.InterpolatedNotPrepared
+        return $wpdb->get_results($wpdb->prepare(
+            "SELECT id, email_type, recipient_email, subject, status, priority,
+                    retry_count, error_message, created_at, processed_at
+             FROM {$table}
+             WHERE {$where}
+             ORDER BY created_at DESC
+             LIMIT %d",
+            ...$params
+        ), ARRAY_A) ?: [];
+    }
+
+    /**
      * Get emails for a specific user.
      *
      * @param int    $user_id User ID.
