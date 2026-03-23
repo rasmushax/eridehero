@@ -39,6 +39,7 @@ use ERH\Cron\NotificationJob;
 use ERH\Cron\YouTubeSyncJob;
 use ERH\Cron\EmailQueueJob;
 use ERH\Cron\NewsletterJob;
+use ERH\Cron\DealsDigestJob;
 use ERH\Database\EmailQueue;
 use ERH\Database\EmailQueueRepository;
 use ERH\Scoring\ProductScorer;
@@ -857,6 +858,15 @@ class Core {
         $this->cron_manager->add_job(
             'newsletter',
             new NewsletterJob($this->cron_manager)
+        );
+
+        $this->cron_manager->add_job(
+            'deals-digest',
+            new DealsDigestJob(
+                new \ERH\Pricing\DealsFinder($product_cache),
+                $this->user_repo,
+                $this->cron_manager
+            )
         );
 
         // Register the cron manager.
