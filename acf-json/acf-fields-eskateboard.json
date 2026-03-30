@@ -126,7 +126,7 @@
                 },
                 "min": "",
                 "max": "",
-                "step": ""
+                "step": "any"
               },
               {
                 "key": "field_erh_eskateboard_power_peak",
@@ -142,7 +142,7 @@
                 },
                 "min": "",
                 "max": "",
-                "step": ""
+                "step": "any"
               }
             ]
           },
@@ -174,7 +174,7 @@
                 },
                 "min": "",
                 "max": "",
-                "step": ""
+                "step": "any"
               },
               {
                 "key": "field_erh_eskateboard_voltage",
@@ -190,7 +190,7 @@
                 },
                 "min": "",
                 "max": "",
-                "step": ""
+                "step": "any"
               },
               {
                 "key": "field_erh_eskateboard_amphours",
@@ -206,7 +206,7 @@
                 },
                 "min": "",
                 "max": "",
-                "step": ""
+                "step": "any"
               },
               {
                 "key": "field_erh_eskateboard_battery_type",
@@ -275,7 +275,7 @@
                 },
                 "min": "",
                 "max": "",
-                "step": ""
+                "step": "any"
               }
             ]
           },
@@ -307,7 +307,7 @@
                 },
                 "min": "",
                 "max": "",
-                "step": ""
+                "step": "any"
               },
               {
                 "key": "field_erh_eskateboard_deck_width",
@@ -323,7 +323,7 @@
                 },
                 "min": "",
                 "max": "",
-                "step": ""
+                "step": "any"
               },
               {
                 "key": "field_erh_eskateboard_deck_material",
@@ -442,7 +442,7 @@
                 },
                 "min": "",
                 "max": "",
-                "step": ""
+                "step": "any"
               },
               {
                 "key": "field_erh_eskateboard_wheel_width",
@@ -458,7 +458,7 @@
                 },
                 "min": "",
                 "max": "",
-                "step": ""
+                "step": "any"
               },
               {
                 "key": "field_erh_eskateboard_durometer",
@@ -474,7 +474,7 @@
                 },
                 "min": "",
                 "max": "",
-                "step": ""
+                "step": "any"
               },
               {
                 "key": "field_erh_eskateboard_wheel_type",
@@ -633,7 +633,7 @@
                 },
                 "min": "",
                 "max": "",
-                "step": ""
+                "step": "any"
               },
               {
                 "key": "field_erh_eskateboard_ground_clearance",
@@ -649,7 +649,7 @@
                 },
                 "min": "",
                 "max": "",
-                "step": ""
+                "step": "any"
               },
               {
                 "key": "field_erh_eskateboard_weight",
@@ -665,7 +665,7 @@
                 },
                 "min": "",
                 "max": "",
-                "step": ""
+                "step": "any"
               },
               {
                 "key": "field_erh_eskateboard_max_load",
@@ -681,7 +681,7 @@
                 },
                 "min": "",
                 "max": "",
-                "step": ""
+                "step": "any"
               },
               {
                 "key": "field_erh_eskateboard_unfolded_length",
@@ -697,7 +697,7 @@
                 },
                 "min": "",
                 "max": "",
-                "step": ""
+                "step": "any"
               },
               {
                 "key": "field_erh_eskateboard_unfolded_width",
@@ -713,7 +713,7 @@
                 },
                 "min": "",
                 "max": "",
-                "step": ""
+                "step": "any"
               },
               {
                 "key": "field_erh_eskateboard_unfolded_height",
@@ -729,7 +729,7 @@
                 },
                 "min": "",
                 "max": "",
-                "step": ""
+                "step": "any"
               }
             ]
           },
