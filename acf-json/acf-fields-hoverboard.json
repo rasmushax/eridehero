@@ -45,7 +45,7 @@
                 },
                 "min": "",
                 "max": "",
-                "step": ""
+                "step": "any"
               },
               {
                 "key": "field_erh_hoverboard_power_peak",
@@ -61,7 +61,7 @@
                 },
                 "min": "",
                 "max": "",
-                "step": ""
+                "step": "any"
               }
             ]
           },
@@ -93,7 +93,7 @@
                 },
                 "min": "",
                 "max": "",
-                "step": ""
+                "step": "any"
               },
               {
                 "key": "field_erh_hoverboard_voltage",
@@ -109,7 +109,7 @@
                 },
                 "min": "",
                 "max": "",
-                "step": ""
+                "step": "any"
               },
               {
                 "key": "field_erh_hoverboard_amphours",
@@ -125,7 +125,7 @@
                 },
                 "min": "",
                 "max": "",
-                "step": ""
+                "step": "any"
               },
               {
                 "key": "field_erh_hoverboard_battery_type",
@@ -164,7 +164,7 @@
                 },
                 "min": "",
                 "max": "",
-                "step": ""
+                "step": "any"
               }
             ]
           },
@@ -196,7 +196,7 @@
                 },
                 "min": "",
                 "max": "",
-                "step": ""
+                "step": "any"
               },
               {
                 "key": "field_erh_hoverboard_wheel_width",
@@ -212,7 +212,7 @@
                 },
                 "min": "",
                 "max": "",
-                "step": ""
+                "step": "any"
               },
               {
                 "key": "field_erh_hoverboard_wheel_type",
@@ -299,7 +299,7 @@
                 },
                 "min": "",
                 "max": "",
-                "step": ""
+                "step": "any"
               },
               {
                 "key": "field_erh_hoverboard_max_load",
@@ -315,7 +315,7 @@
                 },
                 "min": "",
                 "max": "",
-                "step": ""
+                "step": "any"
               },
               {
                 "key": "field_erh_hoverboard_length",
@@ -331,7 +331,7 @@
                 },
                 "min": "",
                 "max": "",
-                "step": ""
+                "step": "any"
               },
               {
                 "key": "field_erh_hoverboard_width",
@@ -347,7 +347,7 @@
                 },
                 "min": "",
                 "max": "",
-                "step": ""
+                "step": "any"
               },
               {
                 "key": "field_erh_hoverboard_height",
@@ -363,7 +363,7 @@
                 },
                 "min": "",
                 "max": "",
-                "step": ""
+                "step": "any"
               }
             ]
           },
@@ -586,7 +586,7 @@
                 },
                 "min": "",
                 "max": "",
-                "step": ""
+                "step": "1"
               }
             ]
           },
