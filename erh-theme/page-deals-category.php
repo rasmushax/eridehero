@@ -87,10 +87,10 @@ $retailer_count = erh_get_retailer_count();
 
 if ( $ssr_deal_count > 0 && $product_count > 0 && $retailer_count > 0 ) {
     $intro_text = sprintf(
-        'We track prices on %d+ %s across %d+ retailers every day. When a product drops below its real average selling price, not inflated list prices, it shows up here. Currently showing %d deals.',
-        $product_count,
+        'We track prices on %s %s across %s retailers every day. When a product drops below its real average selling price, not inflated list prices, it shows up here. Currently showing %d deals.',
+        erh_round_count( $product_count ),
         $type_plural,
-        $retailer_count,
+        erh_round_count( $retailer_count ),
         $ssr_deal_count
     );
 } else {

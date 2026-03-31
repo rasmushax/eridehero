@@ -169,6 +169,28 @@ function erh_get_retailer_count(): int {
 	return $count;
 }
 
+/**
+ * Round a count down to a clean number for display.
+ *
+ * 23 → 20, 69 → 65, 127 → 120, 344 → 340, 1247 → 1,200
+ *
+ * @param int $n Raw count.
+ * @return string Formatted rounded number (e.g., "340").
+ */
+function erh_round_count( int $n ): string {
+	if ( $n < 20 ) {
+		return (string) $n;
+	}
+	if ( $n < 100 ) {
+		$rounded = (int) floor( $n / 5 ) * 5;
+	} elseif ( $n < 1000 ) {
+		$rounded = (int) floor( $n / 10 ) * 10;
+	} else {
+		$rounded = (int) floor( $n / 100 ) * 100;
+	}
+	return number_format( $rounded );
+}
+
 // =============================================================================
 // RANKMATH TITLE FILTER
 // =============================================================================
@@ -232,10 +254,10 @@ add_filter( 'rank_math/frontend/description', function( string $description ): s
 
 		if ( $total > 0 && $products > 0 && $retailers > 0 ) {
 			return sprintf(
-				'Browse %d deals on electric scooters, e-bikes, skateboards and more, all priced below their average selling price. We track prices on %d+ models across %d+ retailers daily.',
+				'Browse %d deals on electric scooters, e-bikes, skateboards and more, all priced below their average selling price. We track prices on %s models across %s retailers daily.',
 				$total,
-				$products,
-				$retailers
+				erh_round_count( $products ),
+				erh_round_count( $retailers )
 			);
 		}
 		return 'Find deals on electric scooters, e-bikes, skateboards and more, all priced below their average selling price. Click any product to view in-depth price history.';
@@ -253,11 +275,11 @@ add_filter( 'rank_math/frontend/description', function( string $description ): s
 
 	if ( $count > 0 && $products > 0 && $retailers > 0 ) {
 		return sprintf(
-			'Browse %d %s priced below their 6-month average. We track prices on %d+ models across %d+ retailers daily. Click any product to view in-depth price history.',
+			'Browse %d %s priced below their 6-month average. We track prices on %s models across %s retailers daily. Click any product to view in-depth price history.',
 			$count,
 			$name_plural . ' deals',
-			$products,
-			$retailers
+			erh_round_count( $products ),
+			erh_round_count( $retailers )
 		);
 	}
 	return sprintf(

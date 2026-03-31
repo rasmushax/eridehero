@@ -149,9 +149,9 @@ $total_deals = array_sum( $ssr_counts );
                         $hub_retailer_count = erh_get_retailer_count();
                         if ( $hub_product_count > 0 && $hub_retailer_count > 0 ) {
                             printf(
-                                esc_html__( 'Unlike retailer "sales" based on inflated list prices, we compare current prices against what products actually sell for. Our system tracks %d+ models daily across %d+ retailers in the US, UK, EU, Canada, and Australia. When a product drops below its 6-month average, it shows up here.', 'erh' ),
-                                $hub_product_count,
-                                $hub_retailer_count
+                                esc_html__( 'Unlike retailer "sales" based on inflated list prices, we compare current prices against what products actually sell for. Our system tracks %s models daily across %s retailers in the US, UK, EU, Canada, and Australia. When a product drops below its 6-month average, it shows up here.', 'erh' ),
+                                erh_round_count( $hub_product_count ),
+                                erh_round_count( $hub_retailer_count )
                             );
                         } else {
                             esc_html_e( 'Unlike retailer "sales" based on inflated list prices, we compare current prices against what products actually sell for. When a product drops below its 6-month average, it shows up here.', 'erh' );
