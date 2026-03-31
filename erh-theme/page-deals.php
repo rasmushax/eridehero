@@ -144,7 +144,19 @@ $total_deals = array_sum( $ssr_counts );
                         <?php erh_the_icon( 'globe-search' ); ?>
                         <?php esc_html_e( 'How we find deals', 'erh' ); ?>
                     </h2>
-                    <p class="deals-info-card-text"><?php esc_html_e( 'Unlike retailer "sales" based on inflated list prices, we compare current prices against what products actually sell for. Our system tracks 1,000+ products daily across dozens of retailers in the US, UK, EU, Canada, and Australia. When a product drops below its 6-month average, it shows up here.', 'erh' ); ?></p>
+                    <p class="deals-info-card-text"><?php
+                        $hub_product_count  = erh_get_tracked_product_count();
+                        $hub_retailer_count = erh_get_retailer_count();
+                        if ( $hub_product_count > 0 && $hub_retailer_count > 0 ) {
+                            printf(
+                                esc_html__( 'Unlike retailer "sales" based on inflated list prices, we compare current prices against what products actually sell for. Our system tracks %d+ models daily across %d+ retailers in the US, UK, EU, Canada, and Australia. When a product drops below its 6-month average, it shows up here.', 'erh' ),
+                                $hub_product_count,
+                                $hub_retailer_count
+                            );
+                        } else {
+                            esc_html_e( 'Unlike retailer "sales" based on inflated list prices, we compare current prices against what products actually sell for. When a product drops below its 6-month average, it shows up here.', 'erh' );
+                        }
+                    ?></p>
                 </div>
                 <div class="deals-info-card">
                     <h2 class="deals-info-card-title">

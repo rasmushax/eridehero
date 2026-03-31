@@ -122,6 +122,53 @@ function erh_get_category_deal_count( string $product_type ): int {
 	return (int) ( $counts[ $product_type ] ?? 0 );
 }
 
+/**
+ * Get tracked product count for a product type (from wp_product_data cache table).
+ *
+ * @param string $product_type Product type (e.g., 'Electric Scooter'), or empty for all.
+ * @return int
+ */
+function erh_get_tracked_product_count( string $product_type = '' ): int {
+	static $counts = [];
+
+	if ( isset( $counts[ $product_type ] ) ) {
+		return $counts[ $product_type ];
+	}
+
+	if ( ! class_exists( 'ERH\Database\ProductCache' ) ) {
+		return 0;
+	}
+
+	$cache = new \ERH\Database\ProductCache();
+	$filters = $product_type ? [ 'product_type' => $product_type ] : [];
+	$counts[ $product_type ] = $cache->count_filtered( $filters );
+
+	return $counts[ $product_type ];
+}
+
+/**
+ * Get retailer count (HFT scrapers + Amazon).
+ *
+ * @return int
+ */
+function erh_get_retailer_count(): int {
+	static $count = null;
+
+	if ( $count !== null ) {
+		return $count;
+	}
+
+	if ( ! class_exists( 'HFT_Scraper_Repository' ) ) {
+		$count = 0;
+		return $count;
+	}
+
+	$repo  = new \HFT_Scraper_Repository();
+	$count = $repo->count() + 1; // +1 for Amazon (PA-API, not a scraper).
+
+	return $count;
+}
+
 // =============================================================================
 // RANKMATH TITLE FILTER
 // =============================================================================
@@ -177,15 +224,21 @@ add_filter( 'rank_math/frontend/description', function( string $description ): s
 		return $description;
 	}
 
+	$retailers = erh_get_retailer_count();
+
 	if ( erh_is_deals_hub() ) {
-		$total = erh_get_total_deal_count();
-		if ( $total > 0 ) {
+		$total    = erh_get_total_deal_count();
+		$products = erh_get_tracked_product_count();
+
+		if ( $total > 0 && $products > 0 && $retailers > 0 ) {
 			return sprintf(
-				'Browse %d deals on electric scooters, e-bikes, skateboards & more — all priced below their average selling price. We track 1,000+ products daily across US, UK, EU, CA & AU retailers.',
-				$total
+				'Browse %d deals on electric scooters, e-bikes, skateboards and more, all priced below their average selling price. We track prices on %d+ models across %d+ retailers daily.',
+				$total,
+				$products,
+				$retailers
 			);
 		}
-		return 'Browse deals on electric scooters, e-bikes, skateboards & more — all priced below their average selling price. We track 1,000+ products daily across US, UK, EU, CA & AU retailers.';
+		return 'Find deals on electric scooters, e-bikes, skateboards and more, all priced below their average selling price. Click any product to view in-depth price history.';
 	}
 
 	// Category page.
@@ -196,17 +249,20 @@ add_filter( 'rank_math/frontend/description', function( string $description ): s
 
 	$name_plural = strtolower( $config['name_plural'] ?? '' );
 	$count       = erh_get_category_deal_count( $config['type'] ?? '' );
+	$products    = erh_get_tracked_product_count( $config['type'] ?? '' );
 
-	if ( $count > 0 ) {
+	if ( $count > 0 && $products > 0 && $retailers > 0 ) {
 		return sprintf(
-			'Browse %d %s deals currently priced below their 6-month average. We track actual selling prices daily — not inflated list prices. Set alerts to buy at the right time.',
+			'Browse %d %s priced below their 6-month average. We track prices on %d+ models across %d+ retailers daily. Click any product to view in-depth price history.',
 			$count,
-			$name_plural
+			$name_plural . ' deals',
+			$products,
+			$retailers
 		);
 	}
 	return sprintf(
-		'Browse %s deals currently priced below their 6-month average. We track actual selling prices daily — not inflated list prices. Set alerts to buy at the right time.',
-		$name_plural
+		'Find %s currently priced below their average selling price. We track actual prices daily, not inflated list prices. Click any product to view in-depth price history.',
+		$name_plural . ' deals'
 	);
 }, 20 );
 

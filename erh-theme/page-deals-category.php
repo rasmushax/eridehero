@@ -80,14 +80,18 @@ if ( class_exists( 'ERH\Pricing\DealsFinder' ) ) {
     }
 }
 
-// Build dynamic intro text.
-$type_plural = strtolower( $config['breadcrumb_title'] );
-if ( $ssr_deal_count > 0 ) {
+// Build dynamic intro text with real counts.
+$type_plural    = strtolower( $config['breadcrumb_title'] );
+$product_count  = erh_get_tracked_product_count( $config['type'] );
+$retailer_count = erh_get_retailer_count();
+
+if ( $ssr_deal_count > 0 && $product_count > 0 && $retailer_count > 0 ) {
     $intro_text = sprintf(
-        'We track prices on %s daily across dozens of retailers. When a product drops below its real average selling price — not inflated list prices — it shows up here. Currently showing %d %s deals.',
+        'We track prices on %d+ %s across %d+ retailers every day. When a product drops below its real average selling price, not inflated list prices, it shows up here. Currently showing %d deals.',
+        $product_count,
         $type_plural,
-        $ssr_deal_count,
-        $type_plural
+        $retailer_count,
+        $ssr_deal_count
     );
 } else {
     $intro_text = sprintf(
