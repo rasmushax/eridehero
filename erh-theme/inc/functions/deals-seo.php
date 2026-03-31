@@ -389,3 +389,76 @@ function erh_build_deals_itemlist_schema( array $deals ): array {
 		'itemListElement' => $items,
 	];
 }
+
+// =============================================================================
+// ACF FIELD GROUP: DEALS FAQ
+// =============================================================================
+
+/**
+ * Register ACF field group for Deals FAQ repeater.
+ *
+ * Adds a repeater field (question + answer) to pages using the
+ * Deals Hub or Deals Category templates.
+ */
+add_action( 'acf/init', function (): void {
+	if ( ! function_exists( 'acf_add_local_field_group' ) ) {
+		return;
+	}
+
+	acf_add_local_field_group( [
+		'key'      => 'group_deals_faq',
+		'title'    => 'Deals FAQ',
+		'fields'   => [
+			[
+				'key'          => 'field_deals_faq_repeater',
+				'label'        => 'FAQ Items',
+				'name'         => 'deals_faq',
+				'type'         => 'repeater',
+				'instructions' => 'Add frequently asked questions. Displayed as a two-column accordion at the bottom of the page.',
+				'layout'       => 'block',
+				'button_label' => 'Add Question',
+				'min'          => 0,
+				'max'          => 0,
+				'sub_fields'   => [
+					[
+						'key'         => 'field_deals_faq_question',
+						'label'       => 'Question',
+						'name'        => 'question',
+						'type'        => 'text',
+						'required'    => 1,
+						'placeholder' => 'Enter question...',
+					],
+					[
+						'key'          => 'field_deals_faq_answer',
+						'label'        => 'Answer',
+						'name'         => 'answer',
+						'type'         => 'wysiwyg',
+						'required'     => 1,
+						'tabs'         => 'all',
+						'toolbar'      => 'full',
+						'media_upload' => 0,
+					],
+				],
+			],
+		],
+		'location' => [
+			[
+				[
+					'param'    => 'page_template',
+					'operator' => '==',
+					'value'    => 'page-deals.php',
+				],
+			],
+			[
+				[
+					'param'    => 'page_template',
+					'operator' => '==',
+					'value'    => 'page-deals-category.php',
+				],
+			],
+		],
+		'menu_order' => 10,
+		'position'   => 'normal',
+		'style'      => 'default',
+	] );
+} );
