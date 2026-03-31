@@ -1,0 +1,297 @@
+<?php
+/**
+ * Deals SEO Functions
+ *
+ * RankMath integration for deals pages: dynamic titles, meta descriptions,
+ * and JSON-LD schema (CollectionPage + BreadcrumbList).
+ *
+ * @package ERideHero
+ */
+
+// Prevent direct access.
+if ( ! defined( 'ABSPATH' ) ) {
+	exit;
+}
+
+use ERH\CategoryConfig;
+use ERH\Pricing\DealsFinder;
+
+// =============================================================================
+// HELPER FUNCTIONS
+// =============================================================================
+
+/**
+ * Check if the current page uses the Deals Hub template.
+ *
+ * @return bool True if the current page uses page-deals.php.
+ */
+function erh_is_deals_hub(): bool {
+	return is_page_template( 'page-deals.php' );
+}
+
+/**
+ * Check if the current page uses the Deals Category template.
+ *
+ * @return bool True if the current page uses page-deals-category.php.
+ */
+function erh_is_deals_category(): bool {
+	return is_page_template( 'page-deals-category.php' );
+}
+
+/**
+ * Check if the current page is any deals page (hub or category).
+ *
+ * @return bool True if current page is a deals hub or category page.
+ */
+function erh_is_deals_page(): bool {
+	return erh_is_deals_hub() || erh_is_deals_category();
+}
+
+/**
+ * Get CategoryConfig for the current deals category page.
+ *
+ * Reads the page slug and resolves it via CategoryConfig::get_by_slug().
+ *
+ * @return array<string, mixed>|null Category config array or null if not found.
+ */
+function erh_get_deals_category_config(): ?array {
+	if ( ! erh_is_deals_category() ) {
+		return null;
+	}
+
+	if ( ! class_exists( 'ERH\CategoryConfig' ) ) {
+		return null;
+	}
+
+	$slug = get_post_field( 'post_name', get_the_ID() );
+	if ( empty( $slug ) ) {
+		return null;
+	}
+
+	return CategoryConfig::get_by_slug( $slug );
+}
+
+/**
+ * Get US deal counts via DealsFinder (statically cached per request).
+ *
+ * Returns an array keyed by product type name, e.g.:
+ * ['Electric Scooter' => 47, 'Electric Bike' => 12, ...]
+ *
+ * @return array<string, int> Deal counts per product type.
+ */
+function erh_get_deals_counts_for_seo(): array {
+	static $counts = null;
+
+	if ( $counts !== null ) {
+		return $counts;
+	}
+
+	if ( ! class_exists( 'ERH\Pricing\DealsFinder' ) ) {
+		$counts = [];
+		return $counts;
+	}
+
+	$finder = new DealsFinder();
+	$counts = $finder->get_deal_counts(
+		DealsFinder::DEFAULT_THRESHOLD,
+		DealsFinder::DEFAULT_GEO,
+		DealsFinder::DEFAULT_PERIOD
+	);
+
+	return $counts;
+}
+
+/**
+ * Get the total deal count across all categories.
+ *
+ * @return int Total number of active deals.
+ */
+function erh_get_total_deal_count(): int {
+	$counts = erh_get_deals_counts_for_seo();
+	return array_sum( $counts );
+}
+
+/**
+ * Get the deal count for a specific product type.
+ *
+ * @param string $product_type Product type label (e.g., 'Electric Scooter').
+ * @return int Number of active deals for this product type.
+ */
+function erh_get_category_deal_count( string $product_type ): int {
+	$counts = erh_get_deals_counts_for_seo();
+	return (int) ( $counts[ $product_type ] ?? 0 );
+}
+
+// =============================================================================
+// RANKMATH TITLE FILTER
+// =============================================================================
+
+/**
+ * Override RankMath title for deals pages.
+ *
+ * Hub:      "Electric Ride Deals ({total}) - Updated Daily | ERideHero"
+ * Category: "{name_short} Deals ({count}) - Updated Daily | ERideHero"
+ * Count is omitted from parentheses when 0.
+ */
+add_filter( 'rank_math/frontend/title', function( string $title ): string {
+	if ( ! erh_is_deals_page() ) {
+		return $title;
+	}
+
+	if ( erh_is_deals_hub() ) {
+		$total = erh_get_total_deal_count();
+		if ( $total > 0 ) {
+			return sprintf( 'Electric Ride Deals (%d) - Updated Daily | ERideHero', $total );
+		}
+		return 'Electric Ride Deals - Updated Daily | ERideHero';
+	}
+
+	// Category page.
+	$config = erh_get_deals_category_config();
+	if ( ! $config ) {
+		return $title;
+	}
+
+	$name_short = $config['name_short'] ?? '';
+	$count      = erh_get_category_deal_count( $config['type'] ?? '' );
+
+	if ( $count > 0 ) {
+		return sprintf( '%s Deals (%d) - Updated Daily | ERideHero', $name_short, $count );
+	}
+	return sprintf( '%s Deals - Updated Daily | ERideHero', $name_short );
+}, 20 );
+
+// =============================================================================
+// RANKMATH DESCRIPTION FILTER
+// =============================================================================
+
+/**
+ * Override RankMath meta description for deals pages.
+ *
+ * Hub: "Browse {total} deals on electric scooters, e-bikes, skateboards & more..."
+ * Category: "Browse {count} {name_plural lowercase} deals currently priced below..."
+ * Fallback versions without counts if count is 0.
+ */
+add_filter( 'rank_math/frontend/description', function( string $description ): string {
+	if ( ! erh_is_deals_page() ) {
+		return $description;
+	}
+
+	if ( erh_is_deals_hub() ) {
+		$total = erh_get_total_deal_count();
+		if ( $total > 0 ) {
+			return sprintf(
+				'Browse %d deals on electric scooters, e-bikes, skateboards & more — all priced below their average selling price. We track 1,000+ products daily across US, UK, EU, CA & AU retailers.',
+				$total
+			);
+		}
+		return 'Browse deals on electric scooters, e-bikes, skateboards & more — all priced below their average selling price. We track 1,000+ products daily across US, UK, EU, CA & AU retailers.';
+	}
+
+	// Category page.
+	$config = erh_get_deals_category_config();
+	if ( ! $config ) {
+		return $description;
+	}
+
+	$name_plural = strtolower( $config['name_plural'] ?? '' );
+	$count       = erh_get_category_deal_count( $config['type'] ?? '' );
+
+	if ( $count > 0 ) {
+		return sprintf(
+			'Browse %d %s deals currently priced below their 6-month average. We track actual selling prices daily — not inflated list prices. Set alerts to buy at the right time.',
+			$count,
+			$name_plural
+		);
+	}
+	return sprintf(
+		'Browse %s deals currently priced below their 6-month average. We track actual selling prices daily — not inflated list prices. Set alerts to buy at the right time.',
+		$name_plural
+	);
+}, 20 );
+
+// =============================================================================
+// RANKMATH JSON-LD FILTER
+// =============================================================================
+
+/**
+ * Modify JSON-LD schema for deals pages.
+ *
+ * - Changes Article @type to CollectionPage (top-level entries AND @graph nodes).
+ * - For category pages: replaces BreadcrumbList with Home > Deals > {category}.
+ */
+add_filter( 'rank_math/json_ld', function( array $data ): array {
+	if ( ! erh_is_deals_page() ) {
+		return $data;
+	}
+
+	// Replace Article @type with CollectionPage throughout the data structure.
+	foreach ( $data as $key => $entity ) {
+		if ( ! is_array( $entity ) ) {
+			continue;
+		}
+
+		// Handle top-level entries.
+		if ( isset( $entity['@type'] ) && $entity['@type'] === 'Article' ) {
+			$data[ $key ]['@type'] = 'CollectionPage';
+		}
+
+		// Handle @graph nodes.
+		if ( isset( $entity['@graph'] ) && is_array( $entity['@graph'] ) ) {
+			foreach ( $entity['@graph'] as $graph_key => $node ) {
+				if ( isset( $node['@type'] ) && $node['@type'] === 'Article' ) {
+					$data[ $key ]['@graph'][ $graph_key ]['@type'] = 'CollectionPage';
+				}
+			}
+		}
+	}
+
+	// For category pages: replace BreadcrumbList with a 3-level version.
+	if ( erh_is_deals_category() ) {
+		$config = erh_get_deals_category_config();
+		if ( $config ) {
+			// Remove all existing BreadcrumbList entries.
+			foreach ( $data as $key => $entity ) {
+				if ( isset( $entity['@type'] ) && $entity['@type'] === 'BreadcrumbList' ) {
+					unset( $data[ $key ] );
+				}
+			}
+
+			$name_plural  = $config['name_plural'] ?? '';
+			$current_url  = get_permalink();
+
+			$data['breadcrumb'] = [
+				'@type'           => 'BreadcrumbList',
+				'@id'             => ( $current_url ?: home_url( '/' ) ) . '#breadcrumb',
+				'itemListElement' => [
+					[
+						'@type'    => 'ListItem',
+						'position' => 1,
+						'item'     => [
+							'@id'  => home_url( '/' ),
+							'name' => 'Home',
+						],
+					],
+					[
+						'@type'    => 'ListItem',
+						'position' => 2,
+						'item'     => [
+							'@id'  => home_url( '/deals/' ),
+							'name' => 'Deals',
+						],
+					],
+					[
+						'@type'    => 'ListItem',
+						'position' => 3,
+						'item'     => [
+							'@id'  => $current_url ?: '',
+							'name' => $name_plural,
+						],
+					],
+				],
+			];
+		}
+	}
+
+	return $data;
+}, 20 );
