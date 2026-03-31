@@ -4,6 +4,7 @@
  *
  * Template for category-specific deals pages (e.g., E-Scooter Deals).
  * Uses page slug to determine which category to display.
+ * SSR renders US deals for SEO; JS hydrates with user's geo on load.
  *
  * @package ERideHero
  */
@@ -52,18 +53,61 @@ $config = $category_config[ $page_slug ] ?? $category_config['electric-scooters'
 // Get parent deals page URL.
 $parent_id  = wp_get_post_parent_id( get_the_ID() );
 $parent_url = $parent_id ? get_permalink( $parent_id ) : home_url( '/deals/' );
+
+// SSR: Fetch US deals via DealsFinder.
+$ssr_deals      = [];
+$ssr_deal_count = 0;
+$ssr_period     = \ERH\Pricing\DealsFinder::DEFAULT_PERIOD;
+$latest_updated = '';
+
+if ( class_exists( 'ERH\Pricing\DealsFinder' ) ) {
+    $finder    = new \ERH\Pricing\DealsFinder();
+    $ssr_deals = $finder->get_deals(
+        $config['type'],
+        \ERH\Pricing\DealsFinder::DEFAULT_THRESHOLD,
+        100,
+        'US',
+        $ssr_period
+    );
+    $ssr_deal_count = count( $ssr_deals );
+
+    // Find latest updated_at for dateModified schema.
+    foreach ( $ssr_deals as $deal ) {
+        $updated = $deal['deal_analysis']['updated_at'] ?? $deal['price_history']['US']['updated_at'] ?? '';
+        if ( $updated && $updated > $latest_updated ) {
+            $latest_updated = $updated;
+        }
+    }
+}
+
+// Build dynamic intro text.
+$type_plural = strtolower( $config['breadcrumb_title'] );
+if ( $ssr_deal_count > 0 ) {
+    $intro_text = sprintf(
+        'We track prices on %s daily across dozens of retailers. When a product drops below its real average selling price — not inflated list prices — it shows up here. Currently showing %d %s deals.',
+        $type_plural,
+        $ssr_deal_count,
+        strtolower( $config['breadcrumb_title'] )
+    );
+} else {
+    $intro_text = sprintf(
+        'We track prices on %s daily across dozens of retailers. When a product drops below its real average selling price, it shows up here.',
+        $type_plural
+    );
+}
 ?>
 
-<main class="deals-page" data-deals-page data-category="<?php echo esc_attr( $config['category'] ); ?>" data-click-source="deals">
+<main class="deals-page" data-deals-page data-category="<?php echo esc_attr( $config['category'] ); ?>" data-click-source="deals" data-ssr-geo="US">
 
     <?php
-    // Hero section - uses WordPress title and content.
+    // Hero section with SSR intro text and deal count.
     get_template_part( 'template-parts/deals/hero', null, [
         'title'            => get_the_title(),
-        'content'          => get_the_content(),
+        'intro_text'       => $intro_text,
         'category'         => $config['category'],
         'back_url'         => $parent_url,
         'breadcrumb_title' => $config['breadcrumb_title'],
+        'deal_count'       => $ssr_deal_count,
     ] );
     ?>
 
@@ -145,20 +189,25 @@ $parent_url = $parent_id ? get_permalink( $parent_id ) : home_url( '/deals/' );
                 </div>
             </div>
 
-            <!-- Deals Grid (uses finder-grid styles) -->
+            <!-- Section heading -->
+            <h2 class="deals-section-heading" data-deals-section-heading>
+                <?php if ( $ssr_deal_count > 0 ) {
+                    printf( '%d %s', $ssr_deal_count, esc_html( $ssr_deal_count === 1 ? 'deal found' : 'deals found' ) );
+                } else {
+                    esc_html_e( 'Deals', 'erh' );
+                } ?>
+            </h2>
+
+            <!-- Deals Grid (SSR'd with US deals) -->
             <div class="finder-grid" data-deals-grid>
-                <!-- Skeleton loaders while loading -->
-                <?php for ( $i = 0; $i < 8; $i++ ) : ?>
-                    <div class="product-card product-card-skeleton">
-                        <div class="product-card-image">
-                            <div class="skeleton skeleton-img"></div>
-                        </div>
-                        <div class="product-card-content">
-                            <div class="skeleton skeleton-text"></div>
-                            <div class="skeleton skeleton-text-sm"></div>
-                        </div>
-                    </div>
-                <?php endfor; ?>
+                <?php if ( $ssr_deal_count > 0 ) : ?>
+                    <?php foreach ( $ssr_deals as $deal ) : ?>
+                        <?php get_template_part( 'template-parts/deals/ssr-deal-card', null, [
+                            'deal'   => $deal,
+                            'period' => $ssr_period,
+                        ] ); ?>
+                    <?php endforeach; ?>
+                <?php endif; ?>
             </div>
 
             <!-- Empty State -->
@@ -168,6 +217,8 @@ $parent_url = $parent_id ? get_permalink( $parent_id ) : home_url( '/deals/' );
 
         </div>
     </section>
+
+    <?php get_template_part( 'template-parts/deals/faq' ); ?>
 
     <?php get_template_part( 'template-parts/components/comparison-bar' ); ?>
 
@@ -200,9 +251,9 @@ $parent_url = $parent_id ? get_permalink( $parent_id ) : home_url( '/deals/' );
         </a>
 
         <div class="product-card-content">
-            <h2 class="product-card-name">
+            <h3 class="product-card-name">
                 <a href="" data-product-link></a>
-            </h2>
+            </h3>
             <div class="deal-card-compare" data-deal-compare>
                 <span class="deal-card-compare-label" data-compare-label>6-mo avg</span>
                 <span class="deal-card-compare-price" data-compare-price></span>
@@ -223,10 +274,21 @@ $parent_url = $parent_id ? get_permalink( $parent_id ) : home_url( '/deals/' );
 <?php get_footer(); ?>
 
 <script data-no-optimize="1">
-// Page-specific config
 window.erhData = window.erhData || {};
 window.erhData.dealsConfig = {
     category: <?php echo wp_json_encode( $config['category'] ); ?>,
-    productType: <?php echo wp_json_encode( $config['type'] ); ?>
+    productType: <?php echo wp_json_encode( $config['type'] ); ?>,
+    ssrGeo: 'US',
+    ssrDealCount: <?php echo (int) $ssr_deal_count; ?>
 };
 </script>
+
+<?php if ( $latest_updated ) : ?>
+<script type="application/ld+json">
+<?php echo wp_json_encode( [
+    '@context'     => 'https://schema.org',
+    '@type'        => 'CollectionPage',
+    'dateModified' => gmdate( 'c', strtotime( $latest_updated ) ),
+], JSON_UNESCAPED_SLASHES ); ?>
+</script>
+<?php endif; ?>
