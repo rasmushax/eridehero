@@ -41,6 +41,9 @@ export async function initDealsHub() {
     let userGeo = { geo: 'US', currency: 'USD' };
     const carouselInstances = {};
 
+    // Get SSR geo from element attribute (set by PHP for US SSR'd content)
+    const ssrGeo = hub.dataset.ssrGeo || null;
+
     // Get user geo
     try {
         userGeo = await getUserGeo();
@@ -48,11 +51,43 @@ export async function initDealsHub() {
         // Use defaults
     }
 
-    // Load and render deals
-    await loadDeals();
+    // Hydrate SSR if geo matches, otherwise fetch fresh data
+    const needsGeoSwap = ssrGeo && userGeo.geo !== ssrGeo;
+    if (needsGeoSwap || !ssrGeo) {
+        await loadDeals();
+    } else {
+        hydrateSSR();
+    }
 
     // Price tracker button handler (event delegation)
     hub.addEventListener('click', (e) => handleTrackClick(e, userGeo));
+
+    /**
+     * Hydrate SSR'd content without an API call (user geo matches SSR geo)
+     */
+    function hydrateSSR() {
+        // Top deals section
+        if (topDealsSection && topDealsGrid) {
+            const hasCards = topDealsGrid.querySelector('.deal-card:not(.deal-card-skeleton)');
+            if (hasCards) {
+                topDealsSection.classList.remove('is-loading');
+                initSectionCarousel('top', topDealsSection, topDealsGrid);
+            }
+        }
+
+        // Category sections
+        CONFIG.categories.forEach(category => {
+            const section = hub.querySelector(`[data-category-section="${category}"]`);
+            const grid = hub.querySelector(`[data-category-grid="${category}"]`);
+            if (!section || !grid) return;
+
+            const hasCards = grid.querySelector('.deal-card:not(.deal-card-skeleton)');
+            if (hasCards) {
+                section.classList.remove('is-loading');
+                initSectionCarousel(category, section, grid);
+            }
+        });
+    }
 
     /**
      * Load deals from API
