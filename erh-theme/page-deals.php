@@ -89,15 +89,19 @@ $total_deals = array_sum( $ssr_counts );
 <main class="deals-hub" data-deals-hub data-ssr-geo="US">
 
     <!-- Hub Header -->
-    <section class="hub-header">
+    <section class="deals-hero">
         <div class="container">
-            <h1 class="hub-title"><?php the_title(); ?></h1>
-            <?php
-            $hub_tracked = erh_get_tracked_product_count();
-            if ( $hub_tracked > 0 ) :
-            ?>
-                <p class="hub-subtitle"><?php printf( 'Daily price tracking on %s electric rides. See what\'s actually on sale right now.', erh_round_count( $hub_tracked ) ); ?></p>
-            <?php endif; ?>
+            <div class="deals-hero-content">
+                <div class="deals-hero-text">
+                    <h1 class="deals-hero-title"><?php the_title(); ?></h1>
+                    <?php
+                    $hub_tracked = erh_get_tracked_product_count();
+                    if ( $hub_tracked > 0 ) :
+                    ?>
+                        <div class="deals-hero-intro"><?php printf( 'Daily price tracking on %s electric rides. See what\'s actually on sale right now.', erh_round_count( $hub_tracked ) ); ?></div>
+                    <?php endif; ?>
+                </div>
+            </div>
         </div>
     </section>
 
