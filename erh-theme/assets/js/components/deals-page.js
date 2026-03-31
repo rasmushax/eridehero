@@ -7,6 +7,8 @@
  * - Product cards (matching finder exactly)
  * - Compare checkboxes with comparison bar
  * - Geo-aware pricing
+ * - SSR hydration: when user geo matches SSR geo (US), hydrate existing
+ *   DOM cards instead of fetching from the API
  */
 
 import { getUserGeo, formatPrice, getCurrencySymbol } from '../services/geo-price.js';
@@ -31,6 +33,7 @@ export async function initDealsPage() {
     if (!page) return null;
 
     const category = page.dataset.category || 'escooter';
+    const ssrGeo = page.dataset.ssrGeo || null;
     const grid = page.querySelector('[data-deals-grid]');
     const emptyState = page.querySelector('[data-deals-empty]');
     const template = document.getElementById('deal-card-template');
@@ -39,6 +42,7 @@ export async function initDealsPage() {
     const sortSelect = page.querySelector('[data-deals-sort]');
     const priceFilterSelect = page.querySelector('[data-deals-price-filter]');
     const countEl = page.querySelector('[data-deals-count]');
+    const sectionHeading = page.querySelector('[data-deals-section-heading]');
 
     if (!grid || !template) return null;
 
@@ -66,10 +70,18 @@ export async function initDealsPage() {
         // Use defaults
     }
 
-    // Initial load
-    await loadDeals();
+    // Decide initial load strategy:
+    // - If SSR was rendered for the same geo as the user → hydrate existing DOM
+    // - Otherwise → fetch from API (geo swap needed)
+    const needsGeoSwap = ssrGeo ? userGeo.geo !== ssrGeo : true;
 
-    // Period change handler
+    if (needsGeoSwap) {
+        await loadDeals();
+    } else {
+        hydrateSSR();
+    }
+
+    // Period change handler — always fetches fresh data (different averages)
     if (periodSelect) {
         periodSelect.addEventListener('change', async (e) => {
             currentPeriod = e.target.value;
@@ -125,6 +137,52 @@ export async function initDealsPage() {
 
     // Initialize custom selects
     initCustomSelects(page);
+
+    /**
+     * Hydrate SSR-rendered deal cards without an API call.
+     * Extracts deal data from existing DOM cards into the deals array,
+     * then enables sort/filter/compare interactivity.
+     */
+    function hydrateSSR() {
+        const ssrCards = grid.querySelectorAll('.product-card');
+        deals = Array.from(ssrCards).map(card => {
+            const id = parseInt(card.dataset.productId, 10);
+            const nameEl = card.querySelector('[data-product-link]');
+            const priceEl = card.querySelector('[data-price]');
+            const indicatorEl = card.querySelector('[data-indicator-value]');
+            const comparePriceEl = card.querySelector('[data-compare-price]');
+            const link = card.querySelector('.product-card-link');
+            const img = card.querySelector('.product-card-image img');
+
+            const priceText = priceEl?.textContent?.trim() || '';
+            const currentPrice = parseFloat(priceText.replace(/[^0-9.]/g, '')) || 0;
+
+            const discountText = indicatorEl?.textContent?.trim() || '';
+            const discountPercent = parseFloat(discountText.replace('%', '')) || 0;
+
+            const avgText = comparePriceEl?.textContent?.trim() || '';
+            const avgPrice = parseFloat(avgText.replace(/[^0-9.]/g, '')) || 0;
+
+            return {
+                id,
+                name: nameEl?.textContent?.trim() || '',
+                url: link?.href || '',
+                thumbnail: img?.src || '',
+                current_price: currentPrice,
+                currency: 'USD',
+                discount_percent: discountPercent,
+                avg_price: avgPrice,
+                avg_price_6m: avgPrice,
+                category: category,
+            };
+        });
+
+        // Update count based on hydrated deals
+        updateCount(deals.length);
+
+        // Wire up comparison bar checkboxes on the existing cards
+        comparisonBar.syncCheckboxes();
+    }
 
     /**
      * Load deals from API
@@ -391,11 +449,14 @@ export async function initDealsPage() {
     }
 
     /**
-     * Update deal count in hero
+     * Update deal count in hero and section heading
      */
     function updateCount(count) {
         if (countEl) {
             countEl.innerHTML = `<strong>${count}</strong> deals available`;
+        }
+        if (sectionHeading) {
+            sectionHeading.textContent = `${count} deals available`;
         }
     }
 
