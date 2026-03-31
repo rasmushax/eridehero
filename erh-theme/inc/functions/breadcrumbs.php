@@ -257,10 +257,10 @@ function erh_is_canonical_reviews_url( ?array $category_config ): bool {
  */
 function erh_get_guides_page_url( ?array $category_config ): string {
     if ( ! $category_config ) {
-        return home_url( '/articles/' );
+        return home_url( '/buying-guides/' );
     }
 
-    return home_url( '/articles/?category=' . $category_config['slug'] . '&type=buying-guide' );
+    return home_url( '/buying-guides/?category=' . $category_config['slug'] );
 }
 
 /**
