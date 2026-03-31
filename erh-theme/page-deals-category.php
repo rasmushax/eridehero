@@ -87,7 +87,7 @@ if ( $ssr_deal_count > 0 ) {
         'We track prices on %s daily across dozens of retailers. When a product drops below its real average selling price — not inflated list prices — it shows up here. Currently showing %d %s deals.',
         $type_plural,
         $ssr_deal_count,
-        strtolower( $config['breadcrumb_title'] )
+        $type_plural
     );
 } else {
     $intro_text = sprintf(

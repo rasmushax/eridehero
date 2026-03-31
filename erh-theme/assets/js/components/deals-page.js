@@ -456,7 +456,7 @@ export async function initDealsPage() {
             countEl.innerHTML = `<strong>${count}</strong> deals available`;
         }
         if (sectionHeading) {
-            sectionHeading.textContent = `${count} deals available`;
+            sectionHeading.textContent = `${count} ${count === 1 ? 'deal found' : 'deals found'}`;
         }
     }
 
