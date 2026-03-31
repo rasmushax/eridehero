@@ -7,6 +7,10 @@
  * - Top deals carousel (best across all categories)
  * - Carousel for each category (if deals available)
  * - Price tracking CTA
+ * - FAQ section
+ *
+ * SSR: Fetches US deals server-side for fast first paint and SEO.
+ * JS hydrates with user's actual geo on load.
  *
  * @package ERideHero
  */
@@ -23,27 +27,66 @@ $categories = [
     'escooter'   => [
         'label' => __( 'E-Scooter Deals', 'erh' ),
         'url'   => home_url( '/deals/electric-scooters/' ),
+        'type'  => 'Electric Scooter',
     ],
     'ebike'      => [
         'label' => __( 'E-Bike Deals', 'erh' ),
         'url'   => home_url( '/deals/electric-bikes/' ),
+        'type'  => 'Electric Bike',
     ],
     'eskate'     => [
         'label' => __( 'E-Skateboard Deals', 'erh' ),
         'url'   => home_url( '/deals/electric-skateboards/' ),
+        'type'  => 'Electric Skateboard',
     ],
     'euc'        => [
         'label' => __( 'EUC Deals', 'erh' ),
         'url'   => home_url( '/deals/electric-unicycles/' ),
+        'type'  => 'Electric Unicycle',
     ],
     'hoverboard' => [
         'label' => __( 'Hoverboard Deals', 'erh' ),
         'url'   => home_url( '/deals/hoverboards/' ),
+        'type'  => 'Hoverboard',
     ],
 ];
+
+// Fetch US deals server-side for SSR.
+$all_ssr_deals = [];
+$ssr_counts    = [];
+$ssr_top_deals = [];
+
+if ( class_exists( 'ERH\Pricing\DealsFinder' ) ) {
+    $finder        = new \ERH\Pricing\DealsFinder();
+    $all_ssr_deals = $finder->get_all_deals(
+        \ERH\Pricing\DealsFinder::DEFAULT_THRESHOLD,
+        50,
+        'US',
+        \ERH\Pricing\DealsFinder::DEFAULT_PERIOD
+    );
+
+    // Build counts keyed by category slug (escooter, ebike, etc.).
+    foreach ( $all_ssr_deals as $type => $deals ) {
+        $slug                = \ERH\CategoryConfig::type_to_finder_key( $type );
+        $ssr_counts[ $slug ] = count( $deals );
+    }
+
+    // Flatten and sort for top deals (most discounted first).
+    $all_flat = [];
+    foreach ( $all_ssr_deals as $type => $deals ) {
+        foreach ( $deals as $deal ) {
+            $all_flat[] = $deal;
+        }
+    }
+    usort( $all_flat, function ( $a, $b ) {
+        return $a['deal_analysis']['discount_percent'] <=> $b['deal_analysis']['discount_percent'];
+    } );
+    $ssr_top_deals = array_slice( $all_flat, 0, 8 );
+}
+$total_deals = array_sum( $ssr_counts );
 ?>
 
-<main class="deals-hub" data-deals-hub>
+<main class="deals-hub" data-deals-hub data-ssr-geo="US">
 
     <!-- Hub Header -->
     <section class="hub-header">
@@ -56,7 +99,7 @@ $categories = [
     </section>
 
     <!-- Top Deals Section -->
-    <section class="section deals-hub-top scroll-section is-loading" data-top-deals>
+    <section class="section deals-hub-top scroll-section<?php echo empty( $ssr_top_deals ) ? ' is-loading' : ''; ?>" data-top-deals>
         <div class="container">
             <div class="section-header">
                 <h2><?php esc_html_e( "Today's Top Deals", 'erh' ); ?></h2>
@@ -71,16 +114,22 @@ $categories = [
                 </button>
 
                 <div class="deals-grid scroll-section" data-top-deals-grid>
-                    <?php for ( $i = 0; $i < 8; $i++ ) : ?>
-                        <div class="deal-card deal-card-skeleton">
-                            <div class="deal-card-image">
-                                <div class="skeleton skeleton-img"></div>
+                    <?php if ( ! empty( $ssr_top_deals ) ) : ?>
+                        <?php foreach ( $ssr_top_deals as $deal ) : ?>
+                            <?php get_template_part( 'template-parts/deals/ssr-hub-deal-card', null, [ 'deal' => $deal ] ); ?>
+                        <?php endforeach; ?>
+                    <?php else : ?>
+                        <?php for ( $i = 0; $i < 8; $i++ ) : ?>
+                            <div class="deal-card deal-card-skeleton">
+                                <div class="deal-card-image">
+                                    <div class="skeleton skeleton-img"></div>
+                                </div>
+                                <div class="deal-card-content">
+                                    <div class="skeleton skeleton-text" style="height: 11px;"></div>
+                                </div>
                             </div>
-                            <div class="deal-card-content">
-                                <div class="skeleton skeleton-text" style="height: 11px;"></div>
-                            </div>
-                        </div>
-                    <?php endfor; ?>
+                        <?php endfor; ?>
+                    <?php endif; ?>
                 </div>
             </div>
         </div>
@@ -109,13 +158,28 @@ $categories = [
     </section>
 
     <!-- Category Sections -->
-    <?php foreach ( $categories as $slug => $cat ) : ?>
-        <section class="section deals-hub-category scroll-section is-loading" data-category-section="<?php echo esc_attr( $slug ); ?>">
+    <?php foreach ( $categories as $slug => $cat ) :
+        $cat_deals = [];
+        if ( isset( $all_ssr_deals[ $cat['type'] ] ) ) {
+            $cat_deals = array_slice( $all_ssr_deals[ $cat['type'] ], 0, 15 );
+        }
+        $cat_count = $ssr_counts[ $slug ] ?? 0;
+        $has_deals = ! empty( $cat_deals );
+    ?>
+        <section class="section deals-hub-category scroll-section<?php echo ! $has_deals ? ' is-loading' : ''; ?>"
+                 data-category-section="<?php echo esc_attr( $slug ); ?>"
+                 <?php echo ! $has_deals ? 'hidden' : ''; ?>>
             <div class="container">
                 <div class="section-header">
                     <h2>
                         <?php echo esc_html( $cat['label'] ); ?>
-                        <span class="deals-hub-category-count" data-category-count="<?php echo esc_attr( $slug ); ?>" hidden></span>
+                        <span class="deals-hub-category-count"
+                              data-category-count="<?php echo esc_attr( $slug ); ?>"
+                              <?php echo $cat_count > 0 ? '' : 'hidden'; ?>>
+                            <?php if ( $cat_count > 0 ) : ?>
+                                <?php echo esc_html( $cat_count ); ?>
+                            <?php endif; ?>
+                        </span>
                     </h2>
                     <a href="<?php echo esc_url( $cat['url'] ); ?>" class="btn btn-secondary">
                         <?php esc_html_e( 'View all', 'erh' ); ?>
@@ -132,22 +196,29 @@ $categories = [
                     </button>
 
                     <div class="deals-grid scroll-section" data-category-grid="<?php echo esc_attr( $slug ); ?>">
-                        <?php for ( $i = 0; $i < 6; $i++ ) : ?>
-                            <div class="deal-card deal-card-skeleton">
-                                <div class="deal-card-image">
-                                    <div class="skeleton skeleton-img"></div>
+                        <?php if ( $has_deals ) : ?>
+                            <?php foreach ( $cat_deals as $deal ) : ?>
+                                <?php get_template_part( 'template-parts/deals/ssr-hub-deal-card', null, [ 'deal' => $deal ] ); ?>
+                            <?php endforeach; ?>
+                        <?php else : ?>
+                            <?php for ( $i = 0; $i < 6; $i++ ) : ?>
+                                <div class="deal-card deal-card-skeleton">
+                                    <div class="deal-card-image">
+                                        <div class="skeleton skeleton-img"></div>
+                                    </div>
+                                    <div class="deal-card-content">
+                                        <div class="skeleton skeleton-text" style="height: 11px;"></div>
+                                    </div>
                                 </div>
-                                <div class="deal-card-content">
-                                    <div class="skeleton skeleton-text" style="height: 11px;"></div>
-                                </div>
-                            </div>
-                        <?php endfor; ?>
+                            <?php endfor; ?>
+                        <?php endif; ?>
                     </div>
                 </div>
             </div>
         </section>
     <?php endforeach; ?>
 
+    <?php get_template_part( 'template-parts/deals/faq' ); ?>
 
 </main>
 
@@ -174,3 +245,11 @@ $categories = [
 </template>
 
 <?php get_footer(); ?>
+
+<script data-no-optimize="1">
+window.erhData = window.erhData || {};
+window.erhData.dealsHubConfig = {
+    ssrGeo: 'US',
+    ssrCounts: <?php echo wp_json_encode( $ssr_counts ); ?>
+};
+</script>
