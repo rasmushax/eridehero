@@ -16,7 +16,7 @@ if ( ! defined( 'ABSPATH' ) ) {
     exit;
 }
 
-$faq_items = get_field( 'deals_faq' );
+$faq_items = get_field( 'deals_faq', 'option' );
 
 if ( empty( $faq_items ) || ! is_array( $faq_items ) ) {
     return;

@@ -58,6 +58,15 @@ function erh_register_options_pages(): void {
         'menu_slug'   => 'erh-about-settings',
         'capability'  => 'manage_options',
     ) );
+
+    // Deals Settings sub-page
+    acf_add_options_sub_page( array(
+        'page_title'  => __( 'Deals Settings', 'erh' ),
+        'menu_title'  => __( 'Deals', 'erh' ),
+        'parent_slug' => 'erh-theme-settings',
+        'menu_slug'   => 'erh-deals-settings',
+        'capability'  => 'manage_options',
+    ) );
 }
 add_action( 'acf/init', 'erh_register_options_pages' );
 

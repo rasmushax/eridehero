@@ -475,8 +475,8 @@ function erh_build_deals_itemlist_schema( array $deals ): array {
 /**
  * Register ACF field group for Deals FAQ repeater.
  *
- * Adds a repeater field (question + answer) to pages using the
- * Deals Hub or Deals Category templates.
+ * Shows on the Deals options sub-page (Theme Settings > Deals).
+ * All deals pages read from this single source.
  */
 add_action( 'acf/init', function (): void {
 	if ( ! function_exists( 'acf_add_local_field_group' ) ) {
@@ -492,7 +492,7 @@ add_action( 'acf/init', function (): void {
 				'label'        => 'FAQ Items',
 				'name'         => 'deals_faq',
 				'type'         => 'repeater',
-				'instructions' => 'Add frequently asked questions. Displayed as a two-column accordion at the bottom of the page.',
+				'instructions' => 'Frequently asked questions displayed as a two-column accordion at the bottom of all deals pages.',
 				'layout'       => 'block',
 				'button_label' => 'Add Question',
 				'min'          => 0,
@@ -522,16 +522,9 @@ add_action( 'acf/init', function (): void {
 		'location' => [
 			[
 				[
-					'param'    => 'page_template',
+					'param'    => 'options_page',
 					'operator' => '==',
-					'value'    => 'page-deals.php',
-				],
-			],
-			[
-				[
-					'param'    => 'page_template',
-					'operator' => '==',
-					'value'    => 'page-deals-category.php',
+					'value'    => 'erh-deals-settings',
 				],
 			],
 		],
