@@ -92,8 +92,11 @@ $total_deals = array_sum( $ssr_counts );
     <section class="hub-header">
         <div class="container">
             <h1 class="hub-title"><?php the_title(); ?></h1>
-            <?php if ( get_the_content() ) : ?>
-                <p class="hub-subtitle"><?php echo wp_strip_all_tags( get_the_content() ); ?></p>
+            <?php
+            $hub_tracked = erh_get_tracked_product_count();
+            if ( $hub_tracked > 0 ) :
+            ?>
+                <p class="hub-subtitle"><?php printf( 'Daily price tracking on %s electric rides. See what\'s actually on sale right now.', erh_round_count( $hub_tracked ) ); ?></p>
             <?php endif; ?>
         </div>
     </section>
