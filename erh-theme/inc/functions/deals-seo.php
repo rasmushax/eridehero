@@ -221,13 +221,13 @@ add_filter( 'rank_math/frontend/title', function( string $title ): string {
 		return $title;
 	}
 
-	$name_plural = $config['name_plural'] ?? '';
-	$count       = erh_get_category_deal_count( $config['type'] ?? '' );
+	$name  = $config['type'] ?? '';
+	$count = erh_get_category_deal_count( $name );
 
 	if ( $count > 0 ) {
-		return sprintf( '%s Deals (%d on Sale) - Tracked Daily', $name_plural, $count );
+		return sprintf( '%s Deals (%d on Sale) - Tracked Daily', $name, $count );
 	}
-	return sprintf( '%s Deals - Tracked Daily', $name_plural );
+	return sprintf( '%s Deals - Tracked Daily', $name );
 }, 20 );
 
 // =============================================================================
