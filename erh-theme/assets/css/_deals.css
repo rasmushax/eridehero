@@ -931,10 +931,10 @@
 
 /* Section heading (deal count above grid) */
 .deals-section-heading {
-    font-size: var(--font-size-sm);
-    font-weight: 500;
-    color: var(--color-text-muted);
-    margin-bottom: 1rem;
+    font-size: var(--font-size-xl, 1.5rem);
+    font-weight: 600;
+    color: var(--color-text);
+    margin-bottom: 1.25rem;
 }
 
 /* FAQ Section */

@@ -119,6 +119,15 @@ if ( $ssr_deal_count > 0 && $product_count > 0 && $retailer_count > 0 ) {
     <section class="deals-content">
         <div class="container">
 
+            <!-- Section heading (above toolbar) -->
+            <h2 class="deals-section-heading" data-deals-section-heading>
+                <?php if ( $ssr_deal_count > 0 ) {
+                    printf( '%d %s', $ssr_deal_count, esc_html( $ssr_deal_count === 1 ? 'deal found' : 'deals found' ) );
+                } else {
+                    esc_html_e( 'Deals', 'erh' );
+                } ?>
+            </h2>
+
             <!-- Toolbar (sort, filters) -->
             <div class="deals-toolbar" data-deals-toolbar>
                 <div class="deals-toolbar-left">
@@ -192,15 +201,6 @@ if ( $ssr_deal_count > 0 && $product_count > 0 && $retailer_count > 0 ) {
                     </div>
                 </div>
             </div>
-
-            <!-- Section heading -->
-            <h2 class="deals-section-heading" data-deals-section-heading>
-                <?php if ( $ssr_deal_count > 0 ) {
-                    printf( '%d %s', $ssr_deal_count, esc_html( $ssr_deal_count === 1 ? 'deal found' : 'deals found' ) );
-                } else {
-                    esc_html_e( 'Deals', 'erh' );
-                } ?>
-            </h2>
 
             <!-- Deals Grid (SSR'd with US deals) -->
             <div class="finder-grid" data-deals-grid>

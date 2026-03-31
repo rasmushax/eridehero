@@ -210,9 +210,9 @@ add_filter( 'rank_math/frontend/title', function( string $title ): string {
 	if ( erh_is_deals_hub() ) {
 		$total = erh_get_total_deal_count();
 		if ( $total > 0 ) {
-			return sprintf( 'Electric Ride Deals (%d) - Updated Daily | ERideHero', $total );
+			return sprintf( 'Electric Ride Deals (%d) - Updated Daily', $total );
 		}
-		return 'Electric Ride Deals - Updated Daily | ERideHero';
+		return 'Electric Ride Deals - Updated Daily';
 	}
 
 	// Category page.
@@ -225,9 +225,9 @@ add_filter( 'rank_math/frontend/title', function( string $title ): string {
 	$count      = erh_get_category_deal_count( $config['type'] ?? '' );
 
 	if ( $count > 0 ) {
-		return sprintf( '%s Deals (%d) - Updated Daily | ERideHero', $name_short, $count );
+		return sprintf( '%s Deals (%d) - Updated Daily', $name_short, $count );
 	}
-	return sprintf( '%s Deals - Updated Daily | ERideHero', $name_short );
+	return sprintf( '%s Deals - Updated Daily', $name_short );
 }, 20 );
 
 // =============================================================================

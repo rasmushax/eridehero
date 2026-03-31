@@ -57,18 +57,6 @@ $display_text = $intro_text ?: $content;
                     <div class="deals-hero-intro"><?php echo wp_kses_post( $display_text ); ?></div>
                 <?php endif; ?>
             </div>
-
-            <?php if ( $is_category ) : ?>
-                <div class="deals-hero-meta" data-deals-meta>
-                    <span class="deals-hero-count" data-deals-count>
-                        <?php if ( $deal_count > 0 ) : ?>
-                            <strong><?php echo (int) $deal_count; ?></strong> deals available
-                        <?php else : ?>
-                            <span class="skeleton skeleton-text" style="display: inline-block; width: 120px; height: 17px; margin-bottom: 0;"></span>
-                        <?php endif; ?>
-                    </span>
-                </div>
-            <?php endif; ?>
         </div>
     </div>
 </section>
