@@ -250,10 +250,17 @@ add_filter( 'rank_math/json_ld', function( array $data ): array {
 	if ( erh_is_deals_category() ) {
 		$config = erh_get_deals_category_config();
 		if ( $config ) {
-			// Remove all existing BreadcrumbList entries.
+			// Remove all existing BreadcrumbList entries (top-level and @graph).
 			foreach ( $data as $key => $entity ) {
 				if ( isset( $entity['@type'] ) && $entity['@type'] === 'BreadcrumbList' ) {
 					unset( $data[ $key ] );
+				}
+				if ( isset( $entity['@graph'] ) && is_array( $entity['@graph'] ) ) {
+					foreach ( $entity['@graph'] as $graph_key => $node ) {
+						if ( isset( $node['@type'] ) && $node['@type'] === 'BreadcrumbList' ) {
+							unset( $data[ $key ]['@graph'][ $graph_key ] );
+						}
+					}
 				}
 			}
 
@@ -293,5 +300,92 @@ add_filter( 'rank_math/json_ld', function( array $data ): array {
 		}
 	}
 
+	// Add ItemList schema for category pages (SSR deals).
+	if ( erh_is_deals_category() ) {
+		$config = erh_get_deals_category_config();
+		if ( $config && class_exists( 'ERH\Pricing\DealsFinder' ) ) {
+			$finder = new DealsFinder();
+			$deals  = $finder->get_deals(
+				$config['type'],
+				DealsFinder::DEFAULT_THRESHOLD,
+				100,
+				'US',
+				DealsFinder::DEFAULT_PERIOD
+			);
+
+			if ( ! empty( $deals ) ) {
+				$data['itemList'] = erh_build_deals_itemlist_schema( $deals );
+			}
+		}
+	}
+
 	return $data;
 }, 20 );
+
+/**
+ * Build ItemList schema from SSR deals.
+ *
+ * @param array  $deals SSR deals array from DealsFinder.
+ * @return array Schema.org ItemList.
+ */
+function erh_build_deals_itemlist_schema( array $deals ): array {
+	$items = [];
+
+	foreach ( $deals as $index => $deal ) {
+		$product_id    = (int) ( $deal['product_id'] ?? $deal['id'] ?? 0 );
+		$analysis      = $deal['deal_analysis'] ?? [];
+		$current_price = (float) ( $analysis['current_price'] ?? 0 );
+		$currency      = $analysis['currency'] ?? 'USD';
+		$permalink     = $deal['permalink'] ?? '';
+		$name          = $deal['name'] ?? '';
+
+		if ( ! $product_id || $current_price <= 0 || ! $permalink ) {
+			continue;
+		}
+
+		$item = [
+			'@type'    => 'ListItem',
+			'position' => $index + 1,
+			'item'     => [
+				'@type'  => 'Product',
+				'name'   => $name,
+				'url'    => $permalink,
+				'offers' => [
+					'@type'         => 'Offer',
+					'price'         => $current_price,
+					'priceCurrency' => $currency,
+					'availability'  => 'https://schema.org/InStock',
+				],
+			],
+		];
+
+		// Add seller if available.
+		if ( ! empty( $analysis['retailer'] ) ) {
+			$item['item']['offers']['seller'] = [
+				'@type' => 'Organization',
+				'name'  => $analysis['retailer'],
+			];
+		}
+
+		// Add image.
+		if ( ! empty( $deal['image_url'] ) ) {
+			$item['item']['image'] = $deal['image_url'];
+		} elseif ( $product_id ) {
+			$thumb_id = get_post_thumbnail_id( $product_id );
+			if ( $thumb_id ) {
+				$thumb_url = wp_get_attachment_image_url( $thumb_id, 'medium' );
+				if ( $thumb_url ) {
+					$item['item']['image'] = $thumb_url;
+				}
+			}
+		}
+
+		$items[] = $item;
+	}
+
+	return [
+		'@type'           => 'ItemList',
+		'numberOfItems'   => count( $items ),
+		'itemListElement' => $items,
+	];
+}
